@@ -1,0 +1,59 @@
+id: IMPL-RS-OPTIMIZER-HOST-TRANSFORM-JACKKNIFE-PARITY-001
+native_evidence:
+- jqmc_rs::optimizer_transform::tests::real_linear_tie_matches_dense_matrix_product
+- jqmc_rs::optimizer_transform::tests::stiefel_adjoint_output_is_a_whitened_tangent
+kind: implementation
+name: Rust host optimizer coordinate transform and coordinate-force jackknife equal their JAX twins
+plain_language: >-
+  On the CPU Rust route (JQMC_FLAG_RUST_ON_CPU, JAX cpu backend) the host functions
+  OptimizationCoordinateMap.transform_derivatives (Euclidean field adjoint, linear-tie COO adjoint and S-Stiefel
+  row projection adjoint) and estimate_coordinate_force_jackknife run in jqmc_rs. Each equals its JAX twin
+  (transform_derivatives_device; estimate_coordinate_force_jackknife_device) on identical inputs, within the
+  strict Rust/XLA tier of float64 zones, in full and mixed separately: (a) N2 ccECP J2 + J3 (symmetric linear tie
+  with 1/sqrt(2) couplings) + SD MO S-Stiefel rows with real and with complex direct sources, (b) the same map with
+  the J3 family frozen (not published), (c) open-shell AGPn (two S-Stiefel MO blocks, lambda_diag and
+  lambda_unpaired) with J2 + J3, and (d) a complex map with a tied Hermitian lambda (+-i/sqrt(2) couplings) and a
+  complex S-Stiefel block carrying Wirtinger (d_p, d_pbar) pairs, holomorphic and Wirtinger Euclidean blocks, and a
+  general real COO tie with repeated coordinates and non-unit coefficients. The transform runs on 37 sample rows
+  (two Rust row chunks) and on a 2 x 3 sample shape; its result is float64 for the real wave functions with real
+  sources (a with real sources, b, c; the real route) and complex128 otherwise; the jackknife
+  force and standard error run on 41 one-sample bins with real and complex weighted energies, and on two MPI ranks
+  with unequal bin counts whose reductions stay in Python. This is backend parity on realized inputs, not an
+  independent proof of the transform; the dense-reference coordinate-map guarantees cover the NumPy route. Two Rust
+  unit tests check the real linear-tie adjoint against an independent dense matrix product (repeated coordinates,
+  1/sqrt(2) couplings) and that the S-Stiefel adjoint output satisfies the whitened tangent constraint.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_transform_jackknife_rust.py::test_rust_host_transform_derivatives_matches_xla_twin
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: j2-j3-sd-real-source, rows: '37'}
+    - {case: j2-j3-sd-real-source, rows: 2x3}
+    - {case: j2-j3-sd-complex-source, rows: '37'}
+    - {case: j2-j3-sd-complex-source, rows: 2x3}
+    - {case: j3-frozen-j2-sd-active, rows: '37'}
+    - {case: j3-frozen-j2-sd-active, rows: 2x3}
+    - {case: agpn-open-shell, rows: '37'}
+    - {case: agpn-open-shell, rows: 2x3}
+    - {case: complex-tied-lambda-stiefel, rows: '37'}
+    - {case: complex-tied-lambda-stiefel, rows: 2x3}
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_transform_jackknife_rust.py::test_rust_host_coordinate_force_jackknife_matches_xla_twin
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: j2-j3-sd-real-source, complex_energy: false}
+    - {case: j2-j3-sd-real-source, complex_energy: true}
+    - {case: j2-j3-sd-complex-source, complex_energy: false}
+    - {case: j2-j3-sd-complex-source, complex_energy: true}
+    - {case: j3-frozen-j2-sd-active, complex_energy: false}
+    - {case: j3-frozen-j2-sd-active, complex_energy: true}
+    - {case: agpn-open-shell, complex_energy: false}
+    - {case: agpn-open-shell, complex_energy: true}
+    - {case: complex-tied-lambda-stiefel, complex_energy: false}
+    - {case: complex-tied-lambda-stiefel, complex_energy: true}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_rust_coordinate_force_jackknife_matches_device_twin_on_two_ranks
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: j2-j3-sd-real-source}
+    - {case: complex-tied-lambda-stiefel}

@@ -1,0 +1,61 @@
+id: PHY-GFMC-GAUSSIAN-PROJECTION-001
+kind: physical
+name: Gaussian Coulomb energy and deterministic projection substep
+plain_language: >-
+  The conventional GFMC production substep on synthetic molecular H/He,
+  single-s Cartesian Gaussian SD without Jastrow/ECP, must return the closed-form
+  local energy sum(3a-2a^2*r^2-Z/r) plus He electron repulsion. The independently
+  evaluated Gaussian six-neighbour ratios determine the exponential escape rate;
+  inversion of its CDF on the specified uniform determines elapsed time and
+  exp(-elapsed*energy) determines the branching weight. Exponents 0.5/1.25,
+  alat 0.15/0.3, and tau 0.0001/0.2 require both no-hop and actual-hop branches
+  at explicit positions (0.4,0.7,-0.2) and (-0.6,-0.3,0.8), fixed key 3 and
+  identity mesh, without condition screening. Each mode uses its own existing
+  central strict policy. Actual core energy, inverse-CDF and weight faults must
+  fail after a passing baseline. This is finite-input physical and propagation
+  evidence, not ground-state convergence, a distribution-fit, or agreement
+  within statistical error bars. Shared random-key generation is not an RNG
+  quality oracle; the energy and rates do not use production physics kernels.
+  The reference evaluates each piece in its production zone dtype (orbital
+  values in ao_eval, orbital derivatives in ao_grad_lap, ratios in det_ratio, Coulomb in coulomb), so mixed
+  mode is never judged against an fp64 reference.
+verdict_methods: [VM-PHY-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-PHY-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_gaussian_projection_reference.py::test_gaussian_projection_substep_matches_physical_formula
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {charge: 1, exponent: 0.5, alat: 0.15, tau: 0.0001}
+    - {charge: 2, exponent: 0.5, alat: 0.15, tau: 0.0001}
+    - {charge: 1, exponent: 1.25, alat: 0.15, tau: 0.0001}
+    - {charge: 2, exponent: 1.25, alat: 0.15, tau: 0.0001}
+    - {charge: 1, exponent: 0.5, alat: 0.3, tau: 0.0001}
+    - {charge: 2, exponent: 0.5, alat: 0.3, tau: 0.0001}
+    - {charge: 1, exponent: 1.25, alat: 0.3, tau: 0.0001}
+    - {charge: 2, exponent: 1.25, alat: 0.3, tau: 0.0001}
+    - {charge: 1, exponent: 0.5, alat: 0.15, tau: 0.2}
+    - {charge: 2, exponent: 0.5, alat: 0.15, tau: 0.2}
+    - {charge: 1, exponent: 1.25, alat: 0.15, tau: 0.2}
+    - {charge: 2, exponent: 1.25, alat: 0.15, tau: 0.2}
+    - {charge: 1, exponent: 0.5, alat: 0.3, tau: 0.2}
+    - {charge: 2, exponent: 0.5, alat: 0.3, tau: 0.2}
+    - {charge: 1, exponent: 1.25, alat: 0.3, tau: 0.2}
+    - {charge: 2, exponent: 1.25, alat: 0.3, tau: 0.2}
+    executable_checks:
+      physical-projection: &gaussian-projection-check
+        site: tests/test_jqmc_kernel/test_gfmc_gaussian_projection_reference.py::_compare_substep#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-gfmc-core-energy-time-weight, expression: actual}
+        reference: {role: gaussian-coulomb-and-exponential-cdf-formula, expression: reference}
+        iterations:
+          variable: quantity
+          required_values: [local-energy, remaining-time, branching-weight]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_gaussian_projection_reference.py::test_gaussian_projection_reference_rejects_production_fault
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{fault: energy}, {fault: escape}, {fault: weight}]
+    executable_checks:
+      physical-projection: *gaussian-projection-check

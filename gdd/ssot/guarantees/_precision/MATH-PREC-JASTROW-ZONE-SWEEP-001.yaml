@@ -1,0 +1,84 @@
+id: MATH-PREC-JASTROW-ZONE-SWEEP-001
+kind: mathematical
+name: Every XLA and native Jastrow ratio route, the J3 streaming ratio tables and the Jastrow parameter storage stay in their precision zones
+plain_language: >-
+  The precision policy assigns every Jastrow ratio exp(J(R')-J(R)) to jastrow_ratio (float64 in
+  both modes), whole Jastrow values to jastrow_eval and gradients / Laplacians to jastrow_grad_lap
+  (float32 in mixed). (1) Native whole-value routes: the full-recompute routes that difference two
+  whole Jastrow values (coulomb_potential::jastrow_value_for_ratio: reference LRDMC e_L / b_L of
+  _gfmc_lrdmc_ecp / _gfmc_lrdmc_ae(fast=False), the reference discretized-kinetic elements, the
+  reference ECP all-pairs sum, the ecp_nonlocal_force_pbc / ecp_nonlocal_force_mol /
+  ecp_nonlocal_stress_mesh_pbc Jastrow fallbacks and the frozen debug stress oracle), the J3 slow
+  fallback of the GFMC fast mesh state (periodic MO-wrapped J3, production GFMC projection) and the
+  free periodic ECP strain grad_V_ecp_nonlocal_wrt_strain (DTN, J1, J2) evaluate both values in
+  jastrow_ratio. On mol_ecp_cart_jdtn, mol_cart_sd_j123, mol_ecp_sphe_j12 (molecular force /
+  stress fallback, JQMC_RS_ECPF_SLOW), pbc_gamma_sphepgto_jdtn and pbc_composite_j123 (periodic
+  MO-wrapped J3: production GFMC_n interval, MCMC force / stress batch, GFMC force / stress) with
+  the native policy all float64 except jastrow_eval at the active mode's dtype, every output equals
+  the all-float64 native evaluation of an independently loaded copy of the same full input
+  elementwise to reduction order (ATOL/RTOL_REDUCTION_ORDER); the composite projection must take
+  the J3 slow fallback. (2) XLA whole-value routes: compute_Jastrow_part_ratio_zone is the only
+  whole-value entry of the ratio routes (non-fast discretized kinetic mesh and its debug twin,
+  nearest-neighbour ECP kernels incl. the holomorphic dV_nl/dc fallback, all-pairs ECP kernel and
+  both ECP debug kernels, GFMC_t _compute_V_elements_t tmove / dltmove, the dltmove verification
+  value _dltmove_delta and the GFMC_t / GFMC_n debug drivers); on N2 ccECP with exp J1/J2 and an
+  AO-leaf J3 or with DTN, and on bcc Li at Gamma with J1/J2 and a periodic pGTO J3, with the XLA
+  policy full except jastrow_eval at the active mode's dtype every output equals the full-policy
+  evaluation of an independently loaded copy to reduction order. The up-electron-only MCMC kernel
+  and _MCMC_debug consume only jastrow_ratio-dtype whole Jastrow values under that policy. (3) The
+  orbital values, j3_mat @ aos tables and row-sums of the J3 grad/lap streaming state, read by the
+  GFMC ratio kernels, are kept in the higher precision of jastrow_grad_lap and jastrow_ratio: with
+  only jastrow_grad_lap at the active mode's dtype the discretized kinetic mesh
+  (compute_discretized_kinetic_energy_fast_update), the rank-one and the split-spin ratios fed by
+  that state equal the full-policy evaluation to reduction order (N2 j123, Li Gamma j123). (4) Jastrow variational
+  parameters (J1, J2, J3 j_matrix, DTN alpha/beta/gamma_indep) are stored in float64 in both modes
+  after construction, an optimizer update (apply_block_update, seeded 1e-9 relative step),
+  to_cartesian, a random_init J3 and an HDF5 load / post-load alignment of a float32 DTN checkpoint,
+  and in mixed equal the leaves of an independently rebuilt full case bit for bit. Values must be
+  finite and outputs live; full runs are same-case consistency checks. The carried DTN grad/lap
+  coefficients are MATH-PREC-DTN-SHARED-COEFFICIENT-ZONE-001. This does not claim mixed fidelity
+  of any output that legitimately consumes a float32 zone (AO values, grad/lap fields).
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_jastrow_ratio_zone_sweep.py::test_native_jastrow_ratio_routes_do_not_read_jastrow_eval
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_jdtn, route: lrdmc_reference}
+    - {pattern: mol_cart_sd_j123, route: lrdmc_reference}
+    - {pattern: mol_ecp_sphe_j12, route: mesh_force_stress_mol_fallback}
+    - {pattern: pbc_gamma_sphepgto_jdtn, route: lrdmc_reference}
+    - {pattern: pbc_gamma_sphepgto_jdtn, route: free_strain}
+    - {pattern: pbc_gamma_sphepgto_jdtn, route: mesh_force_stress}
+    - {pattern: pbc_composite_j123, route: gfmc_projection}
+    - {pattern: pbc_composite_j123, route: mesh_force_stress}
+    - {pattern: pbc_composite_j123, route: lrdmc_reference}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_ratio_zone_sweep_xla.py::test_xla_whole_value_jastrow_ratio_routes_do_not_read_jastrow_eval
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: n2_j123, route: discretized_kinetic}
+    - {fixture: n2_j123, route: ecp_nearest_neighbors}
+    - {fixture: n2_j123, route: ecp_all_pairs}
+    - {fixture: n2_j123, route: gfmc_fallbacks}
+    - {fixture: n2_dtn, route: gfmc_fallbacks}
+    - {fixture: n2_dtn, route: ecp_nearest_neighbors}
+    - {fixture: n2_j123, route: gfmc_debug_drivers}
+    - {fixture: li_gamma_j123, route: discretized_kinetic}
+    - {fixture: li_gamma_j123, route: ecp_nearest_neighbors}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_ratio_zone_sweep_xla.py::test_xla_j3_streaming_ratio_tables_do_not_read_jastrow_grad_lap
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: n2_j123}
+    - {fixture: li_gamma_j123}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_ratio_zone_sweep_xla.py::test_jastrow_parameter_storage_is_float64_in_every_mode
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+# Registered outside VM-MATH-REFERENCE-001: the test asserts no value agreement, so it is not reference evidence. It asserts the consumed ratio dtype equals the reviewed zone dtype (reviewed-contract is not legal for a mathematical guarantee).
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_ratio_zone_sweep_xla.py::test_xla_mcmc_whole_value_accept_ratio_consumes_ratio_zone_jastrow
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kernel: only_up_electron}
+    - {kernel: mcmc_debug}

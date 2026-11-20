@@ -1,0 +1,16 @@
+id: IMPL-XLA-PROJECTION-J3-STREAMING-001
+kind: implementation
+name: XLA projection mesh consumers receive the maintained J3 streaming state
+plain_language: >-
+  On the tested active-J3 molecular ECP fixture, the GFMC_n and GFMC_t XLA
+  t-move projection paths supply the maintained J3 streaming state to both
+  the kinetic and ECP ratio consumers when they reuse a carried mesh.
+  Both consumers must execute in Full and Mixed. The state-building first
+  substep can evaluate before a carried mesh is available.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_xla_periodic_cache_routes.py::test_xla_projection_consumers_receive_j3_streaming_state
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver: n}, {driver: t}]

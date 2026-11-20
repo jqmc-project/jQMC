@@ -1,0 +1,38 @@
+id: MATH-CKPT-HISTORY-WEIGHTS-001
+kind: mathematical
+name: Historical branching weights against hand-evaluated products
+plain_language: >-
+  NumPy checkpoint and XLA sampler accumulators both equal hand-evaluated historical
+  products for the fixed two-walker, five-row input. Window lengths zero through four
+  check the empty product, zero weights, fractional weights, independent walker columns
+  and exclusion of the measurement row. These exact fp64 storage calculations run in
+  both global precision modes. This is not a driver restart or sampling-convergence guarantee.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_weights.py::test_checkpoint_and_xla_weights_equal_hand_evaluated_history
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {window: 0, expected: [[1, 1], [1, 1], [1, 1], [1, 1], [1, 1]]}
+    - {window: 1, expected: [[2, 3], [0.5, 0], [4, 2], [1, 5]]}
+    - {window: 2, expected: [[1, 0], [2, 0], [4, 10]]}
+    - {window: 3, expected: [[4, 0], [2, 0]]}
+    - {window: 4, expected: [[4, 0]]}
+    executable_checks:
+      checkpoint-product:
+        site: tests/test_jqmc_kernel/test_checkpoint_weights.py::test_checkpoint_and_xla_weights_equal_hand_evaluated_history#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: checkpoint-historical-product, expression: checkpoint_weights}
+        reference: {role: hand-evaluated-historical-product, expression: reference}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      xla-product:
+        site: tests/test_jqmc_kernel/test_checkpoint_weights.py::test_checkpoint_and_xla_weights_equal_hand_evaluated_history#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: xla-historical-product, expression: xla_weights}
+        reference: {role: hand-evaluated-historical-product, expression: reference}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

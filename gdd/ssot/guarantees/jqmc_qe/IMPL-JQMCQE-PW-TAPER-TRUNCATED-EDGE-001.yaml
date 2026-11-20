@@ -1,0 +1,18 @@
+id: IMPL-JQMCQE-PW-TAPER-TRUNCATED-EDGE-001
+kind: implementation
+name: A pw basis truncated at a numeric ecutwfc stores coefficients tapered at its own edge, consumed by compute_MOs
+plain_language: >-
+  On the committed Li k025 save stretched to a vacuum cell, run_qe2jqmc with kind pw and ecutwfc 40 Ry
+  (g_cut = sqrt(40) bohr^-1, below 0.8 of the QE sphere edge) stores only plane waves with |G+k| <= g_cut,
+  and every stored complex coefficient equals the raw QE coefficient times Omega^-1/2 times
+  w(|G+k|; 0.8 g_cut, g_cut) to ATOL_PYTHON_FP64_LOOSE, with the ramp below g_cut populated and strictly
+  attenuated; compute_MOs on the loaded leaf reproduces the zone-aware direct sum of those tapered,
+  truncated bands within RTOL_QE_PW_RECONSTRUCTION_LOOSE in each precision mode. A window placed at the QE
+  sphere edge instead of g_cut leaves the ramp unattenuated and fails (positive lower cutoff).
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_truncated_pw_edge_is_applied_to_the_persisted_coefficients
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

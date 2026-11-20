@@ -1,0 +1,78 @@
+id: MATH-RS-AGPN-COMPLEX-SOURCE-REFERENCE-001
+kind: mathematical
+name: Complex AGPn optimizer derivatives equal real-coordinate automatic derivatives
+plain_language: Before anchoring Rust parity, XLA analytical optimizer sources for complex ln(Psi) and complex e_L
+  must equal derivatives along each active real parameter coordinate. Closed-shell H4_pbc_ae_k025_cart.h5 uses four
+  MOs, J1/J2, real occupations and one PCG64(2026) Gaussian configuration. Open-shell O-lsda_k025/out/o_k025.save
+  with O.ccECP.upf uses four up/two down electrons, parameter seed 431, electron seed 41, and either real unpaired
+  coefficients or imaginary perturbations from seed 432. There is no cond(G) rejection. The ECP mesh is the fixed
+  twelve-point identity rotation. The log reference independently contracts production AO values into MO and geminal
+  columns and differentiates their determinant. The energy reference differentiates the primal complex local energy,
+  not its analytical parameter-gradient implementation; AO, spatial kinetic and ECP forward evaluators remain shared.
+  Both real and imaginary output components are differentiated in the same precision. Complex unpaired parameters
+  also require the imaginary-coordinate derivative to equal i times the holomorphic source. Projecting away the
+  imaginary output must fail the same comparison. Real parameter domains, log-absolute diagnostics and LRDMC fixed-phase
+  projection are distinct quantities and are not redefined by this guarantee. All original Full and Mixed real-coordinate
+  AD cases, strict/medium comparison bands and capability controls remain because lambda-dependent reference and
+  production arithmetic reaching claimed outputs is FP64 conditional on frozen orbital/background inputs. Independent
+  analytical Full/Mixed production fidelity is additionally required by NUM-COMPLEX-AGPN-SOURCE-MIXED-FIDELITY-001;
+  it supplements this mathematical capability and does not replace its legitimate Mixed AD calls.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_agpn_complex_derivative_reference.py::test_agpn_complex_optimizer_sources_match_real_coordinate_reference
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - case: closed-real
+      fixture_path: tests/trexio_example_files/H4_pbc_ae_k025_cart.h5
+      quantity: ln_Psi
+    - case: open-real
+      fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      quantity: ln_Psi
+    - case: open-complex
+      fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      quantity: ln_Psi
+    - case: closed-real
+      fixture_path: tests/trexio_example_files/H4_pbc_ae_k025_cart.h5
+      quantity: e_L
+    - case: open-real
+      fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      quantity: e_L
+    - case: open-complex
+      fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      quantity: e_L
+    executable_checks:
+      complex-real-coordinate-reference:
+        site: tests/test_jqmc_kernel/test_agpn_complex_derivative_reference.py::test_agpn_complex_optimizer_sources_match_real_coordinate_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: xla-analytical-complex-parameter-source
+          expression: actual[name]
+        reference:
+          role: same-precision-real-coordinate-forward-ad
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap

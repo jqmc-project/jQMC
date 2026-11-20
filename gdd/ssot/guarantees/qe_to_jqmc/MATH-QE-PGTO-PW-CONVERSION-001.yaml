@@ -1,0 +1,50 @@
+id: MATH-QE-PGTO-PW-CONVERSION-001
+kind: mathematical
+name: Converted pGTO plus PW orbitals equal independent elementary sums
+plain_language: >-
+  The public converter must preserve a synthetic Be projection with two
+  occupied orbitals per spin, two unnormalized Cartesian Gaussian primitives
+  (s exponent 0.7 and x exponent 1.1) at (0.3,0.7,0.9), and five nonzero
+  plane-wave columns. Orthorhombic and triclinic cells must work both at
+  Gamma and fractional twist (1/4,-1/8,3/8). At five fixed fractional
+  points, including an image pair and a negative coordinate, compare
+  every converted MO in both spin channels to independent Gaussian image
+  enumeration on [-4,4]^3 plus elementary Fourier sums. Use active AO
+  precision and existing same-mode AO/MO strict tolerance, without per-band
+  rescaling, random points or cond(G) selection. No external QE/TREXIO file
+  is used. Actual PW scaling, pGTO normalization, PW ordering and Bloch-sign
+  faults must fail after a passing baseline. This asserts preservation of
+  the supplied projection, not lossless equality to an original finite
+  QE PW band, which cannot cancel all high-G pGTO content.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_pw_conversion_reference.py::test_converted_pgto_pw_orbitals_match_elementary_sums
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {skew: false, twisted: false}
+    - {skew: true, twisted: false}
+    - {skew: false, twisted: true}
+    - {skew: true, twisted: true}
+    executable_checks:
+      converted-orbitals: &pgto-pw-conversion-check
+        site: tests/test_jqmc_kernel/test_pgto_pw_conversion_reference.py::_compare_conversion#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: converted-spin-orbitals, expression: actual}
+        reference: {role: independent-gaussian-image-and-fourier-sums, expression: expected}
+        iterations:
+          variable: spin
+          required_values: [up, down]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_pw_conversion_reference.py::test_pgto_pw_reference_rejects_actual_conversion_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: pw-scale}
+    - {fault: pgto-normalization}
+    - {fault: pw-column-order}
+    - {fault: bloch-sign}
+    executable_checks:
+      converted-orbitals: *pgto-pw-conversion-check

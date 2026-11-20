@@ -1,0 +1,55 @@
+id: MATH-STR-LATTICE-GEOMETRY-001
+kind: mathematical
+name: Lattice geometry identities and design values
+plain_language: Reciprocal lattice dot products equal 2 pi, the cell inradius matches the design formula, n_max matches
+  the design goldens and is invariant under position updates, the s-orbital image radius matches its closed form, and fractional
+  coordinates stay in the unit box; the inradius refuses molecular input.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-MATH-REFERENCE-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics::test_reciprocal_lattice_dot_2pi
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics.test_reciprocal_lattice_dot_2pi#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: cell-reciprocal-dot-product
+          expression: dot
+        reference:
+          role: two-pi-kronecker-delta
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: pair_label
+          required_values:
+          - 0,0
+          - 0,1
+          - 0,2
+          - 1,0
+          - 1,1
+          - 1,2
+          - 2,0
+          - 2,1
+          - 2,2
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureLattice::test_n_max_invariant_under_position_update
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC::test_parallelepiped_fractional_in_unit_box
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureLattice::test_cell_inradius_matches_design_formula
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureLattice::test_n_max_matches_design_goldens
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList::test_primitive_image_radius_s_orbital_matches_closed_form
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureLattice::test_cell_inradius_molecular_raises

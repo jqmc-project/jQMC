@@ -1,0 +1,30 @@
+id: IMPL-COUL-COMPLEX-ECP-REVERSE-NO-CAST-001
+kind: implementation
+name: Complex VMC ECP reverse-mode position gradient needs no complex-to-real cast
+plain_language: >-
+  On the committed lithium_k025.h5 Li DTN SD twist input (seed7 image-offset
+  configuration, cond(G)<1e4, identity rotation, NN=1, Nv=12), the standard
+  and fast holomorphic nonlocal ECP kernels are differentiated in reverse
+  mode with respect to the up and down electron positions. The retained
+  complex matrix element must not cast a complex cotangent into the real
+  radial V_l leaf, which the suite-wide ComplexWarning guard rejects. The
+  gradient of Re of the holomorphic sum equals the gradient of the separately
+  projected fixed-phase kernel of the same route, and the Im gradient is finite
+  and nonzero. Each precision mode uses its existing strict zone budget. This
+  is route parity of the two projections, not an independent derivative formula.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_policy.py::test_vmc_complex_ecp_reverse_mode_position_gradient_has_no_complex_cast
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/test_complex_ecp_policy.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'actual'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: standard}, {route: fast}]

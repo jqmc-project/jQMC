@@ -1,0 +1,30 @@
+id: NUM-TOOL-AO-CONV-SPHE-LN-PSI-CONDITIONING-001
+kind: numerical
+name: The mixed lossy sphe-projection ln|Psi| comparison is taken only at seeded draws with cond_2(G) below 1e4
+plain_language: >-
+  The ln|Psi| comparison of MATH-TOOL-AO-CONV-SPHE-PROJECTION-001 (the written spherical wavefunction against the same
+  S-metric projection expanded in the source Cartesian AOs, at the unchanged strict budget
+  get_tolerance_min(ao_eval, mo_eval, det_eval, wf_eval)) is evaluated at the first three draws of the seed-591 PCG64
+  stream of _random_configurations. In full precision every draw counts, as before. In mixed precision a draw counts
+  only when the production geminal matrix G = compute_geminal_all_elements of the projected function has a float64
+  (complex128 for a complex G) spectral condition number cond_2(G) < 1e4, the cap of the periodic invariant tests; at
+  most 64 proposals are drawn from that one stream, a rejected draw is never counted, exhausting the proposals fails,
+  and the screen runs before the comparison. Mixed precision evaluates real GTO and pGTO values in the
+  float32 ao_eval zone and ln|det| amplifies that rounding by about cond_2(G): at the second Li_pbc_ae_ccpvdz_cart.h5
+  draw (cond_2(G) = 3.9e4, a same-spin near-node configuration with an up-spin Slater-matrix condition number of 2.0e5)
+  the written and the reference ln|Psi| deviate from their own float64 values by 6.9e-3 and -1.6e-3 with jax 0.10.2 and
+  by -2.6e-3 and -5.2e-3 with jax 0.7.2, while at that draw every AO deviates by at most 1.6e-7 of the largest AO value
+  and correctly rounded float32 AO values alone shift ln|Psi| by 1.2e-3. The accepted mixed draws are 0, 1, 2 for
+  N2_ecp_ccpvtz_cart.h5 and lithium_k025_cart.h5 (unchanged) and 0, 4, 6 for Li_pbc_ae_ccpvdz_cart.h5, at which a 1e-3
+  scale fault of the periodic spherical AO normalization still fails the comparison. The cap does not certify the
+  mixed comparison on ill-conditioned G.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertToSphericalProjection::test_trexio_convert_to_sphe_warns_and_writes_s_metric_projection
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_filename: N2_ecp_ccpvtz_cart.h5}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_cart.h5}
+    - {trexio_filename: lithium_k025_cart.h5}

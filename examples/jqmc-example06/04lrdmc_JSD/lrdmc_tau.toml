@@ -1,0 +1,23 @@
+[control]
+job_type = "lrdmc-tau" # GFMC_t (fixed imaginary-time step) driver.
+mcmc_seed = 34467
+number_of_walkers = 1 # PBC complex-Bloch run; scale samples via MPI ranks.
+max_time = 86400
+restart = false
+restart_chk = "restart.h5"
+hamiltonian_h5 = "hamiltonian_data.h5"
+verbosity = "low"
+
+[lrdmc-tau]
+num_mcmc_steps = 5000 # Number of observable measurement steps per MPI and Walker.
+tau = 0.10 # Imaginary time between branchings (Ha^-1, atomic units of imaginary time).
+alat = 0.30 # Lattice discretization parameter (bohr). LRDMC energy carries an O(alat^2) bias.
+non_local_move = "tmove" # T-move scheme for the non-local ECP terms (the default).
+num_gfmc_warmup_steps = 50
+num_gfmc_bin_blocks = 50
+num_gfmc_collect_steps = 20
+atomic_force = false
+compute_stress = false
+
+# [precision]
+# mode = "full"  # "full" (default, all float64; reference setting) or "mixed" (opt-in speed setting; see doc/notes/mixed_precision.md).

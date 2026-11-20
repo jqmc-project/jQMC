@@ -1,0 +1,22 @@
+id: IMPL-ROUTE-PROBE-CONTRACT-001
+kind: implementation
+name: Route probe reports, and can refuse, an uncached mesh route
+plain_language: 'Every projection-scoped mesh cache engages through a Python-static branch whose two sides return the SAME
+  numbers, so a cache that is gated out, never reached, or never written is invisible to every numerical test and shows
+  up only as wall-clock. The probe records which route each channel COMPILED, per candidate lattice and per calling site,
+  and under require_mesh_cache() turns an uncached route into a raised MeshCacheMissing rather than a silent slowdown. The
+  strict-mode row is what keeps the probe itself honest: without it a future refactor could neuter note_route and every
+  route gate would still pass. The env flag that arms strict mode outside a context manager must stay listed in the _setting.py
+  environment-variable ledger, so no override can go undocumented.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_route_probe_strict_mode_raises_on_an_uncached_route
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_route_probe_env_flag_is_documented
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_xla_kinetic_mesh_caches_every_jastrow_channel
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_jdtn, expected: [det, dtn, j1, j2], driver: n}
+    - {pattern: mol_ecp_cart_jdtn, expected: [det, dtn, j1, j2], driver: t}

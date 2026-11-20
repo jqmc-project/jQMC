@@ -1,0 +1,37 @@
+id: IMPL-RS-RICHER-REAL-DRIVER-PARITY-001
+kind: implementation
+name: Real composite DTN and B-spline J123 production drivers preserve same-input parity
+plain_language: >-
+  Committed QE Li Gamma inputs are realized as pGTO plus PW with active DTN, or B-spline
+  with conventional J1/J2 and active MO J3. Four-walker MCMC with seed 34356 compares
+  identical injected proposals, acceptance and final positions exactly, and stored weights,
+  energies and the public estimator under the existing within-mode backend policy.
+  One-walker forty-step fixed-mesh GFMC compares weights, energies, squared energies and
+  public energy numerically, with final positions and keys exact. Force, stress and SWCT
+  buffers are additionally compared for composite-DTN load-balanced GFMC and for PW or
+  B-spline J123 with both conventional and load-balanced GFMC. The original B-spline
+  values-only test remains unchanged and does not itself certify derivatives. Full and mixed are
+  separate same-mode verdicts, not statistical windows or cross-precision comparisons.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_richer_production_drivers.py::test_richer_mcmc_driver_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{pattern: pbc_composite_jdtn}, {pattern: bspline_gamma_j123}]
+  - pytest_node: tests/test_rs_kernel/test_richer_production_drivers.py::test_composite_dtn_gfmc_driver_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_richer_production_drivers.py::test_composite_dtn_conventional_gfmc_driver_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_richer_production_drivers.py::test_bspline_j123_gfmc_values_match_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_richer_production_drivers.py::test_grid_j3_gfmc_force_stress_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: t, basis: bspline}
+    - {driver: t, basis: pw}
+    - {driver: n, basis: bspline}
+    - {driver: n, basis: pw}

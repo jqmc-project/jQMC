@@ -1,0 +1,28 @@
+id: MATH-HAM-MO-GRAM-STRUCTURED-OVERLAP-001
+kind: mathematical
+name: The MO Gram matrix from a leaf's structured overlap equals the Gram matrix of its dense production overlap
+plain_language: >-
+  The MO orthonormality diagnostic forms M = conj(C) S C^T through the AO leaf's _overlap_gram. For a
+  complex plane-wave leaf this uses the closed form S = V I; for a real half-space plane-wave leaf the diagonal
+  cos/sin overlap (V at G = 0, V/2 otherwise); for a periodic composite the sum of child blocks with the exact cross
+  blocks; and for any other leaf the dense compute_overlap_matrix. On the committed H2 periodic Cartesian fixture at
+  Gamma and at k = (1/4, 1/4, 1/4), with three random MOs, M equals conj(C) compute_overlap_matrix(aos) C^T for the
+  real half-space plane-wave leaf, a real plane-wave leaf with a cos(G) / cos(-G) pair (not half-space, so it
+  falls back to the dense overlap), the complex plane-wave leaf, the pGTO + plane-wave composites at Gamma and at
+  the twist, the pGTO + B-spline composite at the twist, and the twisted pGTO leaf alone. The comparison uses the
+  strict ao_eval/det_eval zone policy scaled by max |M|. Only the pure plane-wave leaves never request a dense
+  overlap. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_structured_overlap.py::test_structured_mo_gram_equals_the_dense_overlap_gram
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: pw-gamma-half-space}
+    - {case: pw-gamma-signed-pair}
+    - {case: pw-twist}
+    - {case: composite-pw-gamma}
+    - {case: composite-pw-twist}
+    - {case: composite-bspline-twist}
+    - {case: pgto-twist}

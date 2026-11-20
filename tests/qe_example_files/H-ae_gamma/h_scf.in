@@ -1,0 +1,76 @@
+&CONTROL
+    calculation   = 'scf'
+    prefix        = 'h_gamma'
+    outdir        = './out'
+    pseudo_dir    = '../'
+    verbosity     = 'high'
+    tstress       = .false.
+    tprnfor       = .false.
+    disk_io       = 'medium'
+/
+&SYSTEM
+    ! Liquid H2 snapshot at Gamma (k = (0,0,0)). Gamma-point twin of
+    ! H-ae_k025/h_scf.in -- SAME cell, positions, cutoffs and AE pseudo;
+    ! only the k-point sampling differs.
+    ! Four H2 molecules (8 H atoms) in a cubic cell ~ 9.50 Bohr
+    ! (5.027 A). Per-molecule volume ~ 214 Bohr^3 (~ 32 A^3) -> mass
+    ! density ~ 105 kg/m^3, modestly compressed vs saturated liquid H2
+    ! (~71 kg/m^3) so the molecules' first-neighbor distance lands in
+    ! the typical liquid-H2 range ~ 3.3-4.0 A.
+    !
+    ! H.coulomb-ae.UPF is a true 1/r all-electron Coulomb potential
+    ! (Z_valence = 1 per H, no pseudization). 8 valence electrons total
+    ! -> 4 occupied bands (RHF, paramagnetic, nspin=1). H2 is a
+    ! molecular insulator so fixed occupations (no smearing); the gap
+    ! is large.
+    !
+    ! ecutwfc=200 / ecutrho=800 Ry is a *conservative* starting point
+    ! for the 1/r cusp (the suggested cutoff in the UPF is 0 because
+    ! it is mathematically infinite -- a true cusp can never be
+    ! resolved exactly in a PW basis; the SCF energy converges
+    ! variationally as ecutwfc -> infinity). Bump if SCF struggles or
+    ! the etot is not converged to the threshold you need.
+    ibrav         = 1
+    celldm(1)     = 9.50
+    nat           = 8
+    ntyp          = 1
+    nbnd          = 10
+    ecutwfc       = 200.0
+    ecutrho       = 800.0
+    occupations   = 'fixed'
+    nspin         = 1
+    ! nosym + noinv disable spatial symmetry AND time-reversal, matching
+    ! H-ae_k025. Not strictly required at Gamma (Gamma is never folded),
+    ! but kept for a faithful twin of the twist input and to preserve
+    ! nks=1 unambiguously.
+    nosym         = .true.
+    noinv         = .true.
+/
+&ELECTRONS
+    conv_thr      = 1.0d-8
+    mixing_beta   = 0.3
+    electron_maxstep = 200
+/
+ATOMIC_SPECIES
+    H  1.00794  H.coulomb-ae.UPF
+
+! Four H2 molecules in the cubic cell. Bond length 1.4 Bohr =
+! ~0.1474 in cell-fractional units (1.4 / 9.50). Positions are
+! asymmetric and bonds point along different axes so the configuration
+! has no point-group symmetry beyond the trivial identity.
+! Molecule 1: bond along +x, centred near (0.20, 0.30, 0.20).
+! Molecule 2: bond along +y, centred near (0.70, 0.20, 0.80).
+! Molecule 3: bond along +z, centred near (0.20, 0.80, 0.65).
+! Molecule 4: bond along the cube diagonal, centred near (0.75, 0.65, 0.30).
+ATOMIC_POSITIONS {crystal}
+    H  0.1263  0.3000  0.2000
+    H  0.2737  0.3000  0.2000
+    H  0.7000  0.1263  0.8000
+    H  0.7000  0.2737  0.8000
+    H  0.2000  0.8000  0.5763
+    H  0.2000  0.8000  0.7237
+    H  0.7075  0.6075  0.2575
+    H  0.7925  0.6925  0.3425
+
+! Gamma analogue of H-ae_k025 (which used K = (0.25, 0.25, 0.25)).
+K_POINTS {gamma}

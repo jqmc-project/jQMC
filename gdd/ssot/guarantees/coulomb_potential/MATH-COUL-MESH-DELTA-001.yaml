@@ -1,0 +1,35 @@
+id: MATH-COUL-MESH-DELTA-001
+kind: mathematical
+name: Derivative consistency of weighted mesh deltas
+plain_language: The weighted position delta of the ECP quadrature mesh equals the autodiff oracle.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_fast_mesh_weighted_delta.py::test_weighted_position_delta_vs_autograd_oracle
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_fast_mesh_weighted_delta.py::test_weighted_position_delta_vs_autograd_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(dr)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(dr_oracle)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - jastrow_grad_lap

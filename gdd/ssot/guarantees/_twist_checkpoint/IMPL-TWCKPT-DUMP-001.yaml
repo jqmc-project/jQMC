@@ -1,0 +1,21 @@
+id: IMPL-TWCKPT-DUMP-001
+kind: implementation
+name: Twist-averaged optimizer wavefunction dump assembly
+plain_language: 'The twist-averaged optimizer''s wavefunction dump is a COMPLETE combined Hamiltonian assembled from the
+  sharded per-twist checkpoints: the source /shared template, k points and BZ weights are preserved, the canonical shared
+  Jastrow of shared_state.h5 is written once, every twist slot receives its own optimized MO/lambda payload, and the result
+  loads back through the ordinary combined loaders as valid input for a fresh run -- including for the intermediate dump of a
+  still running optimisation, whose per-twist checkpoints are not converged. A partial checkpoint set or a missing shared
+  Jastrow is refused, leaving no output, instead of dumping un-optimized or unsynchronised physics.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestWriteTwistOptimizedHamiltonian::test_dump_is_a_loadable_combined_input_with_every_optimized_twist
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestWriteTwistOptimizedHamiltonian::test_unconverged_per_twist_checkpoints_still_dump
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestWriteTwistOptimizedHamiltonian::test_missing_per_twist_checkpoint_raises
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestWriteTwistOptimizedHamiltonian::test_missing_shared_jastrow_raises

@@ -1,0 +1,57 @@
+id: NUM-MO-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: MO analytical derivatives retain full-route fidelity in mixed precision
+plain_language: >-
+  Molecular and periodic molecular-orbital gradients and Laplacians produced by the analytical route in mixed precision
+  stay within the registered orbital-derivative fidelity budget of the same analytical route built and evaluated
+  independently in full precision. Each homogeneous gradient component or Laplacian is judged by its block infinity
+  norm. Full precision retains the separate analytical-versus-AD correctness oracle. Every mixed case also injects one
+  out-of-budget change and requires the fidelity gate to reject it without modifying the full reference.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian::test_MOs_comparing_analytic_and_auto_grads
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian.test_MOs_comparing_analytic_and_auto_grads#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-orbital-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-orbital-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: orbital_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian::test_MOs_comparing_analytic_and_auto_laplacians
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian.test_MOs_comparing_analytic_and_auto_laplacians#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-orbital-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-orbital-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: orbital_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic::test_MOs_periodic_grad_analytic_vs_auto
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{kind: pw}, {kind: bspline}, {kind: pgto}, {kind: pgto+pw}, {kind: pgto+bspline}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic.test_MOs_periodic_grad_analytic_vs_auto#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-orbital-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-orbital-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: orbital_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic::test_MOs_periodic_laplacian_analytic_vs_auto
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{kind: pw}, {kind: bspline}, {kind: pgto}, {kind: pgto+pw}, {kind: pgto+bspline}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic.test_MOs_periodic_laplacian_analytic_vs_auto#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-orbital-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-orbital-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: orbital_derivative}

@@ -1,0 +1,12 @@
+id: IMPL-OPTK-FORCE-CONTRACTS-001
+kind: implementation
+name: Generalized-force API contracts
+plain_language: get_gF returns the complex generalized force and respects the MO gauge while carrying the imaginary part,
+  as the reviewed API contract requires.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_opt_gt_force.py::TestT1ForceWirtingerFD::test_get_gF_returns_the_complex_force
+  - pytest_node: tests/test_jqmc_kernel/test_complex_opt_gt_gauge.py::TestT5GaugeConstraints::test_get_gF_respects_gauge_and_carries_im

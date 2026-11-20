@@ -1,0 +1,33 @@
+id: IMPL-CLI-COMPOSITE-TWO-TWIST-001
+kind: implementation
+name: The real CLI runs and resumes two-twist pGTO plus PW and pGTO plus B-spline composite inputs
+plain_language: >-
+  The committed eight-twist Li_k_twist QE save is converted by the production
+  converter to pGTO plus plane-wave and to pGTO plus B-spline composites
+  (ccECP, Pade J2 = 1, no J1, converter defaults) and reduced to twists 0 and
+  1, k = (1/4, 1/4, 1/4) and (1/4, 1/4, -1/4), by copying their groups and
+  setting the twist count and weight sum. The actual CLI runs MCMC and
+  LRDMC-tau on each input under two MPI ranks with one walker, seed 34467 and
+  bounded step counts, with full or mixed passed through the TOML. Each run
+  must announce two twists and the requested precision and leave both twist
+  checkpoints and the shared state. For each twist, the up composite child
+  and the explicit time-reversal image of the down child equal that twist's
+  saved composite_child payload (Miller triples or complex spline control
+  points) and k read directly from the input HDF5; the MOs equal the input
+  datasets; twist index, count, normalized weight 1/2, k, target steps,
+  convergence and finite stored energies are present. A restart run must
+  leave both checkpoints byte- and timestamp-identical, and both displayed
+  E_TA summaries must equal independent arithmetic on the saved per-twist
+  values. This is deterministic wiring and metadata evidence, not energy
+  accuracy, statistical convergence, partial-twist recovery or Rust parity.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli_composite_two_twist.py::test_cli_two_twist_composite_runs_and_resumes
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: 'pgto+pw', job_type: mcmc}
+    - {kind: 'pgto+pw', job_type: lrdmc-tau}
+    - {kind: 'pgto+bspline', job_type: mcmc}
+    - {kind: 'pgto+bspline', job_type: lrdmc-tau}

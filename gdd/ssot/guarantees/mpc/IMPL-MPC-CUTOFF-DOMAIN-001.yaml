@@ -1,0 +1,56 @@
+id: IMPL-MPC-CUTOFF-DOMAIN-001
+kind: implementation
+name: MPC cutoff must be a positive finite real scalar
+plain_language: >-
+  mpc_cutoff keeps the reciprocal vectors with G^2/2 <= mpc_cutoff, so a zero cutoff keeps only G = 0 and gives an
+  unconverged, plausible-looking MPC correction, and negative or non-finite cutoffs have no meaning. build_mpc_data, with
+  the automatic or an explicit grid, the MCMC, GFMC_t and GFMC_n constructors with mpc enabled, and a CLI run with
+  [coulomb] mpc = true for mcmc, lrdmc-bra and lrdmc-tau reject a zero, negative, NaN or infinite cutoff with a ValueError
+  that names mpc_cutoff and the rejected value, before any sampling; the CLI writes no restart checkpoint. This guarantee
+  covers the refusal only; results for positive finite cutoffs are covered by the other MPC guarantees. The check is
+  host-side and identical in both precision modes; no numerical tolerance is involved.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_cutoff_validation.py::test_build_mpc_data_rejects_non_positive_or_non_finite_cutoff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cutoff_case: zero, grid_kind: auto}
+    - {cutoff_case: zero, grid_kind: explicit}
+    - {cutoff_case: negative, grid_kind: auto}
+    - {cutoff_case: negative, grid_kind: explicit}
+    - {cutoff_case: nan, grid_kind: auto}
+    - {cutoff_case: nan, grid_kind: explicit}
+    - {cutoff_case: inf, grid_kind: auto}
+    - {cutoff_case: inf, grid_kind: explicit}
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_cutoff_validation.py::test_mpc_samplers_reject_non_positive_or_non_finite_cutoff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cutoff_case: zero, driver: mcmc}
+    - {cutoff_case: zero, driver: gfmc_t}
+    - {cutoff_case: zero, driver: gfmc_n}
+    - {cutoff_case: negative, driver: mcmc}
+    - {cutoff_case: negative, driver: gfmc_t}
+    - {cutoff_case: negative, driver: gfmc_n}
+    - {cutoff_case: nan, driver: mcmc}
+    - {cutoff_case: nan, driver: gfmc_t}
+    - {cutoff_case: nan, driver: gfmc_n}
+    - {cutoff_case: inf, driver: mcmc}
+    - {cutoff_case: inf, driver: gfmc_t}
+    - {cutoff_case: inf, driver: gfmc_n}
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_cutoff_validation.py::test_cli_rejects_non_positive_or_non_finite_mpc_cutoff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cutoff_case: zero, job_type: mcmc}
+    - {cutoff_case: zero, job_type: lrdmc-bra}
+    - {cutoff_case: zero, job_type: lrdmc-tau}
+    - {cutoff_case: negative, job_type: mcmc}
+    - {cutoff_case: negative, job_type: lrdmc-bra}
+    - {cutoff_case: negative, job_type: lrdmc-tau}
+    - {cutoff_case: nan, job_type: mcmc}
+    - {cutoff_case: nan, job_type: lrdmc-bra}
+    - {cutoff_case: nan, job_type: lrdmc-tau}
+    - {cutoff_case: inf, job_type: mcmc}
+    - {cutoff_case: inf, job_type: lrdmc-bra}
+    - {cutoff_case: inf, job_type: lrdmc-tau}

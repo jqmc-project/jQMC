@@ -1,0 +1,18 @@
+id: OPS-SETTING-HARNESS-ISOLATION-001
+kind: operational
+name: Evidence-harness environment isolation
+plain_language: 'The pytest harness protects the interpreter from JAX''s two process-lifetime hazards: every xdist worker
+  gets its own JAX compilation cache directory (assigned before jax is imported), and the address space consumed by accumulated
+  XLA executables is bounded. Either hazard kills a whole test session and silently destroys its evidence -- a shared cache
+  can abort a worker mid-write, and unbounded executable VMAs segfault the process the moment vm.max_map_count is reached.'
+verdict_methods:
+- VM-OPS-SET-CLOSURE-001
+required_evidence:
+- verdict_method: VM-OPS-SET-CLOSURE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jax_cache_isolation.py::test_jax_cache_dir_is_per_worker
+  - pytest_node: tests/test_jqmc_kernel/test_jax_cache_isolation.py::test_jax_cache_isolation_is_applied_before_jax_import
+  - pytest_node: tests/test_jqmc_kernel/test_jax_cache_isolation.py::test_vma_reclaim_policy_keeps_room_for_the_worst_test
+  - pytest_node: tests/test_jqmc_kernel/test_jax_cache_isolation.py::test_vma_reclaim_policy_never_holds_more_than_it_could_still_acquire
+  - pytest_node: tests/test_jqmc_kernel/test_jax_cache_isolation.py::test_vma_bound_is_installed_as_an_autouse_fixture
+  - pytest_node: tests/test_jqmc_kernel/test_jax_cache_isolation.py::test_persistent_cache_is_off_where_a_cache_hit_overflows_a_worker_stack

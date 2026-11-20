@@ -1,0 +1,13 @@
+id: MATH-RS-ECP-NN-PBC-MIN-IMAGE-001
+kind: mathematical
+name: Periodic NN=1 non-local ECP filter picks the minimum-image nearest nucleus
+plain_language: On a periodic cell (orthogonal or skewed), the nearest-nucleus filter of the non-local ECP energy ranks
+  nuclei by their minimum-image distance on both the Rust and the XLA backend. When a brute-force image search shows that
+  every electron, placed several cells away from the home cell, is nearest to the only nucleus with non-zero ECP terms,
+  the NN=1 non-local energy equals the all-pairs non-local energy.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_ecp_nonlocal_nearest_nucleus_pbc_brute_force_images

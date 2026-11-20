@@ -1,0 +1,20 @@
+id: NUM-MPC-TABLE-FIXTURE-REGRESSION-001
+kind: numerical
+name: Fixture regression bound of the MPC V_LR table against an independent kernel
+plain_language: For one fixed fixture only (the diag(5,6,7) Bohr box in its orthorhombic and integer-shear basis representations,
+  one doubly occupied three-plane-wave MO, cutoff 1.3 Ha, explicit 16^3 grid), the production V_LR table nodes and its
+  off-grid lookup agree with an independent box-face quadrature kernel and a directly evaluated NumPy density within the
+  named central regression bounds ATOL_MPC_TABLE_FIXTURE_REGRESSION and ATOL_MPC_OFFGRID_FIXTURE_REGRESSION (rtol zero),
+  each precision mode against its own reference. These bounds are a regression bound for this fixture, adopted because
+  every measured injected table-construction fault exceeds them in both modes; they are not a first-principles accuracy
+  bound for any other cell, density or grid.
+verdict_methods:
+- VM-NUM-REVIEWED-REGRESSION-001
+required_evidence:
+- verdict_method: VM-NUM-REVIEWED-REGRESSION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_independent_reference.py::test_production_table_within_fixture_regression_bound_of_independent_kernel
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {basis_name: orthorhombic}
+    - {basis_name: sheared-basis}

@@ -1,0 +1,22 @@
+id: IMPL-OPTK-COLLECTIVES-001
+kind: implementation
+name: Collective-communication contracts
+plain_language: The allreduce sum preserves real and complex values including imaginary parts, rejects unsupported dtypes
+  loudly, and the drivers accept optional MPI communicator kwargs with a safe None default.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_allreduce_sum.py::TestAllreduceSum::test_allreduce_sum_real_single_rank
+  - pytest_node: tests/test_jqmc_kernel/test_allreduce_sum.py::TestAllreduceSum::test_allreduce_sum_complex_single_rank
+  - pytest_node: tests/test_jqmc_kernel/test_allreduce_sum.py::TestAllreduceSum::test_allreduce_sum_complex_preserves_im_part
+  - pytest_node: tests/test_jqmc_kernel/test_comm_injection.py::TestCommInjectionKwargs::test_init_accepts_mpi_comm_kwargs_with_none_default
+  - pytest_node: tests/test_jqmc_kernel/test_comm_injection.py::TestCommInjectionKwargs::test_kwargs_are_optional_at_call_site
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_wide_real_cg_does_not_conjugate_the_samples_per_iteration
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_wide_real_cg_call_sites_reduce_with_buffer_allreduce
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_allreduce_sum.py::TestAllreduceSum::test_allreduce_sum_rejects_complex64
+  - pytest_node: tests/test_jqmc_kernel/test_allreduce_sum.py::TestAllreduceSum::test_allreduce_sum_rejects_unsupported_dtype

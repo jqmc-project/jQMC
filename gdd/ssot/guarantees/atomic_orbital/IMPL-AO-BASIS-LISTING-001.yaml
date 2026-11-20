@@ -1,0 +1,18 @@
+id: IMPL-AO-BASIS-LISTING-001
+kind: implementation
+name: Basis-set listing shows each shell once in stored order
+plain_language: The per-atom basis listing printed by hamiltonian show-info lists every contracted shell exactly once, on
+  its home atom, in the stored (TREXIO) AO order, for Cartesian and real-spherical GTO leaves, molecular and periodic. Cartesian
+  s, p, d and f shells print one coefficient per primitive, uniform over the angular components (the stored per-component
+  Cartesian factor is removed), periodic leaves do not follow the ragged image layout order, and two distinct identical
+  shells on one atom are both listed. Building the listing does not change AO values. This is a display contract, not
+  a statement about AO normalization or values.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_listing.py::test_molecular_cartesian_listing_has_one_uniform_entry_per_shell
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_listing.py::test_molecular_spherical_listing_has_one_entry_per_shell
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_listing.py::test_periodic_listing_follows_home_ao_order_on_every_atom
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_listing.py::test_listing_is_display_only

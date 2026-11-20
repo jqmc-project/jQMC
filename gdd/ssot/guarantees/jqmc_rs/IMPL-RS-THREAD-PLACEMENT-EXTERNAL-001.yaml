@@ -1,0 +1,19 @@
+id: IMPL-RS-THREAD-PLACEMENT-EXTERNAL-001
+kind: implementation
+name: Native Rayon setup leaves CPU and NUMA placement to the launcher
+plain_language: >-
+  The reviewed Rayon setup configures the global pool width using the explicit
+  argument, the JQMC_RS_NUM_THREADS setting and Rayon's defaults. CPU affinity
+  and NUMA policy are assigned by the launcher. The source-token pin checks the
+  live initialization body and rejects either a main-thread NUMA setup call or
+  a worker-start CPU-pinning hook inserted into that body.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_rust_parallel_sites.py::test_rust_production_parallel_source_inventory
+  - pytest_node: tests/test_jqmc_kernel/test_rust_parallel_sites.py::test_rust_parallel_inventory_rejects_internal_placement
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {setup: 'if env_enabled("JQMC_RS_NUMA_INTERLEAVE") { enable_numa_interleave().unwrap(); }'}
+    - {setup: 'builder = builder.start_handler(|_| pin_current_thread(0));'}

@@ -1,0 +1,40 @@
+id: IMPL-BUILDINFO-VERSION-COMMIT-RESOLUTION-001
+kind: implementation
+name: The reported git commit is the live HEAD of a tracked checkout, else the full hash written at build time, else unknown
+plain_language: >-
+  jqmc._build_info resolves, once per process, where the running code comes from. When the package
+  directory is tracked by an enclosing git work tree, git rev-parse HEAD is reported, so an editable install follows
+  git pull / checkout without reinstalling, and the version is computed live (or the install-time metadata is marked
+  "(metadata, may be stale)"). Otherwise the full 40-digit hash that the setuptools_scm version_file_template wrote
+  into jqmc/_version.py at build time is reported. An untracked package, a missing git binary, a git timeout or a
+  malformed HEAD fall back without raising; a package outside any work tree runs no rev-parse. Without a full hash
+  (only the abbreviated __commit_id__, no node, or no version file) the commit is reported as unknown, never as an
+  abbreviated hash or an omitted line. Checked with the package directory, the git subprocess and jqmc._version
+  replaced; precision-independent, judged in full and mixed separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_build_info.py::test_live_git_checkout_reports_its_current_head_and_live_version
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_build_info.py::test_live_git_without_setuptools_scm_marks_the_metadata_version_stale
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_build_info.py::test_git_failures_fall_back_to_the_build_time_commit
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {failure: untracked}
+    - {failure: no-git-binary}
+    - {failure: timeout}
+    - {failure: malformed-head}
+  - pytest_node: tests/test_jqmc_kernel/test_build_info.py::test_installed_distribution_without_git_reports_the_build_time_commit
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_build_info.py::test_missing_full_commit_is_reported_as_unknown
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {version_file: abbreviated-only}
+    - {version_file: no-node}
+    - {version_file: short-node}
+    - {version_file: no-version-file}

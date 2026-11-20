@@ -1,0 +1,86 @@
+id: IMPL-CLI-TIME-BUDGET-CONTINUATION-001
+kind: implementation
+name: Explicit TOML time budget stops and preserves real MCMC continuation
+plain_language: >-
+  The actual XLA MCMC CLI consumes control.max_time=50 and stops at four or six
+  measurements when a deterministic sampler clock crosses that budget, before
+  the requested eight measurements. The saved checkpoint resumes the remaining
+  measurements and matches uninterrupted execution: positions, RNG and counters
+  are exact; each e_L/e_L2/w_L entry uses the existing same-mode strict tolerance.
+  Both precisions use committed H2 AE Cartesian MO, Pade J2=1, two walkers and
+  seed 12345, with no cond(G) selection. No sampler, energy or checkpoint is
+  mocked; only elapsed time is controlled. A budget-discarding fault must fail
+  after a successful baseline. The actual VMC CLI does not start an
+  optimization step that would end after max_time, predicting its duration by
+  the mean step time so far. With three requested steps, wf_dump_freq 10, 1000 s
+  per step and max_time 1500 or 2500, the run stops after step 1 or 2, before a
+  batch limit 300 s after max_time could kill the next step, and writes
+  restart.h5, hamiltonian_data_opt_step_N.h5 and Program ends; resuming matches
+  an uninterrupted run exactly in counter, positions and RNG and in J2 within the
+  same-mode strict tolerance, and a run that completes all its steps is not
+  reported as a budget stop. This does not certify native chunking, real step
+  timing, MPI stop coordination or every GFMC route.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_budget_stop_and_restart_matches_continuous_samples
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{stop_after: 4}, {stop_after: 6}]
+    executable_checks:
+      saved-interruption-count:
+        site: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_budget_stop_and_restart_matches_continuous_samples#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: saved-measurement-count-after-budget-stop, expression: "partial['driver_config']['mcmc_counter']"}
+        reference: {role: controlled-clock-budget-crossing-count, expression: stop_after}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      continued-positions:
+        site: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_budget_stop_and_restart_matches_continuous_samples#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-walker-positions, expression: "actual['walker_state'][name]"}
+        reference: {role: uninterrupted-walker-positions, expression: "expected['walker_state'][name]"}
+        iterations: {variable: name, required_values: [latest_r_up_carts, latest_r_dn_carts]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      continued-rng:
+        site: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_budget_stop_and_restart_matches_continuous_samples#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-jax-rng, expression: "actual['rng_state']['jax_PRNG_key_list']"}
+        reference: {role: uninterrupted-jax-rng, expression: "expected['rng_state']['jax_PRNG_key_list']"}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      continued-measurements:
+        site: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_budget_stop_and_restart_matches_continuous_samples#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: resumed-measurement-history, expression: observed}
+        reference: {role: uninterrupted-measurement-history, expression: reference}
+        iterations: {variable: name, required_values: [e_L, e_L2, w_L]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+  - pytest_node: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_budget_verdict_rejects_ignored_budget
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{stop_after: 4}, {stop_after: 6}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_stop_coordination_mpi.py::test_vmc_budget_stop_is_decided_once_for_all_ranks
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{late_rank: 0}, {late_rank: 1}]
+  - pytest_node: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_gfmc_budget_stop_and_restart_matches_continuous_samples
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {job_type: lrdmc-bra, stop_after: 45}
+    - {job_type: lrdmc-bra, stop_after: 60}
+    - {job_type: lrdmc-tau, stop_after: 45}
+    - {job_type: lrdmc-tau, stop_after: 60}
+  - pytest_node: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_vmc_budget_stops_between_optimization_steps
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_vmc_budget_does_not_start_a_step_that_ends_after_max_time
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{stop_after: 1}, {stop_after: 2}]
+  - pytest_node: tests/test_jqmc_kernel/test_cli_time_budget.py::test_cli_budget_stop_before_enough_samples_keeps_continuation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{job_type: mcmc}, {job_type: lrdmc-bra}, {job_type: lrdmc-tau}]

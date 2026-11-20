@@ -1,0 +1,34 @@
+id: IMPL-JAS-PHASE-FREE-INPUT-001
+kind: implementation
+name: Explicit phase-bearing J3 is rejected rather than silently reinterpreted
+plain_language: >-
+  Explicit MO J3 inputs with nonzero Bloch momenta are invalid on Cartesian
+  and spherical pGTO, plane-wave, B-spline and composite bases. Construction
+  must reject them. This does not prohibit a twisted determinant combined
+  with a valid shared phase-free Jastrow.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_direct_j3_builder_rejects_nonzero_bloch_phase
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pgto-cartesian-complex}
+    - {kind: pgto-spherical-complex}
+    - {kind: plane-wave-complex}
+    - {kind: bspline-complex}
+    - {kind: pgto-plane-wave-complex}
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_every_j3_construction_path_rejects_phase_bearing_basis
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {path: direct, fault: nonzero-k}
+    - {path: init, fault: nonzero-k}
+    - {path: replace, fault: nonzero-k}
+    - {path: direct, fault: stale-image-phase}
+    - {path: init, fault: stale-image-phase}
+    - {path: replace, fault: stale-image-phase}
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_fixture_observer_rejects_phase_bearing_j3_without_builder_validation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: nonzero-k}
+    - {fault: stale-image-phase}

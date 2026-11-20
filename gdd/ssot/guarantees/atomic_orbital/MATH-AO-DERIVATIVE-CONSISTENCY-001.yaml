@@ -1,0 +1,620 @@
+id: MATH-AO-DERIVATIVE-CONSISTENCY-001
+kind: mathematical
+name: Derivative consistency of atomic-orbital evaluators
+plain_language: Analytical gradients and Laplacians of every atomic-orbital family equal the autodiff oracle of the same
+  evaluator; fused value/grad/Laplacian outputs equal their separate evaluations; cell and basis-parameter derivatives match
+  JVP; and the complex leaves reduce exactly to the real leaves at the Gamma point.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_grad_analytic_vs_auto_molecular
+    required_precision_modes: [full]
+    required_parameter_cases: [{ao_kind: cart}, {ao_kind: sphe}]
+    executable_checks:
+      gradient-components:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_grad_analytic_vs_auto_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-ao-gradient-component, expression: an}
+        reference: {role: autodiff-ao-gradient-component, expression: au}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_grad_analytic_vs_auto_periodic
+    required_precision_modes: [full]
+    required_parameter_cases: [{ao_kind: cart}, {ao_kind: sphe}, {ao_kind: pw}, {ao_kind: bspline}]
+    executable_checks:
+      gradient-components:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_grad_analytic_vs_auto_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-ao-gradient-component, expression: an}
+        reference: {role: autodiff-ao-gradient-component, expression: au}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_laplacian_analytic_vs_auto_molecular
+    required_precision_modes: [full]
+    required_parameter_cases: [{ao_kind: cart}, {ao_kind: sphe}]
+    executable_checks:
+      laplacian:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_laplacian_analytic_vs_auto_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-ao-laplacian, expression: lap_a}
+        reference: {role: autodiff-ao-laplacian, expression: lap_u}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_laplacian_analytic_vs_auto_periodic
+    required_precision_modes: [full]
+    required_parameter_cases: [{ao_kind: cart}, {ao_kind: sphe}, {ao_kind: pw}, {ao_kind: bspline}]
+    executable_checks:
+      laplacian:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_laplacian_analytic_vs_auto_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-ao-laplacian, expression: lap_a}
+        reference: {role: autodiff-ao-laplacian, expression: lap_u}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_pw_dcell_matches_jvp
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - seed: 0
+    - seed: 7
+    executable_checks:
+      all-vgl-components:
+        site: tests/test_jqmc_kernel/test_derivatives_ao.py::test_pw_dcell_matches_jvp#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-directional-ao-vgl-derivative
+          expression: np.asarray(da)
+        reference:
+          role: same-mode-autodiff-jvp-ao-vgl
+          expression: np.asarray(dj)
+        iterations:
+          variable: name
+          required_values:
+          - val
+          - gx
+          - gy
+          - gz
+          - lap
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_bspline_dcell_matches_jvp
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - seed: 0
+      order: 3
+    - seed: 0
+      order: 5
+    - seed: 7
+      order: 3
+    - seed: 7
+      order: 5
+    executable_checks:
+      all-vgl-components:
+        site: tests/test_jqmc_kernel/test_derivatives_ao.py::test_bspline_dcell_matches_jvp#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-directional-ao-vgl-derivative
+          expression: np.asarray(da)
+        reference:
+          role: same-mode-autodiff-jvp-ao-vgl
+          expression: np.asarray(dj)
+        iterations:
+          variable: name
+          required_values:
+          - val
+          - gx
+          - gy
+          - gz
+          - lap
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_sphe_basis_param_matches_jvp
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - seed: 0
+    - seed: 7
+    executable_checks:
+      all-vgl-components:
+        site: tests/test_jqmc_kernel/test_derivatives_ao.py::test_sphe_basis_param_matches_jvp#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-directional-ao-vgl-derivative
+          expression: np.asarray(da)
+        reference:
+          role: same-mode-autodiff-jvp-ao-vgl
+          expression: np.asarray(dj)
+        iterations:
+          variable: name
+          required_values:
+          - val
+          - gx
+          - gy
+          - gz
+          - lap
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_value_grad_lap_consistency
+    executable_checks:
+      d8-n-078:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf.test_pw_value_grad_lap_consistency#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: gx
+        reference:
+          role: source-reference-value
+          expression: gx_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      d8-n-079:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf.test_pw_value_grad_lap_consistency#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: gy
+        reference:
+          role: source-reference-value
+          expression: gy_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      d8-n-080:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf.test_pw_value_grad_lap_consistency#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: gz
+        reference:
+          role: source-reference-value
+          expression: gz_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      d8-n-081:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf.test_pw_value_grad_lap_consistency#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: lap
+        reference:
+          role: source-reference-value
+          expression: np.asarray(compute_AOs_laplacian(aos_data=aos, r_carts=r))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_value_grad_lap_consistency
+    executable_checks:
+      d8-n-082:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf.test_bspline_value_grad_lap_consistency#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: gx
+        reference:
+          role: source-reference-value
+          expression: gx_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      d8-n-083:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf.test_bspline_value_grad_lap_consistency#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: gy
+        reference:
+          role: source-reference-value
+          expression: gy_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      d8-n-084:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf.test_bspline_value_grad_lap_consistency#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: gz
+        reference:
+          role: source-reference-value
+          expression: gz_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      d8-n-085:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf.test_bspline_value_grad_lap_consistency#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: lap
+        reference:
+          role: source-reference-value
+          expression: np.asarray(compute_AOs_laplacian(aos_data=leaf, r_carts=r))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_value_grad_lap_molecular
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(gx_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(gx_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(gy_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(gy_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(gz_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(gz_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(lap_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(lap_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_molecular#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(val_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(val_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_value_grad_lap_periodic
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(gx_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(gx_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(gy_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(gy_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_periodic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(gz_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(gz_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_periodic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(lap_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(lap_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian.test_AOs_value_grad_lap_periodic#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(val_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(val_s)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_gamma_identity_value
+    executable_checks:
+      imaginary-zero:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_gamma_identity_value#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: Gamma-AO-imaginary-value, expression: np.imag(cplx_val)}
+        reference: {role: fixture-sized-zero-array, expression: 'np.zeros((real_leaf.num_ao, r.shape[0]), dtype=np.float64)'}
+        precision:
+          full: {policy: CMP-ZONE-ATOL-ZERO-RTOL-001, components: [{index: 0, zones: [ao_eval]}]}
+          mixed: {policy: CMP-ZONE-ATOL-ZERO-RTOL-001, components: [{index: 0, zones: [ao_eval]}]}
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_gamma_identity_value#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.real(cplx_val)
+        reference:
+          role: existing-test-reference
+          expression: real_val
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_gamma_identity_grad
+    executable_checks:
+      imaginary-zero:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_gamma_identity_grad#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: Gamma-AO-imaginary-gradient-component, expression: np.imag(gc)}
+        reference: {role: fixture-sized-zero-array, expression: 'np.zeros((real_leaf.num_ao, r.shape[0]), dtype=np.float64)'}
+        component_loop: {sequence: cplx_grad, value: gc, index: null}
+        precision:
+          full:
+            policy: CMP-ZONE-ATOL-ZERO-RTOL-001
+            components:
+            - {index: 0, zones: [ao_grad_lap]}
+            - {index: 1, zones: [ao_grad_lap]}
+            - {index: 2, zones: [ao_grad_lap]}
+          mixed:
+            policy: CMP-ZONE-ATOL-ZERO-RTOL-001
+            components:
+            - {index: 0, zones: [ao_grad_lap]}
+            - {index: 1, zones: [ao_grad_lap]}
+            - {index: 2, zones: [ao_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_gamma_identity_laplacian
+    executable_checks:
+      imaginary-zero:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_gamma_identity_laplacian#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: Gamma-AO-imaginary-laplacian, expression: np.imag(cplx_lap)}
+        reference: {role: fixture-sized-zero-array, expression: 'np.zeros((real_leaf.num_ao, r.shape[0]), dtype=np.float64)'}
+        precision:
+          full: {policy: CMP-ZONE-ATOL-ZERO-RTOL-001, components: [{index: 0, zones: [ao_grad_lap]}]}
+          mixed: {policy: CMP-ZONE-ATOL-ZERO-RTOL-001, components: [{index: 0, zones: [ao_grad_lap]}]}
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_gamma_identity_laplacian#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.real(cplx_lap)
+        reference:
+          role: existing-test-reference
+          expression: real_lap
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_gamma_identity_value_grad_lap_fused
+    executable_checks:
+      imaginary-zero:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_gamma_identity_value_grad_lap_fused#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: Gamma-AO-imaginary-fused-component, expression: np.imag(x_cplx)}
+        reference: {role: fixture-sized-zero-array, expression: 'np.zeros((real_leaf.num_ao, r.shape[0]), dtype=np.float64)'}
+        component_loop: {sequence: cplx_tup, value: x_cplx, index: index}
+        precision:
+          full:
+            policy: CMP-ZONE-ATOL-ZERO-RTOL-001
+            components:
+            - {index: 0, zones: [ao_eval]}
+            - {index: 1, zones: [ao_grad_lap]}
+            - {index: 2, zones: [ao_grad_lap]}
+            - {index: 3, zones: [ao_grad_lap]}
+            - {index: 4, zones: [ao_grad_lap]}
+          mixed:
+            policy: CMP-ZONE-ATOL-ZERO-RTOL-001
+            components:
+            - {index: 0, zones: [ao_eval]}
+            - {index: 1, zones: [ao_grad_lap]}
+            - {index: 2, zones: [ao_grad_lap]}
+            - {index: 3, zones: [ao_grad_lap]}
+            - {index: 4, zones: [ao_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_gamma_identity_overlap_matrix
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_gamma_identity_overlap_matrix#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: complex-Gamma-overlap
+          expression: S_cplx
+        reference:
+          role: Hermitian-conjugate
+          expression: S_cplx.conj().T
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_gamma_identity_overlap_matrix#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: Gamma-overlap-imaginary-part
+          expression: np.imag(S_cplx)
+        reference:
+          role: known-zero-imaginary-part
+          expression: np.zeros((real_leaf.num_ao, real_leaf.num_ao), dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-BITZERO-001
+      central-pair-3:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_gamma_identity_overlap_matrix#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: Gamma-overlap-real-part
+          expression: np.real(S_cplx)
+        reference:
+          role: real-basis-overlap
+          expression: S_real
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-PAIR-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-PAIR-001
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_pw_no_position_dependence
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_bspline_no_position_dependence

@@ -1,0 +1,30 @@
+id: IMPL-RS-DTN-TABPIP-FAR-ROW-SKIP-001
+kind: implementation
+name: The DTN candidate-table advance skips rows that are provably outside every mover cutoff without changing any output bit
+plain_language: >-
+  After an accepted GFMC hop every unmoved row of a DTN candidate table (the kinetic and the ECP tables of the real
+  and the complex interval chains) changes only through its pair with the mover: the u term at both mover positions
+  and the f term over the atoms the mover's f leg touches (cutoff live at the old or the new mover position).
+  dtn::advance_dtn_candidate_table_impl skips a row when, with delta the largest raw Euclidean distance between
+  the row's electron and its candidates (an upper bound on their minimum-image distance), both electron--mover
+  distances are at least L_u + delta and every electron--active-atom distance is at least L_f + delta, plus a
+  rounding margin (1e-9 bohr in full, 1e-3 bohr in mixed, where the distances are formed from f32 coordinates).
+  By the triangle inequality on the minimum-image metric every candidate of the row is then outside both cutoffs,
+  so every cutoff factor of its correction is an exact zero (cutoff_ratio returns 0 for r >= L) and the skipped
+  correction could only have turned a stored -0 into +0. The implemented minimum image equals the true one for
+  molecules and orthorhombic cells; for other cells it is exact below rho = min_i |b_i| / 2 (the shell rule of
+  CellInfo::mic_half_widths) and never shorter than the true one, so the bound uses min(d, rho). The test-only hook
+  JQMC_RS_DTN_TABPIP_NO_FAR_SKIP restores the evaluation of every row. On GFMC_t intervals of a molecular, a
+  Gamma-point PBC and a complex-twist PBC DTN fixture rebuilt with short cutoffs (so far rows exist), the skip and
+  the hook give byte-identical e_L, w_L, final walkers, sub-step counts and keys; the skip counts skipped rows and
+  the hook counts none (jqmc_rs.gfmc_route_counters index 72). Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_dtn_tabpip_far_row_skip.py::test_dtn_tabpip_far_row_skip_is_bitwise
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_cart_sd_jdtn}
+    - {pattern: pbc_gamma_sphepgto_jdtn}
+    - {pattern: twist_sphepgto_jdtn}

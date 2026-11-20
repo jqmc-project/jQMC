@@ -1,0 +1,23 @@
+id: MATH-RS-COMPLEX-ECP-MO-GRAD-NN1-MIN-IMAGE-001
+kind: mathematical
+name: The native complex ECP dE_L/dc (MO coefficients) kernel selects the minimum-image nearest ECP nucleus
+plain_language: >-
+  The ECP non-local MO-coefficient gradient kernel behind jqmc_rs.grad_eL_ecp_wrt_mo_coeff_complex (fed to
+  the linear method by the native complex parameter-derivative driver on raw walker coordinates) and
+  jqmc_rs.grad_V_ecp_nonlocal_wrt_mo_complex filters each electron to its NN = 1 nearest ECP nucleus, which must be
+  ranked by the minimum-image distance. On the committed lithium_k025 ccECP twist cell (Li bcc, two ECP nuclei,
+  k != Gamma; without Jastrow and with J1+J2), one up and one down electron, the home-cell copy Xw puts each electron
+  within about 1 bohr of a home-cell nucleus and X = Xw + lattice vectors (four shift pairs) puts each electron next
+  to an image of that nucleus; the brute-force image search of tests/_ecp_min_image_reference.py shows that the
+  minimum-image nearest nucleus at X is the one at Xw and that the raw Cartesian distance ranks the other nucleus
+  first for every electron (input validity). For a Bloch twist wavefunction a lattice translation of an electron
+  multiplies Psi by exp(i k.L), a factor independent of the MO coefficients, so every up and down gradient block of
+  both bindings at X equals the block at Xw (block infinity norm, nonzero signal). Full and mixed are judged
+  separately, each at the existing zone tolerances of its own policy (no mixed-vs-full comparison).
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_ecp_mo_grad_nn1_min_image.py::test_native_complex_ecp_mo_coeff_gradient_selects_min_image_nearest_nucleus
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{pattern: twist_sphepgto_jnone, shift: shift0}, {pattern: twist_sphepgto_jnone, shift: shift1}, {pattern: twist_sphepgto_jnone, shift: shift2}, {pattern: twist_sphepgto_jnone, shift: shift3}, {pattern: twist_sphepgto_j12, shift: shift0}, {pattern: twist_sphepgto_j12, shift: shift1}, {pattern: twist_sphepgto_j12, shift: shift2}, {pattern: twist_sphepgto_j12, shift: shift3}]

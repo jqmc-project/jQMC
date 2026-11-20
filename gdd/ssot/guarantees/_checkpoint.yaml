@@ -1,0 +1,27 @@
+schema_version: 1
+document:
+  id: jqmc._checkpoint
+  version: 1
+  lifecycle: cutover
+  title: Checkpoint-component guarantees
+  purpose: Which test guarantees what, by which verdict method, for the rank-checkpoint components shared by all drivers.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-CKPT-ROUNDTRIP-001
+  overrides:
+    jqmc._checkpoint.missing_restart_keys:
+    - IMPL-CKPT-RANK-CONSISTENCY-001
+    jqmc._checkpoint.history_length_errors:
+    - IMPL-CKPT-RANK-CONSISTENCY-001
+    jqmc._checkpoint.load_rank_checkpoint_for_restart:
+    - IMPL-CKPT-RANK-CONSISTENCY-001
+    jqmc._checkpoint.walker_shape_errors:
+    - IMPL-CKPT-RANK-CONSISTENCY-001
+    jqmc._checkpoint.restart_state_problems:
+    - IMPL-CKPT-RANK-CONSISTENCY-001
+    jqmc._checkpoint.raise_on_restart_inconsistency:
+    - IMPL-CKPT-RANK-CONSISTENCY-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

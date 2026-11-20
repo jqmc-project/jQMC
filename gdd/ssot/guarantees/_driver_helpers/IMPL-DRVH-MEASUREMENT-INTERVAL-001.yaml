@@ -1,0 +1,48 @@
+id: IMPL-DRVH-MEASUREMENT-INTERVAL-001
+kind: implementation
+name: Sampler drivers reject a measurement interval without updates
+plain_language: >-
+  num_mcmc_per_measurement is the number of MCMC updates (MCMC; mcmc and vmc jobs) or GFMC projections (GFMC_n;
+  lrdmc-bra job) between successive measurements, so it must be an integer of at least one. Zero, a negative count, a
+  non-integer and a boolean raise a ValueError naming num_mcmc_per_measurement from the MCMC and GFMC_n constructors and
+  from their checkpoint loads, before any sampling. The mcmc, vmc and lrdmc-bra console entries therefore exit non-zero
+  with that message on both the native Rust and the XLA route and write neither a restart checkpoint nor an optimized
+  Hamiltonian, instead of publishing the unmoved initial configuration as an energy. Valid counts are unchanged.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_measurement_interval_domain.py::test_drivers_reject_invalid_num_mcmc_per_measurement
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: MCMC, boundary: constructor, value: 0}
+    - {driver: MCMC, boundary: constructor, value: -4}
+    - {driver: MCMC, boundary: constructor, value: 2.5}
+    - {driver: MCMC, boundary: constructor, value: true}
+    - {driver: MCMC, boundary: checkpoint, value: 0}
+    - {driver: MCMC, boundary: checkpoint, value: -4}
+    - {driver: MCMC, boundary: checkpoint, value: 2.5}
+    - {driver: MCMC, boundary: checkpoint, value: true}
+    - {driver: GFMC_n, boundary: constructor, value: 0}
+    - {driver: GFMC_n, boundary: constructor, value: -4}
+    - {driver: GFMC_n, boundary: constructor, value: 2.5}
+    - {driver: GFMC_n, boundary: constructor, value: true}
+    - {driver: GFMC_n, boundary: checkpoint, value: 0}
+    - {driver: GFMC_n, boundary: checkpoint, value: -4}
+    - {driver: GFMC_n, boundary: checkpoint, value: 2.5}
+    - {driver: GFMC_n, boundary: checkpoint, value: true}
+  - pytest_node: tests/test_jqmc_kernel/test_measurement_interval_domain.py::test_cli_rejects_nonpositive_num_mcmc_per_measurement
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {job_type: mcmc, backend: rust, value: 0}
+    - {job_type: mcmc, backend: rust, value: -4}
+    - {job_type: mcmc, backend: xla, value: 0}
+    - {job_type: mcmc, backend: xla, value: -4}
+    - {job_type: vmc, backend: rust, value: 0}
+    - {job_type: vmc, backend: rust, value: -4}
+    - {job_type: vmc, backend: xla, value: 0}
+    - {job_type: vmc, backend: xla, value: -4}
+    - {job_type: lrdmc-bra, backend: rust, value: 0}
+    - {job_type: lrdmc-bra, backend: rust, value: -4}
+    - {job_type: lrdmc-bra, backend: xla, value: 0}
+    - {job_type: lrdmc-bra, backend: xla, value: -4}

@@ -1,0 +1,43 @@
+id: IMPL-RS-ECP-DTN-NEAREST-CENTRE-001
+kind: implementation
+name: Native real ECP DTN derivatives use the nearest projector centre
+plain_language: >-
+  On the committed Cl2 ccECP Cartesian fixture, both centres have live
+  nonlocal projectors. With J1, J2, J3 and all DTN channels active, the
+  native nonlocal ECP derivative agrees with the XLA analytic derivative of the
+  nearest-centre nonlocal energy for each of the u, chi and f parameter
+  blocks. Full and Mixed run independently under the established ECP
+  parity budget. The fixed configuration is selected by geminal conditioning.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn_uses_nearest_projectors
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      u-parameters:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn_uses_nearest_projectors#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-same-input, expression: alpha}
+        reference: {role: xla-same-precision, expression: reference.alpha_indep}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+      chi-parameters:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn_uses_nearest_projectors#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-same-input, expression: beta}
+        reference: {role: xla-same-precision, expression: reference.beta_indep}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+      f-parameters:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn_uses_nearest_projectors#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-same-input, expression: gamma}
+        reference: {role: xla-same-precision, expression: reference.gamma_indep}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}

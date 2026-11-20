@@ -1,0 +1,168 @@
+id: IMPL-WF-CANDIDATE-MESH-VALUES-001
+kind: implementation
+name: Carried candidate meshes preserve values and consume every active cache
+plain_language: >-
+  At five fixed configurations, initialized and incrementally advanced kinetic and ECP
+  candidate caches agree with uncached evaluation on the identical fresh inverse.
+  All mesh elements, their total, and both-spin candidate positions are checked.
+  Synthetic canonical GTO/pGTO/PW/spline/composite inputs and committed H2-ECP,
+  Gamma/non-Gamma Li, water and silicon use the declared Jastrow channels.
+  Each of the five cache channels has a corruption control that must fail.
+  Full and mixed are separate obligations under unchanged strict consumer bounds.
+  This isolates candidate-cache correctness; it does not certify carried inverse stability.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::test_canonical_kinetic_candidate_cache_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-004}
+    - {pattern: WF-PATTERN-006}
+    - {pattern: WF-PATTERN-008}
+    - {pattern: WF-PATTERN-009}
+    - {pattern: WF-PATTERN-010}
+    - {pattern: WF-PATTERN-013}
+    - {pattern: WF-PATTERN-014}
+    - {pattern: WF-PATTERN-016}
+    executable_checks:
+      candidate-positions:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: cached-candidate-positions, expression: actual_positions}
+        reference: {role: fresh-candidate-positions, expression: reference_positions}
+        iterations: {variable: configuration, required_values: [hop-0, hop-1, hop-2, hop-3, hop-4]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      candidate-values:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-candidate-values-or-total, expression: actual}
+        reference: {role: uncached-values-or-total-same-inverse, expression: reference}
+        iterations: {variable: quantity, required_values: ['hop-0:mesh-values', 'hop-0:mesh-total', 'hop-1:mesh-values', 'hop-1:mesh-total', 'hop-2:mesh-values', 'hop-2:mesh-total', 'hop-3:mesh-values', 'hop-3:mesh-total', 'hop-4:mesh-values', 'hop-4:mesh-total']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+  - pytest_node: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::test_canonical_ecp_candidate_cache_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-004}
+    - {pattern: WF-PATTERN-006}
+    - {pattern: WF-PATTERN-008}
+    - {pattern: WF-PATTERN-014}
+    executable_checks:
+      candidate-positions:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: cached-candidate-positions, expression: actual_positions}
+        reference: {role: fresh-candidate-positions, expression: reference_positions}
+        iterations: {variable: configuration, required_values: [hop-0, hop-1, hop-2, hop-3, hop-4]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      candidate-values:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-candidate-values-or-total, expression: actual}
+        reference: {role: uncached-values-or-total-same-inverse, expression: reference}
+        iterations: {variable: quantity, required_values: ['hop-0:mesh-values', 'hop-0:mesh-total', 'hop-1:mesh-values', 'hop-1:mesh-total', 'hop-2:mesh-values', 'hop-2:mesh-total', 'hop-3:mesh-values', 'hop-3:mesh-total', 'hop-4:mesh-values', 'hop-4:mesh-total']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+  - pytest_node: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::test_committed_j123_candidate_cache_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_j123, family: kinetic}
+    - {pattern: pbc_gamma_sphepgto_j123, family: kinetic}
+    - {pattern: twist_sphepgto_j123, family: kinetic}
+    - {pattern: mol_ecp_cart_j123, family: ecp}
+    - {pattern: pbc_gamma_sphepgto_j123, family: ecp}
+    - {pattern: twist_sphepgto_j123, family: ecp}
+    executable_checks:
+      candidate-positions:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: cached-candidate-positions, expression: actual_positions}
+        reference: {role: fresh-candidate-positions, expression: reference_positions}
+        iterations: {variable: configuration, required_values: [hop-0, hop-1, hop-2, hop-3, hop-4]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      candidate-values:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-candidate-values-or-total, expression: actual}
+        reference: {role: uncached-values-or-total-same-inverse, expression: reference}
+        iterations: {variable: quantity, required_values: ['hop-0:mesh-values', 'hop-0:mesh-total', 'hop-1:mesh-values', 'hop-1:mesh-total', 'hop-2:mesh-values', 'hop-2:mesh-total', 'hop-3:mesh-values', 'hop-3:mesh-total', 'hop-4:mesh-values', 'hop-4:mesh-total']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+  - pytest_node: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::test_water_silicon_j123_candidate_cache_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: water_ccecp_ccpvqz.h5, family: kinetic}
+    - {trexio_file: silicon.h5, family: kinetic}
+    - {trexio_file: water_ccecp_ccpvqz.h5, family: ecp}
+    - {trexio_file: silicon.h5, family: ecp}
+    executable_checks:
+      candidate-positions:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: cached-candidate-positions, expression: actual_positions}
+        reference: {role: fresh-candidate-positions, expression: reference_positions}
+        iterations: {variable: configuration, required_values: [hop-0, hop-1, hop-2, hop-3, hop-4]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      candidate-values:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-candidate-values-or-total, expression: actual}
+        reference: {role: uncached-values-or-total-same-inverse, expression: reference}
+        iterations: {variable: quantity, required_values: ['hop-0:mesh-values', 'hop-0:mesh-total', 'hop-1:mesh-values', 'hop-1:mesh-total', 'hop-2:mesh-values', 'hop-2:mesh-total', 'hop-3:mesh-values', 'hop-3:mesh-total', 'hop-4:mesh-values', 'hop-4:mesh-total']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+  - pytest_node: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::test_each_candidate_channel_is_consumed_and_checked
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {channel: det, family: kinetic}
+    - {channel: j1, family: kinetic}
+    - {channel: j2, family: kinetic}
+    - {channel: j3, family: kinetic}
+    - {channel: dtn, family: kinetic}
+    - {channel: det, family: ecp}
+    - {channel: j1, family: ecp}
+    - {channel: j2, family: ecp}
+    - {channel: j3, family: ecp}
+    - {channel: dtn, family: ecp}
+    executable_checks:
+      candidate-positions:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: cached-candidate-positions, expression: actual_positions}
+        reference: {role: fresh-candidate-positions, expression: reference_positions}
+        iterations: {variable: configuration, required_values: [hop-0, hop-1, hop-2, hop-3, hop-4]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      candidate-values:
+        site: tests/test_jqmc_kernel/test_candidate_mesh_cache_values.py::_chain#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-candidate-values-or-total, expression: actual}
+        reference: {role: uncached-values-or-total-same-inverse, expression: reference}
+        iterations: {variable: quantity, required_values: ['hop-0:mesh-values', 'hop-0:mesh-total', 'hop-1:mesh-values', 'hop-1:mesh-total', 'hop-2:mesh-values', 'hop-2:mesh-total', 'hop-3:mesh-values', 'hop-3:mesh-total', 'hop-4:mesh-values', 'hop-4:mesh-total']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic, coulomb]}
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_self_candidate_j3_ratio.py::test_ecp_candidate_cache_after_tmove_onto_own_quadrature_point
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {moved_spin: up}
+    - {moved_spin: dn}
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_self_candidate_j3_ratio.py::test_molecular_ecp_candidate_cache_with_an_electron_on_a_rotated_quadrature_point
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {moved_spin: up}
+    - {moved_spin: dn}

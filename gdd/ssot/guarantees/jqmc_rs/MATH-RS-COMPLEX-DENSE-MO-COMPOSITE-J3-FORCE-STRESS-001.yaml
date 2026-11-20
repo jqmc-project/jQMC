@@ -1,0 +1,40 @@
+id: MATH-RS-COMPLEX-DENSE-MO-COMPOSITE-J3-FORCE-STRESS-001
+kind: mathematical
+name: Native complex-twist forces and stress of a dense-MO composite J3 equal the derivatives of ln Psi and the
+  local energy
+plain_language: 'The native complex-twist force and stress kernels accept a J3 orbital that is a dense complex MO
+  (fewer orbitals than AOs) over a pGTO(+)plane-wave or pGTO(+)B-spline composite, the J3 the QE converter builds
+  for j3_basis_type mo, and return the derivatives of the wave function and of the continuum local energy instead
+  of aborting. On run_qe2jqmc output for the committed QE Li k=(1/4,1/4,1/4) ccECP save (kind pgto+pw and pgto+bspline,
+  j1 = j2 = 1, j3_basis_type mo) with a seeded symmetric nonzero j_matrix, with the J3 composite in its converted
+  (pGTO, extra) order and in the (extra, pGTO) order with the MO columns permuted to match, at one seeded electron
+  configuration: the Pulay force d Re ln Psi / dR (free kernel vmc_grad_ln_psi_pbc_complex and the MCMC driver entry
+  grad_ln_psi_pbc_complex_batch), the drift d Re ln Psi / dr, the HF force d Re e_L / dR and d Re e_L / dr (free
+  kernel vmc_grad_e_L_pbc_complex, driver entry grad_e_L_pbc_complex_batch and the GFMC/LRDMC T-move measurement
+  force _gfmc_grad_e_L_ecp_pbc_complex), the VMC Pulay stress, the VMC HF stress and the GFMC/LRDMC T-move stress
+  equal reverse-mode AD of the XLA Re ln Psi and Re local energy (identity quadrature rotation) with every nucleus
+  position leaf displaced together, the electron coordinates displaced, or the cell, nuclei and electrons strained
+  together, in the same precision. Every reference must be finite and distinguishable from zero. This mathematical
+  guarantee owns full AD only at strict; paired mixed numerical receipts belong to NUM-RS-COMPLEX-DENSE-MO-COMPOSITE-J3-DERIVATIVE-MIXED-FIDELITY-001.'
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_converter_mo_j3_composite.py::test_converter_dense_mo_composite_j3_complex_forces_and_stress_match_ad
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {kind: pgto+pw, order: gto_first}
+    - {kind: pgto+pw, order: extra_first}
+    - {kind: pgto+bspline, order: gto_first}
+    - {kind: pgto+bspline, order: extra_first}
+    executable_checks:
+      force-and-stress-vs-ad:
+        site: tests/test_rs_kernel/test_complex_converter_mo_j3_composite.py::test_converter_dense_mo_composite_j3_complex_forces_and_stress_match_ad#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-dense-mo-composite-j3-force-and-stress, expression: value}
+        reference: {role: same-precision-autodiff-of-ln-psi-and-local-energy, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, mo_eval, mo_grad, mo_lap, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap,
+              wf_kinetic, ewald, coulomb]

@@ -1,0 +1,20 @@
+id: IMPL-GFMC-TMOVE-PROPAGATION-FN-LIVE-SAME-INPUT-001
+kind: implementation
+name: GFMC_t and GFMC_n tmove propagation equals its per-hop same-input reference with live fixed-node non-local elements
+plain_language: >-
+  On the committed N2 ccECP with J1+J2, random mesh and non_local_move tmove, short energy-only production XLA
+  runs of GFMC_n (two walkers, forty intervals of five hops) and GFMC_t (one walker, tau 0.05, twenty intervals)
+  are observed at every real projection hop. At each hop's captured configuration and rotations the
+  full-recompute tmove leaf reference of tests/_gfmc_n_same_input.py supplies the off-diagonal candidates
+  (including the fixed-node non-local elements min(V_nl, 0)), the transition CDF and the diagonal (including the
+  sign-flip term sum max(V_nl, 0)). GFMC_n must match them with the branching factor, running weight, fresh
+  inverse and selected move; GFMC_t must match candidates, CDF, off-diagonal sum, diagonal and selected move.
+  The reference non-local elements min(V_nl, 0) must be strictly negative at captured hops, so the T-move
+  off-diagonal channel is live (the light Li ccECP rows have none). Full and mixed are each judged with their
+  own strict or medium zone tolerance.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_tmove_propagation_reference.py::test_gfmc_n_tmove_propagation_matches_same_input_reference
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_tmove_propagation_reference.py::test_gfmc_t_tmove_propagation_matches_same_input_reference

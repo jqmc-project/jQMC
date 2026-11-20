@@ -1,0 +1,192 @@
+id: PHY-JAS-BASIS-CONVERSION-001
+kind: physical
+name: Basis-representation invariance of the J3 factor
+plain_language: 'Physics does not depend on the basis representation: spherical/cartesian conversions of the J3 factor in
+  AO and MO representation preserve the Jastrow, and the periodic-Gamma leaf converts consistently for its complex-twist
+  companion.'
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestBasisConversion::test_periodic_gamma_j3_leaf_conversion_for_complex_twist_companion
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestBasisConversion::test_Jastrow_threebody_part_sphe_to_cart_AOs_data
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestBasisConversion.test_Jastrow_threebody_part_sphe_to_cart_AOs_data#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(sph)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(cart)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+        iterations:
+          variable: channel
+          required_values:
+          - grad_up
+          - grad_dn
+          - lap_up
+          - lap_dn
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestBasisConversion.test_Jastrow_threebody_part_sphe_to_cart_AOs_data#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(J_sph)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(J_cart)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestBasisConversion::test_Jastrow_threebody_part_cart_to_sphe_AOs_data
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestBasisConversion.test_Jastrow_threebody_part_cart_to_sphe_AOs_data#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(cart)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(sph)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+        iterations:
+          variable: channel
+          required_values:
+          - grad_up
+          - grad_dn
+          - lap_up
+          - lap_dn
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestBasisConversion.test_Jastrow_threebody_part_cart_to_sphe_AOs_data#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(J_cart)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(J_sph)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestBasisConversion::test_Jastrow_threebody_part_sphe_to_cart_MOs_data
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestBasisConversion.test_Jastrow_threebody_part_sphe_to_cart_MOs_data#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(sph)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(cart)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+        iterations:
+          variable: channel
+          required_values:
+          - grad_up
+          - grad_dn
+          - lap_up
+          - lap_dn
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestBasisConversion.test_Jastrow_threebody_part_sphe_to_cart_MOs_data#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(J_sph)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(J_cart)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestBasisConversion::test_Jastrow_threebody_part_cart_to_sphe_MOs_data
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestBasisConversion.test_Jastrow_threebody_part_cart_to_sphe_MOs_data#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(cart)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(sph)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+        iterations:
+          variable: channel
+          required_values:
+          - grad_up
+          - grad_dn
+          - lap_up
+          - lap_dn
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestBasisConversion.test_Jastrow_threebody_part_cart_to_sphe_MOs_data#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(J_cart)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(J_sph)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval

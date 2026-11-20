@@ -1,0 +1,18 @@
+id: MATH-OPTK-LM-ROOT-SELECTION-001
+kind: mathematical
+name: LM update is the maximum-reference-weight real eigenpair on the conditioned set
+plain_language: >-
+  For centered non-symmetric pencils constructed from known right eigenvectors on the conditioned coordinate set,
+  with real roots -3, -1, 0.5, 2 (and 4) and a complex-conjugate pair 1 +- 0.75 i given the largest reference
+  component, the LM solver returns the real root of largest S-normalized reference weight, both when that root is
+  not the lowest real root and when it is, never a complex root, and a zero update on removed coordinates. The
+  update agrees in the S metric within 10 units of n eps kappa_2(S_A); the energy and reference weight agree with the
+  analytic values within the fp64 pair. Covered for a full-rank metric and for the rank-deficient metric of
+  MATH-OPTK-LM-CONDITIONING-001.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_lm_solver_selects_analytic_max_weight_real_eigenpair
+    required_parameter_cases: [{lowest_root_has_max_weight: false, metric_case: full-rank}, {lowest_root_has_max_weight: true, metric_case: full-rank}, {lowest_root_has_max_weight: false, metric_case: rank-deficient}, {lowest_root_has_max_weight: true, metric_case: rank-deficient}]
+    required_precision_modes: [full, mixed]

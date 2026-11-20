@@ -1,0 +1,31 @@
+id: MATH-AO-CART-INCOMPLETE-SHELL-NORMALIZATION-001
+kind: mathematical
+name: Cartesian GTO fields use the normalization of each component's own total degree, also for incomplete shells
+plain_language: >-
+  Every Cartesian GTO component c N x^nx y^ny z^nz exp(-a r^2) is normalized with its own total degree
+  l = nx + ny + nz, N^-2 = prod_i Gamma(n_i + 1/2) / (2a)^(n_i + 1/2), also when the AO set contains an incomplete
+  Cartesian shell, so that l exceeds the largest single coordinate power max(nx, ny, nz) of the set (the XLA
+  kernels bounded the static (8a)^l unroll by the coordinate power and returned fields scaled by (8a)^((1 - l)/2)).
+  For AO sets built with AOs_cart_gto_data.build containing a lone d_xy (a = 0.25), a lone (2,1,0) (a = 2.5), a p
+  shell plus a lone d_xy (a = 0.8), a lone (5,5,0) (a = 1) and a lone (41,41,0) (a = 1), and for a complete d shell as
+  control, at the radial maximum of the probed component and two nearby points (where the field is O(1)), the XLA
+  compute_AOs, compute_AOs_grad, compute_AOs_laplacian and fused compute_AOs_value_grad_lap and the Rust
+  compute_AOs, compute_AOs_grad and compute_AOs_laplacian equal the closed-form value, gradient
+  c N e^{-a r^2} (d_i P - 2 a x_i P) and Laplacian c N e^{-a r^2} (lap P - (4 a l + 6 a) P + 4 a^2 r^2 P) evaluated
+  with math.lgamma (no jqmc code), within the strict ao_eval (values) and ao_grad_lap (gradients, Laplacians)
+  tolerances of the active mode. The standalone value of the (41,41,0) component is outside this guarantee because
+  its mixed-precision ao_eval kernel needs float32 intermediates beyond the float32 range. Full and mixed
+  are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_cart_incomplete_shell_normalization.py::test_incomplete_cartesian_shell_fields_match_closed_form_normalization
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: lone_dxy}
+    - {case: lone_210}
+    - {case: p_shell_plus_lone_dxy}
+    - {case: lone_550}
+    - {case: lone_41_41_0}
+    - {case: complete_d_shell_control}

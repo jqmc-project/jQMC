@@ -1,0 +1,50 @@
+id: MATH-GFMC-ACCUMULATED-WEIGHT-SCALE-001
+kind: mathematical
+name: GFMC estimators stay exact when the collect-window weight products exceed the float64 range
+plain_language: >-
+  GFMC_t stores unshifted branching weights exp(-tau e), so the product of num_gfmc_collect_steps of them exceeds the
+  float64 range once k * tau * |E| passes about 709. On stored per-step moments of a system near -100 Ha
+  with tau = 0.1 and collect windows of 100 and 200 steps (unscaled products about e^1000 and e^2000, stated by an
+  input check), three warmup windows and four unequal blocks of 37 retained windows, the conventional and
+  load-balanced get_E energy and variance, get_aF force and get_aT stress means and jackknife errors, production and
+  debug twins, must equal an independent reference that sums each window's log-weights with math.fsum, subtracts the
+  largest retained one before exponentiating and evaluates the delete-one-block jackknife definitions directly. The
+  same comparison is required for get_E and get_aF on two MPI ranks (scattered-bin branch, non-root buffers poisoned
+  with NaN). For collect windows of 2 and 5 steps, whose products are ordinary float64 numbers, the same estimates must
+  equal the reference built on the explicit unscaled products. Every comparison uses the
+  current precision mode's local_energy strict policy (float64 storage in both modes). This is deterministic
+  stored-buffer postprocessing: no sampling, wavefunction or statistical confidence band is certified.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_weight_scaling.py::test_gfmc_estimators_match_log_space_reference_beyond_float64_products
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, implementation: production, collect: 100}
+    - {driver_kind: conventional, implementation: production, collect: 200}
+    - {driver_kind: conventional, implementation: debug, collect: 100}
+    - {driver_kind: conventional, implementation: debug, collect: 200}
+    - {driver_kind: load-balanced, implementation: production, collect: 100}
+    - {driver_kind: load-balanced, implementation: production, collect: 200}
+    - {driver_kind: load-balanced, implementation: debug, collect: 100}
+    - {driver_kind: load-balanced, implementation: debug, collect: 200}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_weight_scaling.py::test_gfmc_estimators_equal_unscaled_products_for_short_windows
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, implementation: production, collect: 2}
+    - {driver_kind: conventional, implementation: production, collect: 5}
+    - {driver_kind: conventional, implementation: debug, collect: 2}
+    - {driver_kind: conventional, implementation: debug, collect: 5}
+    - {driver_kind: load-balanced, implementation: production, collect: 2}
+    - {driver_kind: load-balanced, implementation: production, collect: 5}
+    - {driver_kind: load-balanced, implementation: debug, collect: 2}
+    - {driver_kind: load-balanced, implementation: debug, collect: 5}
+  - pytest_node: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_gfmc_mpi_energy_force_match_log_space_reference_beyond_float64_products
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, collect: 100}
+    - {driver_kind: conventional, collect: 200}
+    - {driver_kind: load-balanced, collect: 100}
+    - {driver_kind: load-balanced, collect: 200}

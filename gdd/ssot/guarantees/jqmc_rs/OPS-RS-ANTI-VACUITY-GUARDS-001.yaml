@@ -1,0 +1,28 @@
+id: OPS-RS-ANTI-VACUITY-GUARDS-001
+kind: operational
+name: Anti-vacuity guards of the Rust evidence set
+plain_language: 'No capability gate or skip/xfail conversion can silently drop Rust evidence, mutation controls prove the
+  detectors fire, the imported extension matches Rust/build/generator/central-setting inputs, compiled numerical policies equal their central Python literals, Rust test budgets cannot introduce local literals, and production
+  drivers use no optimized-away asserts (operational set closure).'
+verdict_methods:
+- VM-OPS-SET-CLOSURE-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-OPS-SET-CLOSURE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_no_capability_gates.py::test_no_capability_gate_expression_reappears
+  - pytest_node: tests/test_rs_kernel/test_no_capability_gates.py::test_guard_detects_a_reintroduced_gate
+  - pytest_node: tests/test_rs_kernel/test_no_capability_gates.py::test_rs_tests_do_not_turn_exceptions_into_skip_or_xfail
+  - pytest_node: tests/test_rs_kernel/test_no_capability_gates.py::test_rust_route_predicate_detector_catches_a_new_gate
+  - pytest_node: tests/test_rs_kernel/test_mutation_b_dropped_block.py::test_baseline_block_set_is_complete
+  - pytest_node: tests/test_rs_kernel/test_mutation_b_dropped_block.py::test_dropping_a_return_block_is_detected
+  - pytest_node: tests/test_gdd_simplification/test_rust_central_settings.py::test_rust_inline_budget_cli_rejects_literals_and_aliases
+  - pytest_node: tests/test_gdd_simplification/test_rust_central_settings.py::test_native_setting_generator_preserves_literal_binary64_bits
+  - pytest_node: tests/test_rs_kernel/test_build_identity.py::test_source_tree_is_present
+  - pytest_node: tests/test_rs_kernel/test_build_identity.py::test_imported_extension_matches_current_source
+  - pytest_node: tests/test_rs_kernel/test_build_identity.py::test_digest_is_sensitive_to_source_change
+  - pytest_node: tests/test_rs_kernel/test_raise_contract.py::test_production_drivers_do_not_use_optimized_away_asserts
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mutation_b_dropped_block.py::test_production_itself_rejects_a_dropped_block
+  - pytest_node: tests/test_rs_kernel/test_raise_contract.py::test_gfmc_grad_ln_psi_periodic_raises

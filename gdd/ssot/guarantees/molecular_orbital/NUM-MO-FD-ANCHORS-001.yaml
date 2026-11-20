@@ -1,0 +1,13 @@
+id: NUM-MO-FD-ANCHORS-001
+kind: numerical
+name: Module-level finite-difference anchors for molecular orbitals
+plain_language: Autodiff MO gradients and Laplacians agree with independent finite differences on the core evaluators; the
+  periodic sentinels are owned by the derivative ledger. The config_A cases of both nodes place every electron so far from
+  the nuclei that every AO underflows to exactly zero; they establish only finite output on underflow, not derivative agreement.
+verdict_methods:
+- VM-NUM-FD-ANCHOR-001
+required_evidence:
+- verdict_method: VM-NUM-FD-ANCHOR-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian::test_MOs_comparing_auto_and_numerical_grads
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian::test_MOs_comparing_auto_and_numerical_laplacians

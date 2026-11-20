@@ -1,0 +1,11 @@
+id: NUM-OPTK-FD-ANCHORS-001
+kind: numerical
+name: Finite-difference anchor of the ASR directional slope
+plain_language: The ASR directional slope agrees with an independent finite difference.
+verdict_methods:
+- VM-NUM-FD-ANCHOR-001
+required_evidence:
+- verdict_method: VM-NUM-FD-ANCHOR-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_opt_gt_force.py::TestT1ForceWirtingerFD::test_covariance_force_matches_fd_exactly
+  - pytest_node: tests/test_jqmc_kernel/test_complex_opt_gt_linear_method.py::TestT4ASRScalars::test_directional_slope_fd_anchor

@@ -1,0 +1,33 @@
+id: IMPL-RS-FAST-CUT-AO-DERIVATIVE-SCREEN-HIGH-L-001
+kind: implementation
+name: FAST-mode Rust AO derivative screens stay absolute for every accepted angular momentum
+plain_language: >-
+  The derivative cut of the screened FAST-mode Rust AO gradient and Laplacian kernels
+  (compute_aos_grad_lap_fast_cut, compute_aos_single_value_grad_lap_fast_cut_into,
+  compute_aos_single_value_grad_lap_fast_cut_folded_into) is valid for every angular momentum that AO construction
+  and the native molecular FAST gates accept, not only for l up to 39: the search for the cut radius starts beyond
+  every turning point of the Gaussian-polynomial derivative bound, so a bound that dips below exp(-LEPSBAS) at
+  zeta_min r^2 = 20.72 and rises above it farther out cannot screen the larger radii. For one
+  accepted Cartesian AO at the origin with powers (82, 0, 0), exponent 1 and contraction coefficient
+  4.01499518920269e-9 (the counterexample), at points on and next to the x axis with r^2 from 10 to 90
+  (beyond zeta_min r^2 = 20.72 the exact derivatives exceed the comparison envelope), the gradient components
+  and Laplacian of all three kernels, reached through the test-only binding compute_AOs_grad_lap_fast_cut, equal
+  the independent closed-form derivatives of c N x^82 exp(-r^2) (N from separable Gaussian integrals, c as stored
+  in the AO leaf) within the strict XLA-Rust consistency tolerance of the ao_grad_lap zone. Full and mixed are each
+  required.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_fast_cut_derivative_screen_high_l.py::test_fast_cut_ao_derivative_screen_absolute_for_high_angular_momentum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      fast-cut-ao-derivatives-high-l-vs-closed-form:
+        site: tests/test_rs_kernel/test_fast_cut_derivative_screen_high_l.py::test_fast_cut_ao_derivative_screen_absolute_for_high_angular_momentum#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-fast-cut-ao-grad-lap, expression: val}
+        reference: {role: independent-closed-form-ao-grad-lap, expression: ref}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_grad_lap]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_grad_lap]}

@@ -1,0 +1,52 @@
+id: IMPL-DERIV-RUST-XLA-001
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+name: Rust and XLA analytical derivative parity
+kind: implementation
+plain_language: Rust must implement and match XLA for every one of the 979 XLA analytical derivative obligations. Molecular-affine
+  and periodic cell-strain are distinct semantic axes, but both require parity. A missing Rust implementation is a failure.
+statement: Every XLA analytical derivative obligation requires one blocking Rust production implementation and parity registration.
+  The required Rust set is exactly the XLA universe and is never derived from the implementations currently present in Rust.
+  The molecular-affine capability is not a physical stress observable, but that semantic distinction does not weaken implementation
+  parity.
+scope:
+  universe: derivatives.rust_required_cases.v1
+  fixture_set: DERIV-FIX-XLA-RUST-001
+  upstream_obligations: 979
+  required_obligations: 979
+  explicit_not_applicable: 0
+  coverage_relation:
+    required: every-xla-required-cell
+    additional-rust-side-thinning: forbidden
+    not-applicable-obligations: forbidden
+required_evidence:
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_analytic_matrix.py::test_gfmc_analytic_matrix_matches_rust
+  - pytest_node: tests/test_rs_kernel/test_gfmc_analytic_matrix.py::test_gfmc_invalid_non_local_move_matches_public_contract
+  - pytest_node: tests/test_rs_kernel/test_gfmc_analytic_matrix.py::test_gfmc_numerical_regime_matches_rust
+  - pytest_node: tests/test_rs_kernel/test_gfmc_analytic_matrix.py::test_gfmc_output_liveness_matches_rust
+  - pytest_node: tests/test_rs_kernel/test_route_parity_param_deriv.py::test_parameter_leaf_liveness_matches_main_oracle
+  - pytest_node: tests/test_rs_kernel/test_route_parity_param_deriv.py::test_parameter_validity_disposition_matches_main
+  - pytest_node: tests/test_rs_kernel/test_route_parity_param_deriv.py::test_route_parity_complex_basis_opt
+  - pytest_node: tests/test_rs_kernel/test_route_parity_param_deriv.py::test_route_parity_j3_basis_parameter_derivatives
+  - pytest_node: tests/test_rs_kernel/test_route_parity_param_deriv.py::test_route_parity_nongto_basis_opt_emits_no_basis_block
+  - pytest_node: tests/test_rs_kernel/test_route_parity_param_deriv.py::test_route_parity_param_deriv_complex_twist
+  - pytest_node: tests/test_rs_kernel/test_route_parity_param_deriv.py::test_route_parity_param_deriv_real
+  - pytest_node: tests/test_rs_kernel/test_route_parity_param_deriv.py::test_route_parity_periodic_composite_basis_opt
+  - pytest_node: tests/test_rs_kernel/test_route_parity_param_deriv.py::test_v1_potential_independence_native_contract
+  - pytest_node: tests/test_rs_kernel/test_rs_analytic_matrix.py::test_rs_analytic_matrix
+  - pytest_node: tests/test_rs_kernel/test_rs_analytic_matrix_rRe.py::test_rs_analytic_matrix_rRe
+  - pytest_node: tests/test_rs_kernel/test_rs_analytic_matrix_rRe.py::test_rs_numerical_regime_matches_main_autograd
+  operation: derivatives.rust_registered_cases.v1
+  proof_kinds:
+  - backend-parity
+  - production-route-parity
+  - identity-parity
+  - validity-parity
+  one_to_one_registration: true
+  require_same_concrete_fixture_as_upstream: true
+  require_xla_and_rust_route_liveness: true
+  no_skip_or_xfail_escape: true
+  upstream_snapshot:
+    algorithm: sha256
+    value: 7c0ec7bfcc22d2b50dcc8ed3f2ee5875cacb17df3b6c9c91b5b1a0be4ae21ebe

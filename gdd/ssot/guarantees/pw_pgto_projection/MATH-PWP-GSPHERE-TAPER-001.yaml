@@ -1,0 +1,39 @@
+id: MATH-PWP-GSPHERE-TAPER-001
+kind: mathematical
+name: G-sphere taper is a monotone smooth step, is the identity without vacuum and attenuates only the sphere edge
+plain_language: >-
+  A sphere-truncated plane-wave expansion is not analytic at G_max, so far from every nucleus its
+  real-space tail falls to a truncation-ringing floor where -1/2 lap(psi)/psi is O(G_max^2/2). The
+  converter multiplies the QE coefficients by w(|G+k|), the C-infinity step S((g_end - q)/(g_end -
+  g_start)) with S(t) = f(t)/(f(t)+f(1-t)), f(t) = exp(-1/t), g_end = sqrt(2 ecutwfc) and g_start =
+  PW_TAPER_START_FRACTION g_end: w is 1 below g_start, 0 at and above g_end, monotone, symmetric about
+  the ramp midpoint, and already 1 (resp. below fp64 eps^2) one percent into the ramp. The taper is
+  applied only when some point of the cell is farther than PW_TAPER_VACUUM_RADIUS_BOHR from every
+  nucleus -- the covering radius of the periodic nuclei, computed exactly from the Voronoi vertices of the
+  wrapped atoms and their images, so it equals sqrt(3) a / 2 for one atom per cubic cell of side a and
+  a sqrt(5) / 4 for the body-centred pair, and does not change with the origin, the primitive basis or the
+  lattice representatives of the atoms. The committed Li gamma save has no such point and
+  taper_qe_reference returns the very same object, while the same save with its third lattice vector
+  stretched fourfold is tapered -- coefficients below g_start are bit-identical, those at or above g_end
+  are zero, those on the ramp are attenuated, the per-band spectral loss is returned, and the expanded
+  gamma_only set keeps c(-G) = conj(c(G)) because w depends on |G| only at Gamma. At the nonzero twist of
+  the committed Li k025 save the window is a function of the physical wavevector |G+k|: columns with
+  |G+k| >= g_end vanish and columns with |G| >= g_end > |G+k| do not. project_pw_to_spline then judges
+  its fidelity against the tapered bands, so every band's reported residual is below the residual of the
+  same spline against the untapered bands. Both modes exercise fp64 host arithmetic.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_pw_taper_window_is_a_monotone_smooth_step
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_taper_is_the_identity_without_a_vacuum_region
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_taper_attenuates_only_the_sphere_edge_and_keeps_gamma_symmetry
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_spline_fidelity_is_judged_against_the_tapered_bands
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

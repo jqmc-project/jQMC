@@ -1,0 +1,71 @@
+id: IMPL-TOOL-FORCE-REFUSALS-001
+kind: implementation
+name: Single-checkpoint compute-force refuses settings and samples that leave the force undefined
+plain_language: >-
+  mcmc compute-force and lrdmc compute-force on a single checkpoint file reject a warmup (and, for LRDMC, a
+  weight-history length) that leaves fewer measurements than bins on any contributing rank, more bins than
+  measurements, zero bins, a negative warmup, fewer than two delete-one replicas, a delete-one-bin weight sum that is
+  zero, negative or non-finite, and a non-finite force mean or error caused by a non-finite local-energy, weight or
+  force sample in the analysed window. Each refusal exits non-zero with an explicit reason and prints no force table
+  and no NaN value.
+  As documented for every LRDMC analysis command, lrdmc compute-force (checkpoint file and twist directory),
+  lrdmc extrapolate-energy and lrdmc compute-energy refuse a warmup below 25, fewer than 10 bins and a weight history
+  shorter than 5, including an explicit -w 0, with exit status 1, the violated minimum named and no estimate
+  printed.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForceRefusals::test_mcmc_compute_force_rejects_vacuous_binning
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {num_walkers: 2, args: ["-b", "4", "-w", "40"], message: fewer than num_mcmc_bin_blocks}
+    - {num_walkers: 2, args: ["-b", "50", "-w", "0"], message: fewer than num_mcmc_bin_blocks}
+    - {num_walkers: 2, args: ["-b", "0", "-w", "0"], message: must be >= 1}
+    - {num_walkers: 2, args: ["-b", "4", "-w", "-1"], message: must be >= 0}
+    - {num_walkers: 1, args: ["-b", "1", "-w", "0"], message: at least 2 binned samples}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForceRefusals::test_mcmc_compute_force_rejects_invalid_samples
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {defect: zero-weights, message: delete-one-bin weight sum}
+    - {defect: nan-weight, message: delete-one-bin weight sum}
+    - {defect: nan-e_L, message: non-finite atomic force estimate}
+    - {defect: nan-force_HF, message: non-finite atomic force estimate}
+    - {defect: inf-force_PP, message: non-finite atomic force estimate}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForceRefusals::test_lrdmc_compute_force_rejects_vacuous_binning
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {args: ["-b", "10", "-w", "40", "-c", "5"]}
+    - {args: ["-b", "10", "-w", "25", "-c", "40"]}
+    - {args: ["-b", "100", "-w", "25", "-c", "5"]}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForceRefusals::test_lrdmc_compute_force_rejects_invalid_samples
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {defect: zero-weights, message: delete-one-bin weight sum}
+    - {defect: nan-weight, message: delete-one-bin weight sum}
+    - {defect: nan-e_L, message: non-finite atomic force estimate}
+    - {defect: nan-force_HF, message: non-finite atomic force estimate}
+    - {defect: inf-force_PP, message: non-finite atomic force estimate}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForceRefusals::test_lrdmc_analysis_below_documented_minima_is_refused
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: compute-energy, args: ["-b", "10", "-w", "24", "-c", "5"], message: "num_gfmc_warmup_steps (24) must be >= 25"}
+    - {route: compute-energy, args: ["-b", "9", "-w", "25", "-c", "5"], message: "num_gfmc_bin_blocks (9) must be >= 10"}
+    - {route: compute-energy, args: ["-b", "10", "-w", "25", "-c", "4"], message: "num_gfmc_collect_steps (4) must be >= 5"}
+    - {route: compute-energy, args: ["-b", "3", "-w", "2", "-c", "2"], message: "num_gfmc_warmup_steps (2) must be >= 25"}
+    - {route: compute-energy, args: ["-w", "0"], message: "num_gfmc_warmup_steps (0) must be >= 25"}
+    - {route: compute-force, args: ["-b", "10", "-w", "24", "-c", "5"], message: "num_gfmc_warmup_steps (24) must be >= 25"}
+    - {route: compute-force, args: ["-b", "9", "-w", "25", "-c", "5"], message: "num_gfmc_bin_blocks (9) must be >= 10"}
+    - {route: compute-force, args: ["-b", "10", "-w", "25", "-c", "4"], message: "num_gfmc_collect_steps (4) must be >= 5"}
+    - {route: compute-force, args: ["-b", "3", "-w", "2", "-c", "2"], message: "num_gfmc_warmup_steps (2) must be >= 25"}
+    - {route: compute-force, args: ["-w", "0"], message: "num_gfmc_warmup_steps (0) must be >= 25"}
+    - {route: compute-force-twist, args: ["-b", "10", "-w", "24", "-c", "5"], message: "num_gfmc_warmup_steps (24) must be >= 25"}
+    - {route: compute-force-twist, args: ["-b", "9", "-w", "25", "-c", "5"], message: "num_gfmc_bin_blocks (9) must be >= 10"}
+    - {route: compute-force-twist, args: ["-b", "10", "-w", "25", "-c", "4"], message: "num_gfmc_collect_steps (4) must be >= 5"}
+    - {route: compute-force-twist, args: ["-b", "3", "-w", "2", "-c", "2"], message: "num_gfmc_warmup_steps (2) must be >= 25"}
+    - {route: compute-force-twist, args: ["-w", "0"], message: "num_gfmc_warmup_steps (0) must be >= 25"}
+    - {route: extrapolate-energy, args: ["-b", "10", "-w", "24", "-c", "5"], message: "num_gfmc_warmup_steps (24) must be >= 25"}
+    - {route: extrapolate-energy, args: ["-b", "9", "-w", "25", "-c", "5"], message: "num_gfmc_bin_blocks (9) must be >= 10"}
+    - {route: extrapolate-energy, args: ["-b", "10", "-w", "25", "-c", "4"], message: "num_gfmc_collect_steps (4) must be >= 5"}
+    - {route: extrapolate-energy, args: ["-b", "3", "-w", "2", "-c", "2"], message: "num_gfmc_warmup_steps (2) must be >= 25"}
+    - {route: extrapolate-energy, args: ["-w", "0"], message: "num_gfmc_warmup_steps (0) must be >= 25"}

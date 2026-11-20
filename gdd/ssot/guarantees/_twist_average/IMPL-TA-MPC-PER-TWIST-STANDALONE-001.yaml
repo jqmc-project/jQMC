@@ -1,0 +1,19 @@
+id: IMPL-TA-MPC-PER-TWIST-STANDALONE-001
+kind: implementation
+name: Twist-driver per-twist MPC estimates equal a standalone sampler's
+plain_language: >-
+  With mpc enabled on the periodic Li twist fixture (lithium_twist_222, twist 0, J2 Jastrow), the per-twist
+  energy, MPC correction and MPC-corrected energy, each with its jackknife error, that
+  run_twist_average_from_hamiltonians (MCMC) and run_twist_average_gfmc (GFMC_t) publish equal the get_E,
+  get_dE_mpc and get_E_mpc results of a standalone sampler of the same class built with the documented per-twist
+  seed and the same sampler settings, evaluated with the warmup and bin-block counts requested from the driver.
+  Those counts differ from every getter default and from each other, and the test checks that a dropped warmup or
+  swapped warmup and bin-block counts change every MPC value, so a per-twist estimator call that drops, replaces
+  or swaps either argument fails. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_mpc_per_twist_standalone.py::test_driver_per_twist_mpc_estimates_match_standalone_sampler
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}]

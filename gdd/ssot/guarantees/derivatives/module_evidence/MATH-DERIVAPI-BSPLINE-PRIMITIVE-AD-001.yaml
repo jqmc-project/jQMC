@@ -1,0 +1,56 @@
+id: MATH-DERIVAPI-BSPLINE-PRIMITIVE-AD-001
+kind: mathematical
+name: B-spline primitive Hessian and gradient-Laplacian retain their float64 AD identities
+plain_language: The original primitive Hessian and gradient-Laplacian analytical-versus-AD comparisons execute before
+  any Mixed whole-WF strain branch in both modes. Primitive coefficients, coordinates, primal and derivative JAX
+  arithmetic are float64; source-matched Full/Mixed dtype and JAXpr qualification establishes this mathematical
+  exception. The original non-AD gradient parity, jit eligibility and near-nucleus seeded coordinates remain required
+  controls. This guarantee does not promote rounded whole-wavefunction kinetic strain to mathematical AD.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_bspline_kinetic_vs_grad
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      retained-math-1:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_bspline_kinetic_vs_grad#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: retained-analytical-mathematical-result
+          expression: hess
+        reference:
+          role: retained-independent-full-mathematical-reference
+          expression: np.einsum('ckiid->cdki', Jg)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id001
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id001
+      retained-math-2:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_bspline_kinetic_vs_grad#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: retained-analytical-mathematical-result
+          expression: gradlap
+        reference:
+          role: retained-independent-full-mathematical-reference
+          expression: np.einsum('kiid->dki', Jl)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id001
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id001

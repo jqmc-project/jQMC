@@ -1,0 +1,23 @@
+id: IMPL-TWCKPT-BASIS-001
+kind: implementation
+name: Optimized geminal AO basis round-trip in multi-twist dumps
+plain_language: >-
+  A combined optimized twist Hamiltonian preserves each checkpoint's geminal AO
+  exponents and contraction coefficients for both spin channels. Reloading each
+  twist reproduces its optimized orbitals, gradients, Laplacians and wavefunction
+  for Cartesian and spherical periodic Gaussians, Gamma and non-Gamma twists,
+  restricted and unrestricted spin treatments, and Gaussian/PW composites,
+  in full and mixed precision. A partial spin-basis override is rejected.
+  Repeated dump/load cycles do not multiply periodic images. Inputs without
+  per-twist AO overrides continue to use the shared template.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_basis_dump.py::test_optimized_basis_dump_preserves_orbitals
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestWriteTwistOptimizedHamiltonian::test_dump_is_a_loadable_combined_input_with_every_optimized_twist
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_basis_dump.py::test_incomplete_twist_basis_override_is_rejected

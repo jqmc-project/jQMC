@@ -1,0 +1,31 @@
+id: IMPL-RS-DTN-MESH-STRAIN-DELTA-BATCH-001
+kind: implementation
+name: The periodic ECP mesh stress takes the DTN value-strain deltas of one electron's candidates together
+plain_language: >-
+  Every ECP non-local quadrature candidate of the periodic LRDMC HF stress (real MeshJasStressPbc and complex-twist
+  gfmc_ecp_nonlocal_strain_complex) moves one electron, and its DTN value strain is the base strain plus the
+  one-electron delta. stress_pbc::dtn_value_strain_move_delta_batch evaluates the deltas of all candidates of one
+  electron together: the base-position terms and the cutoff-policy base value once per group, the e-N metric of the
+  other electrons once per group; in the f channel the terms with an e-N leg at or past the cutoff (exactly zero) are
+  skipped and the fixed leg's power sum is contracted once per group, value and gradient together. Same per-term
+  formulas as dtn_value_strain_move_delta. A native test compares the
+  grouped deltas with the per-hop function for three electrons of both spins, five hops each, molecular and
+  periodic, all three channels with a nonzero cutoff policy, within ATOL_RS_UNIT_REDUCTION. The end-to-end
+  periodic GFMC DTN stress stays checked against the full-recompute oracle (test_gfmc_stress_ecp_pbc_dtn) and the
+  complex-twist DTN stress against XLA (test_gfmc_complex_stress). Full and mixed are judged separately.
+native_evidence:
+- jqmc_rs::dtn::tests::value_strain_move_delta_batch_matches_per_hop
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_forces.py::test_gfmc_stress_ecp_pbc_dtn
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 0, dltmove: false}
+    - {seed: 0, dltmove: true}
+  - pytest_node: tests/test_rs_kernel/test_gfmc_complex_force_stress.py::test_gfmc_complex_stress
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: dtn, nlm: tmove}
+    - {kind: dtn, nlm: dltmove}

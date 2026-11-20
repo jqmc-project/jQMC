@@ -1,0 +1,38 @@
+[control]
+job_type = "vmc"
+mcmc_seed = 34456
+number_of_walkers = 64
+max_time = 86400
+restart = false
+restart_chk = "restart.h5"
+hamiltonian_h5 = "hamiltonian_data.h5"
+verbosity = "high"
+
+[vmc]
+num_mcmc_steps = 500
+num_mcmc_per_measurement = 20
+num_mcmc_warmup_steps = 30
+num_mcmc_bin_blocks = 10
+Dt = 1.5
+epsilon_AS = 0.0
+num_opt_steps = 100
+wf_dump_freq = 1
+optimizer_kwargs = { method = "sr", delta = 0.05, epsilon = 0.001, cg_flag = true, cg_max_iter = 10000, use_lm = false }
+
+opt_J1_param = false
+opt_J2_param = true
+opt_J3_param = false
+opt_JDTN_u_param = false
+opt_JDTN_chi_param = false
+opt_JDTN_f_param = false
+
+# UHF has independent alpha and beta MO blocks; both are optimized.
+opt_geminal = true
+fix_geminal_rank = 0
+opt_J3_basis_exp = false
+opt_J3_basis_coeff = false
+opt_lambda_basis_exp = false
+opt_lambda_basis_coeff = false
+
+[precision]
+mode = "full"

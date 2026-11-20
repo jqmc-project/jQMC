@@ -1,0 +1,55 @@
+id: MATH-PREC-TWIST-ECP-MESH-JASTROW-RATIO-ZONE-001
+kind: mathematical
+name: Native complex-twist ECP mesh force/stress and reference kernels keep their Jastrow ratio in the fp64 jastrow_ratio zone
+plain_language: >-
+  On the committed twist_sphepgto_j123 fixture (lithium_k025.h5, bcc Li ccECP,
+  k = (1/4, 1/4, 1/4), complex sphe-pGTO single determinant, exp J1/J2 and a complex Bloch
+  pGTO J3), the three _walker_batch(seed=0) walkers and the three production per-walker
+  rotations of test_batch_mesh_per_walker on the default Nv mesh (NN = 1, alat = 0.3), the
+  precision policy assigns every ECP mesh / discretized-hop Jastrow ratio exp(J(R')-J(R)) to
+  the jastrow_ratio zone (float64 in both modes), never to jastrow_eval (whole Jastrow
+  values, float32 in mixed). (1) The native twist ECP force and stress outputs whose mesh
+  candidates fall back to full recomputes when a J3 is present -- the MCMC force / stress
+  batch entries (NativeObsCtx.grad_e_L_pbc_complex_batch / grad_e_L_eps_pbc_complex_batch,
+  through gfmc_forces.gfmc_ecp_nonlocal_force_complex and gfmc_ecp_nonlocal_strain_complex),
+  the GFMC force / stress entries (_gfmc_grad_e_L_ecp_pbc_complex / _gfmc_stress_ecp_pbc_complex),
+  the free complex_stress ECP non-local force / strain kernels, and the reference ECP
+  energy and LRDMC e_L / b_L routes (compute_ecp_nonlocal_withJ_complex,
+  _gfmc_lrdmc_ecp_complex(fast=False)) -- evaluated with the float64 native policy except
+  jastrow_eval at the active mode's dtype equal the all-float64 native evaluation of an
+  independently loaded Hamiltonian of the same serialized full input elementwise to reduction
+  order (ATOL/RTOL_REDUCTION_ORDER): none of them consumes a whole Jastrow value, so both run
+  the same float64 arithmetic; the full MCMC force / stress must also equal XLA
+  (assemble.compute_grad_e_L) at the strict float64 budget. (2) Under the actual mixed policy
+  the reference-route ECP non-local energy and the reference LRDMC b_L, whose zones at a twist
+  (ao_bloch_eval, mo_eval, det_eval, det_ratio, jastrow_ratio, coulomb) are float64 in both
+  modes, equal the full rebuild to reduction order, Re and Im, and XLA's holomorphic
+  nearest-neighbour ECP sum equals its full rebuild at the strict float64 budget of those zones;
+  the full native ECP energy equals XLA's at that budget.
+  The same holds for the MCMC force / stress of that input with only the determinant converted
+  to Cartesian AOs (production geminal_data.to_cartesian(); same active spherical J3, walkers and
+  rotations), which selects the grouped mesh-force reduction; the native route counter
+  gfmc_route_counters()[73] must show that its fallback ratio (MeshJasC::ratio) ran, and must
+  stay zero on the spherical case.
+  Electron configurations must be identical, values finite and live. Full runs are same-case
+  consistency checks. A ratio formed from two whole jastrow_value_complex values fails these
+  budgets (the force / stress routes also exceed the strict float64 budget). This does not claim mixed fidelity of the jastrow_grad_lap-zone drift,
+  Pulay and strain fields of these outputs, of the DTN streaming ratio state, or of XLA's
+  streamed (non-rank-one) ECP force / stress route.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_ecp_mesh_jastrow_ratio_zone.py::test_twist_ecp_mesh_kernels_do_not_read_jastrow_eval
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: mcmc_force_stress}
+    - {route: mcmc_force_stress_cart_grouped}
+    - {route: gfmc_force_stress}
+    - {route: free_force_strain}
+    - {route: reference_energy}
+  - pytest_node: tests/test_rs_kernel/test_complex_ecp_mesh_jastrow_ratio_zone.py::test_twist_ecp_reference_routes_match_full_precision_rebuild
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: native}
+    - {backend: xla}

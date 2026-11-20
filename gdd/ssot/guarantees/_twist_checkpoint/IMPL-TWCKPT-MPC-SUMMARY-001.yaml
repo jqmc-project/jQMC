@@ -1,0 +1,19 @@
+id: IMPL-TWCKPT-MPC-SUMMARY-001
+kind: implementation
+name: MPC summaries resume without stale cutoff reuse
+plain_language: Per-twist checkpoints persist the MPC correction and covariance-aware corrected total with both errors and
+  the cutoff that defined them; resume rehydrates every MPC result without resampling, recomputes legacy summaries missing
+  the cutoff, and refuses a stored cutoff that differs from the requested calculation.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_mpc.py::test_checkpoint_summary_and_identity_include_mpc_cutoff
+  - pytest_node: tests/test_jqmc_kernel/test_twist_resume.py::test_twist_driver_refuses_stale_checkpoint
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}]
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_mpc.py::test_mpc_resume_rehydrates_all_per_twist_summaries_without_resampling

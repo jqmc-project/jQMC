@@ -1,0 +1,12 @@
+id: IMPL-SETTING-OPTIMIZER-POLICIES-001
+kind: implementation
+name: Optimizer numerical-policy resolution
+plain_language: Every registered optimizer roundoff policy resolves exactly to its multiplier times the real component's epsilon power times the scale, checked for binary32/binary64 real and complex dtypes at three fixed scales and the default scale; unknown names raise KeyError. The CG breakdown threshold is the real component's smallest normal value. This checks policy resolution, not the scientific optimality of the selected policies.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_setting_policy_resolvers.py::test_optimizer_roundoff_resolution_matches_binary_formula
+  - pytest_node: tests/test_jqmc_kernel/test_setting_policy_resolvers.py::test_optimizer_roundoff_unknown_policy_is_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_setting_policy_resolvers.py::test_optimizer_breakdown_uses_smallest_real_normal

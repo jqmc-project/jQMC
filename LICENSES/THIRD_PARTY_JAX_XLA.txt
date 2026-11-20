@@ -1,0 +1,45 @@
+# Third-party code derived from JAX and XLA
+
+The file `jqmc/rs/src/threefry.rs` of jQMC, which is compiled into the
+`jqmc_rs` extension module, contains material derived from JAX and XLA:
+
+* The Threefry-2x32 implementation and the `split` / `random_bits` /
+  `randint` / `uniform` transforms are derived from JAX
+  (https://github.com/jax-ml/jax), `jax/_src/prng.py` and
+  `jax/_src/random.py` of JAX 0.7.2:
+
+    Copyright 2018 The JAX Authors.
+    Copyright 2021 The JAX Authors.
+
+  They were translated from Python to Rust and modified for jQMC.
+
+* The coefficients and regions of the Rust function `erfinv` are those of
+  XLA's `ErfInv32` and `ErfInv64` (https://github.com/openxla/xla,
+  `xla/hlo/builder/lib/math.cc`), which implement the approximation of
+  M. Giles, "Approximating the erfinv function", GPU Computing Gems, Jade
+  Edition (2011):
+
+    Copyright 2018 The OpenXLA Authors.
+
+  They were translated to Rust and modified for jQMC: `erfinv` evaluates in
+  f64, keeps the single-precision central and intermediate regions, and uses
+  the double-precision final region for `w >= 16` instead of extrapolating
+  the single-precision fit.
+
+Both are licensed under the Apache License, Version 2.0:
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+The text of the Apache License, Version 2.0 is in `LICENSES/Apache-2.0.txt`.
+The rest of `jqmc/rs/src/threefry.rs`, and jQMC itself, is under the
+BSD-3-Clause licence in `LICENSE`.

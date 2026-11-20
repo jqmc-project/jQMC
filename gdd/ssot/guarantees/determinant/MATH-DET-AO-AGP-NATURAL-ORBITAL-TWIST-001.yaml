@@ -1,0 +1,45 @@
+id: MATH-DET-AO-AGP-NATURAL-ORBITAL-TWIST-001
+kind: mathematical
+name: MPC natural orbitals of an AO-basis AGP use the bilinear (transposed) right factor at a complex twist
+plain_language: >-
+  AGP_data.natural_orbital_density_coefficients_jnp, which supplies the MPC one-body density of an AO-basis
+  AGP, factorises S_up^{1/2} lambda (S_dn^{1/2})^T, the same bilinear convention as convert_from_AOs_to_MOs,
+  and takes the dn natural orbitals from the transposed right singular vectors. For a Slater determinant
+  converted to the AO basis on complex Bloch pGTO leaves at k = 1/4 (committed Cartesian H4 and spherical H2
+  TREXIO fixtures with their stored MOs, and the H4 leaf with two random complex S-orthonormal MOs), the
+  returned occupations are exactly one on the occupied orbitals and zero elsewhere in both spin channels, the
+  occupied natural orbitals are S-orthonormal and span the stored MOs (every singular value of conj(P) S C^T
+  is one), all within the strict det_eval zone policy, and the per-spin density from the natural orbitals
+  equals the density of the stored MOs at 16 points inside and outside the home cell within the strict
+  ao_eval/mo_eval/det_eval policy; this holds with the overlap computed directly or passed in as the hoisted
+  frozen overlap. At the twist the overlap is genuinely complex and the adjoint form S_up^{1/2} lambda
+  S_dn^{1/2} fails the same occupation comparison. At Gamma (real Cartesian H4 and spherical H2 leaves) the
+  same checks hold and the two forms agree, so the Gamma result is unchanged. Full and mixed are judged
+  separately. This concerns the natural-orbital factorisation feeding the MPC density, not the MPC
+  Coulomb tables.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_natural_orbital_twist.py::test_twist_ao_agp_natural_orbitals_recover_the_slater_determinant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H4_pbc_ae_k025_cart.h5, mos: stored, overlap_route: direct}
+    - {trexio_file: H4_pbc_ae_k025_cart.h5, mos: stored, overlap_route: frozen}
+    - {trexio_file: H2_pbc_ae_k025_sphe.h5, mos: stored, overlap_route: direct}
+    - {trexio_file: H2_pbc_ae_k025_sphe.h5, mos: stored, overlap_route: frozen}
+    - {trexio_file: H4_pbc_ae_k025_cart.h5, mos: random-complex, overlap_route: direct}
+    - {trexio_file: H4_pbc_ae_k025_cart.h5, mos: random-complex, overlap_route: frozen}
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_natural_orbital_twist.py::test_twist_adjoint_right_factor_is_rejected
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H4_pbc_ae_k025_cart.h5, mos: stored}
+    - {trexio_file: H2_pbc_ae_k025_sphe.h5, mos: stored}
+    - {trexio_file: H4_pbc_ae_k025_cart.h5, mos: random-complex}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_natural_orbital_twist.py::test_gamma_ao_agp_natural_orbitals_are_unchanged
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H4_pbc_ae_cart.h5}
+    - {trexio_file: H2_pbc_ae_sphe.h5}

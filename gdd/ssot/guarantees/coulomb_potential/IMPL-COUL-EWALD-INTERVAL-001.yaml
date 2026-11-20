@@ -1,0 +1,453 @@
+id: IMPL-COUL-EWALD-INTERVAL-001
+kind: implementation
+name: Per-hop Ewald electron interval-state equivalence
+plain_language: >-
+  The carried electron-electron Ewald state reproduces full Ewald recomputation
+  initially and after all 50 prescribed moves, including lattice translations
+  and exact no-ops, in cubic, tetragonal, orthorhombic and monoclinic cells
+  with one, two and four electrons. No-op moves preserve every state component
+  exactly. This component contract does not require a determinant or Jastrow,
+  and does not claim an independent oracle for shared Ewald tables or geometry.
+  Additional 127/128-electron cubic/monoclinic cases cover both batching arms.
+  The orthogonal-cell shortcut must preserve general nearest-image values and
+  cell Jacobians, including half-cell ties and a rotated orthogonal cell.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_interval_matches_full_at_every_explicit_hop
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 8.0, 0.0], [0.0, 0.0, 8.0]], n_up: 1, n_dn: 0}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 8.0, 0.0], [0.0, 0.0, 10.0]], n_up: 1, n_dn: 0}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [0.0, 0.0, 10.0]], n_up: 1, n_dn: 0}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [2.0, 0.0, 10.0]], n_up: 1, n_dn: 0}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 8.0, 0.0], [0.0, 0.0, 8.0]], n_up: 1, n_dn: 1}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 8.0, 0.0], [0.0, 0.0, 10.0]], n_up: 1, n_dn: 1}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [0.0, 0.0, 10.0]], n_up: 1, n_dn: 1}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [2.0, 0.0, 10.0]], n_up: 1, n_dn: 1}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 8.0, 0.0], [0.0, 0.0, 8.0]], n_up: 2, n_dn: 2}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 8.0, 0.0], [0.0, 0.0, 10.0]], n_up: 2, n_dn: 2}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [0.0, 0.0, 10.0]], n_up: 2, n_dn: 2}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [2.0, 0.0, 10.0]], n_up: 2, n_dn: 2}
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_interval_matches_full_at_every_explicit_hop#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual_component
+        reference:
+          role: existing-test-reference
+          expression: reference_component
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+        iterations:
+          variable: component_hop_label
+          required_values:
+          - 0/real-space
+          - 0/reciprocal-real
+          - 0/reciprocal-imag
+          - 1/real-space
+          - 1/reciprocal-real
+          - 1/reciprocal-imag
+          - 2/real-space
+          - 2/reciprocal-real
+          - 2/reciprocal-imag
+          - 3/real-space
+          - 3/reciprocal-real
+          - 3/reciprocal-imag
+          - 4/real-space
+          - 4/reciprocal-real
+          - 4/reciprocal-imag
+          - 5/real-space
+          - 5/reciprocal-real
+          - 5/reciprocal-imag
+          - 6/real-space
+          - 6/reciprocal-real
+          - 6/reciprocal-imag
+          - 7/real-space
+          - 7/reciprocal-real
+          - 7/reciprocal-imag
+          - 8/real-space
+          - 8/reciprocal-real
+          - 8/reciprocal-imag
+          - 9/real-space
+          - 9/reciprocal-real
+          - 9/reciprocal-imag
+          - 10/real-space
+          - 10/reciprocal-real
+          - 10/reciprocal-imag
+          - 11/real-space
+          - 11/reciprocal-real
+          - 11/reciprocal-imag
+          - 12/real-space
+          - 12/reciprocal-real
+          - 12/reciprocal-imag
+          - 13/real-space
+          - 13/reciprocal-real
+          - 13/reciprocal-imag
+          - 14/real-space
+          - 14/reciprocal-real
+          - 14/reciprocal-imag
+          - 15/real-space
+          - 15/reciprocal-real
+          - 15/reciprocal-imag
+          - 16/real-space
+          - 16/reciprocal-real
+          - 16/reciprocal-imag
+          - 17/real-space
+          - 17/reciprocal-real
+          - 17/reciprocal-imag
+          - 18/real-space
+          - 18/reciprocal-real
+          - 18/reciprocal-imag
+          - 19/real-space
+          - 19/reciprocal-real
+          - 19/reciprocal-imag
+          - 20/real-space
+          - 20/reciprocal-real
+          - 20/reciprocal-imag
+          - 21/real-space
+          - 21/reciprocal-real
+          - 21/reciprocal-imag
+          - 22/real-space
+          - 22/reciprocal-real
+          - 22/reciprocal-imag
+          - 23/real-space
+          - 23/reciprocal-real
+          - 23/reciprocal-imag
+          - 24/real-space
+          - 24/reciprocal-real
+          - 24/reciprocal-imag
+          - 25/real-space
+          - 25/reciprocal-real
+          - 25/reciprocal-imag
+          - 26/real-space
+          - 26/reciprocal-real
+          - 26/reciprocal-imag
+          - 27/real-space
+          - 27/reciprocal-real
+          - 27/reciprocal-imag
+          - 28/real-space
+          - 28/reciprocal-real
+          - 28/reciprocal-imag
+          - 29/real-space
+          - 29/reciprocal-real
+          - 29/reciprocal-imag
+          - 30/real-space
+          - 30/reciprocal-real
+          - 30/reciprocal-imag
+          - 31/real-space
+          - 31/reciprocal-real
+          - 31/reciprocal-imag
+          - 32/real-space
+          - 32/reciprocal-real
+          - 32/reciprocal-imag
+          - 33/real-space
+          - 33/reciprocal-real
+          - 33/reciprocal-imag
+          - 34/real-space
+          - 34/reciprocal-real
+          - 34/reciprocal-imag
+          - 35/real-space
+          - 35/reciprocal-real
+          - 35/reciprocal-imag
+          - 36/real-space
+          - 36/reciprocal-real
+          - 36/reciprocal-imag
+          - 37/real-space
+          - 37/reciprocal-real
+          - 37/reciprocal-imag
+          - 38/real-space
+          - 38/reciprocal-real
+          - 38/reciprocal-imag
+          - 39/real-space
+          - 39/reciprocal-real
+          - 39/reciprocal-imag
+          - 40/real-space
+          - 40/reciprocal-real
+          - 40/reciprocal-imag
+          - 41/real-space
+          - 41/reciprocal-real
+          - 41/reciprocal-imag
+          - 42/real-space
+          - 42/reciprocal-real
+          - 42/reciprocal-imag
+          - 43/real-space
+          - 43/reciprocal-real
+          - 43/reciprocal-imag
+          - 44/real-space
+          - 44/reciprocal-real
+          - 44/reciprocal-imag
+          - 45/real-space
+          - 45/reciprocal-real
+          - 45/reciprocal-imag
+          - 46/real-space
+          - 46/reciprocal-real
+          - 46/reciprocal-imag
+          - 47/real-space
+          - 47/reciprocal-real
+          - 47/reciprocal-imag
+          - 48/real-space
+          - 48/reciprocal-real
+          - 48/reciprocal-imag
+          - 49/real-space
+          - 49/reciprocal-real
+          - 49/reciprocal-imag
+      energy:
+        iterations:
+          variable: hop_label
+          required_values: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50']
+        site: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_interval_matches_full_at_every_explicit_hop#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-ewald-ee-energy, expression: actual}
+        reference: {role: full-ewald-ee-recomputation, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      no-op-state:
+        site: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_interval_matches_full_at_every_explicit_hop#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: state-after-no-op, expression: actual_component}
+        reference: {role: state-before-no-op, expression: reference_component}
+        iterations:
+          variable: noop_label
+          required_values: [0/real-space, 0/reciprocal-real, 0/reciprocal-imag, 11/real-space, 11/reciprocal-real, 11/reciprocal-imag, 22/real-space, 22/reciprocal-real, 22/reciprocal-imag, 33/real-space, 33/reciprocal-real, 33/reciprocal-imag, 44/real-space, 44/reciprocal-real, 44/reciprocal-imag]
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_interval_batch_boundary_preserves_every_hop
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 8.0, 0.0], [0.0, 0.0, 8.0]], n_up: 64, n_dn: 63}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 8.0, 0.0], [0.0, 0.0, 8.0]], n_up: 64, n_dn: 64}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [2.0, 0.0, 10.0]], n_up: 64, n_dn: 63}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [2.0, 0.0, 10.0]], n_up: 64, n_dn: 64}
+    executable_checks:
+      explicit-hop-comparison-2:
+        site: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_interval_matches_full_at_every_explicit_hop#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual_component
+        reference:
+          role: existing-test-reference
+          expression: reference_component
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+        iterations:
+          variable: component_hop_label
+          required_values:
+          - 0/real-space
+          - 0/reciprocal-real
+          - 0/reciprocal-imag
+          - 1/real-space
+          - 1/reciprocal-real
+          - 1/reciprocal-imag
+          - 2/real-space
+          - 2/reciprocal-real
+          - 2/reciprocal-imag
+          - 3/real-space
+          - 3/reciprocal-real
+          - 3/reciprocal-imag
+          - 4/real-space
+          - 4/reciprocal-real
+          - 4/reciprocal-imag
+          - 5/real-space
+          - 5/reciprocal-real
+          - 5/reciprocal-imag
+          - 6/real-space
+          - 6/reciprocal-real
+          - 6/reciprocal-imag
+          - 7/real-space
+          - 7/reciprocal-real
+          - 7/reciprocal-imag
+          - 8/real-space
+          - 8/reciprocal-real
+          - 8/reciprocal-imag
+          - 9/real-space
+          - 9/reciprocal-real
+          - 9/reciprocal-imag
+          - 10/real-space
+          - 10/reciprocal-real
+          - 10/reciprocal-imag
+          - 11/real-space
+          - 11/reciprocal-real
+          - 11/reciprocal-imag
+          - 12/real-space
+          - 12/reciprocal-real
+          - 12/reciprocal-imag
+          - 13/real-space
+          - 13/reciprocal-real
+          - 13/reciprocal-imag
+          - 14/real-space
+          - 14/reciprocal-real
+          - 14/reciprocal-imag
+          - 15/real-space
+          - 15/reciprocal-real
+          - 15/reciprocal-imag
+          - 16/real-space
+          - 16/reciprocal-real
+          - 16/reciprocal-imag
+          - 17/real-space
+          - 17/reciprocal-real
+          - 17/reciprocal-imag
+          - 18/real-space
+          - 18/reciprocal-real
+          - 18/reciprocal-imag
+          - 19/real-space
+          - 19/reciprocal-real
+          - 19/reciprocal-imag
+          - 20/real-space
+          - 20/reciprocal-real
+          - 20/reciprocal-imag
+          - 21/real-space
+          - 21/reciprocal-real
+          - 21/reciprocal-imag
+          - 22/real-space
+          - 22/reciprocal-real
+          - 22/reciprocal-imag
+          - 23/real-space
+          - 23/reciprocal-real
+          - 23/reciprocal-imag
+          - 24/real-space
+          - 24/reciprocal-real
+          - 24/reciprocal-imag
+          - 25/real-space
+          - 25/reciprocal-real
+          - 25/reciprocal-imag
+          - 26/real-space
+          - 26/reciprocal-real
+          - 26/reciprocal-imag
+          - 27/real-space
+          - 27/reciprocal-real
+          - 27/reciprocal-imag
+          - 28/real-space
+          - 28/reciprocal-real
+          - 28/reciprocal-imag
+          - 29/real-space
+          - 29/reciprocal-real
+          - 29/reciprocal-imag
+          - 30/real-space
+          - 30/reciprocal-real
+          - 30/reciprocal-imag
+          - 31/real-space
+          - 31/reciprocal-real
+          - 31/reciprocal-imag
+          - 32/real-space
+          - 32/reciprocal-real
+          - 32/reciprocal-imag
+          - 33/real-space
+          - 33/reciprocal-real
+          - 33/reciprocal-imag
+          - 34/real-space
+          - 34/reciprocal-real
+          - 34/reciprocal-imag
+          - 35/real-space
+          - 35/reciprocal-real
+          - 35/reciprocal-imag
+          - 36/real-space
+          - 36/reciprocal-real
+          - 36/reciprocal-imag
+          - 37/real-space
+          - 37/reciprocal-real
+          - 37/reciprocal-imag
+          - 38/real-space
+          - 38/reciprocal-real
+          - 38/reciprocal-imag
+          - 39/real-space
+          - 39/reciprocal-real
+          - 39/reciprocal-imag
+          - 40/real-space
+          - 40/reciprocal-real
+          - 40/reciprocal-imag
+          - 41/real-space
+          - 41/reciprocal-real
+          - 41/reciprocal-imag
+          - 42/real-space
+          - 42/reciprocal-real
+          - 42/reciprocal-imag
+          - 43/real-space
+          - 43/reciprocal-real
+          - 43/reciprocal-imag
+          - 44/real-space
+          - 44/reciprocal-real
+          - 44/reciprocal-imag
+          - 45/real-space
+          - 45/reciprocal-real
+          - 45/reciprocal-imag
+          - 46/real-space
+          - 46/reciprocal-real
+          - 46/reciprocal-imag
+          - 47/real-space
+          - 47/reciprocal-real
+          - 47/reciprocal-imag
+          - 48/real-space
+          - 48/reciprocal-real
+          - 48/reciprocal-imag
+          - 49/real-space
+          - 49/reciprocal-real
+          - 49/reciprocal-imag
+      energy:
+        iterations:
+          variable: hop_label
+          required_values: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46', '47', '48', '49', '50']
+        site: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_interval_matches_full_at_every_explicit_hop#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-ewald-ee-energy, expression: actual}
+        reference: {role: full-ewald-ee-recomputation, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      no-op-state:
+        site: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_interval_matches_full_at_every_explicit_hop#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: state-after-no-op, expression: actual_component}
+        reference: {role: state-before-no-op, expression: reference_component}
+        iterations:
+          variable: noop_label
+          required_values: [0/real-space, 0/reciprocal-real, 0/reciprocal-imag, 11/real-space, 11/reciprocal-real, 11/reciprocal-imag, 22/real-space, 22/reciprocal-real, 22/reciprocal-imag, 33/real-space, 33/reciprocal-real, 33/reciprocal-imag, 44/real-space, 44/reciprocal-real, 44/reciprocal-imag]
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_point_sum_shortcut_preserves_values_and_cell_jacobian
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [0.0, 0.0, 10.0]], sign: -1.0}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [0.0, 0.0, 10.0]], sign: 1.0}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [2.0, 0.0, 10.0]], sign: -1.0}
+    - {cell: [[8.0, 0.0, 0.0], [0.0, 9.0, 0.0], [2.0, 0.0, 10.0]], sign: 1.0}
+    - {cell: [[4.8, 6.4, 0.0], [-7.2, 5.4, 0.0], [0.0, 0.0, 10.0]], sign: -1.0}
+    - {cell: [[4.8, 6.4, 0.0], [-7.2, 5.4, 0.0], [0.0, 0.0, 10.0]], sign: 1.0}
+    executable_checks:
+      point-values:
+        site: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_point_sum_shortcut_preserves_values_and_cell_jacobian#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: optimized-ewald-point-values, expression: actual}
+        reference: {role: general-nearest-image-point-values, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      cell-jacobian:
+        site: tests/test_jqmc_kernel/test_ewald_interval_state.py::test_ewald_point_sum_shortcut_preserves_values_and_cell_jacobian#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: optimized-ewald-cell-jacobian, expression: actual_jacobian}
+        reference: {role: general-nearest-image-cell-jacobian, expression: reference_jacobian}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}

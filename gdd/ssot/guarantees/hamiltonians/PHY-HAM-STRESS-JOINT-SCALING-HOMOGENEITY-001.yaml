@@ -1,0 +1,29 @@
+id: PHY-HAM-STRESS-JOINT-SCALING-HOMOGENEITY-001
+kind: physical
+name: Joint-scaling homogeneity of the kinetic and Ewald stress channels
+plain_language: >-
+  For two all-electron H nuclei in a triclinic cell with one up and one down electron in a Jastrow-free
+  Gamma real plane-wave determinant (orbitals depend on fractional coordinates only), scaling cell, nuclei
+  and electrons by s gives T(s) = T / s^2 and V(s) = V / s for each Ewald channel ii, ei and ee. Values
+  rebuilt from raw inputs by the public builders at s = 0.9 and 1.1 obey this law, and jax.grad in s on a
+  Hamiltonian whose structure leaves are constructed in the test (not through _apply_strain) equals -2 T and
+  -V. The full 3x3 strain derivative of each channel through Hamiltonian_data._apply_strain equals the
+  constructed-leaf tensor entry-wise, its trace equals the same closed form, and the trace of the analytic
+  HF stress kernel equals the virial -2 T - V. A strain map that leaves the Ewald tables on the unstrained
+  cell must fail the ii, ei and ee traces. Deterministic strict zone policy; full and mixed are judged
+  separately. The kinetic law is claimed only for this fractional-coordinate basis: Gaussian exponents and
+  Jastrow parameters are fixed under the production strain (fixed static ansatz), so no homogeneity is
+  claimed for them.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_stress_homogeneity.py::test_rebuilt_channels_are_homogeneous
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_stress_homogeneity.py::test_production_strain_channels_obey_homogeneity
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_stress_homogeneity.py::test_homogeneity_oracle_rejects_unstrained_ewald_leaf
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

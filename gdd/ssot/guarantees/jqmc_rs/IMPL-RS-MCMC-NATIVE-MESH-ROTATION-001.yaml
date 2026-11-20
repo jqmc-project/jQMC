@@ -1,0 +1,32 @@
+id: IMPL-RS-MCMC-NATIVE-MESH-ROTATION-001
+kind: implementation
+name: Native MCMC random-mesh energies follow the prescribed Haar rotation
+plain_language: >-
+  Energy-only production MCMC runs the real water ccECP and complex Li k=(1/4,1/4,1/4)
+  ccECP native chunks for six steps with two walkers, seed 34356 and random mesh enabled,
+  without injected normals or grids. The last stored local energy of each walker equals
+  a from-scratch XLA energy at its returned position and key under the strict same-mode
+  Rust/XLA value policy. SciPy extrinsic Euler composition independently anchors the
+  prescribed Haar Rz(gamma) Ry(beta) Rx(alpha) rotation: alpha and gamma are uniform
+  modulo 2pi and sin(beta) is uniform on [-1,1], as in MATH-RANDOM-MESH-HAAR-ROTATION-001.
+  The rotated and identity-mesh energies must differ at the comparison tolerance in
+  each case, so the nonlocal-ECP rotation is observably exercised. Full and mixed
+  precision are judged separately. This does not claim bit-identical libm rotations.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_richer_production_drivers.py::test_native_mcmc_random_mesh_energies_match_haar_recompute
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_sphe_j12, complex_chunk: false}
+    - {pattern: twist_sphepgto_j12, complex_chunk: true}
+    executable_checks:
+      native-random-mesh-energy:
+        site: tests/test_rs_kernel/test_richer_production_drivers.py::test_native_mcmc_random_mesh_energies_match_haar_recompute#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: stored-native-random-mesh-energy, expression: stored}
+        reference: {role: xla-energy-at-scipy-haar-rotation, expression: reference}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic]}

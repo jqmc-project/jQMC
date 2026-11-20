@@ -1,0 +1,15 @@
+schema_version: 1
+document:
+  id: jqmc._diff_mask
+  version: 1
+  lifecycle: cutover
+  title: Diff-mask guarantees
+  purpose: Which test guarantees what, by which verdict method, for the differential parameter mask applied through Wavefunction_data.with_param_grad_mask.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-DIFFMASK-SEMANTICS-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

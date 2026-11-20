@@ -1,0 +1,14 @@
+id: IMPL-UPF-CHANNEL-TAGS-AND-AE-FLAG-001
+kind: implementation
+name: ccECP non-local channel tags and the UPF v2 all-electron flag
+plain_language: A [Gaussinfo] block with two non-local channels keeps each channel's own angular momentum (s terms tagged
+  0, p terms tagged 1, local terms tagged l_max + 1, local first) on a hand-written block with distinct exponents per channel,
+  and a UPF v2 header with is_coulomb="true" and an empty PP_PSWFC parses as an all-electron bare-Coulomb potential with
+  no channels, while the same layout without the flag is a hard error.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_parse_gaussinfo_two_nonlocal_channels_keep_their_l
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_parse_upf_v2_bare_coulomb_ae_without_pswfc

@@ -1,0 +1,31 @@
+id: IMPL-HAM-SHARED-JASTROW-BASIS-FP64-STORAGE-001
+kind: implementation
+name: Shared Jastrow loaders and the twist-optimizer resume restore fp64 J3 AO basis storage
+plain_language: >-
+  A shared Jastrow restored by load_shared_state or load_shared_jastrow, the standalone loaders used at the
+  twist-averaged optimizer resume handoff, holds its J3 AO radial exponents and coefficients as fp64 model storage in
+  both precision modes, as the Hamiltonian loaders do under IMPL-HAM-HDF5-BASIS-FP64-STORAGE-001. For the
+  committed Cartesian H_ae_ccpvdz_cart.h5 and spherical H2_ae_ccpvdz_sphe.h5 SD Hamiltonians with an exponential J2
+  and an AO J3 on the same basis, written by save_shared_state or save_shared_jastrow with the J3 radial datasets
+  replaced by their float32 rounding (a float32 mixed layout), the loaded J3 leaves are float64 and bit-equal to the
+  raw h5py datasets widened exactly, and compute_AOs, compute_AOs_grad, compute_AOs_laplacian and the J3 value are
+  bit-identical (no tolerance) to those of the in-memory J3 holding the widened arrays at five seeded electron
+  positions in full and in mixed. A run_twist_average_optimize resume from such a legacy shared_state.h5 continues with
+  float64 J3 radial leaves holding exactly those values and rewrites shared_state.h5 with float64 datasets. This is a
+  storage and route-identity contract; it makes no statement about AO accuracy against an fp64 reference.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hdf5_basis_storage_fp64.py::test_shared_jastrow_loaders_lift_legacy_fp32_basis_storage_to_fp64
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H_ae_ccpvdz_cart.h5, loader: load_shared_state}
+    - {trexio_file: H_ae_ccpvdz_cart.h5, loader: load_shared_jastrow}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, loader: load_shared_state}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, loader: load_shared_jastrow}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hdf5_basis_storage_fp64.py::test_twist_optimizer_resume_lifts_legacy_fp32_shared_jastrow_basis_storage
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

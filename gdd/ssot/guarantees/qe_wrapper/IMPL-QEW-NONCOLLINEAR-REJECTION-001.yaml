@@ -1,0 +1,37 @@
+id: IMPL-QEW-NONCOLLINEAR-REJECTION-001
+kind: implementation
+name: QE noncollinear and spin-orbit saves are rejected before projection
+plain_language: >-
+  The QE loader supports only spin-restricted (nspin=1) and LSDA (nspin=2) saves. A wavefunction
+  file whose npol attribute is not 1, or whose evc block does not hold exactly one interleaved
+  real/imaginary column pair per Miller index (a two-component spinor stores npol*igwx complex
+  columns per band), raises a ValueError naming npol or MillerIndices. A data-file-schema.xml with
+  noncolin or spinorbit set to true raises a ValueError naming the noncollinear / spin-orbit save.
+  These rejections happen in the loaders shared by every conversion kind (pw, bspline, pgto,
+  pgto+pw) and by the twist-average route, before any projection, and no Hamiltonian file is
+  written; the unmodified npol=1 save still loads and converts.
+verdict_methods: [VM-ERROR-DISPOSITION-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestNoncollinearRejection::test_npol2_spinor_wfc_rejected_for_every_kind
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pw, twist_average: false}
+    - {kind: bspline, twist_average: false}
+    - {kind: pgto, twist_average: false}
+    - {kind: pgto+pw, twist_average: false}
+    - {kind: pw, twist_average: true}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestNoncollinearRejection::test_load_qe_wfc_rejects_spinor_and_column_mismatch
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestNoncollinearRejection::test_noncollinear_xml_flag_rejected
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {flag: noncolin}
+    - {flag: spinorbit}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestNoncollinearRejection::test_unmodified_save_copy_still_converts
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

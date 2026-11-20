@@ -1,0 +1,44 @@
+id: MATH-RS-COMPLEX-BSPLINE-FIRST-COMPOSITE-HF-STRESS-001
+kind: mathematical
+name: Rust complex-twist VMC HF and GFMC stress of a B-spline-first composite equal the strain derivative of the
+  energy
+plain_language: 'The native complex-twist VMC Hellmann-Feynman stress (vmc_grad_e_L_eps_pbc_complex) and GFMC/LRDMC
+  stress (_gfmc_stress_ecp_pbc_complex) of a complex pGTO(+)B-spline composite basis are the strain derivatives
+  of the continuum local energy and of the continuum measurement local energy whichever child comes first in the
+  AO order: the B-spline kinetic-stress kernel must take the B-spline rows of the AO cotangent at the offset of
+  the B-spline child, also when the B-spline child precedes the pGTO child. On the committed pgto_bspline_twist_jnone
+  cell (QE-projected Li ccECP at k = 0.25, single determinant, no Jastrow) in its built (pGTO, B-spline) order and
+  in the (B-spline, pGTO) order with the MO coefficient columns permuted to match, at one seeded electron configuration,
+  all nine entries of the VMC HF stress (MCMC driver''s default non-local mesh, identity rotation) equal reverse-mode
+  strain AD of Re e_L, and all nine entries of the GFMC stress (alat 2.0, tmove, fixed identity twelve-point mesh)
+  equal reverse-mode strain AD of the XLA measurement energy, with the cell, nuclei and electrons strained together,
+  in the same precision. Every reference entry must be finite and distinguishable from zero. This mathematical guarantee
+  owns full AD only at strict; paired mixed numerical receipts belong to NUM-RS-COMPLEX-PW-BSPLINE-FIRST-HF-STRESS-MIXED-FIDELITY-001.'
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_bspline_first_stress.py::test_complex_bspline_composite_hf_stress_matches_strain_ad_in_both_child_orders
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {order: gto_first}
+    - {order: bspline_first}
+    executable_checks:
+      vmc-hf-stress-vs-strain-ad:
+        site: tests/test_rs_kernel/test_complex_bspline_first_stress.py::test_complex_bspline_composite_hf_stress_matches_strain_ad_in_both_child_orders#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-vmc-hf-stress, expression: vmc}
+        reference: {role: same-precision-strain-autodiff-of-re-local-energy, expression: vmc_reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, ewald, coulomb]
+      gfmc-stress-vs-strain-ad:
+        site: tests/test_rs_kernel/test_complex_bspline_first_stress.py::test_complex_bspline_composite_hf_stress_matches_strain_ad_in_both_child_orders#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-gfmc-stress, expression: gfmc}
+        reference: {role: same-precision-strain-autodiff-of-measurement-energy, expression: gfmc_reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, ewald, coulomb]

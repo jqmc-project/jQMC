@@ -1,0 +1,29 @@
+id: IMPL-RS-COMPLEX-PD-WALKER-BATCH-001
+kind: implementation
+name: Complex-twist Jastrow parameter derivatives run all walkers of a rank in one native batch
+plain_language: >-
+  The MCMC driver's complex-twist adapter _RsComplexPdCtx serves the walker batch of the Jastrow
+  parameter-derivative families (O_k for J3 j_matrix and DTN u/chi/f; dE_L/dc for J1, J2, J3 j_matrix and DTN,
+  kinetic and ECP non-local) through _pd_batch_base / _pd_batch_ecp with the native context's rayon twins
+  NativeObsCtx.pd_*_complex_batch and pd_*_dtn_complex_batch whenever the scalar method is served by that
+  context, so these batches do not run as a serial Python loop over walkers. On the twist lithium inputs with
+  J1+J2+J3 and with DTN, both with ECP, three walkers with their own configurations and their own rotated ECP meshes give, walker by walker,
+  the scalar adapter method's result within the reduction-order tolerance (get_tolerance_reduction_order);
+  the per-walker payloads are non-zero and differ between walkers. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_complex_pd_adapter_walker_batch_matches_per_walker
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {method: el_dtn}
+    - {method: el_ecp_dtn}
+    - {method: el_ecp_j1}
+    - {method: el_ecp_j2}
+    - {method: el_ecp_j3}
+    - {method: el_j1}
+    - {method: el_j2}
+    - {method: el_j3}
+    - {method: ok_dtn}
+    - {method: ok_j3}

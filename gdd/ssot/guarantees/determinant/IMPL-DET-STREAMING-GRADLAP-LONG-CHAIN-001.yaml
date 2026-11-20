@@ -1,0 +1,43 @@
+id: IMPL-DET-STREAMING-GRADLAP-LONG-CHAIN-001
+kind: implementation
+name: Streamed determinant grad/lap state equals a fresh build after every hop of a 1000-hop LRDMC-like chain
+plain_language: >-
+  The LRDMC streaming state of ln|Det| derivatives, advanced by _advance_grads_laplacian_ln_Det_streaming_state
+  (row/column updates for the occupied-orbital SD as well as for AGP), equals
+  _init_grads_laplacian_ln_Det_streaming_state built from scratch at the same configuration with the same exact
+  inverse after EVERY hop of a deterministic 1000-hop LRDMC-like walk (single-electron moves of 0.3 bohr along a
+  lattice axis, every visited configuration below the draw_well_conditioned_cfg conditioning cap, molecular walks
+  kept within 2.5 bohr of a nucleus, the first electron of each multi-electron spin never moved). Every field is
+  compared: orbital value, gradient and Laplacian tables, paired tables, the four geminal derivative tables and the
+  four per-electron outputs. Cases: occupied-orbital SD real molecular open shell (N), real periodic open shell
+  (O-lsda Gamma pGTO), complex twist open shell (O-lsda k=0.25 pGTO) and complex B-spline twist (Li k=0.25); AGP
+  in the AO basis (N, O-lsda k=0.25 via to_AGP) and a dense MO-basis AGP with more orbitals than electrons (N).
+  A carried-table drift of rtol/(4*32) per hop stays inside the comparison for 32 hops and must be rejected over
+  the 1000-hop chain, on SD and AGP. Full and mixed are judged separately: the tables with the ao_eval/det_grad_lap
+  strict tier (XLA:GPU rounds the same fp32 ao_eval value differently in the advance and the fresh
+  program), each output within the det_grad_lap strict pair plus the image of the table differences
+  through the shared inverse of the fresh output; in full both are the det_grad_lap strict pair. The
+  Sherman-Morrison inverse chain of the driver is not part of this guarantee. It also covers multi-electron B-spline SD
+  cases (O-lsda Gamma real and O-lsda k=0.25 complex converted to B-spline leaves, 4 up / 2 dn, square up block).
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_det_gradlap_long_chain.py::test_det_gradlap_streaming_long_chain_matches_fresh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp_complex_twist_open}
+    - {case: agp_mo_real_mol_open}
+    - {case: agp_real_mol_open}
+    - {case: agp_real_pbc_open}
+    - {case: sd_complex_bspline_twist}
+    - {case: sd_complex_twist_open}
+    - {case: sd_real_mol_open}
+    - {case: sd_real_pbc_open}
+    - {case: sd_complex_bspline_open}
+    - {case: sd_real_bspline_open}
+  - pytest_node: tests/test_jqmc_kernel/test_det_gradlap_long_chain.py::test_det_gradlap_long_chain_rejects_accumulating_drift
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: sd_real_mol_open}
+    - {case: agp_real_mol_open}

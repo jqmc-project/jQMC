@@ -1,0 +1,15 @@
+id: IMPL-CKPT-ROUNDTRIP-001
+kind: implementation
+name: Rank checkpoint round trip
+plain_language: 'Rank checkpoints round-trip through save and load (route parity), including optimizer state,
+  multi-rank merges, and selective or complete observable loading.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestRankCheckpoint::test_save_load_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestRankCheckpoint::test_with_optimizer_state
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestRankCheckpoint::test_multi_rank_merge
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestLoadObservables::test_load_selected_keys
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestLoadObservables::test_load_all_keys

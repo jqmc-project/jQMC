@@ -1,0 +1,23 @@
+schema_version: 1
+document:
+  id: jqmc_rs
+  version: 1
+  lifecycle: cutover
+  title: Rust backend parity guarantees
+  purpose: 'All Rust/XLA kernel-parity evidence is consolidated here: the Rust backend must reproduce the
+    XLA evaluators on identical input, kernel by kernel. The derivative-universe Rust closure remains owned by the derivative
+    ledger.'
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-AO-RUST-XLA-001
+  overrides:
+    jqmc.rs.generate_setting_consts.read_constants:
+    - OPS-RS-ANTI-VACUITY-GUARDS-001
+    jqmc.rs.generate_setting_consts.generate:
+    - OPS-RS-ANTI-VACUITY-GUARDS-001
+    jqmc.rs.tools.gen_erfc.f:
+    - IMPL-RS-COULOMB-EWALD-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

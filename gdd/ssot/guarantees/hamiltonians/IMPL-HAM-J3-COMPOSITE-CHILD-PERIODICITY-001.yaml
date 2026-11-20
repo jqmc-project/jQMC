@@ -1,0 +1,22 @@
+id: IMPL-HAM-J3-COMPOSITE-CHILD-PERIODICITY-001
+kind: implementation
+name: Every child of a composite J3 orbital basis must have the Hamiltonian periodicity and cell
+plain_language: >-
+  MOs_data and AOs_composite_data forward structure_data to the first composite child only, so the Jastrow periodicity
+  check inspects every child of a composite J3 orbital basis. On the Gamma-point H2_pbc_ae_cart.h5
+  Hamiltonian, a J3 whose MOs_data basis is a real pGTO + real plane-wave composite built with the public + operator
+  (child 0 on the Hamiltonian cell, placed with MOs_data.replace(aos_data=...)) is rejected with ValueError naming
+  children[1] by Jastrow_data.build (with a J1 on the Hamiltonian cell), by Hamiltonian_data.build and by sanity_check of
+  the directly constructed Hamiltonian when the second child is a plane-wave leaf on a 1.1-scaled cell or a molecular GTO
+  leaf on a molecular copy of the nuclei; the matching-cell composite is accepted by all three. Full and mixed are each
+  required.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_structure_consistency.py::test_composite_j3_basis_child_with_mismatched_periodicity_is_rejected
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: mo_control}
+    - {case: mo_other_cell_second_child}
+    - {case: mo_molecular_second_child}

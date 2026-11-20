@@ -1,0 +1,51 @@
+id: IMPL-RS-CPLX-ECP-FORCE-RANK1-001
+kind: implementation
+name: The complex-twist ECP non-local force takes each mesh candidate's det and Jastrow fields from one-electron updates
+plain_language: >-
+  Every ECP non-local quadrature candidate of the complex-twist HF force (gfmc_forces::gfmc_ecp_nonlocal_force_complex,
+  behind the VMC vmc_grad_e_L_pbc_complex and the LRDMC _gfmc_grad_e_L_ecp_pbc_complex) moves one electron.
+  MeshDetFastC builds the base complex geminal forward once (on the caller's swept inverse when given) and gives each
+  candidate its det ratio, holomorphic det drift of every electron and det Pulay by a rank-1 Sherman-Morrison hop
+  (sm_rank1_bars, shared with the real-Gamma path) that evaluates only the moved electron's orbital row; the det
+  Pulay runs over the atom-centred GTO block only (B-spline and plane-wave orbitals have dAO/dR = 0). The real
+  Jastrow ratio, Pulay and drift come from MeshJasFastPbc (J1/J2/DTN). A tiled orbital set, and a complex or pure
+  PW/B-spline J3 leaf for the Jastrow side, keep the per-candidate full recompute. Before, every candidate rebuilt the
+  complex geminal, a fresh inverse and every electron's orbital values and gradients: on Si8 B-spline with DTN and
+  ccECP (384 candidates) the ECP non-local force took 1012 of 1053 ms per walker, 5444 ms with pgtopw orbitals. The
+  HF force with this kernel equals the XLA analytical/autodiff oracle (assemble.compute_grad_e_L) on the committed
+  twist lithium ccECP inputs (no Jastrow, J1+J2, DTN, complex MO J3; near and far-roamed walkers) and on the
+  QE-projected pure plane-wave, pure B-spline and composite pgto+pw / pgto+bspline twist leaves, within the
+  periodic-force tolerances of jqmc/_setting.py. Full and mixed are judged separately.
+native_evidence:
+- jqmc_rs::mesh_vgs::tests::mesh_vgs_multi_matches_derivative_kernel_tables
+- jqmc_rs::bspline::bspline_layout_tests::complex_value_grad_matches_value_grad_lap_bitexact
+- jqmc_rs::complex_stress::moved_group_tests::pure_bspline_moved_group_matches_per_point_reference_in_both_modes
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_pbc_complex
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_jnone, seed: 0, far: false}
+    - {pattern: twist_sphepgto_j12, seed: 0, far: false}
+    - {pattern: twist_sphepgto_j12, seed: 6, far: true}
+    - {pattern: twist_sphepgto_jdtn, seed: 0, far: false}
+    - {pattern: twist_sphepgto_jdtn, seed: 6, far: true}
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_pbc_complex_mo_wrapped_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 0, far: false}
+    - {seed: 3, far: true}
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces_twist_exotic.py::test_vmc_force_twist_exotic
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fid: twist_bspline, kind: twist_bspline, seed: 0}
+    - {fid: twist_pgto_bspline, kind: twist_pgto_bspline, seed: 0}
+    - {fid: twist_pgto_pw, kind: twist_pgto_pw, seed: 0}
+    - {fid: twist_pw, kind: twist_pw, seed: 0}
+  - pytest_node: tests/test_rs_kernel/test_twist_multi_electron_ecp_j3.py::test_hf_force_complex_twist_multi_electron_ecp_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 0}
+    - {seed: 1}

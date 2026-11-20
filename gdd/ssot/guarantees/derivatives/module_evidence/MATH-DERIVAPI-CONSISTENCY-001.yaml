@@ -1,0 +1,2684 @@
+id: MATH-DERIVAPI-CONSISTENCY-001
+kind: mathematical
+name: Public derivatives API equals the autodiff oracle
+plain_language: 'Every derivative reached through the public flags interface with analytic=True equals the autodiff
+  oracle in the precision modes declared for each required evidence node below: forces, stresses, ECP and DTN
+  axes, twists, basis optimization, exotic and composite bases, plus JVP-anchored cell derivatives and the
+  pinv-referenced resolver. The separate OPS-DERIV-NO-AUTODIFF-001 guarantee owns strict dispatch and the prohibition
+  on silent _auto fallback. The one-body and two-body Jastrow parameter gradients are checked in both functional
+  forms (exp and pade) on molecular and periodic fixtures. Nodes declaring Full mathematical evidence retain
+  their original strict Full comparisons and complete parameter cases; their separately registered numerical
+  guarantees require Mixed analytical fidelity to independently constructed Full production. Nodes declaring
+  both Full and Mixed mathematical evidence retain both. The molecular public/bridge/legacy-driver nodes retain
+  Full mathematical AD and separately require Mixed numerical fidelity under
+  NUM-MOLECULAR-PUBLIC-BRIDGE-DRIVER-MIXED-FIDELITY-001. Exact per-node modes, comparison policies, cases and
+  references remain defined by the required evidence below and the corresponding numerical guarantees.'
+required_evidence:
+- nodes:
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_curated_mixed_alternatives.py::test_curated_unmatched_parameters_match_same_mode_autodiff
+  - executable_checks:
+      unchanged-curated-route-comparison:
+        actual:
+          expression: actual
+          role: same-mode-analytical-curated-bridge-gradient
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: reference
+          role: same-mode-autodiff-curated-bridge-gradient
+        site: tests/test_jqmc_kernel/test_curated_mixed_alternatives.py::_compare_curated_routes#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_curated_mixed_alternatives.py::test_curated_unmatched_parameters_match_same_mode_autodiff
+    required_parameter_cases:
+    - fixture_id: N_cart_J
+      quantity: ln_Psi
+      spec: null
+      stem: N_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - fixture_id: H2_ecp_cart_J
+      quantity: ln_Psi
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: true
+    - fixture_id: H2_ecp_cart_noJ
+      quantity: ln_Psi
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: false
+    - fixture_id: Li_pbc_twist_J
+      quantity: ln_Psi
+      spec: null
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - fixture_id: Li_pbc_twist_J3cplx
+      quantity: ln_Psi
+      spec:
+        j3: complex
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - fixture_id: H2_SD_J3MO
+      quantity: ln_Psi
+      spec:
+        j3: mo
+      stem: H2_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - fixture_id: Li_AGP_J3MO
+      quantity: ln_Psi
+      spec:
+        dense_agp: true
+        j3: mo
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - fixture_id: Li_AGP_MPC_J3MO
+      quantity: ln_Psi
+      spec:
+        dense_agp: true
+        j3: mo
+        mpc: true
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - fixture_id: N_cart_J
+      quantity: e_L
+      spec: null
+      stem: N_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - fixture_id: H2_ecp_cart_J
+      quantity: e_L
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: true
+    - fixture_id: H2_ecp_cart_noJ
+      quantity: e_L
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: false
+    - fixture_id: Li_pbc_twist_J
+      quantity: e_L
+      spec: null
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - fixture_id: Li_pbc_twist_J3cplx
+      quantity: e_L
+      spec:
+        j3: complex
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - fixture_id: H2_SD_J3MO
+      quantity: e_L
+      spec:
+        j3: mo
+      stem: H2_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - fixture_id: Li_AGP_J3MO
+      quantity: e_L
+      spec:
+        dense_agp: true
+        j3: mo
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - fixture_id: Li_AGP_MPC_J3MO
+      quantity: e_L
+      spec:
+        dense_agp: true
+        j3: mo
+        mpc: true
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    required_precision_modes:
+    - full
+    - mixed
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_curated_mixed_alternatives.py::test_curated_unmatched_parameters_match_same_mode_autodiff
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_curated_mixed_alternatives.py::test_curated_unmatched_physical_axes_match_same_mode_autodiff
+  - executable_checks:
+      unchanged-curated-route-comparison:
+        actual:
+          expression: actual
+          role: same-mode-analytical-curated-bridge-gradient
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: reference
+          role: same-mode-autodiff-curated-bridge-gradient
+        site: tests/test_jqmc_kernel/test_curated_mixed_alternatives.py::_compare_curated_routes#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_curated_mixed_alternatives.py::test_curated_unmatched_physical_axes_match_same_mode_autodiff
+    required_parameter_cases:
+    - axis: r
+      fixture_id: N_cart_J
+      quantity: ln_Psi
+      spec: null
+      stem: N_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: H2_ecp_cart_J
+      quantity: ln_Psi
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: H2_ecp_cart_noJ
+      quantity: ln_Psi
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: false
+    - axis: r
+      fixture_id: Li_pbc_twist_J
+      quantity: ln_Psi
+      spec: null
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: Li_pbc_twist_J3cplx
+      quantity: ln_Psi
+      spec:
+        j3: complex
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: H2_SD_J3MO
+      quantity: ln_Psi
+      spec:
+        j3: mo
+      stem: H2_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: Li_AGP_J3MO
+      quantity: ln_Psi
+      spec:
+        dense_agp: true
+        j3: mo
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: r
+      fixture_id: Li_AGP_MPC_J3MO
+      quantity: ln_Psi
+      spec:
+        dense_agp: true
+        j3: mo
+        mpc: true
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: r
+      fixture_id: N_cart_J
+      quantity: e_L
+      spec: null
+      stem: N_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: H2_ecp_cart_J
+      quantity: e_L
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: H2_ecp_cart_noJ
+      quantity: e_L
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: false
+    - axis: r
+      fixture_id: Li_pbc_twist_J
+      quantity: e_L
+      spec: null
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: Li_pbc_twist_J3cplx
+      quantity: e_L
+      spec:
+        j3: complex
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: H2_SD_J3MO
+      quantity: e_L
+      spec:
+        j3: mo
+      stem: H2_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: r
+      fixture_id: Li_AGP_J3MO
+      quantity: e_L
+      spec:
+        dense_agp: true
+        j3: mo
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: r
+      fixture_id: Li_AGP_MPC_J3MO
+      quantity: e_L
+      spec:
+        dense_agp: true
+        j3: mo
+        mpc: true
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: R
+      fixture_id: N_cart_J
+      quantity: ln_Psi
+      spec: null
+      stem: N_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: H2_ecp_cart_J
+      quantity: ln_Psi
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: H2_ecp_cart_noJ
+      quantity: ln_Psi
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: false
+    - axis: R
+      fixture_id: Li_pbc_twist_J
+      quantity: ln_Psi
+      spec: null
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: Li_pbc_twist_J3cplx
+      quantity: ln_Psi
+      spec:
+        j3: complex
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: H2_SD_J3MO
+      quantity: ln_Psi
+      spec:
+        j3: mo
+      stem: H2_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: Li_AGP_J3MO
+      quantity: ln_Psi
+      spec:
+        dense_agp: true
+        j3: mo
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: R
+      fixture_id: Li_AGP_MPC_J3MO
+      quantity: ln_Psi
+      spec:
+        dense_agp: true
+        j3: mo
+        mpc: true
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: R
+      fixture_id: N_cart_J
+      quantity: e_L
+      spec: null
+      stem: N_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: H2_ecp_cart_J
+      quantity: e_L
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: H2_ecp_cart_noJ
+      quantity: e_L
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: false
+    - axis: R
+      fixture_id: Li_pbc_twist_J
+      quantity: e_L
+      spec: null
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: Li_pbc_twist_J3cplx
+      quantity: e_L
+      spec:
+        j3: complex
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: H2_SD_J3MO
+      quantity: e_L
+      spec:
+        j3: mo
+      stem: H2_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: R
+      fixture_id: Li_AGP_J3MO
+      quantity: e_L
+      spec:
+        dense_agp: true
+        j3: mo
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: R
+      fixture_id: Li_AGP_MPC_J3MO
+      quantity: e_L
+      spec:
+        dense_agp: true
+        j3: mo
+        mpc: true
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: eps
+      fixture_id: N_cart_J
+      quantity: ln_Psi
+      spec: null
+      stem: N_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: H2_ecp_cart_J
+      quantity: ln_Psi
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: H2_ecp_cart_noJ
+      quantity: ln_Psi
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: false
+    - axis: eps
+      fixture_id: Li_pbc_twist_J
+      quantity: ln_Psi
+      spec: null
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: Li_pbc_twist_J3cplx
+      quantity: ln_Psi
+      spec:
+        j3: complex
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: H2_SD_J3MO
+      quantity: ln_Psi
+      spec:
+        j3: mo
+      stem: H2_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: Li_AGP_J3MO
+      quantity: ln_Psi
+      spec:
+        dense_agp: true
+        j3: mo
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: eps
+      fixture_id: Li_AGP_MPC_J3MO
+      quantity: ln_Psi
+      spec:
+        dense_agp: true
+        j3: mo
+        mpc: true
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: eps
+      fixture_id: N_cart_J
+      quantity: e_L
+      spec: null
+      stem: N_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: H2_ecp_cart_J
+      quantity: e_L
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: H2_ecp_cart_noJ
+      quantity: e_L
+      spec: null
+      stem: H2_ecp_ccpvdz_cart.h5
+      with_jastrow: false
+    - axis: eps
+      fixture_id: Li_pbc_twist_J
+      quantity: e_L
+      spec: null
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: Li_pbc_twist_J3cplx
+      quantity: e_L
+      spec:
+        j3: complex
+      stem: lithium_k025.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: H2_SD_J3MO
+      quantity: e_L
+      spec:
+        j3: mo
+      stem: H2_ae_ccpvdz_cart.h5
+      with_jastrow: true
+    - axis: eps
+      fixture_id: Li_AGP_J3MO
+      quantity: e_L
+      spec:
+        dense_agp: true
+        j3: mo
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    - axis: eps
+      fixture_id: Li_AGP_MPC_J3MO
+      quantity: e_L
+      spec:
+        dense_agp: true
+        j3: mo
+        mpc: true
+      stem: QE:Li_gamma_pgto+pw
+      with_jastrow: true
+    required_precision_modes:
+    - full
+    - mixed
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_curated_mixed_alternatives.py::test_curated_unmatched_physical_axes_match_same_mode_autodiff
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_gfmc_ecp_mesh_position.py::test_gfmc_force_matches_autograd_with_an_electron_on_a_mesh_direction
+  - executable_checks:
+      mesh-position-derivative:
+        actual:
+          expression: actual
+          role: analytical-gfmc-measurement-position-derivative
+        comparator: numpy.testing.assert_allclose
+        iterations:
+          required_values:
+          - nuclear
+          - electron-up
+          - electron-down
+          variable: quantity
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+        reference:
+          expression: reference
+          role: same-precision-primal-measurement-ad
+        site: tests/test_jqmc_kernel/test_gfmc_ecp_mesh_position.py::test_gfmc_force_matches_autograd_with_an_electron_on_a_mesh_direction#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_gfmc_ecp_mesh_position.py::test_gfmc_force_matches_autograd_with_an_electron_on_a_mesh_direction
+    required_parameter_cases:
+    - nlm: tmove
+    - nlm: dltmove
+    required_precision_modes:
+    - full
+    - mixed
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_gfmc_ecp_mesh_position.py::test_gfmc_force_matches_autograd_with_an_electron_on_a_mesh_direction
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_dtn_active_derivative_fixture.py::test_active_dtn_gamma_matches_autodiff
+  - executable_checks:
+      active-gamma-same-precision:
+        actual:
+          expression: actual
+          role: production-analytical-dtn-gamma
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: reference
+          role: same-precision-autodiff-dtn-gamma
+        site: tests/test_jqmc_kernel/test_dtn_active_derivative_fixture.py::test_active_dtn_gamma_matches_autodiff#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_dtn_active_derivative_fixture.py::test_active_dtn_gamma_matches_autodiff
+    required_parameter_cases:
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - SD
+      quantity: ln_Psi
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - SD
+      quantity: e_L
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - AGPn
+      quantity: ln_Psi
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - AGPn
+      quantity: e_L
+    - cell:
+      - bspline_complex
+      - DTN
+      - AE
+      - twist
+      - SD
+      quantity: ln_Psi
+    - cell:
+      - bspline_complex
+      - DTN
+      - AE
+      - twist
+      - SD
+      quantity: e_L
+    - cell:
+      - composite
+      - DTN
+      - AE
+      - twist
+      - SD
+      quantity: ln_Psi
+    - cell:
+      - composite
+      - DTN
+      - AE
+      - twist
+      - SD
+      quantity: e_L
+    - cell:
+      - composite
+      - DTN
+      - AE
+      - twist
+      - AGPn
+      quantity: ln_Psi
+    - cell:
+      - composite
+      - DTN
+      - AE
+      - twist
+      - AGPn
+      quantity: e_L
+    - cell:
+      - plane_wave
+      - DTN
+      - AE
+      - pbc_gamma
+      - SD
+      quantity: ln_Psi
+    - cell:
+      - plane_wave
+      - DTN
+      - AE
+      - pbc_gamma
+      - SD
+      quantity: e_L
+    - cell:
+      - plane_wave
+      - DTN
+      - AE
+      - pbc_gamma
+      - AGPn
+      quantity: ln_Psi
+    - cell:
+      - plane_wave
+      - DTN
+      - AE
+      - pbc_gamma
+      - AGPn
+      quantity: e_L
+    - cell:
+      - plane_wave_complex
+      - DTN
+      - AE
+      - twist
+      - AGPn
+      quantity: ln_Psi
+    - cell:
+      - plane_wave_complex
+      - DTN
+      - AE
+      - twist
+      - AGPn
+      quantity: e_L
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_dtn_active_derivative_fixture.py::test_active_dtn_gamma_matches_autodiff
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_bspline_active_mo_derivative_fixture.py::test_bspline_virtual_mo_derivatives_match_autodiff
+  - executable_checks:
+      active-virtual-mo-same-precision:
+        actual:
+          expression: actual
+          role: production-analytical-virtual-basis-mo-energy-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: reference
+          role: same-precision-autodiff-virtual-basis-mo-energy-derivative
+        site: tests/test_jqmc_kernel/test_bspline_active_mo_derivative_fixture.py::test_bspline_virtual_mo_derivatives_match_autodiff#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_bspline_active_mo_derivative_fixture.py::test_bspline_virtual_mo_derivatives_match_autodiff
+    required_parameter_cases:
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - AGPn
+      fixture_path: tests/qe_example_files/H-ae_gamma/out/h_gamma.save
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - SD
+      fixture_path: tests/qe_example_files/H-ae_gamma/out/h_gamma.save
+    - cell:
+      - bspline
+      - J1
+      - ECP
+      - pbc_gamma
+      - SD
+      fixture_path: tests/qe_example_files/Li_gamma/out/li.save
+    - cell:
+      - bspline
+      - J2
+      - AE
+      - pbc_gamma
+      - SD
+      fixture_path: tests/qe_example_files/H-ae_gamma/out/h_gamma.save
+    - cell:
+      - bspline
+      - J3poly
+      - AE
+      - pbc_gamma
+      - SD
+      fixture_path: tests/qe_example_files/H-ae_gamma/out/h_gamma.save
+    - cell:
+      - bspline
+      - none
+      - AE
+      - pbc_gamma
+      - SD
+      fixture_path: tests/qe_example_files/H-ae_gamma/out/h_gamma.save
+    - cell:
+      - bspline_complex
+      - DTN
+      - AE
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/H-ae_k025/out/h_k025.save
+    - cell:
+      - bspline_complex
+      - DTN
+      - ECP
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/Li_k025/out/li_k025.save
+    - cell:
+      - bspline_complex
+      - J1
+      - AE
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/H-ae_k025/out/h_k025.save
+    - cell:
+      - bspline_complex
+      - J1
+      - ECP
+      - twist
+      - AGPn
+      fixture_path: tests/qe_example_files/Li_k025/out/li_k025.save
+    - cell:
+      - bspline_complex
+      - J1
+      - ECP
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/Li_k025/out/li_k025.save
+    - cell:
+      - bspline_complex
+      - J2
+      - AE
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/H-ae_k025/out/h_k025.save
+    - cell:
+      - bspline_complex
+      - J2
+      - ECP
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/Li_k025/out/li_k025.save
+    - cell:
+      - bspline_complex
+      - J3poly
+      - AE
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/H-ae_k025/out/h_k025.save
+    - cell:
+      - bspline_complex
+      - J3poly
+      - ECP
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/Li_k025/out/li_k025.save
+    - cell:
+      - bspline_complex
+      - none
+      - AE
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/H-ae_k025/out/h_k025.save
+    - cell:
+      - bspline_complex
+      - none
+      - ECP
+      - twist
+      - SD
+      fixture_path: tests/qe_example_files/Li_k025/out/li_k025.save
+    required_precision_modes:
+    - full
+    - mixed
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_bspline_active_mo_derivative_fixture.py::test_bspline_virtual_mo_derivatives_match_autodiff
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_agpn_gamma_ecp_reference.py::test_agpn_gamma_ecp_lambda_reference
+  - executable_checks:
+      same-precision-primal-reference:
+        actual:
+          expression: actual
+          role: xla-analytical-parameter-source
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+        reference:
+          expression: reference
+          role: same-precision-primal-local-energy-ad
+        site: tests/test_jqmc_kernel/test_agpn_gamma_ecp_reference.py::test_agpn_gamma_ecp_lambda_reference#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_agpn_gamma_ecp_reference.py::test_agpn_gamma_ecp_lambda_reference
+    required_parameter_cases:
+    - fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save
+      leaf: lambda_diag
+    - fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save
+      leaf: lambda_unpaired
+    required_precision_modes:
+    - full
+    - mixed
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_agpn_gamma_ecp_reference.py::test_agpn_gamma_ecp_lambda_reference
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_analytic_vs_auto
+  - executable_checks:
+      retained-full-coordinate-AD:
+        actual:
+          expression: np.asarray(la)
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(lb)
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_analytic_vs_auto#comparison-2
+      retained-full-parameter-AD:
+        actual:
+          expression: np.asarray(da[k])
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(db[k])
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_analytic_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_analytic_vs_auto
+    required_parameter_cases:
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: c
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: R
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: eps
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: c
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: R
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: eps
+    - quantity: ln_Psi
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: c
+    - quantity: ln_Psi
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: R
+    - quantity: ln_Psi
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: eps
+    - quantity: e_L
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: c
+    - quantity: e_L
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: R
+    - quantity: e_L
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: eps
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: c
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: R
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: eps
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: c
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: R
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: eps
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_analytic_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_joint_mo_basis_gradients_match_single_block_and_analytic
+  - executable_checks:
+      retained-full-comparison-1:
+        actual:
+          expression: actual
+          role: full-joint-AD-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(isolated)
+          role: full-isolated-AD-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_joint_mo_basis_gradients_match_single_block_and_analytic#comparison-1
+      retained-full-comparison-2:
+        actual:
+          expression: actual
+          role: full-joint-AD-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(analytical[block])
+          role: full-joint-analytical-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_joint_mo_basis_gradients_match_single_block_and_analytic#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_joint_mo_basis_gradients_match_single_block_and_analytic
+    required_parameter_cases:
+    - basis: exponents
+      geminal: SD
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: exponents
+      geminal: SD
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: exponents
+      geminal: AGPn
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: exponents
+      geminal: AGPn
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: coefficients
+      geminal: SD
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: coefficients
+      geminal: SD
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: coefficients
+      geminal: AGPn
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: coefficients
+      geminal: AGPn
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: both
+      geminal: SD
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: both
+      geminal: SD
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: both
+      geminal: AGPn
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: both
+      geminal: AGPn
+      quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: exponents
+      geminal: SD
+      quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: exponents
+      geminal: SD
+      quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: exponents
+      geminal: AGPn
+      quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: exponents
+      geminal: AGPn
+      quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: coefficients
+      geminal: SD
+      quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: coefficients
+      geminal: SD
+      quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: coefficients
+      geminal: AGPn
+      quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: coefficients
+      geminal: AGPn
+      quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: both
+      geminal: SD
+      quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: both
+      geminal: SD
+      quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+    - basis: both
+      geminal: AGPn
+      quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+    - basis: both
+      geminal: AGPn
+      quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_joint_mo_basis_gradients_match_single_block_and_analytic
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j1_j2_param_grad_functional_forms_vs_auto
+  - executable_checks:
+      retained-math-1:
+        actual:
+          expression: ana1
+          role: retained-analytical-mathematical-result
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+        reference:
+          expression: ref1
+          role: retained-independent-full-mathematical-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j1_j2_param_grad_functional_forms_vs_auto#comparison-1
+      retained-math-2:
+        actual:
+          expression: ana2
+          role: retained-analytical-mathematical-result
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+        reference:
+          expression: ref2
+          role: retained-independent-full-mathematical-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j1_j2_param_grad_functional_forms_vs_auto#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j1_j2_param_grad_functional_forms_vs_auto
+    required_parameter_cases:
+    - form: exp
+      stem: Li_ae_ccpvdz_cart.h5
+    - form: exp
+      stem: lithium.h5
+    - form: pade
+      stem: Li_ae_ccpvdz_cart.h5
+    - form: pade
+      stem: lithium.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j1_j2_param_grad_functional_forms_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_bridge_jit_vs_auto
+  - executable_checks:
+      retained-full-coordinate-AD:
+        actual:
+          expression: np.asarray(la)
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(lb)
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_bridge_jit_vs_auto#comparison-2
+      retained-full-parameter-AD:
+        actual:
+          expression: np.asarray(da[k])
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(db[k])
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_bridge_jit_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_bridge_jit_vs_auto
+    required_parameter_cases:
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: c
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: R
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: eps
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: c
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: R
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_cart.h5
+      wrt: eps
+    - quantity: ln_Psi
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: c
+    - quantity: ln_Psi
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: R
+    - quantity: ln_Psi
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: eps
+    - quantity: e_L
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: c
+    - quantity: e_L
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: R
+    - quantity: e_L
+      stem: N_ae_ccpvdz_cart.h5
+      wrt: eps
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: c
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: R
+    - quantity: ln_Psi
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: eps
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: c
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: R
+    - quantity: e_L
+      stem: H2_ae_ccpvdz_sphe.h5
+      wrt: eps
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_bridge_jit_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_driver_param_closures_vs_production_autograd
+  - executable_checks:
+      retained-full-local-energy-AD:
+        actual:
+          expression: ana_el[k]
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: prod_el[k]
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_driver_param_closures_vs_production_autograd#comparison-2
+      retained-full-log-wavefunction-AD:
+        actual:
+          expression: ana_ok[k]
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: prod_ok[k]
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_driver_param_closures_vs_production_autograd#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_driver_param_closures_vs_production_autograd
+    required_parameter_cases:
+    - stem: H2_ae_ccpvdz_cart.h5
+    - stem: N_ae_ccpvdz_cart.h5
+    - stem: H2_ae_ccpvdz_sphe.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_driver_param_closures_vs_production_autograd
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dr_vs_auto
+  - executable_checks:
+      ecp-position-derivative:
+        actual:
+          expression: al
+          role: analytical-energy-position-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: bl
+          role: same-mode-autodiff-energy-position-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dr_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dr_vs_auto
+    required_parameter_cases:
+    - stem: N2_ecp_ccpvtz_cart.h5
+    - stem: H2_ecp_ccpvdz_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dr_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_deps_vs_auto
+  - executable_checks:
+      ecp-affine-derivative:
+        actual:
+          expression: np.asarray(a)
+          role: analytical-energy-affine-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: same-mode-autodiff-energy-affine-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_deps_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_deps_vs_auto
+    required_parameter_cases:
+    - stem: N2_ecp_ccpvtz_cart.h5
+    - stem: H2_ecp_ccpvdz_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_deps_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dc_vs_auto
+  - executable_checks:
+      ecp-parameter-derivative:
+        actual:
+          expression: np.asarray(da[k])
+          role: full-analytical-energy-parameter-field
+        comparator: numpy.testing.assert_allclose
+        iterations:
+          required_values:
+          - j1_param
+          - j2_param
+          - mo_coefficients_up
+          variable: k
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(db[k])
+          role: independent-full-autodiff-energy-parameter-field
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dc_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dc_vs_auto
+    required_parameter_cases:
+    - stem: H2_ecp_ccpvdz_cart.h5
+    - stem: H2_ecp_ccpvtz_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dc_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_o_k_vs_auto
+  - executable_checks:
+      comparison-1:
+        actual:
+          expression: np.asarray(getattr(da, k))
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        iterations:
+          required_values:
+          - alpha_indep
+          - beta_indep
+          - gamma_indep
+          variable: k
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(getattr(db, k))
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_o_k_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_o_k_vs_auto
+    required_parameter_cases:
+    - stem: N2_ecp_ccpvtz_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_o_k_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_c_axis_vs_auto
+  - executable_checks:
+      periodic-parameter-derivatives:
+        actual:
+          expression: np.asarray(da[k])
+          role: analytical-parameter-derivative
+        comparator: numpy.testing.assert_allclose
+        iterations:
+          required_values:
+          - j1_param
+          - j2_param
+          - lambda_basis_exp
+          - lambda_basis_coeff
+          variable: k
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(db[k])
+          role: same-mode-autodiff-parameter-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_c_axis_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_c_axis_vs_auto
+    required_parameter_cases:
+    - quantity: ln_Psi
+      stem: lithium.h5
+    - quantity: e_L
+      stem: lithium.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_c_axis_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_pgto_ao_derivs_vs_production
+  - executable_checks:
+      comparison-1:
+        actual:
+          expression: np.asarray(T @ P.pgto_value(cart, r))
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+        reference:
+          expression: value_ref
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_pgto_ao_derivs_vs_production#comparison-1
+      comparison-2:
+        actual:
+          expression: np.einsum('sc,dcn->dsn', T, P.pgto_grad(cart, r))
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+        reference:
+          expression: grad_ref
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_pgto_ao_derivs_vs_production#comparison-2
+      comparison-3:
+        actual:
+          expression: np.asarray(T @ P.pgto_laplacian(cart, r))
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+        reference:
+          expression: lap_ref
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_pgto_ao_derivs_vs_production#comparison-3
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_pgto_ao_derivs_vs_production
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_pgto_ao_derivs_vs_production
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_force_vs_grad
+  - executable_checks:
+      comparison-1:
+        actual:
+          expression: np.asarray(ana)
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(ref)
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_force_vs_grad#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_force_vs_grad
+    required_parameter_cases:
+    - stem: lithium.h5
+      with_j1: false
+    - stem: lithium_k025.h5
+      with_j1: false
+    - stem: lithium.h5
+      with_j1: true
+    - stem: lithium_k025.h5
+      with_j1: true
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_force_vs_grad
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_ewald_force_vs_grad
+  - executable_checks:
+      comparison-1:
+        actual:
+          expression: np.asarray(ewald.grad_Eii_wrt_R(cpd, ewd))
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(ref_ii)
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_ewald_force_vs_grad#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_ewald_force_vs_grad
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_ewald_force_vs_grad
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_o_k_vs_auto
+  - executable_checks:
+      retained-full-comparison-1:
+        actual:
+          expression: np.asarray(da[k])
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(db[k])
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_o_k_vs_auto#comparison-1
+      retained-full-comparison-2:
+        actual:
+          expression: np.asarray(la)
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(lb)
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_o_k_vs_auto#comparison-2
+      retained-full-comparison-3:
+        actual:
+          expression: np.asarray(dae[k])
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(dbe[k])
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_o_k_vs_auto#comparison-3
+      retained-full-comparison-4:
+        actual:
+          expression: np.asarray(la)
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(lb)
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_o_k_vs_auto#comparison-4
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_o_k_vs_auto
+    required_parameter_cases:
+    - stem: lithium_k025.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_o_k_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_basis_opt_now_analytic
+  - executable_checks:
+      retained-full-comparison-1:
+        actual:
+          expression: actual
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: expected
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_basis_opt_now_analytic#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_basis_opt_now_analytic
+    required_parameter_cases:
+    - stem: lithium_k025.h5
+    - stem: lithium_k025_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_basis_opt_now_analytic
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_analytic_vs_auto
+  - executable_checks:
+      retained-full-comparison-1:
+        actual:
+          expression: np.asarray(da[k])
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: np.asarray(db[k])
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_analytic_vs_auto#comparison-1
+      retained-full-comparison-2:
+        actual:
+          expression: np.asarray(la)
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: np.asarray(lb)
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_analytic_vs_auto#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_analytic_vs_auto
+    required_parameter_cases:
+    - quantity: ln_Psi
+      wrt: c
+    - quantity: e_L
+      wrt: c
+    - quantity: ln_Psi
+      wrt: r
+    - quantity: e_L
+      wrt: r
+    - quantity: ln_Psi
+      wrt: R
+    - quantity: e_L
+      wrt: R
+    - quantity: ln_Psi
+      wrt: eps
+    - quantity: e_L
+      wrt: eps
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_analytic_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_lambda_basis_opt_analytic_vs_auto
+  - executable_checks:
+      retained-full-comparison-1:
+        actual:
+          expression: np.asarray(da[k])
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: np.asarray(db[k])
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_lambda_basis_opt_analytic_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_lambda_basis_opt_analytic_vs_auto
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_lambda_basis_opt_analytic_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_j3_basis_opt_analytic_vs_auto
+  - executable_checks:
+      retained-full-comparison-1:
+        actual:
+          expression: np.asarray(da[k])
+          role: full-analytical-public-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: np.asarray(db[k])
+          role: independent-full-AD-public-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_j3_basis_opt_analytic_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_j3_basis_opt_analytic_vs_auto
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_j3_basis_opt_analytic_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_vs_grad
+  - executable_checks:
+      retained-full-AD:
+        actual:
+          expression: np.asarray(ana)
+          role: full-analytical-periodic-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(ref)
+          role: independent-full-AD-periodic-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_vs_grad#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_vs_grad
+    required_parameter_cases:
+    - stem: lithium.h5
+    - stem: lithium_k025.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_vs_grad
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_orbital_jnone_vs_grad
+  - executable_checks:
+      retained-full-AD:
+        actual:
+          expression: np.asarray(ana)
+          role: full-analytical-periodic-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(ref)
+          role: independent-full-AD-periodic-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_orbital_jnone_vs_grad#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_orbital_jnone_vs_grad
+    required_parameter_cases:
+    - stem: lithium.h5
+    - stem: lithium_k025.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_orbital_jnone_vs_grad
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_eL_vs_auto
+  - executable_checks:
+      retained-full-AD:
+        actual:
+          expression: np.asarray(a)
+          role: full-analytical-periodic-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: independent-full-AD-periodic-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_eL_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_eL_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_eL_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_lnpsi_vs_auto
+  - executable_checks:
+      retained-full-AD:
+        actual:
+          expression: np.asarray(a)
+          role: full-analytical-periodic-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: independent-full-AD-periodic-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_lnpsi_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_lnpsi_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_lnpsi_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_eL_dr_vs_auto
+  - executable_checks:
+      unchanged-full-strict-mathematical-oracle:
+        actual:
+          expression: al
+          role: full-public-analytical-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: bl
+          role: full-primal-autodiff-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_eL_dr_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_eL_dr_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_eL_dr_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_eL_vs_auto
+  - executable_checks:
+      unchanged-full-strict-mathematical-oracle:
+        actual:
+          expression: np.asarray(a)
+          role: full-public-analytical-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: full-primal-autodiff-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_eL_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_eL_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_eL_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_lnpsi_vs_auto
+  - executable_checks:
+      unchanged-full-strict-mathematical-oracle:
+        actual:
+          expression: np.asarray(a)
+          role: full-public-analytical-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: full-primal-autodiff-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_lnpsi_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_lnpsi_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_lnpsi_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_e_L_dc_vs_auto
+  - executable_checks:
+      unchanged-full-strict-mathematical-oracle:
+        actual:
+          expression: np.asarray(da[k])
+          role: full-public-analytical-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(db[k])
+          role: full-primal-autodiff-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_e_L_dc_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_e_L_dc_vs_auto
+    required_parameter_cases:
+    - stem: N_ae_ccpvdz_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_e_L_dc_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_force_vs_auto
+  - executable_checks:
+      unchanged-full-strict-mathematical-oracle:
+        actual:
+          expression: np.asarray(a)
+          role: full-public-analytical-derivative
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: full-primal-autodiff-derivative
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_force_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_force_vs_auto
+    required_parameter_cases:
+    - stem: N2_ecp_ccpvtz_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_force_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_pw_full_axes_vs_auto
+  - executable_checks:
+      retained-math-1:
+        actual:
+          expression: np.asarray(la)
+          role: retained-analytical-mathematical-result
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(lb)
+          role: retained-independent-full-mathematical-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_pw_full_axes_vs_auto#comparison-1
+      retained-math-2:
+        actual:
+          expression: np.asarray(la)
+          role: retained-analytical-mathematical-result
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(lb)
+          role: retained-independent-full-mathematical-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_pw_full_axes_vs_auto#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_pw_full_axes_vs_auto
+    required_parameter_cases:
+    - element: Li
+      g_cut_fraction: 0.25
+      save_dir:
+        source_expression: os.path.join(os.fspath(qe_example_files_root()), 'Li_gamma', 'out', 'li.save')
+      upf_path:
+        source_expression: os.path.join(os.path.join(os.fspath(qe_example_files_root()), 'Li_gamma', 'out', 'li.save'),
+          'Li.ccECP.upf')
+    - element: Li
+      g_cut_fraction: 0.25
+      save_dir:
+        source_expression: os.path.join(os.fspath(qe_example_files_root()), 'Li_k025', 'out', 'li_k025.save')
+      upf_path:
+        source_expression: os.path.join(os.path.join(os.fspath(qe_example_files_root()), 'Li_k025', 'out', 'li_k025.save'),
+          'Li.ccECP.upf')
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_pw_full_axes_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_basis_opt_vs_auto
+  - executable_checks:
+      retained-math-1:
+        actual:
+          expression: np.asarray(da[k])
+          role: retained-analytical-mathematical-result
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(db[k])
+          role: retained-independent-full-mathematical-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_basis_opt_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_basis_opt_vs_auto
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_basis_opt_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_twist_basis_opt_analytic_vs_auto
+  - executable_checks:
+      retained-math-1:
+        actual:
+          expression: np.asarray(getattr(ca.radial, fld))
+          role: retained-analytical-mathematical-result
+        comparator: numpy.testing.assert_allclose
+        iterations:
+          required_values:
+          - exponents
+          - coefficients
+          variable: fld
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(getattr(cb.radial, fld))
+          role: retained-independent-full-mathematical-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_twist_basis_opt_analytic_vs_auto._cmp_children#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_twist_basis_opt_analytic_vs_auto
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_twist_basis_opt_analytic_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_bspline_kinetic_vs_grad
+  - executable_checks:
+      retained-math-1:
+        actual:
+          expression: gradlap
+          role: retained-analytical-mathematical-result
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.einsum('kiid->dki', Jl)
+          role: retained-independent-full-mathematical-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_bspline_kinetic_vs_grad#comparison-3
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_bspline_kinetic_vs_grad
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_bspline_kinetic_vs_grad
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_okc_pbc_vs_auto
+  - executable_checks:
+      unchanged-full-strict-1:
+        actual:
+          expression: np.asarray(av)
+          role: full-analytical-derivative-block
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(bv)
+          role: full-primal-autodiff-derivative-block
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_okc_pbc_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_okc_pbc_vs_auto
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_okc_pbc_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j3_molecular_axes_vs_auto
+  - executable_checks:
+      unchanged-full-strict-1:
+        actual:
+          expression: np.asarray(da[k])
+          role: full-analytical-derivative-block
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(db[k])
+          role: full-primal-autodiff-derivative-block
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j3_molecular_axes_vs_auto#comparison-1
+      unchanged-full-strict-2:
+        actual:
+          expression: np.asarray(la)
+          role: full-analytical-derivative-block
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(lb)
+          role: full-primal-autodiff-derivative-block
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j3_molecular_axes_vs_auto#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j3_molecular_axes_vs_auto
+    required_parameter_cases:
+    - stem: H2_ae_ccpvdz_cart.h5
+    - stem: H2_ae_ccpvdz_sphe.h5
+    - stem: N_ae_ccpvdz_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j3_molecular_axes_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_ao_basis_mixed_alternative.py::test_ao_converted_geminal_exponent_gradient_matches_primal_ad
+  - executable_checks:
+      ao-geminal-up-exponent:
+        actual:
+          expression: actual
+          role: analytical-ao-geminal-up-exponent-gradient
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+        reference:
+          expression: reference
+          role: same-precision-primal-logdet-autodiff
+        site: tests/test_jqmc_kernel/test_ao_basis_mixed_alternative.py::test_ao_converted_geminal_exponent_gradient_matches_primal_ad#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_ao_basis_mixed_alternative.py::test_ao_converted_geminal_exponent_gradient_matches_primal_ad
+    required_parameter_cases:
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_ao_basis_mixed_alternative.py::test_ao_converted_geminal_exponent_gradient_matches_primal_ad
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_j3_force_stress_vs_auto
+  - executable_checks:
+      unchanged-full-strict-1:
+        actual:
+          expression: np.asarray(a)
+          role: full-analytical-derivative-block
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: full-primal-autodiff-derivative-block
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_j3_force_stress_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_j3_force_stress_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_j3_force_stress_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_bspline_j3_basis_grads_vs_auto
+  - executable_checks:
+      retained-math-1:
+        actual:
+          expression: np.asarray(ca.radial.exponents)
+          role: retained-analytical-mathematical-result
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: np.asarray(cb.radial.exponents)
+          role: retained-independent-full-mathematical-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_bspline_j3_basis_grads_vs_auto#comparison-1
+      retained-math-2:
+        actual:
+          expression: np.asarray(ca.radial.coefficients)
+          role: retained-analytical-mathematical-result
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        reference:
+          expression: np.asarray(cb.radial.coefficients)
+          role: retained-independent-full-mathematical-reference
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_bspline_j3_basis_grads_vs_auto#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_bspline_j3_basis_grads_vs_auto
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_bspline_j3_basis_grads_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_force_vs_auto
+  - executable_checks:
+      unchanged-full-strict-1:
+        actual:
+          expression: np.asarray(a)
+          role: full-analytical-derivative-block
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: full-primal-autodiff-derivative-block
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_force_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_force_vs_auto
+    required_parameter_cases:
+    - stem: H2_ae_ccpvdz_cart.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_force_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_dtn_ecp_e_L_closed_form_vs_auto
+  - executable_checks:
+      unchanged-full-strict-1:
+        actual:
+          expression: np.asarray(getattr(da, k))
+          role: full-analytical-derivative-block
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(getattr(db, k))
+          role: full-primal-autodiff-derivative-block
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_dtn_ecp_e_L_closed_form_vs_auto#comparison-1
+      unchanged-full-strict-2:
+        actual:
+          expression: np.asarray(a)
+          role: full-analytical-derivative-block
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: full-primal-autodiff-derivative-block
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_dtn_ecp_e_L_closed_form_vs_auto#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_dtn_ecp_e_L_closed_form_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+      wrt: r
+    - stem: lithium.h5
+      wrt: R
+    - stem: lithium.h5
+      wrt: c
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_dtn_ecp_e_L_closed_form_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_stress_vs_auto
+  - executable_checks:
+      unchanged-full-strict-1:
+        actual:
+          expression: np.asarray(a)
+          role: full-analytical-derivative-block
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: np.asarray(b)
+          role: full-primal-autodiff-derivative-block
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_stress_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_stress_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_stress_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_complex_twist_dtn_caxis.py::test_twist_dtn_e_L_c_vs_auto
+  - executable_checks:
+      comparison-1:
+        actual:
+          expression: va
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        iterations:
+          required_values:
+          - alpha_indep
+          - beta_indep
+          - gamma_indep
+          variable: k
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        reference:
+          expression: vb
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_complex_twist_dtn_caxis.py::test_twist_dtn_e_L_c_vs_auto#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_complex_twist_dtn_caxis.py::test_twist_dtn_e_L_c_vs_auto
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_complex_twist_dtn_caxis.py::test_twist_dtn_e_L_c_vs_auto
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_derivatives_geminal.py::test_dln_det_dlambda_unpaired_vs_holomorphic_jvp
+  - executable_checks:
+      comparison-1:
+        actual:
+          expression: np.asarray(directional)
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+        reference:
+          expression: np.asarray(jvp_val)
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_derivatives_geminal.py::test_dln_det_dlambda_unpaired_vs_holomorphic_jvp#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_derivatives_geminal.py::test_dln_det_dlambda_unpaired_vs_holomorphic_jvp
+    required_parameter_cases:
+    - complex_unpaired: false
+      n: 5
+      n_dn: 2
+      n_up: 3
+    - complex_unpaired: true
+      n: 5
+      n_dn: 2
+      n_up: 3
+    - complex_unpaired: false
+      n: 6
+      n_dn: 1
+      n_up: 4
+    - complex_unpaired: true
+      n: 6
+      n_dn: 1
+      n_up: 4
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_derivatives_geminal.py::test_dln_det_dlambda_unpaired_vs_holomorphic_jvp
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_derivatives_ao.py::test_pw_dcell_matches_jvp_nonortho
+  - executable_checks:
+      all-vgl-components:
+        actual:
+          expression: np.asarray(da)
+          role: analytical-directional-ao-vgl-derivative
+        comparator: numpy.testing.assert_allclose
+        iterations:
+          required_values:
+          - val
+          - gx
+          - gy
+          - gz
+          - lap
+          variable: name
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+        reference:
+          expression: np.asarray(dj)
+          role: same-mode-autodiff-jvp-ao-vgl
+        site: tests/test_jqmc_kernel/test_derivatives_ao.py::test_pw_dcell_matches_jvp_nonortho#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_pw_dcell_matches_jvp_nonortho
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_derivatives_ao.py::test_pw_dcell_matches_jvp_nonortho
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_derivatives_ao.py::test_bspline_dcell_matches_jvp_nonortho
+  - executable_checks:
+      all-vgl-components:
+        actual:
+          expression: np.asarray(da)
+          role: analytical-directional-ao-vgl-derivative
+        comparator: numpy.testing.assert_allclose
+        iterations:
+          required_values:
+          - val
+          - gx
+          - gy
+          - gz
+          - lap
+          variable: name
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        reference:
+          expression: np.asarray(dj)
+          role: same-mode-autodiff-jvp-ao-vgl
+        site: tests/test_jqmc_kernel/test_derivatives_ao.py::test_bspline_dcell_matches_jvp_nonortho#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_bspline_dcell_matches_jvp_nonortho
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_derivatives_ao.py::test_bspline_dcell_matches_jvp_nonortho
+  # BEGIN evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_derivatives_fast.py::test_fast_logdet_param_grad_matches_nonfast_and_autograd
+  - executable_checks:
+      comparison-1:
+        actual:
+          expression: np.asarray(g_fast)
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+        reference:
+          expression: np.asarray(g_nonfast)
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_derivatives_fast.py::test_fast_logdet_param_grad_matches_nonfast_and_autograd#comparison-3
+      comparison-2:
+        actual:
+          expression: np.asarray(jnp.sum(g_fast * V))
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+        reference:
+          expression: np.asarray(jvp_val)
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_derivatives_fast.py::test_fast_logdet_param_grad_matches_nonfast_and_autograd#comparison-4
+    pytest_node: tests/test_jqmc_kernel/test_derivatives_fast.py::test_fast_logdet_param_grad_matches_nonfast_and_autograd
+    required_parameter_cases:
+    - complex_lambda: false
+    - complex_lambda: true
+    required_precision_modes:
+    - full
+  # END evidence node: VM-MATH-AD-ORACLE-001 :: tests/test_jqmc_kernel/test_derivatives_fast.py::test_fast_logdet_param_grad_matches_nonfast_and_autograd
+  verdict_method: VM-MATH-AD-ORACLE-001
+- nodes:
+  # BEGIN evidence node: VM-MATH-REFERENCE-001 :: tests/test_jqmc_kernel/test_jax_complex_grad_convention.py::TestPhase3JAXGradConvention::test_real_wavefunction_lambda_gradient_matches_inverse_reference
+  - executable_checks:
+      same-input-lambda-inverse:
+        actual:
+          expression: actual
+          role: original-bloch-pgto-lambda-real-loss-gradient
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+        reference:
+          expression: reference
+          role: explicit-geminal-inverse-unconjugated-lambda-reference
+        site: tests/test_jqmc_kernel/test_jax_complex_grad_convention.py::TestPhase3JAXGradConvention.test_real_wavefunction_lambda_gradient_matches_inverse_reference#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_jax_complex_grad_convention.py::TestPhase3JAXGradConvention::test_real_wavefunction_lambda_gradient_matches_inverse_reference
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+    - mixed
+  # END evidence node: VM-MATH-REFERENCE-001 :: tests/test_jqmc_kernel/test_jax_complex_grad_convention.py::TestPhase3JAXGradConvention::test_real_wavefunction_lambda_gradient_matches_inverse_reference
+  # BEGIN evidence node: VM-MATH-REFERENCE-001 :: tests/test_jqmc_kernel/test_derivatives_fast.py::test_resolve_uses_provided_and_matches_pinv
+  - executable_checks:
+      comparison-1:
+        actual:
+          expression: np.asarray(internal)
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+        reference:
+          expression: np.asarray(provided)
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_derivatives_fast.py::test_resolve_uses_provided_and_matches_pinv#comparison-1
+      comparison-2:
+        actual:
+          expression: np.asarray(internal @ G)
+          role: existing-test-actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+        reference:
+          expression: np.asarray(jnp.eye(5))
+          role: existing-test-reference
+        site: tests/test_jqmc_kernel/test_derivatives_fast.py::test_resolve_uses_provided_and_matches_pinv#comparison-2
+    pytest_node: tests/test_jqmc_kernel/test_derivatives_fast.py::test_resolve_uses_provided_and_matches_pinv
+  # END evidence node: VM-MATH-REFERENCE-001 :: tests/test_jqmc_kernel/test_derivatives_fast.py::test_resolve_uses_provided_and_matches_pinv
+  # BEGIN evidence node: VM-MATH-REFERENCE-001 :: tests/test_jqmc_kernel/test_dtn_cutoff_primal_reference.py::test_in_support_fixture_matches_independent_primal_per_field
+  - executable_checks:
+      central-pair-1:
+        actual:
+          expression: got
+          role: actual
+        comparator: numpy.testing.assert_allclose
+        precision:
+          full:
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+          mixed:
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+        reference:
+          expression: ref
+          role: reference
+        site: tests/test_jqmc_kernel/test_dtn_cutoff_primal_reference.py::test_in_support_fixture_matches_independent_primal_per_field#comparison-1
+    pytest_node: tests/test_jqmc_kernel/test_dtn_cutoff_primal_reference.py::test_in_support_fixture_matches_independent_primal_per_field
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+    - mixed
+  # END evidence node: VM-MATH-REFERENCE-001 :: tests/test_jqmc_kernel/test_dtn_cutoff_primal_reference.py::test_in_support_fixture_matches_independent_primal_per_field
+  verdict_method: VM-MATH-REFERENCE-001
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+- VM-MATH-REFERENCE-001

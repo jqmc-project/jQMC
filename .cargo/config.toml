@@ -1,0 +1,13 @@
+# Native-CPU codegen for the jqmc_rs extension when built THROUGH PIP.
+#
+# Cargo discovers config files by walking UP from its *current working
+# directory* -- not from --manifest-path. setuptools-rust invokes cargo from
+# the repository root, so ``jqmc/rs/.cargo/config.toml`` is NEVER read during
+# ``pip install`` builds; without this file those builds silently fall back to
+# generic x86-64 (SSE2) codegen. The auto-vectorized kernels depend on
+# target-cpu=native actually reaching rustc.
+#
+# ``jqmc/rs/.cargo/config.toml`` (same contents) is kept for direct ``cargo``
+# invocations from inside jqmc/rs.
+[build]
+rustflags = ["-C", "target-cpu=native"]

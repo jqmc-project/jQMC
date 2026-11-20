@@ -1,0 +1,62 @@
+id: IMPL-RS-PERIODIC-J3-INTERVAL-STATE-001
+kind: implementation
+name: Periodic raw-AO pGTO J3 carries the native GFMC J3 streaming state, and the MO-wrapped J3 slow route is declared
+plain_language: >-
+  The periodic Li ccECP spherical pGTO determinant with exp J1/J2 and a raw-AO periodic pGTO J3
+  (pbc_gamma_sphepgto_j123) is an interval cell of the native GFMC projection tests: the per-sub-step
+  components at two lattice constants, the fast state against the full recompute, and the GFMC_n and
+  GFMC_t interval drivers against the XLA reference machine with pinned randomness. In the GFMC_n
+  interval the J3 candidate slow-fallback counter (route counter 12) is zero, which proves that the
+  periodic disjunct of mesh_fast_state::j3_state_ok built the J3 streaming state. A periodic J3 whose
+  basis is MO-wrapped is declared a same-observable slow route: on the real-Gamma Li pGTO(+)PW composite SD
+  with J1/J2 and an MO-wrapped J3 the GFMC_n interval takes it (counters 12 and 51 positive, the carried
+  inverse fallback counter 60 zero) and still equals the XLA machine sub-step by sub-step, with walkers and
+  keys exact. (A molecular MO-wrapped J3 is lowered to raw AO at the native GFMC parse and
+  streams; see IMPL-RS-GFMC-MO-J3-STREAMING-001.) The pbc_gamma_j123 parameter rows of the interval nodes are bound through their existing
+  whole-node registration in this file (IMPL-RS GFMC projection parity guarantee); this guarantee binds
+  the declared-slow-route node. Full and mixed are judged separately within the existing interval policy.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_projection.py::test_declared_slow_route_is_taken_and_matches_xla
+    executable_checks:
+      gfmc-helper-comparison-1:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_declared_slow_route_is_taken_and_matches_xla#helper-inequality-5
+        comparator: python.inequality
+        actual: {role: tested-gfmc-quantity, expression: 'float(got[''w_L''])'}
+        reference: {role: existing-gfmc-reference, expression: 'ref[''w_L'']'}
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+      gfmc-helper-comparison-2:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_declared_slow_route_is_taken_and_matches_xla#helper-inequality-6
+        comparator: python.inequality
+        actual: {role: tested-gfmc-quantity, expression: 'float(got[''e_L''])'}
+        reference: {role: existing-gfmc-reference, expression: 'ref[''e_L'']'}
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+      gfmc-helper-comparison-3:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_declared_slow_route_is_taken_and_matches_xla#helper-inequality-7
+        comparator: python.inequality
+        actual: {role: tested-gfmc-quantity, expression: 'float(got[''V_diag''])'}
+        reference: {role: existing-gfmc-reference, expression: 'ref[''V_diag'']'}
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: j3_mo_periodic}

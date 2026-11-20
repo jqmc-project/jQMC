@@ -1,0 +1,77 @@
+id: PHY-WF-TRANSLATION-INVARIANCE-001
+kind: physical
+name: Lattice-translation invariance of the discretized kinetic energy
+plain_language: The discretized kinetic energy is invariant under lattice translations of the electron coordinates.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_invariants.py::test_single_electron_lattice_translation_invariance
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_invariants.py::test_per_config_translation_sum_rule
+    executable_checks:
+      d8-n-466:
+        site: tests/test_jqmc_kernel/test_periodic_invariants.py::test_per_config_translation_sum_rule#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: pulay_sum
+        reference:
+          role: source-reference-value
+          expression: np.zeros(3)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      d8-n-467:
+        site: tests/test_jqmc_kernel/test_periodic_invariants.py::test_per_config_translation_sum_rule#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: hf_sum
+        reference:
+          role: source-reference-value
+          expression: np.zeros(3)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_invariants.py::test_nonvacuous_two_body_sanity
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestDiscretizedKineticEnergy::test_discretized_kinetic_pbc_lattice_translation_invariance
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestDiscretizedKineticEnergy.test_discretized_kinetic_pbc_lattice_translation_invariance#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sum_tr
+        reference:
+          role: existing-test-reference
+          expression: sum_base
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic

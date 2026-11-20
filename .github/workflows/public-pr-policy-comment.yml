@@ -1,0 +1,110 @@
+name: jQMC public PR policy notice
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+# This privileged event is used only to comment on fork PRs. Never check out,
+# install, or execute PR code here, and never use a self-hosted runner.
+permissions: {}
+
+concurrency:
+  group: public-pr-policy-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  comment:
+    if: github.repository == 'jqmc-project/jQMC'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Post the policy notice once unless the PR author is exempt
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # Repository variable: the GitHub logins (separated by commas or
+          # whitespace, optionally with @) whose pull requests get no notice.
+          # Unset or empty, every PR author gets it.
+          PR_POLICY_EXEMPT_USERS: ${{ vars.PR_POLICY_EXEMPT_USERS }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import urllib.request
+
+          def main() -> None:
+              repository = "jqmc-project/jQMC"
+              if os.environ["GITHUB_REPOSITORY"] != repository:
+                  raise RuntimeError("The policy notice is only for public jQMC")
+              with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as stream:
+                  pr = json.load(stream)["pull_request"]
+              if pr["base"]["repo"]["full_name"] != repository:
+                  raise RuntimeError("Unexpected PR target repository")
+              if pr["state"] != "open":
+                  return
+
+              # Match the PR author, not the user who reopens the PR. Usernames
+              # are case-insensitive; commas, whitespace, and optional @ work.
+              exempt_users = {
+                  name.removeprefix("@").lower()
+                  for name in re.split(r"[,\s]+", os.environ.get("PR_POLICY_EXEMPT_USERS", ""))
+                  if name
+              }
+              if pr["user"]["login"].lower() in exempt_users:
+                  print("The PR author is exempt from the policy notice")
+                  return
+              marker = "<!-- jqmc-public-pr-policy:v1 -->"
+              endpoint = f"https://api.github.com/repos/{repository}/issues/{int(pr['number'])}/comments"
+              headers = {
+                  "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+                  "User-Agent": "jqmc-pr-policy",
+              }
+              page = 1
+              while True:
+                  request = urllib.request.Request(f"{endpoint}?per_page=100&page={page}", headers=headers)
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      comments = json.load(response)
+                  for comment in comments:
+                      author = comment.get("user") or {}
+                      if (
+                          author.get("login") == "github-actions[bot]"
+                          and author.get("type") == "Bot"
+                          and marker in (comment.get("body") or "")
+                      ):
+                          print("The policy notice has already been posted")
+                          return
+                  if len(comments) < 100:
+                      break
+                  page += 1
+
+              body = "\n\n".join([
+                  marker,
+                  "Thank you for the pull request! We appreciate proposals, reproductions, "
+                  "and suggested fixes that help us understand the problem.",
+                  "External pull requests in this public repository are not merged as submitted, "
+                  "even when their CI checks pass. Development takes place in the private "
+                  "jQMC-forge repository: the developers investigate the issue, implement and "
+                  "test the changes there, and then bring validated changes into public jQMC "
+                  "through maintainer-managed promotion pull requests.",
+                  "Your PR remains useful as a reference and a place for discussion; this "
+                  "automated notice does not close it. Please see our "
+                  "[contribution policy](https://github.com/jqmc-project/jQMC/blob/main/"
+                  "CONTRIBUTING.md#contribution-policy).",
+              ])
+              request = urllib.request.Request(
+                  endpoint,
+                  data=json.dumps({"body": body}).encode("utf-8"),
+                  headers={**headers, "Content-Type": "application/json"},
+                  method="POST",
+              )
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  json.load(response)
+              print("Posted the public contribution policy notice")
+
+          if __name__ == "__main__":
+              main()
+          PY

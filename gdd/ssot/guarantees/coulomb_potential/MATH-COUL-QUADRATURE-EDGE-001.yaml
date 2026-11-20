@@ -1,0 +1,87 @@
+id: MATH-COUL-QUADRATURE-EDGE-001
+kind: mathematical
+name: Quadrature and edge-case identities
+plain_language: The spherical quadrature weights sum to one, zero-electron Ewald channels return exactly zero or empty,
+  and the discretized electron-ion potential at alat zero equals the unregularized value.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::test_spherical_quadrature_weights_sum_to_one
+    executable_checks:
+      d8-n-122:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::test_spherical_quadrature_weights_sum_to_one#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.sum(mesh.weights)
+        reference:
+          role: source-reference-value
+          expression: '1.0'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldEdgeCase::test_compute_ewald_potential_ee_zero_electrons_is_zero
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldEdgeCase.test_compute_ewald_potential_ee_zero_electrons_is_zero#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_ee
+        reference:
+          role: existing-test-reference
+          expression: '0.0'
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldEdgeCase::test_compute_ewald_potential_ei_zero_electrons_returns_empty
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldEdgeCase::test_compute_ewald_potential_ei_discretized_alat_zero_matches_unregularized
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldEdgeCase.test_compute_ewald_potential_ei_discretized_alat_zero_matches_unregularized#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_up_reg)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_up_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldEdgeCase.test_compute_ewald_potential_ei_discretized_alat_zero_matches_unregularized#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_dn_reg)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_dn_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald

@@ -1,0 +1,25 @@
+schema_version: 1
+document:
+  id: jqmc.orbital_tiling
+  version: 1
+  lifecycle: cutover
+  authority: provisional-before-gdd-cutover
+  title: Representation-independent orbital tiling contracts
+  purpose: Common primitive k blocks, exact quotient geometry and final-orbital evaluation, with scoped native sampling,
+    derivative and checkpoint-continuation contracts.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - MATH-TILING-BLOCK-EVALUATION-001
+  overrides:
+    jqmc.orbital_tiling.tiling_k_points:
+    - MATH-TILING-RECIPROCAL-COSETS-001
+    jqmc.orbital_tiling.match_tiling_k_points:
+    - MATH-TILING-RECIPROCAL-COSETS-001
+    jqmc.orbital_tiling_hdf5.save_tiled_orbitals:
+    - IMPL-TILING-HDF5-001
+    jqmc.orbital_tiling_hdf5.load_tiled_orbitals:
+    - IMPL-TILING-HDF5-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

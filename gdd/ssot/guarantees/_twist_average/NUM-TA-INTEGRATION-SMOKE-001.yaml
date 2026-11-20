@@ -1,0 +1,19 @@
+id: NUM-TA-INTEGRATION-SMOKE-001
+kind: numerical
+name: Twist-average integration smoke
+plain_language: Twist-averaged GFMC and QE MPI runs complete on the reviewed fixtures; this is a smoke check, never a correctness
+  oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageByteIdentity::test_run_twist_average_gfmc_tau_n_twist_1_byte_identity
+  - pytest_node: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageByteIdentity::test_run_twist_average_gfmc_tau_debug_variant_byte_identity
+  - pytest_node: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageDispatches::test_run_twist_average_gfmc_n_kind_smoke
+  - pytest_node: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageDispatches::test_run_twist_average_gfmc_n_debug_variant_smoke
+  - pytest_node: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageBZAggregation::test_run_twist_average_gfmc_two_twist_uses_bz_combine
+  - pytest_node: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageInputValidation::test_run_twist_average_gfmc_rejects_unknown_kind
+  - pytest_node: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageInputValidation::test_run_twist_average_gfmc_rejects_empty_hamiltonian_list
+  - pytest_node: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageInputValidation::test_run_twist_average_gfmc_rejects_weights_length_mismatch
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_twist_average_mpi.py::TestQETwistAverageMPI::test_twist_average_mcmc_smoke

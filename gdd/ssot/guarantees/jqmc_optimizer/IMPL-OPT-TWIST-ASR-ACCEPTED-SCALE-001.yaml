@@ -1,0 +1,17 @@
+id: IMPL-OPT-TWIST-ASR-ACCEPTED-SCALE-001
+kind: implementation
+name: The twist-decomposed target reports the aSR scale of its scaled scopes
+plain_language: >-
+  On the single-k path accepted_scale is the aSR gamma that multiplies the SR direction (aSR, or the aSR fallback of a
+  rejected LM candidate), and 1 for plain SR and an accepted LM step. The twist-decomposed target scales each
+  ownership scope by its own gamma, so it reports the gamma of smallest magnitude among the scaled scopes, with its
+  sign (a gamma may be negative): the most conservative scaled step, equal to the gamma itself when one scope, or
+  every scope alike, was scaled. An accepted LM scope contributes no scale, and without a scaled scope the value is
+  1. Evidence: aSR and rejected reduced LM with shared and twist-local gammas -0.6 and 0.3 report 0.3.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_solver_guards.py::test_twist_asr_scale_is_the_smallest_magnitude_scope_gamma_with_its_sign
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{lm_subspace_dim: 0}, {lm_subspace_dim: 2}]

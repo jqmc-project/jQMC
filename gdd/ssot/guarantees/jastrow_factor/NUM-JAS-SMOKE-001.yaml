@@ -1,0 +1,19 @@
+id: NUM-JAS-SMOKE-001
+kind: numerical
+name: Higher-order autodiff smoke of the DTN Jastrow
+plain_language: Third-order autodiff of the DTN local-energy derivative and the single-electron ECP epsilon gradient stay
+  finite; this is a smoke check, never a correctness oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::test_dtn_third_order_ad_de_l_dr_is_finite
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::test_dtn_third_order_ad_kinetic_derivative_finite_both_precisions
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {structure_factory: {source_expression: _h2_structure}, label: molecular, preset: u}
+    - {structure_factory: {source_expression: _h2_structure}, label: molecular, preset: u_chi_f}
+    - {structure_factory: {source_expression: _h2_pbc_structure}, label: periodic, preset: u}
+    - {structure_factory: {source_expression: _h2_pbc_structure}, label: periodic, preset: u_chi_f}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::test_dtn_ecp_auto_grad_e_L_r_eps_finite_single_electron_per_spin

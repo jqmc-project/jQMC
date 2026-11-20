@@ -1,0 +1,11 @@
+id: PHY-HAM-TIME-REVERSAL-001
+kind: physical
+name: Time-reversal covariance of the wavefunction and local energy
+plain_language: For every +/-k pair in the committed shifted 2x2x2 QE grid, independently built complex pGTO+PW Hamiltonians
+  satisfy Psi(-k)=conj(Psi(+k)) and e_L(-k)=conj(e_L(+k)) at identical deterministic electron coordinates.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_grid_composite.py::test_twist_grid_wavefunction_and_local_energy_are_time_reversal_pairs

@@ -1,0 +1,17 @@
+id: IMPL-JAS-COMPONENT-PERIODICITY-CONSISTENCY-001
+kind: implementation
+name: Jastrow_data rejects populated components that disagree on periodicity or lattice
+plain_language: >-
+  Jastrow_data.build (through Jastrow_data.sanity_check) raises ValueError when the components that carry a populated
+  structure (J1, J2, J3 orbital basis, DTN) disagree on pbc_flag or, when periodic, on the lattice vectors:
+  a periodic J1 on H2_pbc_ae_cart.h5 combined with a J2 or a DTN on a molecular copy of the same nuclei, or with a
+  periodic J2 on a 1.1-scaled cell, is rejected. A J2 left at the empty default Structure_data() is resolved against the
+  Hamiltonian structure by Hamiltonian_data.sanity_check (PHY-HAM-JASTROW-PERIODICITY-CONSISTENCY-001), so a periodic J1
+  plus a default J2 is accepted at the Jastrow_data level. Full and mixed are each required.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_structure_consistency.py::test_jastrow_data_rejects_components_with_mismatched_periodicity
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

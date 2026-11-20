@@ -1,0 +1,30 @@
+id: MATH-AO-SPHE-PERIODIC-VALUE-COHERENT-BIAS-INDEPENDENT-001
+kind: mathematical
+name: The periodic spherical pGTO value routes carry no coherent scale bias against an independent fp64 textbook lattice sum
+plain_language: >-
+  The periodic spherical pGTO s-AO values of XLA compute_AOs, the fused compute_AOs_value_grad_lap value, and the Rust
+  jqmc_rs.compute_AOs_exact and jqmc_rs.compute_AOs routes carry no coherent (per-primitive, image-independent) value-scale
+  error against an implementation-independent reference: an fp64 numpy lattice sum
+  chi(r) = sum_n sum_p c_p (2 Z_p / pi)^(3/4) exp(-Z_p |r - R_A - n . L|^2) of textbook-normalized s Gaussians
+  (Y_00 = 1/sqrt(4 pi) times the radial normalization from int r^2 R^2 dr = 1), computed without any jqmc AO evaluation,
+  normalization or image-enumeration code. Only basis inputs (exponents, coefficients, atom per AO, positions, cell) and the
+  leaf's declared kept image set per AO are read; the test independently enumerates an image box two layers wider than the
+  kept set and asserts that every dropped image is below the leaf's image truncation tolerance at every sample point and that
+  the outermost layer is entirely dropped. On the committed periodic Gamma spherical-pGTO fixture pbc_gamma_sphepgto_j12_pade,
+  at 4096 fixed points uniform in the cell (seed 0), for every s-type AO the coherent relative scale
+  kappa = sum v_ref (v - v_ref) / sum v_ref^2 satisfies
+  |kappa| <= AO_VALUE_COHERENT_BIAS_EPS_FRACTION * eps(ao_eval) + AO_VALUE_COHERENT_BIAS_FP64_EPS_MULTIPLE * eps(float64),
+  and the standard error relrms / sqrt(4096) is at most a quarter of that bound. Full and mixed are judged separately with
+  the same rule (in mixed the XLA and Rust standalone value routes rounded N_n, N_lm, c and Z to float32
+  separately and carried a ~0.9 float32-eps coherent bias (kappa ~ -1.08e-7) on the diffuse s shells against this reference).
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_sphe_pgto_value_coherent_bias.py::test_sphe_pgto_value_has_no_coherent_scale_bias_vs_independent_lattice_sum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: xla_compute_AOs}
+    - {route: rust_compute_AOs_exact}
+    - {route: rust_compute_AOs}
+    - {route: xla_compute_AOs_value_grad_lap}

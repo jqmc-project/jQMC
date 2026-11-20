@@ -1,0 +1,76 @@
+id: IMPL-RS-CPLX-CHUNK-KIN-CARRY-001
+kind: implementation
+name: The complex FAST chunk carries its kinetic derivative tables and determinant base across steps within measured floors
+plain_language: >-
+  In the complex-twist FAST energy chunk (run_energy_chunk with complex=True and the native random stream; the
+  chunk is energy-only), two pieces of walker state are carried across the steps of one chunk call instead of
+  being rebuilt every step. (1) Kinetic derivative tables (gfmc::ComplexChunkKinCarry): the same caches the complex
+  GFMC local energy streams, namely the fused-family determinant derivative cache with its own kinetic-quality
+  inverse (complex_det::DetGradLapCacheC), the J1/J2 cache, the DTN cache and the complex J3 cache. They are seeded
+  once at the chunk's start positions, advanced by replaying the sweep's accepted moves in acceptance order
+  (mcmc::mcmc_sweep_complex_carry reports them), and contracted per local energy with the fresh kinetic's own
+  assembly (complex_det::kinetic_complex_from_fields). They replace the per-e_L
+  compute_kinetic_withj_complex_with_inv. The gate (kin_carry_ok) is the complex GFMC determinant class gate
+  (complex_det_gradlap_ok). The DTN leg stays fresh under an fp32 jastrow_grad_lap zone: the chunk keeps the fresh
+  route, which adds the J1/J2 and DTN legs in that zone (the DTN cache itself is in the fp64 jastrow_grad_lap_carry
+  zone). The J3 leg stays fresh for an unsupported J3 leaf class. The J3 tables use home-cell-wrapped
+  positions, as the fresh observable kinetic does. After each step the tables' own inverse is screened with the
+  probe residual (kin_ginv_carry_ok); a residual above SM_INVERSE_REFRESH_RESIDUAL_THRESHOLD, or NaN, re-seeds
+  every table. (2) Determinant base (det_base_carry_ok): the geminal, its Sherman-Morrison inverse (after the
+  chunk's existing carried-inverse refresh check) and the sweep's DetRatioStateC are built once per chunk and threaded
+  through the sweeps, as the real chunk's det_carry_ok does. Nothing crosses a chunk boundary. The per-step
+  dispatch, the native driver and GFMC/LRDMC do not use these carries. This is a FAST-only route, not bit-identical
+  to rebuilding the state every step. Test-only hooks JQMC_RS_KIN_COMPLEX_FRESH and JQMC_RS_DET_COMPLEX_FRESH_BASE
+  select the per-step fresh routes for A/B comparison; with both set, an N-step chunk equals N single-step chunks
+  byte for byte.
+  The production MCMC driver (two walkers, seven steps, seed 34356, random mesh) runs on the QE Li
+  k=(1/4,1/4,1/4) ccECP fixtures: pGTO with J1/J2, J1/J2/J3 or DTN, and pGTO+PW or B-spline leaves without
+  Jastrow. Kinetic carry against fresh kinetic gives byte-identical walkers, keys and w_L, with every e_L within
+  ATOL/RTOL_CPLX_KIN_CARRY. Base carry against per-step rebuild gives byte-identical keys and positions (no
+  fp-floor Metropolis flip on these walks), with w_L and e_L within ATOL/RTOL_CPLX_DET_BASE_CARRY. Both carries
+  against both hooks give the same walk, with w_L within the base floor and e_L within the sum of the floors.
+  The mixed lane raises the floors to the ao_eval (and, for the kinetic, jastrow_grad_lap) zone envelope. The
+  routes are counted in jqmc_rs.route_predicate_counters indices 22 to 28 with exact counts. Full and mixed are
+  judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_chunk_kin_carry.py::test_complex_chunk_kin_carry_matches_fresh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_j12}
+    - {pattern: twist_sphepgto_j123}
+    - {pattern: twist_sphepgto_jdtn}
+    - {pattern: pgto_pw_twist_jnone}
+    - {pattern: bspline_twist_jnone}
+  - pytest_node: tests/test_rs_kernel/test_complex_chunk_kin_carry.py::test_complex_chunk_det_base_carry_matches_rebuild
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_j12}
+    - {pattern: twist_sphepgto_j123}
+    - {pattern: twist_sphepgto_jdtn}
+    - {pattern: pgto_pw_twist_jnone}
+    - {pattern: bspline_twist_jnone}
+  - pytest_node: tests/test_rs_kernel/test_complex_chunk_kin_carry.py::test_complex_chunk_carries_match_pre_carry_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_j12}
+    - {pattern: twist_sphepgto_j123}
+    - {pattern: twist_sphepgto_jdtn}
+    - {pattern: pgto_pw_twist_jnone}
+    - {pattern: bspline_twist_jnone}
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_run_energy_chunk_complex_fast_equiv_per_step
+  - pytest_node: tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_complex_carry_route_counters
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_j12, hooked: false}
+    - {pattern: twist_sphepgto_j12, hooked: true}
+    - {pattern: twist_sphepgto_j123, hooked: false}
+    - {pattern: twist_sphepgto_j123, hooked: true}
+    - {pattern: twist_sphepgto_jdtn, hooked: false}
+    - {pattern: twist_sphepgto_jdtn, hooked: true}
+    - {pattern: pgto_pw_twist_jnone, hooked: false}
+    - {pattern: pgto_pw_twist_jnone, hooked: true}
+    - {pattern: bspline_twist_jnone, hooked: false}
+    - {pattern: bspline_twist_jnone, hooked: true}

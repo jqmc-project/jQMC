@@ -1,0 +1,37 @@
+id: NUM-AO-CART-VALUE-NORMALIZATION-FP32-RANGE-001
+kind: numerical
+name: The mixed-precision Cartesian AO value normalization is formed in float64 and rounded once, so it keeps the float32 range
+plain_language: >-
+  The electron-independent Cartesian primitive normalization N = sqrt((2a/pi)^(3/2) (8a)^l prod_i n_i!/(2 n_i)!) of
+  the standalone AO value kernels (XLA compute_AOs and the Rust compute_AOs f32 kernel of the mixed MCMC value path) is
+  formed from the float64 storage values and rounded once to the ao_eval zone dtype, so that mixed precision loses
+  only precision, not range, in it (assembling it from float32 pieces overflows (8a)^l or underflows
+  the factorial ratio and returns Inf, 0 or NaN although N and the AO value are representable in float32). For
+  complete Cartesian shells of degree 2..8 at exponents just outside the window of that float32 assembly (l = 2 at a = 1e11, 3 at
+  1e9, 4 at 1e7, 5 at 1e6, 6 at 1e5, 7 and 8 at 1e4, and 8 at 1e-4) and for single axis components (12,0,0) at
+  a = 1e-3, (13,0,0) at a = 1e2 and (25..28,0,0) at a = 1, built with AOs_cart_gto_data.build, at the radial maximum of
+  |x^l exp(-a r^2)| and on the (1,1,1) diagonal at the same radius, the XLA and Rust standalone values are finite and
+  equal the closed form c N x^nx y^ny z^nz exp(-a r^2) with N^-2 = prod_i Gamma(n_i + 1/2) / (2a)^(n_i + 1/2) evaluated
+  with math.lgamma (no jqmc code) within the strict ao_eval tolerance of the active mode. Full and mixed are judged
+  separately; the full-precision kernels are unchanged.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_cart_norm_fp32_range.py::test_cartesian_ao_value_normalization_keeps_fp32_range
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: shell_l2_a1e11}
+    - {case: shell_l3_a1e9}
+    - {case: shell_l4_a1e7}
+    - {case: shell_l5_a1e6}
+    - {case: shell_l6_a1e5}
+    - {case: shell_l7_a1e4}
+    - {case: shell_l8_a1e4}
+    - {case: shell_l8_a1e-4}
+    - {case: axis_l12_a1e-3}
+    - {case: axis_l13_a1e2}
+    - {case: axis_l25_a1}
+    - {case: axis_l26_a1}
+    - {case: axis_l27_a1}
+    - {case: axis_l28_a1}

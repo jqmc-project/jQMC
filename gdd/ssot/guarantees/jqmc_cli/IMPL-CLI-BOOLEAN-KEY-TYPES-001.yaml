@@ -1,0 +1,17 @@
+id: IMPL-CLI-BOOLEAN-KEY-TYPES-001
+kind: implementation
+name: Boolean-valued TOML keys accept only TOML booleans
+plain_language: >-
+  A key the jqmc CLI reads whose shipped default is a boolean (in [control], [coulomb], the section of the selected
+  job_type, and the nested [vmc].optimizer_kwargs options) accepts only a TOML boolean. A quoted string such as
+  "false" or a number is rejected with a ValueError that names the section, the key and the given value, before any
+  Hamiltonian or checkpoint file is read, so a leftover restart checkpoint is not continued and no output file is
+  written. Both TOML booleans are accepted for every such key and behave as before.
+verdict_methods: [VM-ERROR-DISPOSITION-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_boolean_key_types.py::test_non_boolean_value_for_boolean_key_is_rejected
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_boolean_key_types.py::test_toml_boolean_values_pass_the_type_check

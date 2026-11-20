@@ -1,0 +1,29 @@
+id: IMPL-TREXIO-READ-CONTRACTS-001
+kind: implementation
+name: TREXIO read contracts
+plain_language: Reading TREXIO files returns the declared molecular or PBC state with the Ewald contract and independent
+  UHF spin rows, tuple and list inputs take the same route, and tagged element labels split as reviewed.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_trexio.py::TestTREXIO::test_native_uhf_sd_uses_independent_occupied_spin_rows
+  - pytest_node: tests/test_jqmc_kernel/test_trexio.py::TestTREXIO::test_read_trexio_pbc_returns_pbc_state
+  - pytest_node: tests/test_jqmc_kernel/test_trexio.py::TestTREXIO::test_read_trexio_molecular_returns_molecular_state
+  - pytest_node: tests/test_jqmc_kernel/test_trexio.py::TestTREXIO::test_read_trexio_pbc_ewald_contract
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_cli_twist_average_rejects_unsupported_options
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_converter_rejects_metallic_k_point_occupations
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_reader_and_converter_reject_wrong_spin_or_nonfinite_occupations
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_converter_rejects_single_k_file
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_periodic_occupation_check_rejects_invalid_blocks
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_periodic_occupation_check_accepts_fixed_blocks
+  - pytest_node: tests/test_jqmc_kernel/test_trexio_wrapper.py::TestTrexioElementVsLabel::test_untagged_fixture_element_equals_label
+  - pytest_node: tests/test_jqmc_kernel/test_trexio_wrapper.py::TestTrexioElementVsLabel::test_tagged_label_splits_from_element
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_trexio.py::TestTREXIO::test_read_trexio_files_with_tuple
+  - pytest_node: tests/test_jqmc_kernel/test_trexio.py::TestTREXIO::test_read_trexio_files_with_list
+  - pytest_node: tests/test_jqmc_kernel/test_trexio.py::TestTREXIO::test_read_trexio_pbc_files_with_tuple
+  - pytest_node: tests/test_jqmc_kernel/test_trexio.py::TestTREXIO::test_read_trexio_pbc_files_with_list

@@ -1,0 +1,73 @@
+id: IMPL-QE-ORBITAL-TILING-001
+kind: implementation
+name: Primitive-cell B-spline bands unfold into a frozen-node supercell without quadratic spline storage
+plain_language: For an integer tiling matrix S, jQMC constructs the physical cell S times the primitive row-lattice cell,
+  enumerates exactly abs(det(S)) primitive translations, and accepts exactly that many distinct primitive k representatives
+  satisfying S k = 0 modulo reciprocal-lattice integers. The tiled complex B-spline leaf keeps every occupied k block on the
+  primitive grid, applies its own Bloch phase, and normalizes each block by abs(det(S))^-1/2. On a synthetic 2x1x1 case its
+  values, gradients and Laplacian equal separately evaluated primitive-k leaves, it is periodic in the supercell, uses only
+  linear-in-abs(det(S)) spline storage, shares the coefficient allocation with its time-reversal sibling, and stores the AO-to-occupied-MO
+  map as an empty implicit identity. A general determinant-minus-two skew tiling reproduces the expected cell and atom cosets.
+  The QE builder, HDF5 round trip and jqmc-tool command preserve the tiled leaf and implicit identity. A freshly built native
+  extension reproduces XLA VGL and log-determinant results while reading that empty identity payload. These are synthetic
+  setup and route-parity checks in each precision mode; they do not claim optimized spline nodes or twist averaging, both
+  of which are outside this frozen-node representation.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-IMPL-BACKEND-PARITY-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+fixture_usage:
+  aggregation: union-of-required-evidence
+  electron_configurations:
+  - EC-DIRECT-MIXED
+  input_bindings:
+  - IB-PARAMETER-SET
+  sources:
+  - SRC-NOT-APPLICABLE
+  wavefunctions:
+  - WF-FULL-REVIEWED
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_tiled_bspline_matches_primitive_k_blocks_without_supercell_grid
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_bspline.py::test_tiled_bspline_native_vgl_and_implicit_identity_determinant
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics::test_general_integer_tiling_replicates_atoms_and_cell
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_build_tiled_bspline_wavefunction_unfolds_two_k_blocks_with_implicit_mos
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_independent_reference.py::test_mpc_identity_mos_does_not_materialize_dense_coefficients
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestQEConvertTo::test_cli_tiling_matrix_reaches_converter
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}

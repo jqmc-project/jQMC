@@ -1,0 +1,32 @@
+[control]
+job_type = "lrdmc-tau" # GFMC_t (imaginary-time-step) driver. Atomic forces are supported here.
+mcmc_seed = 34467
+number_of_walkers = 1 # Walkers per MPI process; add MPI ranks for more samples.
+max_time = 86400
+restart = false
+restart_chk = "restart.h5"
+hamiltonian_h5 = "hamiltonian_data.h5"
+verbosity = "high"
+
+[lrdmc-tau]
+num_mcmc_steps = 20000 # Number of observable measurement steps per MPI and Walker.
+tau = 0.10            # Imaginary-time step between projections (Ha^-1, atomic units of imaginary time).
+alat = 0.30           # Lattice discretization parameter (bohr).
+non_local_move = "tmove" # T-move scheme for the non-local ECP term.
+                         # AE hydrogen has no non-local channel from H.coulomb-ae.UPF (true 1/r),
+                         # so this setting ("tmove", the default, or "dltmove") has no effect here.
+num_gfmc_warmup_steps = 50
+num_gfmc_bin_blocks = 50
+num_gfmc_collect_steps = 20
+
+# --- Atomic forces. ---
+atomic_force = true       # compute atomic forces during the GFMC_t projection.
+use_swct = false          # SWCT is off by default for LRDMC (matches the LRDMC force convention).
+compute_stress = false    # Stress is NOT computed in this example.
+epsilon_PW = 0.0          # Pathak-Wagner nodal regularization (off).
+
+[coulomb]
+mpc = false
+
+# [precision]
+# mode = "full"  # "full" (default, all float64; reference setting) or "mixed" (opt-in speed setting; see doc/notes/mixed_precision.md).

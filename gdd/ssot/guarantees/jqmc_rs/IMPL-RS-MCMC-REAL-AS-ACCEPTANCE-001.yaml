@@ -1,0 +1,23 @@
+id: IMPL-RS-MCMC-REAL-AS-ACCEPTANCE-001
+kind: implementation
+name: Native real MCMC refreshes the AS guide at accepted walker states
+plain_language: >-
+  A real multi-electron native MCMC sweep refreshes the old-state Attaccalite-Sorella
+  factor after accepting a move. With the same configuration, proposal normals
+  and Threefry draws, the native sweep agrees with the XLA sweep that recomputes
+  the factor from its current geminal. A singular-value calculation confirms
+  the guide is initially active, and removing the guide changes the XLA accept
+  count. The real water ECP energy chunk at API-default epsilon_AS=0.1 also
+  agrees on acceptance count, final positions, stored weights and local energy,
+  and the public energy estimator.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_real_mcmc_sweep_as_guide_tracks_accepted_state
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_chain_modes.py::test_real_mcmc_chunk_as_guide_tracks_accepted_state
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

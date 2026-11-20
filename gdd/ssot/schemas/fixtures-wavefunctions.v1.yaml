@@ -1,0 +1,23 @@
+schema_format: 1
+schema_id: gdd.schema.fixtures-wavefunctions.v1
+match:
+  path: gdd/ssot/fixtures/wavefunctions.yaml
+document_schema_version: 1
+required_top_level:
+  - schema_version
+  - document
+  - enforcement_map
+  - shared_contracts
+  - production_bindings
+  - orbital_signatures
+  - vocabularies
+  - validity_rules
+  - cell_metric_classifier
+  - canonical_suite
+  - evidence_required_from_each_subscribing_feature
+  - enforcement
+optional_top_level: []
+document_block:
+  required_fields: [id, version, lifecycle, title, purpose]
+enforcement_map_required: true
+prose_keys_extra: []

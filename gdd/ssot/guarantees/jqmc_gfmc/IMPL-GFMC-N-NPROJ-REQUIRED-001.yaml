@@ -1,0 +1,42 @@
+id: IMPL-GFMC-N-NPROJ-REQUIRED-001
+kind: implementation
+name: GFMC_n Python API requires an explicit num_mcmc_per_measurement
+plain_language: >-
+  Constructing GFMC_n or its debug twin _GFMC_n_debug without num_mcmc_per_measurement, or with None, raises a
+  ValueError stating that num_mcmc_per_measurement is required, at alat = 0.30 and 0.10 alike (no value is derived
+  from alat). run_twist_average_gfmc with gfmc_kind "n" or "n_debug" and gfmc_kwargs without the key raises the same
+  ValueError before any GFMC_n driver is constructed. An explicit integer is stored exactly as given at any alat, for
+  the production class and the debug twin.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_bra_nproj_required.py::test_python_api_explicit_value_is_used_unchanged
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: GFMC_n, alat: 0.1, explicit: 16}
+    - {driver_name: _GFMC_n_debug, alat: 0.1, explicit: 16}
+    - {driver_name: GFMC_n, alat: 0.1, explicit: 30}
+    - {driver_name: _GFMC_n_debug, alat: 0.1, explicit: 30}
+    - {driver_name: GFMC_n, alat: 0.3, explicit: 7}
+    - {driver_name: _GFMC_n_debug, alat: 0.3, explicit: 7}
+    - {driver_name: GFMC_n, alat: 0.2, explicit: 1}
+    - {driver_name: _GFMC_n_debug, alat: 0.2, explicit: 1}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_bra_nproj_required.py::test_python_api_without_value_is_refused
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {given: omitted, alat: 0.3, driver_name: GFMC_n}
+    - {given: omitted, alat: 0.3, driver_name: _GFMC_n_debug}
+    - {given: omitted, alat: 0.1, driver_name: GFMC_n}
+    - {given: omitted, alat: 0.1, driver_name: _GFMC_n_debug}
+    - {given: passed_none, alat: 0.3, driver_name: GFMC_n}
+    - {given: passed_none, alat: 0.3, driver_name: _GFMC_n_debug}
+    - {given: passed_none, alat: 0.1, driver_name: GFMC_n}
+    - {given: passed_none, alat: 0.1, driver_name: _GFMC_n_debug}
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_bra_nproj_required.py::test_twist_average_gfmc_without_value_is_refused
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {gfmc_kind: n}
+    - {gfmc_kind: n_debug}

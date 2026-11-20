@@ -1,0 +1,50 @@
+id: NUM-OPT-FD-ANCHORS-001
+kind: numerical
+name: Finite-difference anchors of optimizer derivative sources
+plain_language: Two-component derivative sources match xy directional finite differences (the conjugate fold provably does
+  not), AO-basis exponent and coefficient gradients match independent finite differences, and the generalized force of the
+  symmetric-tied J3 and AGP lambda blocks matches a finite difference of ln|Psi| along the physical symmetric direction.
+verdict_methods:
+- VM-NUM-FD-ANCHOR-001
+required_evidence:
+- verdict_method: VM-NUM-FD-ANCHOR-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_two_component_source_matches_xy_directional_fd_and_conjugate_fold_does_not
+    executable_checks:
+      d8-n-322:
+        site: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_two_component_source_matches_xy_directional_fd_and_conjugate_fold_does_not#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: fd_x
+        reference:
+          role: source-reference-value
+          expression: A + B
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-AGGREGATOR-LOOSE-R-PYTHON-FP64-AGGREGATOR-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-AGGREGATOR-LOOSE-R-PYTHON-FP64-AGGREGATOR-LOOSE-001
+      d8-n-323:
+        site: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_two_component_source_matches_xy_directional_fd_and_conjugate_fold_does_not#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: fd_y
+        reference:
+          role: source-reference-value
+          expression: 1j * (A - B)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-AGGREGATOR-LOOSE-R-PYTHON-FP64-AGGREGATOR-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-AGGREGATOR-LOOSE-R-PYTHON-FP64-AGGREGATOR-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_j3_exponent_gradient_finite_diff
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_j3_coefficient_gradient_finite_diff
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_geminal_exponent_gradient_finite_diff
+  # Projection of linear-tie blocks in MCMC.get_dln_WF.
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_linear_tie_force_fd.py::test_tied_block_force_matches_physical_direction_fd

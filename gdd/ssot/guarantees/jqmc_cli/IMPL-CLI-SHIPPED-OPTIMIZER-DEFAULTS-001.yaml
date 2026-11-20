@@ -1,0 +1,20 @@
+id: IMPL-CLI-SHIPPED-OPTIMIZER-DEFAULTS-001
+kind: implementation
+name: Untouched shipped optimizer defaults through the actual CLI
+plain_language: >-
+  A real molecular H2 VMC TOML run preserves the reviewed shipped optimizer keyword dictionary unchanged while
+  shortening only sampler size controls. Exact observations at the real optimizer target and finalizer retain
+  delta, epsilon, CG controls, LM activation, subspace dimension and condition cutoff. The live final displacement
+  equals the reviewed learning rate times the target once, and the saved Hamiltonian retains that applied update.
+  Dropping the CLI learning-rate keyword before the optimizer must fail the exact boundary check.
+  This is default propagation and application, not an independent solver oracle or a statistical convergence test.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_optimizer_controls.py::test_shipped_optimizer_toml_defaults_reach_target_and_final_update
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_cli_optimizer_controls.py::test_shipped_optimizer_toml_defaults_reject_dropped_learning_rate
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

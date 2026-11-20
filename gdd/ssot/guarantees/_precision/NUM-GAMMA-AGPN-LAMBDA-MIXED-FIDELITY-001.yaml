@@ -1,0 +1,42 @@
+id: NUM-GAMMA-AGPN-LAMBDA-MIXED-FIDELITY-001
+kind: numerical
+name: Mixed real Gamma AGPn ECP lambda sources retain Full analytical fidelity
+plain_language: The original committed oxygen Gamma common-rank AGPn, no Jastrow, occupation seed431 and electron
+  seed41 are rebuilt independently under Full/Mixed with the original geminal-only mask and source provider. Each
+  original real lambda_diag or lambda_unpaired leaf is tested separately under the unchanged central parameter_derivative
+  maximum-deviation budget. Shapes, finite/nonempty evidence, direct_real metadata, identical physical coordinates
+  and both original ECP-versus-kinetic non-degeneracy floors remain. The kinetic control uses the production kinetic
+  lambda provider and its structured leaf projector; entry-Mixed floors are retained in both callbacks. The independent
+  Full total/kinetic primal AD proof remains unchanged. No condition screen, sampling change, different Hamiltonian
+  or new numerical tolerance is introduced. Both arithmetic modes additionally retain the original conditional FP64
+  lambda mathematical AD and every original precision-specific comparison band. Active-parameter forward/backward
+  liveness of the primal, reference AD and production source is FP64; low-precision orbital constants and discarded
+  AO adjoints do not constitute low-precision lambda arithmetic. This numerical guarantee is supplemental, not a
+  replacement for those mathematical checks.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_agpn_gamma_ecp_reference.py::test_agpn_gamma_ecp_lambda_reference
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save
+      leaf: lambda_diag
+    - fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save
+      leaf: lambda_unpaired
+    executable_checks:
+      mixed-analytical-vs-full-analytical:
+        site: tests/test_jqmc_kernel/test_agpn_gamma_ecp_reference.py::_gamma_agpn_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-real-lambda-source
+          expression: mixed_block
+        reference:
+          role: full-analytical-real-lambda-source
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

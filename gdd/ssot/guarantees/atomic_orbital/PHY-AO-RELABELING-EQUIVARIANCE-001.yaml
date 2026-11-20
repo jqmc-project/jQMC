@@ -1,0 +1,88 @@
+id: PHY-AO-RELABELING-EQUIVARIANCE-001
+kind: physical
+name: Relabeling equivariance of atomic-orbital evaluation
+plain_language: 'Physics does not depend on how atoms and shells are numbered: permuting the input labels permutes the atomic-orbital
+  outputs exactly, for values and derivatives alike.'
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital_permutation.py::test_compute_aos_equivariance
+    executable_checks:
+      strict-context-comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital_permutation.py::test_compute_aos_equivariance#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital_permutation.py::test_cart_ao_deriv_equivariance
+    executable_checks:
+      strict-context-comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital_permutation.py::_assert_axis_equivariant#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: b
+        reference:
+          role: existing-test-reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: output_label
+          required_values:
+          - '0'
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital_permutation.py::test_j3_basis_derivs_equivariance
+    executable_checks:
+      strict-context-comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital_permutation.py::_assert_axis_equivariant#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: b
+        reference:
+          role: existing-test-reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: output_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'

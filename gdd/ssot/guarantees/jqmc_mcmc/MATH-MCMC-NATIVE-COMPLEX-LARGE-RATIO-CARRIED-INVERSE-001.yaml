@@ -1,0 +1,25 @@
+id: MATH-MCMC-NATIVE-COMPLEX-LARGE-RATIO-CARRIED-INVERSE-001
+kind: mathematical
+name: The native complex MCMC sweep keeps the exact moved inverse column or row and exact decisions after a huge determinant ratio
+plain_language: >-
+  After an accepted single-electron move whose complex determinant ratio
+  exceeds 2^48 in magnitude, the production native complex sweep (NativeObsCtx.mcmc_sweep_complex, whose
+  accepted-move update is complex_det::sm_apply_inplace_complex) writes the moved electron's new inverse column
+  (up move) or row (down move) exactly, so the carried inverse equals the dense inverse of the carried geminal and
+  the next Metropolis decision equals the exact one. Evidence: periodic neutral He (Z = 2) in a cubic cell of side
+  100 bohr, Bloch twist (0.25, 0.125, 0), no Jastrow, time_reversal=False, one up and one down electron in the
+  genuinely complex orbital c N12 x^12 (1 + i x) exp(-r^2) built from two normalized Cartesian primitives; the
+  moved electron (up and down) goes x = 0.01 -> 0.3 (|R| ~ 5.07e17, exact acceptance 1) -> 0.02 (exact acceptance
+  ~6.8e-29) at y = 0.3, z = 0.4 with the other electron at (0.4, 0.3, 0.4); Dt = 2, epsilon_AS = 0; the first
+  threefry key whose two moves select the moved spin along x with a second draw above 0.25, normals injected onto
+  the targets. Starting from the closed-form carried pair, the one-move sweep must accept and the two-move sweep
+  must reject move 2; the carried geminal must equal the closed-form geminal row-scaled at the ao_eval/det_eval
+  strict pair and the carried inverse the dense inverse of the carried geminal column-scaled at the
+  det_eval/det_ratio strict pair. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_large_ratio_carried_inverse_native.py::test_native_complex_large_ratio_move_keeps_exact_decisions_and_carried_inverse
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{spin: up}, {spin: down}]

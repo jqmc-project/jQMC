@@ -1,0 +1,68 @@
+id: IMPL-RS-ROUTE-PREDICATE-COUNTERS-001
+kind: implementation
+name: The Rust ECP w-dot and MCMC chunk carry predicates report engaged and declined routes
+plain_language: >-
+  The four Rust route predicates that choose between a fast and a same-value slower route
+  (ecp_wdot_ok and ecp_j3_wdot_ok in the ECP non-local mesh, det_carry_ok and j3_carry_ok in the
+  real MCMC chunk) each count every decision as engaged or declined in
+  jqmc_rs.route_predicate_counters, reset and enabled together with gfmc_route_counters. The
+  production chunk entry run_energy_chunk_batch, two walkers and three steps, gives exact counts:
+  molecular ccECP H2 with J1/J2/J3 in the fast chunk engages all four on every decision; the
+  bit-exact chunk on the same input declines all four; periodic Li pGTO with J3 engages both w-dot
+  tables, declines the J3 carry, and carries the determinant state in both precision modes (the FAST
+  periodic sweep evaluates every column with the screened fp64 or fp32 ao_eval periodic kernel); a B-spline Li determinant with J1/J2 declines the determinant
+  w-dot, carries the determinant state and makes no J3 decision. The production energy-only MCMC
+  driver, two walkers and seven steps, gives the same exact engaged counts on molecular H2 J123
+  and the same carry decisions on periodic Li J123. The complex-twist FAST chunk's ECP mesh w-dot
+  (ComplexOrb::mesh_wdot_ok, counters 16/17) records one decision per spin per chunk e_L: the production
+  MCMC driver, two walkers and seven steps, on the QE Li k=(1/4,1/4,1/4) ccECP pGTO, pGTO+PW and pure
+  B-spline determinants engages it on every decision in both precision modes, while the real-path w-dot counters stay silent; real runs leave 16/17 at zero.
+  The FAST ECP non-local radial cut
+  (FAST_ECP_NONLOCAL_RADIAL_CUT) counts its kept and dropped (electron, non-local term) pairs in indices 18
+  and 19: in every fast case they add up to every electron times the non-local terms of its nearest ECP
+  nucleus per local energy; the bit-exact chunk counts none. The complex-twist FAST chunk counts in
+  indices 20 and 21 whether each e_L's ECP mesh state was seeded on the sweep's carried determinant base or
+  fresh: the production driver on the three complex fixtures above seeds every e_L carried (walkers times
+  steps, zero fresh); real runs leave 20/21 at zero. The complex FAST chunk's carries
+  (IMPL-RS-CPLX-CHUNK-KIN-CARRY-001) are counted in indices 22 to 28: 22/23 kinetic-table carry engaged/declined
+  per e_L, 24 table seeds, 25 accepted moves replayed into the tables, 26 probe-forced re-seeds, 27/28
+  determinant-base carry engaged/declined per step. run_energy_chunk_batch with complex=True, two walkers and
+  three steps, on the five QE Li twist fixtures gives exactly walkers times steps engaged for both carries, one
+  seed per walker, one advance per accepted move and no re-seed; with the two test-only hooks set, every
+  decision declines and the tables are never touched; real runs leave 22 to 28 at zero. Counting is off unless reset is called, so production
+  values and speed are unchanged. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: engaged-molecular-j123}
+    - {case: fallback-bitexact-j123}
+    - {case: fallback-bspline-det-j12}
+    - {case: fallback-periodic-images-j123}
+  - pytest_node: tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_driver_route_predicate_counters
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_j123}
+    - {pattern: pbc_gamma_sphepgto_j123}
+  - pytest_node: tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_driver_complex_ecp_wdot_route_counters
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_j12}
+    - {pattern: pgto_pw_twist_jnone}
+    - {pattern: bspline_twist_jnone}
+  - pytest_node: tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_complex_carry_route_counters
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_j12, hooked: false}
+    - {pattern: twist_sphepgto_j12, hooked: true}
+    - {pattern: twist_sphepgto_j123, hooked: false}
+    - {pattern: twist_sphepgto_j123, hooked: true}
+    - {pattern: twist_sphepgto_jdtn, hooked: false}
+    - {pattern: twist_sphepgto_jdtn, hooked: true}
+    - {pattern: pgto_pw_twist_jnone, hooked: false}
+    - {pattern: pgto_pw_twist_jnone, hooked: true}
+    - {pattern: bspline_twist_jnone, hooked: false}
+    - {pattern: bspline_twist_jnone, hooked: true}

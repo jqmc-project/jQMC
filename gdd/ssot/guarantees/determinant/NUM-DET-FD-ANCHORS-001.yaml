@@ -1,0 +1,10 @@
+id: NUM-DET-FD-ANCHORS-001
+kind: numerical
+name: Finite-difference anchor of SD parameter derivatives
+plain_language: The SD MO-parameter directional derivative agrees with an independent finite difference.
+verdict_methods:
+- VM-NUM-FD-ANCHOR-001
+required_evidence:
+- verdict_method: VM-NUM-FD-ANCHOR-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_mo_parameter_directional_derivative_matches_independent_fd

@@ -1,0 +1,27 @@
+id: IMPL-TOOL-PADE-JASTROW-OPTION-REFUSALS-001
+kind: implementation
+name: TREXIO conversion refuses Pade/exp J1/J2 options its loader would refuse
+plain_language: >-
+  jqmc-tool trexio convert-to validates the Pade/exp one- and two-body Jastrow options with the same object
+  sanity checks that Hamiltonian_data.load_from_hdf5 applies, which require a finite, non-negative parameter and a
+  form in {exp, pade}. On the committed H2 all-electron cc-pVDZ Cartesian TREXIO file, -j2 -1.0, -j1
+  -1.0, -j2 0.5 --jastrow-2b-type foo, -j1 0.5 --jastrow-1b-type foo, -j2 nan, -j1 nan and -j2 inf, and on the
+  committed lithium 2x2x2 twist file --twist-average -j2 nan, exit non-zero through the jqmc-tool console group with
+  the offending value in the message, print no success line and write no Hamiltonian file. This does not cover the QE converter's handling
+  of a negative -j2, the DTN options, or the tiled TREXIO route.
+verdict_methods:
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertTo::test_trexio_convert_to_rejects_invalid_pade_jastrow_options
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: j2-negative}
+    - {case: j1-negative}
+    - {case: j2-unknown-type}
+    - {case: j1-unknown-type}
+    - {case: j2-nan}
+    - {case: j1-nan}
+    - {case: j2-inf}
+    - {case: twist-average-j2-nan}

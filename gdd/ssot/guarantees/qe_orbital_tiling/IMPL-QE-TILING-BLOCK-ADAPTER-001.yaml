@@ -1,0 +1,19 @@
+id: IMPL-QE-TILING-BLOCK-ADAPTER-001
+kind: implementation
+name: QE projections retain primitive blocks and explicit occupied source bands
+plain_language: >-
+  PW, B-spline and pGTO projections construct the same single-spin tiled provider,
+  preserving non-Aufbau occupied source-band IDs and rejecting malformed or fractional
+  occupations. Explicit whole-orbital down-spin conjugation preserves the BCS negative
+  supertwist and shares source arrays without equating independent LSDA coefficients.
+  Real-source sampling and LSDA real-source evidence remain
+  pending.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_orbital_tiling.py::test_projection_adapter_preserves_source_bands_and_explicit_spin_conjugation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{kind: pw}, {kind: bspline}, {kind: pgto}]

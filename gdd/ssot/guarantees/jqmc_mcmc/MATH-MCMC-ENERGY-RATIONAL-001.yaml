@@ -1,0 +1,50 @@
+id: MATH-MCMC-ENERGY-RATIONAL-001
+kind: mathematical
+name: Exact finite-sample energy, variance and jackknife errors
+plain_language: >-
+  The four MCMC get_E outputs must equal an independent exact-rational
+  reference on ten explicit unequal-weight time slices, one/two walkers,
+  real/complex energies and warmup/block counts 0/4 or 1/3. Delete each raw
+  block/walker cell; derive complex variance from weighted pair distances
+  and both errors from pairwise replicate differences. Compare each scalar
+  separately at same-mode local_energy strict tolerance, not a tensor-wide
+  energy scale. Require full and mixed. Removing either error's replicate
+  factor or discarding the imaginary mean square must fail after a passing
+  baseline. This guarantees deterministic finite-sample arithmetic, not
+  autocorrelation calibration or a statistical confidence interval.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_energy_rational_reference.py::test_energy_variance_and_errors_match_exact_raw_sample_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {walkers: 1, complex_values: false, warmup: 0, bins: 4}
+    - {walkers: 2, complex_values: false, warmup: 0, bins: 4}
+    - {walkers: 1, complex_values: true, warmup: 0, bins: 4}
+    - {walkers: 2, complex_values: true, warmup: 0, bins: 4}
+    - {walkers: 1, complex_values: false, warmup: 1, bins: 3}
+    - {walkers: 2, complex_values: false, warmup: 1, bins: 3}
+    - {walkers: 1, complex_values: true, warmup: 1, bins: 3}
+    - {walkers: 2, complex_values: true, warmup: 1, bins: 3}
+    executable_checks:
+      four-independent-scalars:
+        site: tests/test_jqmc_kernel/test_mcmc_energy_rational_reference.py::_assert_energy#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-energy-or-variance-mean-or-error, expression: actual_value}
+        reference: {role: exact-rational-raw-sample-pair-distance-reference, expression: expected_value}
+        iterations:
+          variable: quantity
+          required_values: [energy-mean, energy-error, variance-mean, variance-error]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_energy_rational_reference.py::test_rational_energy_reference_rejects_production_formula_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {walkers: 1, fault: energy-error-factor}
+    - {walkers: 2, fault: energy-error-factor}
+    - {walkers: 1, fault: variance-error-factor}
+    - {walkers: 2, fault: variance-error-factor}
+    - {walkers: 1, fault: complex-variance}
+    - {walkers: 2, fault: complex-variance}

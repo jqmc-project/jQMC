@@ -1,0 +1,15 @@
+id: IMPL-PREC-FP32-MATMUL-HIGHEST-001
+kind: implementation
+name: fp32 matrix products are requested at HIGHEST precision
+plain_language: >-
+  After configure("mixed") with the JAX matmul precision unset, an fp32
+  matrix product in a mixed zone lowers with precision_config HIGHEST, so
+  Ampere-class GPUs do not run it at TF32-class accuracy; an explicit user
+  choice of matmul precision is kept. This checks the lowered program, not
+  the numerical accuracy of any kernel.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::test_configure_requests_highest_precision_for_fp32_matmuls

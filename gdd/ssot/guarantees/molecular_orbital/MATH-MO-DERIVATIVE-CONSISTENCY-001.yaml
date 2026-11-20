@@ -1,0 +1,114 @@
+id: MATH-MO-DERIVATIVE-CONSISTENCY-001
+kind: mathematical
+name: Derivative consistency of molecular-orbital evaluators
+plain_language: Analytical MO gradients and Laplacians equal the autodiff oracle (core and periodic), and the fused value/grad/Laplacian
+  output equals its separate evaluations.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian::test_MOs_comparing_analytic_and_auto_grads
+    required_precision_modes: [full]
+    required_parameter_cases: [{}]
+    executable_checks:
+      gradient-x:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian.test_MOs_comparing_analytic_and_auto_grads#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-mo-gradient-x, expression: grad_x_an}
+        reference: {role: autodiff-mo-gradient-x, expression: grad_x_auto}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_grad]}
+      gradient-y:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian.test_MOs_comparing_analytic_and_auto_grads#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-mo-gradient-y, expression: grad_y_an}
+        reference: {role: autodiff-mo-gradient-y, expression: grad_y_auto}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_grad]}
+      gradient-z:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian.test_MOs_comparing_analytic_and_auto_grads#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-mo-gradient-z, expression: grad_z_an}
+        reference: {role: autodiff-mo-gradient-z, expression: grad_z_auto}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_grad]}
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian::test_MOs_comparing_analytic_and_auto_laplacians
+    required_precision_modes: [full]
+    required_parameter_cases: [{}]
+    executable_checks:
+      laplacian:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsGradLaplacian.test_MOs_comparing_analytic_and_auto_laplacians#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-mo-laplacian, expression: mo_lap_an}
+        reference: {role: autodiff-mo-laplacian, expression: mo_lap_auto}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic::test_MOs_periodic_grad_analytic_vs_auto
+    required_precision_modes: [full]
+    required_parameter_cases: [{kind: pw}, {kind: bspline}, {kind: pgto}, {kind: pgto+pw}, {kind: pgto+bspline}]
+    executable_checks:
+      gradient-components:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic.test_MOs_periodic_grad_analytic_vs_auto#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-mo-gradient-component, expression: an}
+        reference: {role: autodiff-mo-gradient-component, expression: au}
+        iterations: {variable: name, required_values: [gx, gy, gz]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_grad]}
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic::test_MOs_periodic_laplacian_analytic_vs_auto
+    required_precision_modes: [full]
+    required_parameter_cases: [{kind: pw}, {kind: bspline}, {kind: pgto}, {kind: pgto+pw}, {kind: pgto+bspline}]
+    executable_checks:
+      laplacian:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic.test_MOs_periodic_laplacian_analytic_vs_auto#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-mo-laplacian, expression: lap_an}
+        reference: {role: autodiff-mo-laplacian, expression: lap_auto}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_lap]}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsFusedAPI::test_MOs_value_grad_lap
+    executable_checks:
+      gradient-x:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsFusedAPI.test_MOs_value_grad_lap#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fused-mo-gradient-x, expression: np.asarray(gx_f)}
+        reference: {role: standalone-mo-gradient-x, expression: np.asarray(gx_s)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+      gradient-y:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsFusedAPI.test_MOs_value_grad_lap#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fused-mo-gradient-y, expression: np.asarray(gy_f)}
+        reference: {role: standalone-mo-gradient-y, expression: np.asarray(gy_s)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+      gradient-z:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsFusedAPI.test_MOs_value_grad_lap#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fused-mo-gradient-z, expression: np.asarray(gz_f)}
+        reference: {role: standalone-mo-gradient-z, expression: np.asarray(gz_s)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+      laplacian:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsFusedAPI.test_MOs_value_grad_lap#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fused-mo-laplacian, expression: np.asarray(lap_f)}
+        reference: {role: standalone-mo-laplacian, expression: np.asarray(lap_s)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+      value:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsFusedAPI.test_MOs_value_grad_lap#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fused-mo-value, expression: np.asarray(val_f)}
+        reference: {role: standalone-mo-value, expression: np.asarray(val_s)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}

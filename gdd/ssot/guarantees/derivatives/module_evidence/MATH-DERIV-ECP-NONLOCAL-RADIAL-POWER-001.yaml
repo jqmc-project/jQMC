@@ -1,0 +1,42 @@
+id: MATH-DERIV-ECP-NONLOCAL-RADIAL-POWER-001
+kind: mathematical
+name: Analytical ECP derivatives use the radial derivative of the term's own non-local power
+plain_language: >-
+  For a non-local ECP term (l, c, a, n) the radial factor c r^(n-2) exp(-a r^2) has the derivative
+  c [(n-2) r^(n-3) - 2 a r^(n-1)] exp(-a r^2); its first term vanishes only at n = 2, the power stored by
+  every committed ECP fixture. On the committed N2 ccECP cc-pVTZ wavefunction with a J1 + J2
+  exponential Jastrow, whose non-local term powers are replaced by n = 0 and n = 3 (local powers unchanged),
+  seed-0 electrons and a tilted quadrature rotation, the analytical molecular local-energy derivatives with
+  respect to electron positions, nuclear positions and strain (compute_grad_e_L, analytic=True) equal
+  same-precision JAX autodiff of the production local energy, and the closed-form derivatives of the
+  molecular dltmove correction delta = sum_g max(V^det_g, 0) (1 - jr_g) (ecp_force.grad_V_ecp_nl_dltmove,
+  wrt r, R and eps) equal JAX autodiff of delta rebuilt from the public nearest-neighbour non-local evaluator
+  and the Jastrow value, with delta checked to be non-zero. The test also witnesses that the padded
+  non-local table read by ecp_force carries the replaced power. Full compares element by element at the
+  strict zone tolerance; mixed rebases the same strict pair once onto the largest reference element of each
+  derivative block (get_tolerance_cancelling_mean). Full and mixed are judged separately. This does not
+  cover periodic strain, complex twists, the native Rust derivative kernels, the parameter (c) axis, or
+  non-local channels l >= 1 at n != 2.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_force_nonlocal_radial_power.py::test_ecp_local_energy_derivatives_match_autodiff_at_nonlocal_power
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {power: 0, axis: r}
+    - {power: 0, axis: R}
+    - {power: 0, axis: eps}
+    - {power: 3, axis: r}
+    - {power: 3, axis: R}
+    - {power: 3, axis: eps}
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_force_nonlocal_radial_power.py::test_ecp_dltmove_delta_derivatives_match_autodiff_at_nonlocal_power
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {power: 0, axis: r}
+    - {power: 0, axis: R}
+    - {power: 0, axis: eps}
+    - {power: 3, axis: r}
+    - {power: 3, axis: R}
+    - {power: 3, axis: eps}

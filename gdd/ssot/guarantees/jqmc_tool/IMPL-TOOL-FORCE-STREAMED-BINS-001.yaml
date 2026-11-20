@@ -1,0 +1,31 @@
+id: IMPL-TOOL-FORCE-STREAMED-BINS-001
+kind: implementation
+name: Force post-processing reads per-atom observables by bin block with whole-array results
+plain_language: >-
+  mcmc compute-force, lrdmc compute-force and the twist-directory force estimator read the per-atom force
+  observables (force_HF, force_PP, E_L_force_PP) from the checkpoint one bin block and one observable at a time
+  instead of whole. The blocks are those of np.array_split over the analysed window (after the LRDMC collect shift
+  and the warmup) mapped back to absolute dataset rows, and each block gets the same weighting and step sum, so the
+  force mean and error arrays equal, bit for bit, the estimator evaluated on the fully loaded arrays. Covered: a
+  two-rank MCMC checkpoint with uneven bins, and a merged LRDMC checkpoint (one contributing rank plus an empty rank,
+  uneven bins, collect shift 7) through the single-file command and the twist estimator. Exact comparison in both
+  precision modes; the analysis is fp64 NumPy in both.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::test_force_postprocessing_streamed_bins_equal_whole_array_estimator
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: mcmc-two-ranks}
+    - {route: lrdmc}
+    - {route: lrdmc-twist}
+    executable_checks:
+      streamed-force-mean-and-error:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::test_force_postprocessing_streamed_bins_equal_whole_array_estimator#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: streamed-force-mean-or-error, expression: actual_value}
+        reference: {role: whole-array-force-mean-or-error, expression: expected_value}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

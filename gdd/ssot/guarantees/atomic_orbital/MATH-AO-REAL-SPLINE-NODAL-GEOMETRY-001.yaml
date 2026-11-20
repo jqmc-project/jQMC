@@ -1,0 +1,30 @@
+id: MATH-AO-REAL-SPLINE-NODAL-GEOMETRY-001
+kind: mathematical
+name: CPU real quintic spline coordinate transforms preserve independently known half-cell nodes
+plain_language: >-
+  Three separable mode-5 sine control bands on a 32 x 32 x 32 quintic cardinal spline grid are odd about
+  their respective half-cell planes. The symmetric cardinal kernel therefore gives exactly zero on each
+  plane. In the triclinic cell with rows (6,0,0), (1,7,0), (0.5,1.5,8), 32 points per plane use seed 460
+  and uniform (0.1,0.9) transverse fractional coordinates. Both the home-cell points and their lattice
+  translation (2,-3,1) equal this independent zero reference on CPU at the existing strict ao_eval tolerance,
+  separately in full and mixed precision. Off-plane samples displaced by one quarter of a mode period
+  have magnitude above 100 times the absolute tolerance. The XLA standalone evaluator and independent
+  NumPy forward oracle each obey this zero reference and retain their declared ao_eval dtype.
+  Native standalone values are exposed through a three-up, zero-down AGP
+  geminal with identity unpaired columns, without any inverse or determinant evaluation; the native
+  derivative-zone VGL export is not substituted for that value route. This is a finite nodal-plane
+  accuracy contract, not a claim of exact mixed-precision zeros, GPU behavior or arbitrary-distance accuracy.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_nodal_geometry.py::test_real_spline_half_cell_nodal_planes
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_case: home}
+    - {cell_case: translated}
+  - pytest_node: tests/test_rs_kernel/test_bspline_nodal_geometry.py::test_native_real_spline_half_cell_nodal_planes
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_case: home}
+    - {cell_case: translated}

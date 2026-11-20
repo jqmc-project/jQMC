@@ -1,0 +1,23 @@
+id: IMPL-CKPT-CONTRACTS-001
+kind: implementation
+name: Checkpoint metadata contracts
+plain_language: Checkpoint metadata carries execution and writer provenance without a format-version field. Required rank payloads
+  must exist; attribute conversion handles bytes and numpy scalars as reviewed.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_weights.py::test_no_retained_measurement_returns_empty_weight_columns
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{window: 5}]
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestCheckpointMetadata::test_meta_fields
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestConvertAttr::test_bytes_to_str
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestConvertAttr::test_numpy_int
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestConvertAttr::test_numpy_float
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestConvertAttr::test_numpy_bool
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestConvertAttr::test_none
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestCheckpointMetadata::test_missing_rank_payload_is_rejected

@@ -1,0 +1,22 @@
+id: IMPL-RS-COMPLEX-CHILD-J3-FREE-REAL-WRAPPERS-REFUSED-001
+kind: implementation
+name: The free real native wrappers refuse a complex-child J3 they cannot evaluate with NotImplementedError
+plain_language: >-
+  The real native kernels cannot evaluate a J3 orbital with a complex plane-wave child, so a free real
+  wrapper must raise NotImplementedError naming the complex native path, never panic and never truncate the
+  orbital: for an active such J3 on every wrapper of MATH-RS-INACTIVE-COMPLEX-CHILD-J3-FREE-REAL-WRAPPERS-001, and
+  for the J3 j_matrix-derivative wrappers grad_eL_wrt_jastrow_3b_jmatrix, grad_eL_ecp_wrt_jastrow_3b_jmatrix and
+  grad_ln_Psi_jastrow_3b_jmatrix for an inactive (all-zero j_matrix) or active such J3, since that derivative is
+  nonzero even for an all-zero j_matrix; the JAX route (JQMC_FLAG_RUST_ON_CPU=0) serves these inputs. On the
+  fixture of MATH-RS-INACTIVE-COMPLEX-CHILD-J3-FREE-REAL-WRAPPERS-001 with the complex nonzero-G and k = 0
+  constant children. Full and mixed are judged separately.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_inactive_complex_j3_free_wrappers.py::test_free_real_wrapper_active_complex_child_j3_refused
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{child: complex_pw_G, route: grad_T_dtn_pbc_wrt_strain}, {child: complex_pw_G, route: grad_T_pbc_wrt_R}, {child: complex_pw_G, route: grad_T_pbc_wrt_strain}, {child: complex_pw_G, route: grad_eL_dtn_kinetic_params}, {child: complex_pw_G, route: grad_eL_ecp_dtn_params}, {child: complex_pw_G, route: grad_eL_ecp_wrt_jastrow_1b_param}, {child: complex_pw_G, route: grad_eL_ecp_wrt_jastrow_2b_param}, {child: complex_pw_G, route: grad_eL_ecp_wrt_lambda}, {child: complex_pw_G, route: grad_eL_ecp_wrt_lambda_diag}, {child: complex_pw_G, route: grad_eL_ecp_wrt_mo_coeff}, {child: complex_pw_G, route: grad_eL_ecp_wrt_radial}, {child: complex_pw_G, route: grad_eL_wrt_jastrow_1b_param}, {child: complex_pw_G, route: grad_eL_wrt_jastrow_2b_param}, {child: complex_pw_G, route: grad_eL_wrt_lambda}, {child: complex_pw_G, route: grad_eL_wrt_mo_coeff}, {child: complex_pw_G, route: grad_eL_wrt_radial}, {child: complex_pw_0, route: grad_T_dtn_pbc_wrt_strain}, {child: complex_pw_0, route: grad_T_pbc_wrt_R}, {child: complex_pw_0, route: grad_T_pbc_wrt_strain}, {child: complex_pw_0, route: grad_eL_dtn_kinetic_params}, {child: complex_pw_0, route: grad_eL_ecp_dtn_params}, {child: complex_pw_0, route: grad_eL_ecp_wrt_jastrow_1b_param}, {child: complex_pw_0, route: grad_eL_ecp_wrt_jastrow_2b_param}, {child: complex_pw_0, route: grad_eL_ecp_wrt_lambda}, {child: complex_pw_0, route: grad_eL_ecp_wrt_lambda_diag}, {child: complex_pw_0, route: grad_eL_ecp_wrt_mo_coeff}, {child: complex_pw_0, route: grad_eL_ecp_wrt_radial}, {child: complex_pw_0, route: grad_eL_wrt_jastrow_1b_param}, {child: complex_pw_0, route: grad_eL_wrt_jastrow_2b_param}, {child: complex_pw_0, route: grad_eL_wrt_lambda}, {child: complex_pw_0, route: grad_eL_wrt_mo_coeff}, {child: complex_pw_0, route: grad_eL_wrt_radial}]
+  - pytest_node: tests/test_rs_kernel/test_inactive_complex_j3_free_wrappers.py::test_free_real_j3_jmatrix_derivative_complex_child_refused
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{child: complex_pw_G, route: grad_eL_ecp_wrt_jastrow_3b_jmatrix, activity: inactive}, {child: complex_pw_G, route: grad_eL_ecp_wrt_jastrow_3b_jmatrix, activity: active}, {child: complex_pw_G, route: grad_eL_wrt_jastrow_3b_jmatrix, activity: inactive}, {child: complex_pw_G, route: grad_eL_wrt_jastrow_3b_jmatrix, activity: active}, {child: complex_pw_G, route: grad_ln_Psi_jastrow_3b_jmatrix, activity: inactive}, {child: complex_pw_G, route: grad_ln_Psi_jastrow_3b_jmatrix, activity: active}, {child: complex_pw_0, route: grad_eL_ecp_wrt_jastrow_3b_jmatrix, activity: inactive}, {child: complex_pw_0, route: grad_eL_ecp_wrt_jastrow_3b_jmatrix, activity: active}, {child: complex_pw_0, route: grad_eL_wrt_jastrow_3b_jmatrix, activity: inactive}, {child: complex_pw_0, route: grad_eL_wrt_jastrow_3b_jmatrix, activity: active}, {child: complex_pw_0, route: grad_ln_Psi_jastrow_3b_jmatrix, activity: inactive}, {child: complex_pw_0, route: grad_ln_Psi_jastrow_3b_jmatrix, activity: active}]

@@ -1,0 +1,22 @@
+id: IMPL-RS-DRIVER-LOOPS-001
+kind: implementation
+name: Rust-on optimizer step, checkpoint continuation, CLI entry and twist average
+plain_language: >-
+  With the shipped Rust backend active and native execution witnessed, one run_optimize SR step fed the XLA proposal
+  normals of its own keys walks the same chain as the XLA step and consumes the same weights, local energies and
+  log-derivative coordinates, solves the same update and applies the same parameters within the XLA-Rust consistency
+  tolerance, on a real molecular and a complex twist fixture. Checkpoint save, merge, load and continue with Rust
+  reproduces the uninterrupted Rust MCMC, GFMC_n and one-walker GFMC_t histories, walkers and RNG states. The Rust CLI
+  mcmc job equals a direct Rust API run with the same TOML values, and fed the XLA inputs equals the XLA CLI job. The
+  MCMC twist-average driver with Rust on two twists reports per-twist values equal to standalone Rust chains and BZ
+  values equal to the documented weighted formula. Perturbed values must fail each check. Full and mixed are judged
+  separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_driver_loops_rust.py::test_run_optimize_step_rust_equals_xla
+  - pytest_node: tests/test_rs_kernel/test_driver_loops_rust.py::test_rust_checkpoint_continuation_equals_uninterrupted_run
+  - pytest_node: tests/test_rs_kernel/test_driver_loops_rust.py::test_rust_cli_mcmc_equals_direct_rust_api_run
+  - pytest_node: tests/test_rs_kernel/test_driver_loops_rust.py::test_rust_cli_mcmc_equals_xla_cli_on_the_same_walk
+  - pytest_node: tests/test_rs_kernel/test_driver_loops_rust.py::test_rust_two_twist_average_equals_standalone_chains_and_bz_formula

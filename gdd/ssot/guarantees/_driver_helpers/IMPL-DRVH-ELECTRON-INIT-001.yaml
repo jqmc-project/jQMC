@@ -1,0 +1,24 @@
+id: IMPL-DRVH-ELECTRON-INIT-001
+kind: implementation
+name: Initial electron-configuration contracts
+plain_language: Generated electron positions are unique with the declared shapes and owner ranges; vectorized and reference
+  implementations have identical down-owner arrays, identical deterministic up-owner prefixes, and identical per-atom spin
+  populations; dimer and triatomic configurations are charge neutral with antialigned singlet spins. Molecular positions
+  lie 0.1 to 1.0 bohr from their assigned atom, and positions alone establish per-atom neutrality for separated neutral dimers
+  across all spin partitions.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_init_electron_configurations.py::TestInitElectronConfigurations::test_vectorized_owners_match_reference
+  - pytest_node: tests/test_jqmc_kernel/test_init_electron_configurations.py::TestInitElectronConfigurations::test_per_atom_spin_counts_match_reference
+  - pytest_node: tests/test_jqmc_kernel/test_init_electron_configurations.py::TestInitElectronConfigurations::test_dimer_per_atom_counts_match_reference_for_all_S
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_init_electron_configurations.py::TestInitElectronConfigurations::test_generated_positions_are_all_unique
+  - pytest_node: tests/test_jqmc_kernel/test_init_electron_configurations.py::TestInitElectronConfigurations::test_output_shapes_and_owner_ranges
+  - pytest_node: tests/test_jqmc_kernel/test_init_electron_configurations.py::TestInitElectronConfigurations::test_dimer_singlet_atoms_are_antialigned
+  - pytest_node: tests/test_jqmc_kernel/test_init_electron_configurations.py::TestInitElectronConfigurations::test_dimer_per_atom_charge_neutral_for_all_S
+  - pytest_node: tests/test_jqmc_kernel/test_init_electron_configurations.py::TestInitElectronConfigurations::test_linear_triatomic_charge_neutrality

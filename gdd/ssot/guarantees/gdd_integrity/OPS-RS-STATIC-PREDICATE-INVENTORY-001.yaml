@@ -1,0 +1,15 @@
+id: OPS-RS-STATIC-PREDICATE-INVENTORY-001
+kind: operational
+name: Static CI rejects unreviewed Rust predicate classifications
+plain_language: The public Rust inventory validator rejects a source predicate unless it has an exact reviewed classification
+  as a witnessed route or a numerical-safety branch. The detecting test invokes the same validator entry point used by the
+  GDD preflight, so removing predicate validation from that entry point cannot leave the static checks green.
+verdict_methods:
+- VM-OPS-SET-CLOSURE-001
+required_evidence:
+- verdict_method: VM-OPS-SET-CLOSURE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_no_capability_gates.py::test_rust_inventory_public_validator_rejects_unreviewed_predicate
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}

@@ -1,0 +1,18 @@
+id: OPS-DERIV-NO-AUTODIFF-001
+kind: operational
+name: No generic autodiff inside analytic production
+plain_language: 'The full (AO family x geminal x Jastrow x BC x potential x quantity x axis) sweep runs every supported
+  cell through the analytic kernels with a spy on every generic AD transform in every loaded jqmc module: silent autodiff
+  and coverage regressions are both red, with no xfail escape, and the planted-AD control proves
+  the spy fires.'
+verdict_methods:
+- VM-OPS-SET-CLOSURE-001
+required_evidence:
+- verdict_method: VM-OPS-SET-CLOSURE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_no_autodiff_in_production.py::test_analytic_and_ad_free
+  - pytest_node: tests/test_jqmc_kernel/test_no_autodiff_in_production.py::TestPeriodicKineticJastrowIsAnalytic::test_j1_grad_lap_pbc
+  - pytest_node: tests/test_jqmc_kernel/test_no_autodiff_in_production.py::TestPeriodicKineticJastrowIsAnalytic::test_j2_grad_lap_pbc
+  - pytest_node: tests/test_jqmc_kernel/test_no_autodiff_in_production.py::TestSwctIsAnalytic::test_omega
+  - pytest_node: tests/test_jqmc_kernel/test_no_autodiff_in_production.py::TestSwctIsAnalytic::test_domega
+  - pytest_node: tests/test_jqmc_kernel/test_no_autodiff_in_production.py::TestSpyMechanism::test_spy_detects_planted_ad

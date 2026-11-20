@@ -1,5 +1,9 @@
 # Queue configuration for localhost
 # Each [section] is a queue_label you can reference from your pipeline.
+# max_job_submit: jobs this driver keeps in the queue at once; further
+#   submissions wait (retry every poll_interval s) until a slot frees.
+# max_job_submit_scope (optional): "driver" (default) counts this driver's
+#   jobs only; "user" counts all of your jobs in the queue.
 
 [default]
     submit_template = 'submit_mpi.sh'

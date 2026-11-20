@@ -1,0 +1,481 @@
+id: IMPL-COUL-DEBUG-PRODUCTION-001
+kind: implementation
+name: Debug/production route parity of the Coulomb layer
+plain_language: 'Every production Coulomb evaluator equals its straightforward debug twin on identical input: bare Coulomb,
+  ECP local and non-local, and all Ewald channels.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestBareCoulomb::test_compute_bare_coulomb_potential_production_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestBareCoulomb.test_compute_bare_coulomb_potential_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: vpot_bare_jax
+        reference:
+          role: existing-test-reference
+          expression: vpot_bare_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestBareCoulomb::test_compute_bare_coulomb_potential_el_ion_element_wise_production_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestBareCoulomb.test_compute_bare_coulomb_potential_el_ion_element_wise_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: interactions_R_r_up_debug
+        reference:
+          role: existing-test-reference
+          expression: interactions_R_r_up_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestBareCoulomb.test_compute_bare_coulomb_potential_el_ion_element_wise_production_vs_debug#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: interactions_R_r_dn_debug
+        reference:
+          role: existing-test-reference
+          expression: interactions_R_r_dn_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestBareCoulomb::test_compute_discretized_bare_coulomb_potential_el_ion_element_wise_production_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestBareCoulomb.test_compute_discretized_bare_coulomb_potential_el_ion_element_wise_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: interactions_R_r_up_debug
+        reference:
+          role: existing-test-reference
+          expression: interactions_R_r_up_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestBareCoulomb.test_compute_discretized_bare_coulomb_potential_el_ion_element_wise_production_vs_debug#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: interactions_R_r_dn_debug
+        reference:
+          role: existing-test-reference
+          expression: interactions_R_r_dn_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpLocal::test_compute_ecp_local_parts_all_pairs_production_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpLocal.test_compute_ecp_local_parts_all_pairs_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: vpot_ecp_local_full_NN_jax
+        reference:
+          role: existing-test-reference
+          expression: vpot_ecp_local_full_NN_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal::test_compute_ecp_non_local_parts_all_pairs_production_vs_debug
+    executable_checks:
+      comparison-9:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_non_local_r_dn_carts_max_full_NN_debug
+        reference:
+          role: existing-test-reference
+          expression: mesh_non_local_r_dn_carts_max_NN_check_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-10:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: V_ecp_non_local_max_full_NN_jax
+        reference:
+          role: existing-test-reference
+          expression: V_ecp_non_local_max_NN_check_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-11:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-11
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_non_local_r_up_carts_max_full_NN_jax
+        reference:
+          role: existing-test-reference
+          expression: mesh_non_local_r_up_carts_max_NN_check_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-12:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-12
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_non_local_r_dn_carts_max_full_NN_jax
+        reference:
+          role: existing-test-reference
+          expression: mesh_non_local_r_dn_carts_max_NN_check_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sum_V_nonlocal_full_NN_debug
+        reference:
+          role: existing-test-reference
+          expression: sum_V_nonlocal_full_NN_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: V_ecp_non_local_max_full_NN_jax
+        reference:
+          role: existing-test-reference
+          expression: V_ecp_non_local_max_full_NN_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_non_local_r_up_carts_max_full_NN_jax
+        reference:
+          role: existing-test-reference
+          expression: mesh_non_local_r_up_carts_max_full_NN_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_non_local_r_dn_carts_max_full_NN_jax
+        reference:
+          role: existing-test-reference
+          expression: mesh_non_local_r_dn_carts_max_full_NN_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sum_V_nonlocal_full_NN_debug
+        reference:
+          role: existing-test-reference
+          expression: sum_V_nonlocal_NN_check_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-6:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sum_V_nonlocal_full_NN_jax
+        reference:
+          role: existing-test-reference
+          expression: sum_V_nonlocal_NN_check_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-7:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: V_ecp_non_local_max_full_NN_debug
+        reference:
+          role: existing-test-reference
+          expression: V_ecp_non_local_max_NN_check_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-8:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal.test_compute_ecp_non_local_parts_all_pairs_production_vs_debug#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_non_local_r_up_carts_max_full_NN_debug
+        reference:
+          role: existing-test-reference
+          expression: mesh_non_local_r_up_carts_max_NN_check_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal::test_compute_ecp_non_local_parts_nearest_neighbors_production_vs_debug
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldIon::test_compute_ewald_potential_ii_production_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldIon.test_compute_ewald_potential_ii_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_ii_prod
+        reference:
+          role: existing-test-reference
+          expression: E_ii_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElec::test_compute_ewald_potential_ee_production_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElec.test_compute_ewald_potential_ee_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_prod
+        reference:
+          role: existing-test-reference
+          expression: E_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElec::test_compute_ewald_potential_ee_single_electron_production_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElec.test_compute_ewald_potential_ee_single_electron_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_prod
+        reference:
+          role: existing-test-reference
+          expression: E_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElecIon::test_compute_ewald_potential_ei_production_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElecIon.test_compute_ewald_potential_ei_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_up_prod)
+        reference:
+          role: existing-test-reference
+          expression: E_up_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElecIon.test_compute_ewald_potential_ei_production_vs_debug#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_dn_prod)
+        reference:
+          role: existing-test-reference
+          expression: E_dn_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElecIon::test_compute_ewald_potential_ei_discretized_production_vs_debug
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElecIon.test_compute_ewald_potential_ei_discretized_production_vs_debug#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_dn_prod)
+        reference:
+          role: existing-test-reference
+          expression: E_dn_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldElecIon.test_compute_ewald_potential_ei_discretized_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_up_prod)
+        reference:
+          role: existing-test-reference
+          expression: E_up_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald

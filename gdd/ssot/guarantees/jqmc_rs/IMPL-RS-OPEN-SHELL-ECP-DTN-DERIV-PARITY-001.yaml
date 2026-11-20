@@ -1,0 +1,37 @@
+id: IMPL-RS-OPEN-SHELL-ECP-DTN-DERIV-PARITY-001
+kind: implementation
+name: Native DTN ECP mesh derivatives equal XLA on open-shell (N_up != N_dn) ccECP wavefunctions
+plain_language: >-
+  The native one-electron-move ECP mesh kernels of the DTN Jastrow address a moved down-spin electron by its global
+  stacked index (n_up + its down-spin index): the DTN u/chi/f ECP dE_L/dc (param_grad_dtn::DtnMovedOk), the DTN
+  dJ/dR Pulay delta of every ECP candidate of the HF force (forces_dtn::grad_j_dtn_wrt_r_atom_move_delta) and the
+  DTN value-strain delta of every ECP candidate of the periodic HF stress
+  (stress_pbc::dtn_value_strain_move_delta_batch). With the same number of up and down electrons that index equals
+  n_dn + its down-spin index, so only an open-shell input distinguishes them. On open-shell ccECP inputs with an
+  active DTN (u, chi and f channels, randomized coefficients) the native results equal XLA at fixed
+  configurations: (a) water ccECP SD + J1 + J2 + DTN with 4 up and 3 down electrons and independent down-spin
+  orbitals, the native DTN u/chi/f ECP dE_L/dc (grad_eL_ecp_dtn_params) against jax.grad of the XLA non-local ECP
+  energy, within the strict Rust/XLA tier; (b) the same wavefunction with every electron near the oxygen ECP centre,
+  where down-spin electrons carry live non-local candidates (checked from the XLA candidate list), the native
+  molecular HF force dE_L/d(R, r_up, r_dn) (vmc_grad_e_L_ecp) against assemble.compute_grad_e_L; (c) the committed
+  QE O-lsda_gamma save (real Gamma, ccECP, 4 up and 2 down electrons, independent up/down orbitals, kind=pgto) with
+  the same DTN channels attached, the native periodic HF stress dE_L/d(eps) (vmc_grad_e_L_eps_pbc) against
+  assemble.compute_grad_e_L. The force and stress rows use the medium tier, equal to strict in full precision; in
+  mixed precision the fp32 cancellation of these aggregates exceeds the strict fp32 pair on the unmodified code.
+  Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_open_shell_ecp_dtn_parity.py::test_ecp_dtn_param_grads_open_shell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 1}
+  - pytest_node: tests/test_rs_kernel/test_open_shell_ecp_dtn_parity.py::test_ecp_dtn_hf_force_open_shell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 3}
+  - pytest_node: tests/test_rs_kernel/test_open_shell_ecp_dtn_parity.py::test_ecp_dtn_hf_stress_open_shell_pbc
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 7}

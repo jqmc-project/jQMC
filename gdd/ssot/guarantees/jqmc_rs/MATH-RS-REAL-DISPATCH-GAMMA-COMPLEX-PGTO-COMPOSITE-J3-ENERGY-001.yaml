@@ -1,0 +1,32 @@
+id: MATH-RS-REAL-DISPATCH-GAMMA-COMPLEX-PGTO-COMPOSITE-J3-ENERGY-001
+kind: mathematical
+name: Real native local energy keeps a J3 whose composite orbital has a phase-free Gamma-complex pGTO child
+plain_language: >-
+  A real (Gamma) determinant selects the real native dispatch even when its J3 orbital is a composite whose pGTO
+  child is the phase-free Gamma-complex leaf built by build_AOs_cart_pgto_complex_data with no twist (unit image
+  phases). The real native local energy must then include that J3, as for the identical real pGTO child. Evidence:
+  the committed QE Li_gamma pGTO+PW cell with explicit zero ECP coefficients, one up and one down electron in one
+  constant (G = 0 plane-wave) orbital per spin, and the J3 orbital 0.4 times a normalized periodic s Gaussian
+  (exponent 1) on atom 0 plus 0.2 times a constant real plane wave, with j_matrix [[0.7, 0.19]]. The reference is
+  the J3 kinetic energy -1/2 sum_e (Laplacian_e J + |gradient_e J|^2) from analytic derivatives of the Gaussian
+  lattice sum over the [-3, 3]^3 images (0.5666084267722298 Ha at offsets (0.3, 0.2, 0.1) and (0.5, -0.2, 0.1)
+  Bohr from atom 0); no production AO, orbital, Jastrow or energy helper supplies it. The real periodic native
+  context e_L with the J3 minus e_L without it equals the reference at that configuration. Public native real MCMC
+  (two walkers, seed 34356, fixed mesh, two production calls of six steps, native real energy chunk observed)
+  stores, for every walker after each call, the XLA J3-free local energy plus the reference at the returned walker,
+  within the MCMC Rust/XLA driver policy, with at least one walker whose J3 energy exceeds the strict tolerance.
+  The real pGTO child is the identical control. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_real_gamma_complex_pgto_j3_composite.py::test_real_dispatch_gamma_complex_pgto_composite_j3_direct_e_l_keeps_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {child: gamma_complex_pgto}
+    - {child: real_pgto}
+  - pytest_node: tests/test_rs_kernel/test_real_gamma_complex_pgto_j3_composite.py::test_real_dispatch_gamma_complex_pgto_composite_j3_public_mcmc_keeps_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {child: gamma_complex_pgto}
+    - {child: real_pgto}

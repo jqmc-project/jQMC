@@ -1,0 +1,12 @@
+id: NUM-AO-PRECISION-ZONES-001
+kind: numerical
+name: Precision-zone dtypes of the fused AO API
+plain_language: The fused AO evaluation returns the declared per-zone dtypes in every supported precision mode, molecular
+  and periodic; this is a smoke check, never a correctness oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_fused_AOs_dtypes_match_zones_molecular
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_fused_AOs_dtypes_match_zones_periodic

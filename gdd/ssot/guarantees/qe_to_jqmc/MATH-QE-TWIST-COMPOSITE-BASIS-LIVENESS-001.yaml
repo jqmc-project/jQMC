@@ -1,0 +1,52 @@
+id: MATH-QE-TWIST-COMPOSITE-BASIS-LIVENESS-001
+kind: mathematical
+name: Both geminal radial blocks are live on the committed Li twist-grid corners
+plain_language: >-
+  On committed Li_k_twist ccECP pGTO plus PW at ik=1/8, J1/J2, seed=ik coordinates
+  and the original joint MO/basis flags, both exponent/coefficient lambda blocks
+  remain finite and above the original strict nonzero floor. Full retains its
+  strict same-mode AD comparison. Mixed compares independently rebuilt analytical
+  full/mixed routes in NUM-ORBITAL-ELEMENTARY-DERIVATIVE-MIXED-FIDELITY-001 and
+  retains the same nonzero floors on both operands. The synthetic comparator
+  control remains in both modes and rejects either block being zero on both
+  sides; it supports non-vacuity and is not physical derivative fidelity evidence.
+  The all-axis evidence remains separately registered. No twist-J3 law is claimed.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_grid_composite.py::test_twist_grid_composite_basis_is_live
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - ik: 1
+      quantity: ln_Psi
+    - ik: 8
+      quantity: ln_Psi
+    - ik: 1
+      quantity: e_L
+    - ik: 8
+      quantity: e_L
+    executable_checks:
+      full-parameter-ad-and-liveness:
+        site: tests/test_jqmc_kernel/test_qe_twist_grid_composite.py::_assert_param_blocks_allclose#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-output-or-control-fault
+          expression: actual
+        reference:
+          role: full-same-forward-value-autodiff-reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_grid_composite.py::test_twist_composite_basis_liveness_rejects_both_sides_zero
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{dead_block: lambda_basis_exp}, {dead_block: lambda_basis_coeff}]

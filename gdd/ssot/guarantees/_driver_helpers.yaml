@@ -1,0 +1,34 @@
+schema_version: 1
+document:
+  id: jqmc._driver_helpers
+  version: 1
+  lifecycle: cutover
+  title: Driver-helper guarantees
+  purpose: Which test guarantees what, by which verdict method, for the shared driver helpers (initial electron configuration
+    generation, collective safety and external stop control).
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-DRVH-ELECTRON-INIT-001
+  overrides:
+    jqmc._driver_helpers._os_assigned_free_tcp_port:
+    - IMPL-DRVH-JAX-COORDINATOR-001
+    jqmc._driver_helpers._pick_jax_coordinator_address:
+    - IMPL-DRVH-JAX-COORDINATOR-001
+    jqmc._driver_helpers._initialize_jax_distributed:
+    - IMPL-DRVH-JAX-COORDINATOR-001
+    jqmc._driver_helpers._check_mpi4py_jax_distribution_consistency:
+    - IMPL-DRVH-JAX-DISTRIBUTION-GUARD-001
+    jqmc._driver_helpers._raise_collective_nonfinite_observables:
+    - IMPL-DRVH-NONFINITE-COLLECTIVE-001
+    jqmc._driver_helpers._init_external_control_file:
+    - IMPL-DRVH-EXTERNAL-STOP-001
+    jqmc._driver_helpers._read_external_stop_flag:
+    - IMPL-DRVH-EXTERNAL-STOP-001
+    jqmc._driver_helpers._remove_external_control_file:
+    - IMPL-DRVH-EXTERNAL-STOP-001
+    jqmc._driver_helpers._log_memory_usage:
+    - IMPL-DRVH-PEAK-MEMORY-REPORT-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

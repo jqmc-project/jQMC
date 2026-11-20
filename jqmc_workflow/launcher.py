@@ -20,7 +20,7 @@ Supports FileFrom / ValueFrom dependencies.
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -40,6 +40,7 @@ Supports FileFrom / ValueFrom dependencies.
 import asyncio
 import os
 import pathlib
+from datetime import datetime
 from logging import (
     FileHandler,
     Formatter,
@@ -57,6 +58,44 @@ from .workflow import (
 
 logger = getLogger("jqmc-workflow").getChild(__name__)
 _loggers_initialized = {}
+
+from jqmc._build_info import build_info
+
+
+def _print_header() -> None:
+    """Print Header."""
+    logger.info(f"Program starts {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("")
+    logger.info("-" * 48)
+    logger.info("      d8b  .d88888b.  888b     d888  .d8888b.   ")
+    logger.info('      Y8P d88P" "Y88b 8888b   d8888 d88P  Y88b  ')
+    logger.info("          888     888 88888b.d88888 888    888  ")
+    logger.info("     8888 888     888 888Y88888P888 888         ")
+    logger.info("      888 888     888 888 Y888P 888 888         ")
+    logger.info("      888 888 Y8b 888 888  Y8P  888 888    888  ")
+    logger.info("      888 Y88b.Y8b88P 888       888 Y88b  d88P  ")
+    logger.info('      888  "Y888888"  888       888   Y8888P    ')
+    logger.info("      888        Y8b                            ")
+    logger.info("     d88P                                       ")
+    logger.info("   888P                           Made on earth ")
+    logger.info("-" * 48)
+    logger.info("")
+    logger.info("jqmc_workflow: Python-based workflow package for jQMC")
+    for line in build_info().banner_lines():
+        logger.info(line)
+    logger.info("")
+    logger.info("Authors: Kosuke Nakano [kousuke_1123@icloud.com]")
+    logger.info("")
+    logger.info("***The 3-Clause BSD License***")
+    logger.info("")
+    logger.info("Copyright (C) 2024- Kosuke Nakano")
+    logger.info("All rights reserved.")
+    logger.info("")
+
+
+def _print_footer() -> None:
+    """Print Footer."""
+    logger.info(f"Program ends {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 class Launcher:
@@ -114,7 +153,7 @@ class Launcher:
                 label="mcmc-run",
                 dirname="02_mcmc",
                 input_files=[
-                    FileFrom("vmc-opt", "hamiltonian_data_opt_step_9.h5")
+                    FileFrom("vmc-opt", ValueFrom("vmc-opt", "optimized_hamiltonian"))
                 ],
                 rename_input_files=["hamiltonian_data.h5"],
                 workflow=MCMC_Workflow(
@@ -152,8 +191,6 @@ class Launcher:
 
         # -- Logger setup ------------------------------------------
         self._setup_logger(log_level, log_name)
-
-        from ._header_footer import _print_header
 
         _print_header()
 
@@ -293,7 +330,7 @@ class Launcher:
 
         Returns a dict suitable for the ``workflow/current_state`` MCP resource.
         """
-        from ._state import get_workflow_summary
+        from .state import get_workflow_summary
 
         workflows = {}
         completed = failed = cancelled = 0
@@ -333,7 +370,7 @@ class Launcher:
 
     def get_current_job(self) -> dict | None:
         """Return the first workflow that is currently running/submitted, or ``None``."""
-        from ._state import get_workflow_summary
+        from .state import get_workflow_summary
 
         for cw in self.workflows:
             if cw.project_dir:
@@ -344,7 +381,7 @@ class Launcher:
 
     def get_job_history(self) -> list[dict]:
         """Return a flat, chronologically-sorted list of all jobs across all workflows."""
-        from ._state import get_jobs
+        from .state import get_jobs
 
         history: list[dict] = []
         for cw in self.workflows:
@@ -354,6 +391,40 @@ class Launcher:
                     history.append(j)
         history.sort(key=lambda j: j.get("submitted_at", ""))
         return history
+
+    def _restore_submitted_jobs(self) -> None:
+        """Count the jobs a previous run of this driver left in the queue.
+
+        Collects every job saved as ``submitted`` in the
+        ``workflow_state.toml`` files under each workflow's project
+        directory (pilot and sub-workflow directories included) and
+        registers those the scheduler still lists, so that they count
+        toward ``max_job_submit`` before any workflow submits new work.
+        Records written before the ``queue_label`` field existed fall
+        back to the workflow's ``pilot_queue_label`` when they lie in a
+        pilot directory (``_pilot*``), where pilot jobs are submitted,
+        and to its ``queue_label`` otherwise.
+        """
+        from ._job import restore_driver_jobs
+        from .state import STATE_FILENAME, get_jobs
+
+        saved_jobs = []
+        for cw in self.workflows:
+            default_label = getattr(cw.workflow, "queue_label", None)
+            pilot_label = getattr(cw.workflow, "pilot_queue_label", None) or default_label
+            for dirpath, _dirnames, filenames in os.walk(cw.project_dir):
+                if STATE_FILENAME not in filenames:
+                    continue
+                rel_parts = pathlib.Path(os.path.relpath(dirpath, cw.project_dir)).parts
+                in_pilot_dir = any(part.startswith("_pilot") for part in rel_parts)
+                fallback_label = pilot_label if in_pilot_dir else default_label
+                for job in get_jobs(dirpath):
+                    queue_label = job.get("queue_label") or fallback_label
+                    if job.get("status") == "submitted" and job.get("job_id") and job.get("server_machine") and queue_label:
+                        saved_jobs.append((job["server_machine"], queue_label, job["job_id"]))
+        if saved_jobs:
+            restored = restore_driver_jobs(saved_jobs)
+            logger.info(f"  Restored {restored} queued job(s) of a previous run toward max_job_submit.")
 
     # -- Variable resolution ---------------------------------------
 
@@ -417,7 +488,26 @@ class Launcher:
 
         As soon as ALL predecessors of a node complete, that node
         starts immediately -- no layer-based grouping.
+
+        On exit (success, failure, or cancellation) the shared SSH
+        transports for every cluster touched during the run are torn
+        down via :py:func:`close_all_machines`. Without this, the
+        cached paramiko transports linger until process exit; with it,
+        ``ProxyCommand`` subprocesses and pipe FDs are reclaimed
+        immediately and a follow-up Launcher invocation in the same
+        process re-authenticates cleanly.
         """
+        try:
+            await self._async_launch_body()
+        finally:
+            # Close the shared per-machine SSH transports built up
+            # during this run. Safe to call when nothing was opened
+            # (empty registry).
+            from .machine import close_all_machines
+
+            close_all_machines()
+
+    async def _async_launch_body(self):
         completed = set()
         failed = set()
         skipped = set()  # failed transitively because an upstream dep failed
@@ -438,6 +528,10 @@ class Launcher:
         logger.info("")
 
         running = {}  # label -> asyncio.Task
+
+        # Before any workflow can submit: jobs still queued from a
+        # previous run must hold their max_job_submit slots.
+        self._restore_submitted_jobs()
 
         while pending or running:
             # Find workflows whose dependencies are ALL completed
@@ -564,8 +658,6 @@ class Launcher:
                     reason = reason[:400] + " ...[truncated]"
                 logger.info(f"      reason: {reason}")
         logger.info("=" * 50)
-
-        from ._header_footer import _print_footer
 
         _print_footer()
 

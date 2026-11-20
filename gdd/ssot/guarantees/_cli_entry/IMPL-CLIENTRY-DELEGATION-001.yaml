@@ -1,0 +1,17 @@
+id: IMPL-CLIENTRY-DELEGATION-001
+kind: implementation
+name: The jqmc and jqmc-tool console scripts are the light entries and hand every other invocation to the full CLIs
+plain_language: >-
+  [project.scripts] installs jqmc as jqmc._cli_entry:main and jqmc-tool as jqmc._cli_entry:tool_main.
+  jqmc_cli shares the light module's usage text and argument check. An existing input file is run by
+  jqmc_cli.main, the MPI-owning entry, and any other jqmc-tool arguments are passed to jqmc_tool._cli_main.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_entry.py::test_console_scripts_point_at_the_light_entry
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_cli_entry.py::test_job_and_tool_arguments_delegate_to_the_full_clis
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

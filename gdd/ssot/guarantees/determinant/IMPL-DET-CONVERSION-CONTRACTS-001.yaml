@@ -1,0 +1,29 @@
+id: IMPL-DET-CONVERSION-CONTRACTS-001
+kind: implementation
+name: Wavefunction subtype conversion contracts
+plain_language: SD/AGPn/AGP conversions dispatch on subtype, truncate rank as declared, never invent virtual rows, evaluate
+  through the duck-typed geminal interface identically on molecular and PBC (real and complex) systems, and reject impossible
+  conversions loudly.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_to_AGPn_promotes_without_inventing_virtual_rows
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalConversions::test_AGPn_data_to_AGP_materialises_diag_lambda
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalConversions::test_to_AGP_free_function_dispatches_on_subtype
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalConversions::test_to_AGPn_truncate_rank
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalConversions::test_to_AGPn_from_AGP_closed_shell_trexio
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalConversions::test_to_SD_accepts_pure_SD_AGPn
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_AGPn_data_eval_geminal_via_duck_type_interface
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_SD_data_eval_geminal_via_duck_type_interface
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_AGPn_SD_apply_block_update_pbc_real
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_AGPn_SD_eval_pbc_real
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_AGPn_SD_apply_block_update_pbc_complex
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_AGPn_SD_eval_pbc_complex
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalConversions::test_to_AGPn_n_exceeds_num_mo_is_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalConversions::test_to_AGPn_from_open_shell_truncation_raises
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalConversions::test_to_SD_rejects_non_SD_AGPn

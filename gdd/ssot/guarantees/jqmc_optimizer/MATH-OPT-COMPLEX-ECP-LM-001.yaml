@@ -1,0 +1,54 @@
+id: MATH-OPT-COMPLEX-ECP-LM-001
+kind: mathematical
+name: Actual-sampler nonsymmetric LM agrees with same-mode AD-input dense algebra
+plain_language: >-
+  Actual MCMC lithium_k025_cart.h5 samples (seed 3446, eight walkers, one step,
+  identity ECP rotation, untied MOs and J2-exp) supply the complex energy.
+  Fixed real-coordinate basis columns 0/3/4 define the reduced problem;
+  same-precision AD independently supplies its O/D inputs. Production reduced
+  inputs, nonsymmetric H/S matrices, selected root and update agree with dense
+  reference algebra. Metric conditioning and root separation are asserted;
+  omission of the finite-sample mean(D) bra term must be detected. Full and
+  mixed use their existing strict/medium element-wise zone budgets. This is
+  a fixed-sample nonsymmetric pencil contract, not a Hermitian/eigh model or
+  a claim about stochastic optimization convergence or all parameter subsets.
+verdict_methods: [VM-MATH-COMPLEX-ECP-CONSUMPTION-001]
+required_evidence:
+- verdict_method: VM-MATH-COMPLEX-ECP-CONSUMPTION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_reduced_lm_matches_same_mode_ad_inputs
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_same_mode#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_reduced_lm_update_matches_same_mode_ad_reference
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_same_mode#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_reduced_lm_rejects_missing_mean_derivative
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_same_mode#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+    required_precision_modes: [full, mixed]

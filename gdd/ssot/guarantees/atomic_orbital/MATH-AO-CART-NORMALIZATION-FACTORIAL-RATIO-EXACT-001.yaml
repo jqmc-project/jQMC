@@ -1,0 +1,40 @@
+id: MATH-AO-CART-NORMALIZATION-FACTORIAL-RATIO-EXACT-001
+kind: mathematical
+name: Cartesian GTO factorial ratio prod n_i!/(2 n_i)! is exact for every component, independent of the rest of the leaf
+plain_language: >-
+  The Cartesian primitive normalization of every XLA and NumPy AO, overlap and basis-derivative path uses the
+  factorial ratio prod_i n_i! / (2 n_i)! of each component's own powers, computed without integer overflow and
+  independently of the other components of the leaf, so that N^-2 = prod_i Gamma(n_i + 1/2) / (2a)^(n_i + 1/2)
+  (a product of scipy.special.factorial(exact=True) arrays, which are int64 when every argument is <= 20, wraps
+  (2nx)! (2ny)! (2nz)! or nx! ny! nz! around int64 for lone or incomplete high-degree components and gives a wrong
+  scale or NaN, depending on the companions in the leaf). For leaves built with
+  AOs_cart_gto_data.build containing a lone (7,6,0), (7,7,0), (5,5,5), (8,7,0), (10,2,0), (10,1,1), (20,3,0) or
+  (13,13,0), a (7,6,0) with a (0,0,13) companion, and the controls (6,6,0), (13,1,0) and (7,6,0) with a (13,0,0)
+  companion, the stored ratio equals the math.lgamma value within the strict det_eval relative tolerance; at the
+  radial maximum of the probed component and two nearby points the XLA compute_AOs, compute_AOs_grad,
+  compute_AOs_laplacian and fused compute_AOs_value_grad_lap, the jqmc.derivatives.ao_deriv value, gradient and
+  Laplacian, and the Rust compute_AOs, compute_AOs_grad and compute_AOs_laplacian equal the closed-form value,
+  gradient and Laplacian evaluated with math.lgamma (no jqmc code) within the strict ao_eval (values) and
+  ao_grad_lap (gradients, Laplacians, ao_deriv) tolerances; and the diagonal of the analytic compute_overlap_matrix
+  of each one-primitive AO equals c^2 within the strict det_eval tolerance and agrees with a tensor Gauss-Hermite
+  quadrature of the squared Rust compute_AOs values within the strict ao_eval tolerance. Full and mixed are judged
+  separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_cart_norm_factorial_overflow.py::test_cartesian_normalization_factorial_ratio_has_no_int64_overflow
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: lone_7_6_0}
+    - {case: lone_7_7_0}
+    - {case: lone_5_5_5}
+    - {case: lone_8_7_0}
+    - {case: lone_10_2_0}
+    - {case: lone_10_1_1}
+    - {case: lone_20_3_0}
+    - {case: lone_13_13_0}
+    - {case: pair_7_6_0_with_0_0_13}
+    - {case: control_lone_6_6_0}
+    - {case: control_lone_13_1_0}
+    - {case: control_pair_7_6_0_with_13_0_0}

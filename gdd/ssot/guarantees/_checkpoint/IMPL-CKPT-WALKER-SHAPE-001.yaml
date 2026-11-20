@@ -1,0 +1,15 @@
+id: IMPL-CKPT-WALKER-SHAPE-001
+kind: implementation
+name: Restored walker blocks match the restored Hamiltonian
+plain_language: >-
+  On restart a walker block whose shape is not (num_walkers, electrons, 3) for the restored Hamiltonian and driver
+  configuration is rejected loudly for either spin, while matching blocks, including an empty block for a spin with
+  no electrons, are accepted.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestRestoredWalkerShapes::test_matching_shapes_pass
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestRestoredWalkerShapes::test_mismatched_shapes_raise

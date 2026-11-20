@@ -1,0 +1,237 @@
+id: IMPL-RS-RAW-PGTO-BSPLINE-FORCE-STRESS-SELECTOR-001
+kind: implementation
+name: Native raw pGTO/B-spline force and stress select the complete composite cotangent correctly
+plain_language: For the supported real Gamma raw-AO AGP canonical pGTO/B-spline fixture, force and stress select the B-spline rows from
+  the complete composite AO cotangent in either child order. Reversal consistently permutes paired and unpaired AGP coefficients, and
+  both fixtures pass public sanity checks. MCMC, GFMC_t and GFMC_n public force-plus-stress runs and MCMC stress-only complete through
+  the counted native observable batch method. Every stored energy, weight, HF/Pulay force/stress and energy-weighted Pulay channel preserves
+  matching nonempty field sets and shapes, finite values, reference energy variation and nonzero HF force/stress. GFMC stored channels
+  match independently executed same-policy XLA production at unchanged medium XLA-Rust budgets. MCMC energies and weights retain same-seed
+  parity; at every one of its 28 native production coordinates, actual gradient buffers returned by the fused public chunk (computed
+  using the carried inverse) match the independent same-policy analytical XLA production bridges with an independently rebuilt XLA production
+  inverse and that unchanged central budget. The final two walker points are also compared using the actual carried inverse returned
+  by that public chunk, a distinct same-input/inverse contract. No fresh native reevaluation replaces the actual public output. Passive
+  coordinate recording changes only the want_steps allocation/copy flag; a separate original same-seed native run has bitwise identical
+  stored fields, and Rust source-use auditing verifies that the flag does not enter RNG, energy or derivative arithmetic. Stress-only
+  binds both local-energy and log-wavefunction strain derivatives. Independently propagated MCMC force/stress trajectories are not asserted
+  to stay identical after coordinate roundoff drift. A pure raw B-spline control preserves its established None identity path through
+  public-driver completion and original-step identical-input production derivative parity. The practical reach is hand-built or future
+  raw-AO workflows; current converters do not normally emit this class. No additional debug-wrapper or MO class is claimed.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_raw_bspline_force_stress.py::test_native_raw_composite_force_stress_matches_xla
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - order: pgto-first
+      driver_kind: MCMC
+    - order: pgto-first
+      driver_kind: GFMC_t
+    - order: pgto-first
+      driver_kind: GFMC_n
+    - order: bspline-first
+      driver_kind: MCMC
+    - order: bspline-first
+      driver_kind: GFMC_t
+    - order: bspline-first
+      driver_kind: GFMC_n
+    executable_checks:
+      public-native-vs-xla:
+        site: tests/test_rs_kernel/test_raw_bspline_force_stress.py::_assert_driver_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-production-driver-observable
+          expression: actual[field]
+        reference:
+          role: independent-same-policy-xla-production-observable
+          expression: reference[field]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+      mcmc-energy-weights-vs-xla:
+        site: tests/test_rs_kernel/test_raw_bspline_force_stress.py::_assert_mcmc_fixed_input_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-production-driver-observable
+          expression: actual[field]
+        reference:
+          role: independent-same-policy-xla-production-observable
+          expression: reference[field]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+      mcmc-fixed-input-derivatives-vs-xla:
+        site: tests/test_rs_kernel/test_raw_bspline_force_stress.py::_assert_fixed_mcmc_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual-carried-inverse-fused-public-gradient-output
+          expression: actual_block
+        reference:
+          role: independent-same-policy-xla-production-fresh-inverse-and-final-actual-inverse
+          expression: reference_block
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+  - pytest_node: tests/test_rs_kernel/test_raw_bspline_force_stress.py::test_native_raw_composite_stress_only_matches_xla
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - order: pgto-first
+    - order: bspline-first
+    executable_checks:
+      mcmc-energy-weights-vs-xla:
+        site: tests/test_rs_kernel/test_raw_bspline_force_stress.py::_assert_mcmc_fixed_input_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-production-driver-observable
+          expression: actual[field]
+        reference:
+          role: independent-same-policy-xla-production-observable
+          expression: reference[field]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+      mcmc-fixed-input-derivatives-vs-xla:
+        site: tests/test_rs_kernel/test_raw_bspline_force_stress.py::_assert_fixed_mcmc_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual-carried-inverse-fused-public-gradient-output
+          expression: actual_block
+        reference:
+          role: independent-same-policy-xla-production-fresh-inverse-and-final-actual-inverse
+          expression: reference_block
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+  - pytest_node: tests/test_rs_kernel/test_raw_bspline_force_stress.py::test_native_pure_bspline_force_stress_matches_xla
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      fixed-input-native-vs-xla:
+        site: tests/test_rs_kernel/test_raw_bspline_force_stress.py::test_native_pure_bspline_force_stress_matches_xla#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-fixed-input-production-derivative
+          expression: actual_block
+        reference:
+          role: independent-same-policy-fixed-input-xla-production-derivative
+          expression: reference_block
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - jastrow_eval
+            - ewald
+            - local_energy

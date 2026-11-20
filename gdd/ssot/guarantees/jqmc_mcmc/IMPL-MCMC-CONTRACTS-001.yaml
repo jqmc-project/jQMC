@@ -1,0 +1,31 @@
+id: IMPL-MCMC-CONTRACTS-001
+kind: implementation
+name: Driver accessor and dispatch contracts
+plain_language: The acceptance-ratio accessor implements its declared formula, get_gF requires an explicit block list and
+  rejects a call without one before evaluating anything, the ordinary pytest suite forces XLA dispatch, and the stress
+  buffers have the declared PBC/molecular shapes and population.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestHydrostaticCovariance::test_driver_exposes_trace_first_hydrostatic
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestHydrostaticCovariance::test_cli_formatter_refuses_to_invent_a_hydrostatic_bar
+  - pytest_node: tests/test_jqmc_kernel/test_integration_complex_contamination.py::TestComplexBlochPath::test_no_complex_truncation_mcmc_run
+  - pytest_node: tests/test_jqmc_kernel/test_integration_complex_contamination.py::TestComplexBlochPath::test_no_complex_truncation_mcmc_get_E
+  - pytest_node: tests/test_jqmc_kernel/test_integration_complex_contamination.py::TestComplexBlochPath::test_no_complex_truncation_mcmc_get_aF
+  - pytest_node: tests/test_jqmc_kernel/test_integration_complex_contamination.py::TestComplexBlochPath::test_no_complex_truncation_mcmc_get_gF
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::test_ordinary_pytest_suite_forces_xla_dispatch
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::test_acceptance_ratio_property
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::test_get_gF_requires_blocks
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressDefinition::test_get_aT_shape_pbc_vs_molecular_mcmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressDefinition::test_stress_PP_buffer_populated_pbc_mcmc
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_pressure_reference.py::test_pressure_reference_rejects_wrong_error
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {correlation: positive}
+    - {correlation: negative}
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_pressure_reference.py::test_pressure_formatter_uses_joint_error_or_refuses
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {correlation: positive}

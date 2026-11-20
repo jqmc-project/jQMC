@@ -1,0 +1,31 @@
+id: IMPL-RS-PBC-SCREENED-FORCE-STRESS-001
+kind: implementation
+name: Native periodic real-Gamma force and stress kernels differentiate the screened FAST local energy
+plain_language: >-
+  For a periodic real-Gamma MO-GTO wavefunction on Cartesian leaves whose native FAST chunk local energy applies the
+  runtime AO screen (NATIVE_AO_SCREEN_EXPONENT / FAST_AO_SCREEN_ABS_BOUND: shell pz_val on the orbital value, shell
+  pz_deriv on the kinetic gradient and Laplacian, shell plus primitive pz_val on the ECP non-local mesh), the native
+  force (vmc_grad_e_L_pbc) and stress (vmc_grad_e_L_eps_pbc) kernels apply the same screens to the AO derivative
+  tables they contract, so a screened-out shell image or primitive contributes zero to the value and to every
+  derivative of it. On the committed Cartesian lithium ccECP cell without a Jastrow and with J1+J2, the electron
+  and nuclear gradients and the strain derivative agree with central finite differences of the test-only screened
+  FAST local energy (_e_L_fast_screened: screened orbital values, determinant state and inverse from them, FAST
+  folded kinetic tables, ECP mesh AO cutoff) within ATOL/RTOL_FD_VS_ANALYTIC_TIGHT, and with the unscreened XLA
+  autograd oracle within the periodic force / stress parity tolerance. The screen moves an AO by at most
+  FAST_AO_SCREEN_ABS_BOUND, below finite-difference resolution, so the evidence pins the kernels as derivatives of
+  the screened energy to finite-difference accuracy. In mixed the FAST e_L and the derivative kernels take the same
+  screens (screened fp32 ao_eval orbital values, fp64 derivative tables), but the fp32 zones put the native e_L
+  below finite-difference resolution; there the XLA comparison alone applies. Full and mixed are judged separately.
+native_evidence:
+- jqmc_rs::mesh_vgs::tests::kin_contract_matches_derivative_kernel_tables
+- jqmc_rs::mesh_vgs::tests::mesh_vgs_matches_derivative_kernel_tables
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_pbc_screened_derivatives.py::test_pbc_force_matches_fd_of_screened_e_L
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{with_jastrow: false}, {with_jastrow: true}]
+  - pytest_node: tests/test_rs_kernel/test_pbc_screened_derivatives.py::test_pbc_stress_matches_fd_of_screened_e_L
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{with_jastrow: false}, {with_jastrow: true}]

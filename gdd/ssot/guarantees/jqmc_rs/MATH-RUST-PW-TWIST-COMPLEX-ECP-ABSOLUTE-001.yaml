@@ -1,0 +1,45 @@
+id: MATH-RUST-PW-TWIST-COMPLEX-ECP-ABSOLUTE-001
+kind: mathematical
+name: Native plane-wave twist VMC energy matches the shared independent reference
+plain_language: >-
+  Native compute_local_energy_fast_complex on the composite_twist_j12 (QE
+  Li_k025, windowed Cartesian pGTO plus 40 complex plane waves) and
+  pw_twist_j12 (48 complex plane waves) fixtures, each a time-reversal SD with
+  J1 + J2 and the Li ccECP, with one up and one down electron at the seed7
+  image-offset configuration, cond(G)<1e4, identity Nv12 nearest-ECP mesh and
+  the geminal inverse, equals the independent plane-wave/pGTO, determinant,
+  J1/J2, Hessian-kinetic, NumPy Ewald and explicit quadrature reference shared
+  with MATH-HAM-PW-TWIST-COMPLEX-ECP-ABSOLUTE-001, not reimplemented for Rust.
+  Real and imaginary components are compared separately in full and mixed at
+  the existing strict zone policy; imaginary kinetic and nonlocal parts must
+  be active. With the production plane-wave wave vector stripped of its twist
+  the same comparison must fail after a passing baseline. This is not
+  Rust/XLA parity and not an LRDMC candidate-mesh claim.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_pw_twist_absolute_native.py::test_native_pw_twist_vmc_energy_matches_independent_absolute_value
+    required_parameter_cases: [{pattern: composite_twist_j12}, {pattern: pw_twist_j12}]
+    required_precision_modes: [full, mixed]
+    executable_checks:
+      native-pw-twist-complex-energy:
+        site: tests/test_rs_kernel/test_complex_pw_twist_absolute_native.py::_compare_components#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-complex-local-energy-component, expression: 'part(actual)'}
+        reference: {role: shared-independent-complex-energy-component, expression: 'part(expected)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+  - pytest_node: tests/test_rs_kernel/test_complex_pw_twist_absolute_native.py::test_native_pw_twist_absolute_value_rejects_omitted_plane_wave_twist
+    required_parameter_cases: [{pattern: composite_twist_j12}, {pattern: pw_twist_j12}]
+    required_precision_modes: [full, mixed]
+    executable_checks:
+      native-pw-twist-complex-energy:
+        site: tests/test_rs_kernel/test_complex_pw_twist_absolute_native.py::_compare_components#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-complex-local-energy-component, expression: 'part(actual)'}
+        reference: {role: shared-independent-complex-energy-component, expression: 'part(expected)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}

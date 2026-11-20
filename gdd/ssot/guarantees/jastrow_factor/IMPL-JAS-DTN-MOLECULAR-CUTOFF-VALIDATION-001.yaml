@@ -1,0 +1,47 @@
+id: IMPL-JAS-DTN-MOLECULAR-CUTOFF-VALIDATION-001
+kind: implementation
+name: Molecular DTN cutoffs must be finite positive lengths
+plain_language: >-
+  A molecular DTN cutoff is a length in Bohr, and the (L - r)^C cutoff factor vanishes for r >= L, so a cutoff
+  L <= 0 removes its channel and that channel's Kato cusp for every r > 0. jqmc-tool trexio convert-to
+  --jastrow-dtn u_chi_f on the committed H2 all-electron cc-pVDZ Cartesian TREXIO file refuses --dtn-Lu -1, 0 and
+  nan, --dtn-Lchi -1 and 0, --dtn-Lf -1 and 0 and --dtn-cutoff-abs-cap -1 and 0. It exits non-zero through the
+  jqmc-tool console group with the option name, the value and "must be a finite cutoff length > 0" in the message,
+  prints no success line and writes no Hamiltonian file. Jastrow_DTN_data.build refuses a molecular L_u, L_chi,
+  L_f or cutoff_abs_cap that is zero, negative or non-finite with a ValueError that names the parameter. The
+  load-time Jastrow_DTN_data.sanity_check refuses stored L_u, L_chi or L_f values that are not finite and > 0.
+  Periodic cutoffs are outside this guarantee; they are
+  dimensionless ratios in (0,1) with their own checks.
+verdict_methods:
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMolecularCutoffValidation::test_trexio_convert_to_rejects_nonpositive_dtn_cutoff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: Lu-negative}
+    - {case: Lu-zero}
+    - {case: Lu-nan}
+    - {case: Lchi-negative}
+    - {case: Lchi-zero}
+    - {case: Lf-negative}
+    - {case: Lf-zero}
+    - {case: cap-negative}
+    - {case: cap-zero}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMolecularCutoffValidation::test_build_rejects_nonpositive_molecular_cutoff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: L_u-negative}
+    - {case: L_u-zero}
+    - {case: L_u-inf}
+    - {case: L_chi-negative}
+    - {case: L_f-zero}
+    - {case: cutoff_abs_cap-negative}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMolecularCutoffValidation::test_sanity_check_rejects_nonpositive_stored_cutoff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: L_u-negative}
+    - {case: L_chi-negative}
+    - {case: L_f-zero}
+    - {case: L_u-nan}

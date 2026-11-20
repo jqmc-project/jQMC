@@ -1,0 +1,44 @@
+id: MATH-ECP-MIXED-AE-FORCE-001
+kind: mathematical
+name: ECP electron and nuclear forces of a mixed ECP/all-electron molecule project onto ECP nuclei only
+plain_language: The XLA ECP force setup shared by the public electron force grad_V_ecp_wrt_r, the nuclear force
+  grad_V_ecp_wrt_R and the strain derivatives places each electron's NN=1 non-local projector on its nearest nucleus
+  that carries a non-local channel; an all-electron nucleus never hosts it, even when it is the electron's nearest
+  nucleus. On a two-nucleus, two-electron Slater-determinant input with the ECP on either nucleus and one electron
+  nearer the all-electron nucleus, both public forces (fixed quadrature rotation, Nv=6) equal the exact derivative,
+  by JAX autodiff, of an independently authored V_ecp (local plus non-local; authored octahedral rule, closed-form
+  determinant, AO and ECP centres moving with the nuclei). The reference is the ideal float64 value; the production
+  forces retain the original Full strict zone mathematical comparison. Mixed numerical precision instead compares
+  independently rebuilt Full/Mixed analytical routes under NUM-ECP-MIXED-AE-FORCE-FIDELITY-001, with both original
+  layouts and force axes retained (force route).
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_force_mixed_ecp_all_electron_matches_independent_derivative
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - ecp_atom: 0
+    - ecp_atom: 1
+    executable_checks:
+      authored-independent-potential-derivative:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_force_mixed_ecp_all_electron_matches_independent_derivative#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-ecp-force
+          expression: got
+        reference:
+          role: independent-authored-potential-full-ad
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - det_grad_lap
+            - det_ratio

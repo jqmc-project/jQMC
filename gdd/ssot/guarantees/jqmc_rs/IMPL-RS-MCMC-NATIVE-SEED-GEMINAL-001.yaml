@@ -1,0 +1,37 @@
+id: IMPL-RS-MCMC-NATIVE-SEED-GEMINAL-001
+kind: implementation
+name: The MCMC driver seeds the native sweep's carried geminal from the sweep's own orbital caches
+plain_language: >-
+  The real native MCMC sweeps (per-step route and energy chunk) advance the carried geminal G by
+  rank-1 deltas against their own cached orbital columns, so a difference between the run seed G and those caches
+  is never corrected and stays in G as an absolute row offset. The driver therefore seeds G from the native caches
+  (NativeObsCtx.sweep_seed_geminal_batch) and its inverse from that G. Evidence: committed all-electron open-shell
+  UHF N with J1+J2 (mol_cart_sd_j12, 5 up / 2 dn) on the per-step native route that VMC optimization with
+  opt_geminal uses (comput_log_WF_param_deriv=True, two walkers, mcmc seeds 0 and 1). The seed (G, G^-1) handed to
+  the first native sweep is captured; for each walker the first up electron is moved 6.0 and then 6.3 bohr from the
+  nucleus along its own direction with the production rank-1 kernels (_det_v_up_move, _det_sm_update), with the
+  driver's carried-inverse refresh of the inverse of the carried G in between. The second determinant ratio must equal the
+  ratio of two fresh native geminals within get_tolerance_min((det_ratio,), strict). A JAX-built seed differs from
+  the native caches by about 3e-7 of max|G| under the mixed fp32 ao_eval zone and fails this comparison in mixed
+  (relative error 5e-4); in full the two seeds agree to 6e-16 and the comparison passes either way. Full and mixed
+  are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_tier2_sweep_state.py::test_driver_seed_keeps_far_electron_ratios_exact
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 0}
+    - {seed: 1}
+  - pytest_node: tests/test_rs_kernel/test_mcmc_fast_chunk_geminal.py::test_fast_chunk_carried_geminal_matches_current_orbitals
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_jnone}
+    - {pattern: mol_cart_sd_jnone}
+    - {pattern: mol_cart_agp_jnone}
+    - {pattern: mol_ecp_sphe_jnone}
+  - pytest_node: tests/test_rs_kernel/test_mcmc_fast_chunk_geminal.py::test_fast_chunk_preserves_the_ao_value_precision
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}

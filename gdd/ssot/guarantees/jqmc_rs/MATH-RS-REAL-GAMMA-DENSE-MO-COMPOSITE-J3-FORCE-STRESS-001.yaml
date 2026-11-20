@@ -1,0 +1,42 @@
+id: MATH-RS-REAL-GAMMA-DENSE-MO-COMPOSITE-J3-FORCE-STRESS-001
+kind: mathematical
+name: Native real-Gamma forces and stress of a dense-MO composite J3 equal the derivatives of ln Psi and the local energy
+plain_language: >-
+  The native real-Gamma force and stress paths accept a J3 orbital that is a dense real MO (fewer orbitals than
+  AOs) over a pGTO(+)plane-wave or pGTO(+)B-spline composite, the J3 the QE converter builds at the Gamma point for
+  j3_basis_type mo, and return the derivatives of the wave function and of the continuum local energy instead of
+  raising. On run_qe2jqmc output for the committed QE Li Gamma ccECP save (kind pgto+pw and pgto+bspline, j1 = j2
+  = 1, j3_basis_type mo) with a seeded symmetric nonzero j_matrix, with the J3 composite in its converted (pGTO,
+  extra) order and in the (extra, pGTO) order with the MO columns permuted to match, and for pgto+bspline also
+  with the J3 copy of the B-spline child scaled by 1000 so that its rows are not a near-tolerance residual, at
+  one seeded electron configuration: the Pulay force d Re ln Psi / dR, the drift d Re ln Psi / dr, the HF force d Re e_L / dR and
+  d Re e_L / dr, the Pulay stress and the HF stress of the MCMC driver context (build_obs_ctx) and of the free VMC
+  kernels, the GFMC/LRDMC T-move measurement force and stress, the kinetic force dT/dR (grad_T_pbc_wrt_R), the
+  kinetic stress dT/deps (grad_T_pbc_wrt_strain, pGTO+PW determinant) and the J3 value strain dJ3/deps
+  (_grad_lnJ3_pbc_strain) equal reverse-mode AD of the XLA Re ln Psi, Re local energy (identity quadrature
+  rotation), kinetic energy and J3 value with every nucleus position leaf displaced together, the electron
+  coordinates displaced, or the cell, nuclei and electrons strained together, in the same precision. Every
+  reference must be finite and distinguishable from zero, and the J3 must change the HF force and HF stress
+  references beyond the comparison tolerance. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_real_gamma_converter_mo_j3_composite.py::test_converter_dense_mo_composite_j3_real_forces_and_stress_match_ad
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pgto+pw, order: gto_first, extra: converter}
+    - {kind: pgto+pw, order: extra_first, extra: converter}
+    - {kind: pgto+bspline, order: gto_first, extra: converter}
+    - {kind: pgto+bspline, order: extra_first, extra: converter}
+    - {kind: pgto+bspline, order: gto_first, extra: amplified}
+    - {kind: pgto+bspline, order: extra_first, extra: amplified}
+    executable_checks:
+      force-and-stress-vs-ad:
+        site: tests/test_rs_kernel/test_real_gamma_converter_mo_j3_composite.py::test_converter_dense_mo_composite_j3_real_forces_and_stress_match_ad#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-real-gamma-dense-mo-composite-j3-force-and-stress, expression: value}
+        reference: {role: same-precision-autodiff-of-ln-psi-local-energy-kinetic-and-j3, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, mo_eval, mo_grad, mo_lap, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, wf_kinetic, ewald, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, mo_eval, mo_grad, mo_lap, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, wf_kinetic, ewald, coulomb]}

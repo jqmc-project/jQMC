@@ -1,0 +1,21 @@
+schema_version: 1
+document:
+  id: jqmc._build_info
+  version: 1
+  lifecycle: cutover
+  title: Build information guarantees
+  purpose: Which test guarantees what, by which verdict method, for the version and git commit every jQMC run reports.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-BUILDINFO-VERSION-COMMIT-RESOLUTION-001
+  overrides:
+    jqmc._build_info.BuildInfo:
+    - IMPL-BUILDINFO-VERSION-COMMIT-OUTPUT-001
+    jqmc._build_info.log_build_info_once:
+    - IMPL-BUILDINFO-VERSION-COMMIT-OUTPUT-001
+    jqmc._build_info._emits_info:
+    - IMPL-BUILDINFO-API-BANNER-HANDLER-THRESHOLD-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

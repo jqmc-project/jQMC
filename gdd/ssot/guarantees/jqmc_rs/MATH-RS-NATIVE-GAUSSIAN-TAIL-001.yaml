@@ -1,0 +1,65 @@
+id: MATH-RS-NATIVE-GAUSSIAN-TAIL-001
+kind: mathematical
+name: Native Gaussian far-tail values on fixed positive and negative keys
+plain_language: >-
+  The two specified public-API keys must independently realize opposite-sign fp64
+  uniforms in the far-tail region w=-log((1-u)*(1+u)) >= 16. Native split keys must
+  equal JAX split keys. Each native and XLA Gaussian output must agree with the
+  direct independent SciPy inverse function sqrt(2)*erfinv(u), and with each other,
+  at the unchanged central atol_consistency/rtol_consistency pair. Shape, dtype,
+  finiteness, sign and region checks are additional requirements, not substitutes
+  for numerical comparisons. Full and mixed both use the sampler's same fp64
+  transform. Forward-erf round trips cannot substitute for direct inverse values
+  because erf saturates in the tail. The original two million-input cases remain
+  under MATH-RS-NATIVE-GAUSSIAN-001; neither distribution quality nor every possible
+  key is certified by this fixed-input regression.
+verdict_methods: [VM-MATH-NATIVE-GAUSSIAN-001]
+required_evidence:
+- verdict_method: VM-MATH-NATIVE-GAUSSIAN-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_tail_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {key_words: [0, 25070191], count: 1, sign: -1}
+    - {key_words: [0, 73650073], count: 1, sign: 1}
+    executable_checks:
+      tail-inputs:
+        site: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_tail_reference#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: declared-fp64-sign-and-tail-region, expression: input_checks}
+        reference: {role: all-input-requirements-satisfied, expression: 'np.ones_like(input_checks)'}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      split-keys:
+        site: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_tail_reference#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: native-split-keys, expression: actual_keys}
+        reference: {role: independent-xla-split-keys, expression: 'expected_keys'}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      inverse-function:
+        site: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_tail_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-tail-Gaussian-values, expression: actual}
+        reference: {role: independent-inverse-function-values, expression: 'reference'}
+        precision:
+          full: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+          mixed: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+      xla-inverse-function:
+        site: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_tail_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-tail-Gaussian-values, expression: xla_values}
+        reference: {role: independent-inverse-function-values, expression: 'reference'}
+        precision:
+          full: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+          mixed: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+      same-input-backends:
+        site: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_tail_reference#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-tail-Gaussian-values, expression: actual}
+        reference: {role: xla-tail-Gaussian-values, expression: 'xla_values'}
+        precision:
+          full: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+          mixed: {policy: CMP-NATIVE-GAUSSIAN-F64-001}

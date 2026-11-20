@@ -1,0 +1,43 @@
+id: IMPL-MCMC-CHECKPOINT-FRESH-STATE-001
+kind: implementation
+name: MCMC checkpoint writes refuse freshly invalid wavefunctions without excluding valid tails
+plain_language: >-
+  Before MCMC writes its rank checkpoint, it reconstructs the determinant at the
+  current unmodified walker positions using the selected XLA or Rust backend and
+  current precision policy. A nonfinite matrix, zero determinant or nonfinite log
+  absolute determinant raises FloatingPointError collectively before any rank writes
+  a checkpoint, even if old energies are finite. No position-radius, determinant-size
+  or conditioning cutoff is used. A finite small Cl2 determinant whose direct product
+  underflows, valid real-Gamma and complex-twist periodic Be positions translated by many lattice cells, and a
+  finite near-node Be determinant remain writable without changing positions. Full
+  and mixed are checked separately. This guard validates fresh checkpoint
+  reconstruction; it does not certify a carried cache or arbitrary local energy.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_checkpoint_fresh_state.py::test_checkpoint_save_rejects_fresh_invalid_wavefunction_before_writing
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {rust_enabled: false, invalid_state: zero-determinant}
+    - {rust_enabled: true, invalid_state: zero-determinant}
+    - {rust_enabled: false, invalid_state: nonfinite-coordinate}
+    - {rust_enabled: true, invalid_state: nonfinite-coordinate}
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_checkpoint_fresh_state.py::test_checkpoint_save_preserves_valid_finite_tail_and_small_determinants
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {rust_enabled: false, valid_state: tiny-determinant}
+    - {rust_enabled: true, valid_state: tiny-determinant}
+    - {rust_enabled: false, valid_state: periodic-unwrapped}
+    - {rust_enabled: true, valid_state: periodic-unwrapped}
+    - {rust_enabled: false, valid_state: complex-periodic-unwrapped}
+    - {rust_enabled: true, valid_state: complex-periodic-unwrapped}
+    - {rust_enabled: false, valid_state: near-node}
+    - {rust_enabled: true, valid_state: near-node}
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_checkpoint_fresh_state_mpi.py::test_checkpoint_save_rejects_rank_local_invalid_fresh_state_collectively
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {rust_enabled: false, invalid_state: zero-determinant}
+    - {rust_enabled: true, invalid_state: zero-determinant}
+    - {rust_enabled: false, invalid_state: nonfinite-coordinate}
+    - {rust_enabled: true, invalid_state: nonfinite-coordinate}

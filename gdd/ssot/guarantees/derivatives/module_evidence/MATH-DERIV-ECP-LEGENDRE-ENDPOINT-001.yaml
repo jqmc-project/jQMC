@@ -1,0 +1,33 @@
+id: MATH-DERIV-ECP-LEGENDRE-ENDPOINT-001
+kind: mathematical
+name: Non-local ECP Legendre derivative on the closed interval, including cos theta = +-1
+plain_language: 'For l=0..6, analytic P_l and its derivative remain finite on the original closed interval grid
+  including exact endpoints, adjacent fp64 values and near-endpoint values. Both modes retain the strict coulomb comparison
+  with AD of the tabulated polynomial; these elementary routines use explicit FP64 inputs in both modes. Both modes preserve P_l value equality and the independent endpoint formula
+  P_l''(+-1)=(+-1)^(l-1)l(l+1)/2. The original singular-recurrence negative control retains its strict AD comparison in both modes and requires nonfinite endpoints to fail. Mixed production
+  derivative fidelity is NUM-ORBITAL-ELEMENTARY-DERIVATIVE-MIXED-FIDELITY-001. No force at a singular angular geometry
+  is certified by this elementary test.'
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_legendre_derivative.py::test_legendre_derivative_matches_polynomial_on_closed_interval
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - l: 0
+    - l: 1
+    - l: 2
+    - l: 3
+    - l: 4
+    - l: 5
+    - l: 6
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_legendre_derivative.py::test_legendre_derivative_check_rejects_the_recurrence_form
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - l: 1
+    - l: 2

@@ -1,0 +1,108 @@
+# Lint workflow: the ruff pre-commit hooks declared in .pre-commit-config.yaml
+# (every `ruff` hook and `ruff-format`); rustfmt plus clippy (warnings denied,
+# which covers the rustc warnings) for the jqmc_rs crate (jqmc/rs); and the
+# check that LICENSES/THIRD_PARTY_RUST_CRATES.txt matches jqmc/rs/Cargo.lock.
+# It runs on every pull request and on pushes to main, rc and rc-gh-pages,
+# so contributors who skip `pre-commit install` are still caught here. Like
+# every public workflow, it runs in jqmc-project/jQMC only.
+#
+# The static GDD contract checks run as the local `gdd-contracts` pre-commit
+# hook (`python scripts/gdd_sync.py --check`).
+#
+# To enforce additional ruff rules, fix the violations listed in
+# `lint.extend-ignore` in pyproject.toml and remove them from that list.
+
+name: jQMC public lint
+
+on:
+  push:
+    # Development branches are checked by pull_request; avoid running the
+    # same pre-commit suite twice for every PR update.
+    branches: [main, rc, rc-gh-pages]
+  pull_request:
+    branches: [ "**" ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jqmc-lint-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: ruff lint
+    if: github.repository == 'jqmc-project/jQMC'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
+
+    - name: Cache pre-commit envs
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          pre-commit-${{ runner.os }}-
+
+    - name: Ruff lint (ruff and ruff-format hooks)
+      run: |
+        python -m pip install pre-commit
+        pre-commit run ruff --all-files
+        pre-commit run ruff-format --all-files
+
+  rust-lint:
+    name: rust lint
+    if: github.repository == 'jqmc-project/jQMC'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Pinned so that a new Rust release cannot turn this check red on its own;
+      # raise it together with any lint fixes the new clippy asks for.
+      RUST_TOOLCHAIN: 1.97.1
+      # Lint does not depend on codegen: override .cargo/config.toml target-cpu=native.
+      RUSTFLAGS: ''
+      CARGO_BUILD_JOBS: '2'
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
+
+    # build.rs runs jqmc/rs/generate_setting_consts.py and pyo3 reads the interpreter.
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
+
+    - name: Install the pinned Rust toolchain
+      run: |
+        rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component rustfmt --component clippy
+        rustup run "$RUST_TOOLCHAIN" rustc --version
+        rustup run "$RUST_TOOLCHAIN" cargo clippy --version
+
+    - name: rustfmt
+      run: cargo "+$RUST_TOOLCHAIN" fmt --manifest-path jqmc/rs/Cargo.toml --check
+
+    - name: clippy (rustc and clippy warnings denied)
+      env:
+        PYO3_PYTHON: python
+      run: cargo "+$RUST_TOOLCHAIN" clippy --manifest-path jqmc/rs/Cargo.toml --all-targets --locked -- -D warnings
+
+    # The list is generated from the resolved dependencies of every target;
+    # `cargo fetch` downloads all of them so that the offline `cargo metadata`
+    # of the generator can read each crate's licence files.
+    - name: Third-party Rust licence list is current
+      env:
+        RUSTUP_TOOLCHAIN: ${{ env.RUST_TOOLCHAIN }}
+      run: |
+        cargo fetch --manifest-path jqmc/rs/Cargo.toml --locked
+        python scripts/generate_third_party_licenses.py --check

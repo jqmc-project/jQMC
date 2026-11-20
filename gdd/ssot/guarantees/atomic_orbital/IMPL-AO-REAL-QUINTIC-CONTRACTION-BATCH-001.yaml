@@ -1,0 +1,37 @@
+id: IMPL-AO-REAL-QUINTIC-CONTRACTION-BATCH-001
+kind: implementation
+name: CPU real quintic control-point contraction preserves batching
+plain_language: >-
+  On 17 seeded one-band real K=6 control blocks with identical precomputed weights,
+  CPU XLA batched and single contractions agree under the active ao_eval strict
+  tolerance in full and mixed precision. A separate explicit-fp32-input unit
+  test requires bit equality in both modes; it does not assert that full-mode
+  production evaluates AOs in fp32. No outputs from different modes are compared.
+  Inputs use PCG64 seed 2317, control shape (17,1,6,6,6), and weight shape (17,3,6).
+  No TREXIO, Hamiltonian, electron positions, spin state or cond(G) is involved.
+  This route parity does not certify coordinate or spline-weight generation,
+  the complete orbital evaluator, complex splines, other band counts or GPU execution.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_batch_invariance.py::test_real_quintic_control_contraction_batch_single
+    executable_checks:
+      contraction-parity:
+        site: tests/test_jqmc_kernel/test_bspline_batch_invariance.py::test_real_quintic_control_contraction_batch_single#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: cpu-batched-contraction, expression: actual}
+        reference: {role: cpu-single-contractions, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_batch_invariance.py::test_fp32_real_quintic_control_contraction_batch_single_bits
+    executable_checks:
+      fp32-contraction-bits:
+        site: tests/test_jqmc_kernel/test_bspline_batch_invariance.py::test_fp32_real_quintic_control_contraction_batch_single_bits#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: cpu-batched-fp32-bits, expression: actual_bits}
+        reference: {role: cpu-single-fp32-bits, expression: reference_bits}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

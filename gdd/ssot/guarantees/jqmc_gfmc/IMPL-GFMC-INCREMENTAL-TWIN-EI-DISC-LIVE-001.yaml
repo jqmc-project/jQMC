@@ -1,0 +1,31 @@
+id: IMPL-GFMC-INCREMENTAL-TWIN-EI-DISC-LIVE-001
+kind: implementation
+name: Driver-level incremental versus full-recompute GFMC twin in which the carried ei_disc rows are consumed (XLA)
+plain_language: >-
+  GFMC_t and GFMC_n production runs (incremental interval potential) and JQMC_GFMC_POT_FULL_RECOMPUTE=1 runs on
+  H4_pbc_ae_cart.h5 (periodic, all-electron, J1 + J2; seed 3446, two walkers, three stored steps, alat 0.30) start with
+  same-spin pairs 0.1 bohr on either side of a proton, inside the alat floor and across the exchange node. Stored w_L,
+  e_L and e_L2 agree in real and imaginary parts at the incremental-twin tolerance, walkers and PRNG keys are
+  byte-identical, the incremental branch is traced with positive per-walker update counts and the twin reports zeros.
+  Liveness is a verdict of its own: with the production advance replaced by one that writes the moved electron's
+  ei_disc row as 1.5 times its value, or does not write it, the same comparison fails for both drivers, so the carried
+  ei_disc row update reaches the stored observables in this configuration (from the random start of
+  IMPL-GFMC-INCREMENTAL-TWIN-AE-PBC-DRIVER-001 both faults leave every stored value bit-identical). Full and mixed are
+  judged separately with the same twin policy. Whether a floor-active (discretized differs from bare) moved row is
+  selected at driver level is not asserted here; the state-level check is IMPL-GFMC-INCREMENTAL-POT-AE-PBC-001.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_incremental_twin_xla.py::test_gfmc_xla_incremental_twin_ae_pbc_ei_disc_live
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: t}
+    - {driver: n}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_incremental_twin_xla.py::test_gfmc_xla_ei_disc_twin_detects_carried_row_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: t, fault: row_times_1p5}
+    - {driver: t, fault: row_not_written}
+    - {driver: n, fault: row_times_1p5}
+    - {driver: n, fault: row_not_written}

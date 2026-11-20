@@ -1,0 +1,67 @@
+id: IMPL-MCMC-COMPLEX-ECP-PUBLICATION-001
+kind: implementation
+name: Actual VMC sampling publishes and consumes complex ECP observables
+plain_language: >-
+  The committed lithium_k025_cart.h5 untied-MO, J2-exp fixture runs actual MCMC
+  with seed 3446, eight walkers, one measured step, Dt=0.5, epsilon_AS=0 and
+  identity ECP rotation. No energy or derivative buffers are injected. Stored
+  complex energies and O/D sources, and their real optimization coordinates,
+  agree with re-evaluation at the actual sampled positions. The coordinate
+  force uses complex covariance before its real-coordinate projection.
+  Legacy get_gF and get_aH consume identical stored arrays according to exact
+  delete-one-bin and nonsymmetric-bra algebra, including mean(D), at the
+  existing host-reduction budget. Full/mixed forward comparisons use their
+  own strict/medium zone policies; this is deterministic fixed-sample algebra,
+  not a Monte Carlo energy confidence interval or a mixed-versus-full test.
+verdict_methods: [VM-MATH-COMPLEX-ECP-CONSUMPTION-001]
+required_evidence:
+- verdict_method: VM-MATH-COMPLEX-ECP-CONSUMPTION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_runtime_publication_preserves_complex_sources
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_same_mode#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_runtime_generalized_force_uses_complex_energy
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_same_mode#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_legacy_get_gf_exact_delete_one_bin_consumption
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_algebra#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'actual'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-FIXED-SAMPLE-FP64-001}
+          mixed: {policy: CMP-FIXED-SAMPLE-FP64-001}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_legacy_get_ah_includes_nonsymmetric_bra
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_algebra#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'actual'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-FIXED-SAMPLE-FP64-001}
+          mixed: {policy: CMP-FIXED-SAMPLE-FP64-001}
+    required_precision_modes: [full, mixed]

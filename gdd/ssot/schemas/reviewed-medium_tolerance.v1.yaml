@@ -1,0 +1,178 @@
+{
+  "schema_format": 1,
+  "schema_id": "reviewed-medium_tolerance.v1",
+  "match": {
+    "path": "gdd/ssot/inventories/medium_tolerance.yaml"
+  },
+  "document_schema_version": 1,
+  "required_top_level": [
+    "schema_version",
+    "vocabularies",
+    "allowed_sites",
+    "migration_sites",
+    "document"
+  ],
+  "optional_top_level": [],
+  "runtime_schema": {
+    "type": "mapping",
+    "properties": {
+      "schema_version": {
+        "type": "integer",
+        "const": 1
+      },
+      "vocabularies": {
+        "type": "mapping",
+        "properties": {
+          "allowed_classes": {
+            "type": "sequence",
+            "items": {
+              "type": "string",
+              "min_length": 1
+            },
+            "min_items": 1,
+            "unique_items": true
+          },
+          "migration_classes": {
+            "type": "sequence",
+            "items": {
+              "type": "string",
+              "min_length": 1
+            },
+            "min_items": 1,
+            "unique_items": true
+          }
+        },
+        "required": [
+          "allowed_classes",
+          "migration_classes"
+        ],
+        "additional_properties": false
+      },
+      "allowed_sites": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "site": {
+              "type": "string",
+              "min_length": 1
+            },
+            "class": {
+              "type": "string",
+              "min_length": 1,
+              "enum_from": "vocabularies.allowed_classes"
+            },
+            "reason": {
+              "type": "string",
+              "min_length": 1
+            }
+          },
+          "required": [
+            "site",
+            "class",
+            "reason"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 0,
+        "unique_by": [
+          "site"
+        ]
+      },
+      "migration_sites": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "site": {
+              "type": "string",
+              "min_length": 1
+            },
+            "class": {
+              "type": "string",
+              "min_length": 1,
+              "enum_from": "vocabularies.migration_classes"
+            },
+            "reason": {
+              "type": "string",
+              "min_length": 1
+            }
+          },
+          "required": [
+            "site",
+            "class",
+            "reason"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 0,
+        "unique_by": [
+          "site"
+        ]
+      },
+      "document": {
+        "type": "mapping",
+        "properties": {
+          "id": {
+            "type": "string",
+            "min_length": 1,
+            "const": "jqmc.inventories.medium-tolerance"
+          },
+          "version": {
+            "type": "integer",
+            "const": 1
+          },
+          "title": {
+            "type": "string",
+            "min_length": 1
+          },
+          "lifecycle": {
+            "type": "string",
+            "min_length": 1,
+            "const": "pre-cutover"
+          },
+          "purpose": {
+            "type": "string",
+            "min_length": 1
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "title",
+          "lifecycle",
+          "purpose"
+        ],
+        "additional_properties": false
+      }
+    },
+    "required": [
+      "schema_version",
+      "vocabularies",
+      "allowed_sites",
+      "migration_sites",
+      "document"
+    ],
+    "additional_properties": false,
+    "disjoint_sections": [
+      {
+        "sections": [
+          "allowed_sites",
+          "migration_sites"
+        ],
+        "fields": [
+          "site"
+        ]
+      }
+    ]
+  },
+  "document_block": {
+    "required_fields": [
+      "id",
+      "version",
+      "title",
+      "lifecycle",
+      "purpose"
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+id: IMPL-DRVH-EXTERNAL-STOP-001
+kind: implementation
+name: Real external stop requests preserve non-twist driver continuation
+plain_language: >-
+  The root owns control-file creation and removal; the real TOML reader broadcasts
+  its stop decision, treating missing files, malformed TOML and missing keys as
+  no request. Contradictory rank-local files on two actual MPI ranks distinguish
+  broadcast from independent reads. With committed H2 AE Cartesian MOs, Pade J2=1,
+  two walkers and seed 12345, a real request stops XLA MCMC after 1 of 8
+  measurements, GFMC_n/GFMC_t after 30 of 40 branching steps, and non-twist VMC
+  after 1 of 2 J2-only SR updates. CLI output identifies stop_flag rather than
+  max_time, normal termination removes the file and writes a continuable checkpoint.
+  Restart finishes the uninterrupted trajectory: positions and RNG are exact;
+  histories and optimized J2 use unchanged central same-mode strict tolerances.
+  Native MCMC executes its real energy chunk, stops at 500 of 600 measurements
+  and resumes the remaining 100. A two-rank XLA MCMC request stops both ranks at
+  step 1, saves/merges/loads a checkpoint and continues to 8. This does not claim
+  native GFMC, every Hamiltonian, or multi-rank optimizer/native continuation;
+  twist optimizer stop coverage remains in IMPL-TA-OPT-TIME-BUDGET-001.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_external_stop_drivers.py::test_external_stop_keeps_real_checkpoint_continuation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{job_type: mcmc}, {job_type: lrdmc-bra}, {job_type: lrdmc-tau}, {job_type: vmc}]
+  - pytest_node: tests/test_rs_kernel/test_external_stop_chunk.py::test_native_chunk_external_stop_checkpoint_continues
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_stop_coordination_mpi.py::test_external_control_lifecycle_and_root_read_are_shared
+    required_precision_modes: [full, mixed]
+    required_execution_profiles: [{name: mpi, world_size: 2}]
+    required_parameter_cases: [{content: 'true'}, {content: 'false'}, {content: missing}, {content: malformed}, {content: missing-key}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_stop_coordination_mpi.py::test_non_twist_mcmc_stop_checkpoint_continues_on_every_rank
+    required_precision_modes: [full, mixed]
+    required_execution_profiles: [{name: mpi, world_size: 2}]
+    required_parameter_cases: [{}]

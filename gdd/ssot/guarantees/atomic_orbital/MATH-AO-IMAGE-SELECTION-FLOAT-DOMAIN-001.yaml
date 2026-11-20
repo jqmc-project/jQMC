@@ -1,0 +1,21 @@
+id: MATH-AO-IMAGE-SELECTION-FLOAT-DOMAIN-001
+kind: mathematical
+name: Periodic AO closest-approach image selection is exact in float64 on extreme cell bases
+plain_language: >-
+  The box closest-approach test behind periodic AO image selection (_images_within_rcut_from_box, shared by the per-atom
+  and cell-cell selectors) never forms or inverts the full cell Gram matrix: distances are Cartesian |v @ cell| and the
+  two-free-coordinate projections are solved on a Lagrange-Gauss-reduced pair of cell vectors. For extreme but valid
+  bases (the det-1 shear with rows (1, 1e8, 0), (0, 1, 0), (0, 0, 1) whose float64 Gram matrix is singular, the same shear
+  of a triclinic cell, a 1e6 double shear, a 1e-3/1/1e3 anisotropic cell, the non-reduced basis [[1,-6,-7],[0,7,11],[0,-2,-3]] and two unimodular
+  triclinic bases with entries up to 13634), for cell-cell and per-atom boxes over the candidate cube [-3, 3]^3, the kept
+  set equals the set whose exact rational-arithmetic Cartesian closest-approach distance is within r_cut (r_cut chosen in
+  a gap of the exact distances). A numerically singular or non-finite cell (volume <= float64 eps * |a| |b| |c|) raises
+  ValueError instead of returning an image set. Full and mixed are each required.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_image_selection_on_extreme_bases_matches_exact_rational_closest_approach
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

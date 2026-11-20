@@ -1,0 +1,42 @@
+schema_version: 1
+document:
+  id: jqmc._twist_average
+  version: 1
+  lifecycle: cutover
+  title: Twist-average guarantees
+  purpose: 'Which test guarantees what, by which verdict method, for Brillouin-zone twist averaging: BZ-mean estimators, input
+    layout, distribution, and integration.'
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - MATH-TA-BZ-MEAN-IDENTITIES-001
+  overrides:
+    jqmc._twist_average._aggregate_twist_mpc:
+    - MATH-TA-MPC-BZ-AGGREGATION-001
+    jqmc._twist_average._twist_sampler_seed:
+    - MATH-TA-BZ-MEAN-IDENTITIES-001
+    - MATH-TA-MPC-BZ-AGGREGATION-001
+    - IMPL-TA-DISTRIBUTION-001
+    jqmc._twist_average.TwistAverageMPC:
+    - MATH-TA-MPC-BZ-AGGREGATION-001
+    - IMPL-TA-MPC-OPTIONAL-ROUTING-001
+    jqmc._twist_average.TwistAverageResult:
+    - MATH-TA-BZ-MEAN-IDENTITIES-001
+    - IMPL-TA-MPC-OPTIONAL-ROUTING-001
+    jqmc._twist_average.run_twist_average_from_hamiltonians:
+    - MATH-TA-BZ-MEAN-IDENTITIES-001
+    - MATH-TA-MPC-BZ-AGGREGATION-001
+    - IMPL-TA-MPC-OPTIONAL-ROUTING-001
+    jqmc._twist_average.run_twist_average_gfmc:
+    - MATH-TA-BZ-MEAN-IDENTITIES-001
+    - MATH-TA-MPC-BZ-AGGREGATION-001
+    - IMPL-TA-MPC-OPTIONAL-ROUTING-001
+    jqmc._twist_average.run_twist_average_optimize:
+    - IMPL-TA-BYTE-IDENTITY-001
+    - IMPL-TA-OPT-DUMP-001
+    - IMPL-TA-OPT-TIME-BUDGET-001
+    jqmc._twist_average._twist_k_point_from_hamiltonian:
+    - IMPL-TA-DISTRIBUTION-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

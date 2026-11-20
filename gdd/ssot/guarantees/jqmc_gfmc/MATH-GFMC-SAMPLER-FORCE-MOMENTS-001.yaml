@@ -1,0 +1,80 @@
+id: MATH-GFMC-SAMPLER-FORCE-MOMENTS-001
+kind: mathematical
+name: Sampler force moments against independent fixed-state primal derivatives
+plain_language: >-
+  After one serial conventional or load-balanced interval, the recorded local energies and stored
+  HF, Pulay and E_L*Pulay moments must equal independently differentiated primal values at the same
+  pre-reconfiguration walker coordinates. The committed H2 AE Cartesian SD fixture has no Jastrow,
+  one up and one down electron, and three explicit asymmetric initial configurations with fixed
+  driver keys. SWCT is verified through an independent coordinate map and its log Jacobian;
+  Pathak-Wagner factors exercise disabled, exterior and nontrivial interior regimes, including
+  factors above one. Unequal weights and nonseparable cross moments must have detectable effects.
+  XLA and Rust routes, SWCT off/on and all three PW regimes are required in both precision modes,
+  using same-mode zone strict (full) or medium (mixed) element-wise comparisons, never a statistical
+  confidence interval. Actual projection weights are given reference inputs, not an independent
+  guarantee of their probability law. This certifies molecular sampler-to-buffer moment formation,
+  not physical ground-state forces, stress, ECP/PBC/complex kernels or distributed reduction.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_sampler_force_reference.py::test_gfmc_sampler_force_moments_match_warped_primal_derivatives
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {algorithm: conventional, backend: xla, use_swct: false, regime: disabled}
+    - {algorithm: conventional, backend: xla, use_swct: false, regime: outside}
+    - {algorithm: conventional, backend: xla, use_swct: false, regime: interior}
+    - {algorithm: conventional, backend: xla, use_swct: true, regime: disabled}
+    - {algorithm: conventional, backend: xla, use_swct: true, regime: outside}
+    - {algorithm: conventional, backend: xla, use_swct: true, regime: interior}
+    - {algorithm: conventional, backend: rust, use_swct: false, regime: disabled}
+    - {algorithm: conventional, backend: rust, use_swct: false, regime: outside}
+    - {algorithm: conventional, backend: rust, use_swct: false, regime: interior}
+    - {algorithm: conventional, backend: rust, use_swct: true, regime: disabled}
+    - {algorithm: conventional, backend: rust, use_swct: true, regime: outside}
+    - {algorithm: conventional, backend: rust, use_swct: true, regime: interior}
+    - {algorithm: load-balanced, backend: xla, use_swct: false, regime: disabled}
+    - {algorithm: load-balanced, backend: xla, use_swct: false, regime: outside}
+    - {algorithm: load-balanced, backend: xla, use_swct: false, regime: interior}
+    - {algorithm: load-balanced, backend: xla, use_swct: true, regime: disabled}
+    - {algorithm: load-balanced, backend: xla, use_swct: true, regime: outside}
+    - {algorithm: load-balanced, backend: xla, use_swct: true, regime: interior}
+    - {algorithm: load-balanced, backend: rust, use_swct: false, regime: disabled}
+    - {algorithm: load-balanced, backend: rust, use_swct: false, regime: outside}
+    - {algorithm: load-balanced, backend: rust, use_swct: false, regime: interior}
+    - {algorithm: load-balanced, backend: rust, use_swct: true, regime: disabled}
+    - {algorithm: load-balanced, backend: rust, use_swct: true, regime: outside}
+    - {algorithm: load-balanced, backend: rust, use_swct: true, regime: interior}
+    executable_checks:
+      local-energy:
+        site: tests/test_jqmc_kernel/test_gfmc_sampler_force_reference.py::test_gfmc_sampler_force_moments_match_warped_primal_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: recorded-continuum-energy, expression: actual_energy}
+        reference: {role: independent-continuum-leaf-energy, expression: energy}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+      hf-moment:
+        site: tests/test_jqmc_kernel/test_gfmc_sampler_force_reference.py::test_gfmc_sampler_force_moments_match_warped_primal_derivatives#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: stored-hf-moment, expression: actual_hf}
+        reference: {role: independently-differentiated-energy-moment, expression: expected_hf}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+      pulay-moment:
+        site: tests/test_jqmc_kernel/test_gfmc_sampler_force_reference.py::test_gfmc_sampler_force_moments_match_warped_primal_derivatives#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: stored-pulay-moment, expression: actual_pp}
+        reference: {role: independently-differentiated-log-amplitude-moment, expression: expected_pp}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+      energy-pulay-cross-moment:
+        site: tests/test_jqmc_kernel/test_gfmc_sampler_force_reference.py::test_gfmc_sampler_force_moments_match_warped_primal_derivatives#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: stored-energy-pulay-cross-moment, expression: actual_cross}
+        reference: {role: independent-per-walker-energy-pulay-product, expression: expected_cross}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}

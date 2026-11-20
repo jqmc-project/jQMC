@@ -1,0 +1,26 @@
+id: PHY-RS-SINGLE-MOVE-PBC-LATTICE-TRANSLATION-001
+kind: physical
+name: Native periodic single move is invariant under lattice translations of the walkers and matches from-scratch ratios
+plain_language: >-
+  Given a periodic cell, the native single-electron Metropolis move evaluates its determinant and AO-J3 orbitals at
+  home-cell-wrapped coordinates, exactly as the production sweep does, while storing the unwrapped walker. With the
+  up electrons translated by 0, 1 and 3 lattice vectors a0 and the down electrons by the opposite multiples of a1, on
+  the canonical periodic rhombohedral Be cell (Z = 4, no Jastrow) and on the committed lithium.h5 Gamma cell with
+  J1 + J2 + AO-J3 and with J1 + J2 + DTN, six fixed moves must give a determinant ratio equal to det G(new) / det G(old)
+  with both geminals rebuilt from scratch, a probability ratio equal to (exp(J(new) - J(old)) times that ratio)
+  squared from the from-scratch Jastrow, a proposal ratio equal to the Kato ratio at a brute-force minimum-image
+  distance, and the same accept decision at every translation and as the one-move native sweep.
+  Correctness against the from-scratch references is judged in full precision. In mixed precision the ratios at
+  every translation must equal the mixed home-cell ratios under the strict ao_eval / det_ratio / jastrow_ratio zone
+  policy, and the accept decisions of the single move and of the one-move sweep must equal those of the same move
+  rebuilt independently in full precision at the home cell.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_single_move.py::test_single_move_pbc_lattice_translated_walkers_match_from_scratch_ratios
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-015}
+    - {pattern: pbc_gamma_sphepgto_j123}
+    - {pattern: pbc_gamma_sphepgto_jdtn}

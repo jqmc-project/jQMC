@@ -1,0 +1,19 @@
+id: IMPL-OPT-HOST-SR-TARGET-COST-001
+kind: implementation
+name: Host SR prepares the tied coordinate system once
+plain_language: >-
+  Wide and tall host SR each prepare one system using one full-size
+  log-derivative transform (the samples); the global weighted mean
+  transforms only the one summed row of the binned jackknife moments.
+  On a one-dimensional sample axis the J3 tied coordinate transform visits
+  at most eight rows per adjoint block. The tall layout holds the gathered
+  data read-only. Full and Mixed host tests
+  compare prepared rows and the tall layout with ordered COO accumulation
+  and verify the restored update against a dense independent solve.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_host_sr_prepares_once_and_bounds_tied_workspace
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{expected_regime: wide}, {expected_regime: tall}]

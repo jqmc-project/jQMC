@@ -1,0 +1,41 @@
+id: IMPL-MISCS-INPUT-GENERATOR-001
+kind: implementation
+name: Parameter registry and TOML emission contracts
+plain_language: Parameter resolution keeps explicit values, fills None from defaults, returns deep copies with the declared
+  sections, and TOML emission writes atomically, round-trips, formats primitives and nested structures, and truncates long
+  comments; unknown job types and missing required fields are hard errors that list the valid choices.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-IMPL-ROUTE-PARITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestResolveWithDefaults::test_explicit_value_kept
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestResolveWithDefaults::test_none_replaced_by_default
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestResolveWithDefaults::test_unknown_key_resolves_to_none
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestResolveWithDefaults::test_unknown_section_returns_user_values_only
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestResolveWithDefaults::test_mixed_explicit_and_none
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGetDefaultParameters::test_returns_control_and_job_type_sections
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGetDefaultParameters::test_control_job_type_field_set
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGetDefaultParameters::test_returned_dict_is_deep_copy
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGenerateInputToml::test_emits_file_at_filename
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGenerateInputToml::test_with_comments_includes_comment_lines
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGenerateInputToml::test_atomic_write_replaces_existing
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGenerateInputToml::test_no_tmpfile_left_behind
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGenerateInputToml::test_overrides_can_add_new_section
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGenerateInputToml::test_overrides_with_scalar_value_replaces_section
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestDumpWithComments::test_emits_section_headers
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestDumpWithComments::test_short_comment_kept_unchanged
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestDumpWithComments::test_truncates_long_comments_at_120_chars
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestTomlValueFormatter::test_primitive_formatting
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestTomlValueFormatter::test_nested_list_of_dicts
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestTomlValueFormatter::test_fallback_to_repr_for_unsupported_type
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGenerateInputToml::test_round_trip
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGetDefaultParameters::test_unknown_job_type_raises
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGetDefaultParameters::test_error_message_lists_valid_choices
+  - pytest_node: tests/test_jqmc_workflow/test_input_generator.py::TestGenerateInputToml::test_missing_required_field_raises

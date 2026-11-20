@@ -1,0 +1,15 @@
+schema_version: 1
+document:
+  id: jqmc.orbital_tiling_geometry
+  version: 1
+  lifecycle: cutover
+  authority: provisional-before-gdd-cutover
+  title: Tiled orbital physical coordinate continuation
+  purpose: Primitive image to physical-supercell atom mapping without expanded per-k AO tables.
+symbol_contract:
+  status: governed
+  default_guarantee_refs: [MATH-TILING-PHYSICAL-CONTINUATION-001]
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

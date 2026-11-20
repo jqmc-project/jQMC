@@ -1,0 +1,153 @@
+id: NUM-DERIVAPI-ACTIVE-DTN-GAMMA-MIXED-FIDELITY-001
+kind: numerical
+name: Active DTN gamma derivatives preserve independently rebuilt Full analytical fidelity
+plain_language: All eight original periodic AE cells and both ln_Psi/e_L quantities use the same fixed PCG64(42)
+  candidate configurations 0 and 9. Each walker compares its Mixed analytical gamma block with an independently
+  reconstructed Full analytical block at the unchanged central parameter_derivative infinity-norm budget. Policy-dependent
+  QE projection caches are cleared before each independent build; both calls use their actual running geminal inverse
+  and the full c-axis mask. Gamma-dependent DTN forward arithmetic and AD are float32 in Mixed while the analytical
+  parameter derivative is float64; this is not an AO-only precision distinction. All original 27-image active-pair,
+  cond_2(G)<700, nonempty, shape, finite and zero-block rejection controls remain. The original same-policy AD block
+  is retained only as the reference for the zero-block rejection, at the captured entry-Mixed six-zone medium band
+  in both builds. Full retains the original strict mathematical AD test. No input, case, threshold, central budget
+  or scientific scope is reduced.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_dtn_active_derivative_fixture.py::test_active_dtn_gamma_matches_autodiff
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - SD
+      quantity: ln_Psi
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - SD
+      quantity: e_L
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - AGPn
+      quantity: ln_Psi
+    - cell:
+      - bspline
+      - DTN
+      - AE
+      - pbc_gamma
+      - AGPn
+      quantity: e_L
+    - cell:
+      - bspline_complex
+      - DTN
+      - AE
+      - twist
+      - SD
+      quantity: ln_Psi
+    - cell:
+      - bspline_complex
+      - DTN
+      - AE
+      - twist
+      - SD
+      quantity: e_L
+    - cell:
+      - composite
+      - DTN
+      - AE
+      - twist
+      - SD
+      quantity: ln_Psi
+    - cell:
+      - composite
+      - DTN
+      - AE
+      - twist
+      - SD
+      quantity: e_L
+    - cell:
+      - composite
+      - DTN
+      - AE
+      - twist
+      - AGPn
+      quantity: ln_Psi
+    - cell:
+      - composite
+      - DTN
+      - AE
+      - twist
+      - AGPn
+      quantity: e_L
+    - cell:
+      - plane_wave
+      - DTN
+      - AE
+      - pbc_gamma
+      - SD
+      quantity: ln_Psi
+    - cell:
+      - plane_wave
+      - DTN
+      - AE
+      - pbc_gamma
+      - SD
+      quantity: e_L
+    - cell:
+      - plane_wave
+      - DTN
+      - AE
+      - pbc_gamma
+      - AGPn
+      quantity: ln_Psi
+    - cell:
+      - plane_wave
+      - DTN
+      - AE
+      - pbc_gamma
+      - AGPn
+      quantity: e_L
+    - cell:
+      - plane_wave_complex
+      - DTN
+      - AE
+      - twist
+      - AGPn
+      quantity: ln_Psi
+    - cell:
+      - plane_wave_complex
+      - DTN
+      - AE
+      - twist
+      - AGPn
+      quantity: e_L
+    executable_checks:
+      active-gamma-independent-full:
+        site: tests/test_jqmc_kernel/test_dtn_active_derivative_fixture.py::_compare_active_gamma_mixed#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-production-gamma-per-walker
+          expression: mixed_gamma[walker_index]
+        reference:
+          role: independently-rebuilt-full-analytical-gamma-per-walker
+          expression: full_gamma[walker_index]
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+        iterations:
+          variable: walker
+          required_values:
+          - candidate-0
+          - candidate-9

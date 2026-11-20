@@ -25,7 +25,7 @@ a tree view with status information.
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -50,7 +50,7 @@ import toml
 import typer
 
 from ._config import get_config_dir, template_dir
-from ._state import WorkflowStatus, get_jobs, update_job, update_status
+from .state import WorkflowStatus, get_jobs, update_job, update_status
 
 logger = getLogger("jqmc-workflow").getChild(__name__)
 
@@ -284,13 +284,13 @@ class Monitor:
         logger.info(f"Checking job {stored_job_id} on {server} (workflow: {e['label']})...")
 
         try:
-            from ._machine import Machine
+            from .machine import Machine
 
             machine = Machine(server)
             try:
                 job_list_text = machine.get_job_list_as_text()
 
-                # PBS may store "1428989.opbs" but qstat shows "1428989".
+                # PBS may store "1000001.pbs" but qstat shows "1000001".
                 jid_short = stored_job_id.split(".")[0]
                 found = any(stored_job_id in line or jid_short in line for line in job_list_text)
                 if found:
@@ -322,7 +322,7 @@ class Monitor:
         else:
             logger.info(f"Deleting job {stored_job_id} on {server} (workflow: {e['label']})...")
             try:
-                from ._machine import Machine
+                from .machine import Machine
 
                 machine = Machine(server)
                 try:
@@ -404,7 +404,7 @@ def show(
     _setup_logger(log_level)
     _bootstrap_config()
 
-    from ._header_footer import _print_footer, _print_header
+    from .launcher import _print_footer, _print_header
 
     _print_header()
 
@@ -428,7 +428,7 @@ def check(
     _setup_logger(log_level)
     _bootstrap_config()
 
-    from ._header_footer import _print_footer, _print_header
+    from .launcher import _print_footer, _print_header
 
     _print_header()
 
@@ -454,7 +454,7 @@ def delete(
     _setup_logger(log_level)
     _bootstrap_config()
 
-    from ._header_footer import _print_footer, _print_header
+    from .launcher import _print_footer, _print_header
 
     _print_header()
 

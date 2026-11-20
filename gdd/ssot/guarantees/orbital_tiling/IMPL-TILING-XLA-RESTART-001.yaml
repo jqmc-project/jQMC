@@ -1,0 +1,30 @@
+id: IMPL-TILING-XLA-RESTART-001
+kind: implementation
+name: Frozen tiled SDs retain complex energies and primitive aliases across XLA restart
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  Energy-only XLA sampling reads final occupied primitive-block orbitals. Complex
+  storage is selected by the determinant dtype rather than AO-leaf classification.
+  Single-rank MCMC for PW, B-spline and Cartesian/spherical pGTO, and GFMC_n/GFMC_t
+  for PW preserve saved walkers, RNG keys and complex energy histories through
+  checkpoint consolidation and reload. Continuation from the saved state agrees
+  with the original driver. Native drivers, forces, orbital optimization, MPI
+  restart and independent LSDA sampling are outside this guarantee.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_runtime.py::test_tiled_xla_sampling_checkpoint_continuation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: MCMC, backend: pw}
+    - {driver_name: MCMC, backend: bspline}
+    - {driver_name: MCMC, backend: pgto_cart}
+    - {driver_name: MCMC, backend: pgto_sphe}
+    - {driver_name: GFMC_n, backend: pw}
+    - {driver_name: GFMC_t, backend: pw}
+    - {driver_name: MCMC, backend: composite_cart}
+    - {driver_name: MCMC, backend: composite_sphe}

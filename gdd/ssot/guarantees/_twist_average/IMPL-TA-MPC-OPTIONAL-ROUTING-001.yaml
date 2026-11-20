@@ -1,0 +1,11 @@
+id: IMPL-TA-MPC-OPTIONAL-ROUTING-001
+kind: implementation
+name: MPC twist results are strictly optional
+plain_language: MPC-disabled twist runs do not evaluate MPC estimators and return no MPC result, preserving the existing
+  pure-Ewald route without synthetic zero corrections or extra work.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_mpc.py::test_mpc_false_keeps_result_absent_and_does_not_call_mpc_estimators

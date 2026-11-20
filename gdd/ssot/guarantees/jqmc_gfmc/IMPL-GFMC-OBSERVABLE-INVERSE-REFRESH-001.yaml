@@ -1,0 +1,42 @@
+id: IMPL-GFMC-OBSERVABLE-INVERSE-REFRESH-001
+kind: implementation
+name: GFMC observable boundary hands over an inverse within the single refresh rule after a near-singular start
+plain_language: >-
+  The carried geminal inverse follows the single refresh rule (inside a
+  projection interval the carried inverse is screened after every hop by the probe residual against the
+  geminal the streaming caches imply and rebuilt from scratch when the residual exceeds
+  SM_INVERSE_REFRESH_RESIDUAL_THRESHOLD). On the original input (H4 periodic AE, exponential J2, PCG64 seed
+  2025 coordinates with the first same-spin pair 1e-3 Bohr apart, three offset walkers, alat 0.3, seed 34, fixed
+  mesh, force and stress on, SWCT off), one GFMC_t interval (tau 0.03) and one GFMC_n interval (16 projections)
+  fire the in-interval refresh on both backends. XLA: the inverse handed to the boundary observables, captured
+  before any boundary refresh, has a probe residual of at most the threshold for every walker; its geminal equals
+  the geminal rebuilt at the boundary positions (ao_eval/det_eval strict), and the fast Coulomb energy computed
+  from it (det_eval/wf/coulomb strict; on this all-electron input the route does not consume the inverse) equals
+  that of the fresh route, the pseudo-inverse of that geminal; GFMC_t also keeps the stored e_L and w_L equal to
+  the GFMC_T_OBS_FRESH_INV run.
+  Rust: every force fold-in takes the projection-inverse handoff and none is screened out (the boundary residual
+  is at most the threshold for every walker, route counters 64/65), and the stored e_L and w_L equal those of the
+  fresh-factorization route (threshold 0 at the boundary). Without the in-interval refresh the boundary residual is
+  2e-9 to 9e-2 and every one of these nodes fails. Raw inverse entries and the force/stress estimators are not
+  compared at the strict pair: at cond(G) ~ 1e5-1e6 they amplify the admitted residual. Neither
+  are the fast local energy, the continuum kinetic energies per electron and the
+  discretized kinetic mesh elements of the handed-over inverse: they are ratios with one row or column of G
+  replaced and carry the same cond(G) x residual class (at cond(G) 5.8e5 a carried inverse whose residual is the
+  size of a fresh factorization's put the mesh ratios 169x and the kinetic elements 1.4x over the strict budget
+  against an exact rational oracle on jax 0.7.2, 0.8x on jax 0.10.2, while the fresh pseudo-inverse stayed within
+  0.005x), so no residual threshold can hold that comparison. Full and mixed are judged
+  separately. The local energies used inside a projection interval (propagation weights) are covered by the
+  interval guarantees of the long production chains.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_sm_inverse_refresh_gfmc.py::test_gfmc_t_carried_observable_inverse_matches_fresh_inverse
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_sm_inverse_refresh_gfmc.py::test_gfmc_n_carried_observable_inverse_matches_same_g_inverse
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_sm_inverse_refresh_gfmc_native.py::test_native_gfmc_projection_inverse_handoff_matches_fresh_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{algorithm: t}, {algorithm: n}]

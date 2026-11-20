@@ -1,0 +1,18 @@
+id: IMPL-RS-REAL-DISPATCH-COMPLEX-ONLY-J3-REJECTED-001
+kind: implementation
+name: A J3 orbital that only the complex native path can evaluate is rejected by the real native local energy
+plain_language: >-
+  When a real (Gamma) determinant carries an active J3 whose orbital the real native parser cannot represent (a
+  complex plane-wave or B-spline leaf or composite child, a complex pGTO with a nonzero k_point, or MO coefficients
+  with a nonzero imaginary part), the real native local energy must raise NotImplementedError instead of returning
+  the energy of the wavefunction without its J3. Evidence: the real Li_gamma determinant of
+  MATH-RS-REAL-DISPATCH-GAMMA-COMPLEX-PGTO-COMPOSITE-J3-ENERGY-001 with the J3 constant child replaced by a
+  phase-free (k = 0) complex plane wave; both the real periodic native context and the free real local-energy
+  kernel raise NotImplementedError naming the complex native path. Full and mixed are judged separately.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_real_gamma_complex_pgto_j3_composite.py::test_real_dispatch_complex_only_composite_j3_is_rejected_not_dropped
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

@@ -1,0 +1,61 @@
+id: IMPL-COUL-WATER-J123-MESH-001
+kind: implementation
+name: Water J123 complete nonlocal ECP mesh route parity
+plain_language: >-
+  The committed water_ccecp_ccpvqz.h5 SD/MO spherical-GTO input, with
+  nonzero exp J1/exp J2/MO J3 (PCG64 seed 31), retains every nonlocal
+  mesh configuration and contribution when batching replaces scalar
+  assembly. One 4-up/4-down electron configuration uses PCG64 seed 0,
+  uniform [-1,1] coordinates, without rejection or cond(G) screening.
+  All-pairs and nearest 1/3 nuclei, quadrature 6/18 and identity rotations
+  are mandatory in full and mixed at the existing Coulomb strict policy.
+  Compare the complete coordinate bijection, both spin arrays, individual
+  weighted contributions and total. The scalar debug assembler shares
+  Jastrow leaves: this is route parity, not an independent Jastrow formula
+  or a guarantee for periodic, carried-inverse or arbitrary inputs.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_water_jastrow_mesh.py::test_water_j123_ecp_whole_mesh_matches_scalar_assembly
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {quadrature: 6, family: all_pairs, neighbors: null}
+    - {quadrature: 6, family: nearest_neighbors, neighbors: 1}
+    - {quadrature: 6, family: nearest_neighbors, neighbors: 3}
+    - {quadrature: 18, family: all_pairs, neighbors: null}
+    - {quadrature: 18, family: nearest_neighbors, neighbors: 1}
+    - {quadrature: 18, family: nearest_neighbors, neighbors: 3}
+    executable_checks:
+      up-configurations:
+        site: tests/test_jqmc_kernel/test_ecp_water_jastrow_mesh.py::test_water_j123_ecp_whole_mesh_matches_scalar_assembly#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: batched-up-configurations, expression: actual_up}
+        reference: {role: scalar-debug-up-configurations, expression: reference_up}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+      down-configurations:
+        site: tests/test_jqmc_kernel/test_ecp_water_jastrow_mesh.py::test_water_j123_ecp_whole_mesh_matches_scalar_assembly#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: batched-down-configurations, expression: actual_down}
+        reference: {role: scalar-debug-down-configurations, expression: reference_down}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+      mesh-contributions:
+        site: tests/test_jqmc_kernel/test_ecp_water_jastrow_mesh.py::test_water_j123_ecp_whole_mesh_matches_scalar_assembly#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: batched-mesh-contributions, expression: actual_contributions}
+        reference: {role: scalar-debug-mesh-contributions, expression: reference_contributions}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+      total:
+        site: tests/test_jqmc_kernel/test_ecp_water_jastrow_mesh.py::test_water_j123_ecp_whole_mesh_matches_scalar_assembly#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: batched-total, expression: actual_total}
+        reference: {role: scalar-debug-total, expression: reference_total}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}

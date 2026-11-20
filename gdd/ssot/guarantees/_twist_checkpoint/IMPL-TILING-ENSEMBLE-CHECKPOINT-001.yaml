@@ -1,0 +1,33 @@
+id: IMPL-TILING-ENSEMBLE-CHECKPOINT-001
+kind: implementation
+name: Tiled twist checkpoint preserves frozen blocks and shared supercell J3
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  Combined optimized twist dumps retain complete ragged tiled SD providers,
+  source-sector metadata and weights, primitive spin sharing and independent
+  spin payloads. Canonical nonzero physical-supercell J3 survives two checkpoint
+  generations. VGL and wavefunction equal the corresponding per-sector snapshots
+  for PW, B-spline and Cartesian/spherical pGTO. No global MO or lambda matrix
+  is synthesized. A wrong-sector checkpoint is rejected before replacing output.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_restart.py::test_tiled_ensemble_checkpoint_preserves_sectors_and_shared_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw, restricted: true}
+    - {backend: pw, restricted: false}
+    - {backend: bspline, restricted: true}
+    - {backend: bspline, restricted: false}
+    - {backend: pgto_cart, restricted: true}
+    - {backend: pgto_cart, restricted: false}
+    - {backend: pgto_sphe, restricted: true}
+    - {backend: pgto_sphe, restricted: false}
+    - {backend: composite_cart, restricted: true}
+    - {backend: composite_cart, restricted: false}
+    - {backend: composite_sphe, restricted: true}
+    - {backend: composite_sphe, restricted: false}

@@ -1,0 +1,21 @@
+schema_version: 1
+document:
+  id: jqmc.coulomb_potential
+  version: 1
+  lifecycle: cutover
+  title: Coulomb-potential guarantees
+  purpose: 'Which test guarantees what, by which verdict method, for the Coulomb layer: bare Coulomb, ECP local and non-local,
+    and the Ewald summation (bulk and slab).'
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - PHY-COUL-EXTERNAL-REFERENCE-001
+  overrides:
+    jqmc.coulomb_potential.compute_ecp_non_local_parts_nearest_neighbors_fast_update_holomorphic:
+    - MATH-HAM-COMPLEX-ECP-ABSOLUTE-001
+    jqmc.coulomb_potential._compute_ecp_non_local_parts_nearest_neighbors_fast_update_impl:
+    - MATH-HAM-COMPLEX-ECP-ABSOLUTE-001
+    - MATH-COUL-FIXED-PHASE-ECP-CANDIDATES-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

@@ -1,0 +1,51 @@
+id: MATH-DET-INDEPENDENT-ORBITAL-REFERENCE-001
+kind: mathematical
+name: Independent orbital-to-geminal and AS references
+plain_language: >-
+  All 16 canonical synthetic wavefunctions preserve geminal and AS values against independent NumPy orbitals, contraction and inverse in each precision. Perturbing actual production orbital or geminal operands must be rejected without moving the reference. This is not arbitrary ill-conditioning certification.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_independent_orbital_composites.py::test_geminal_and_as_use_independent_orbital_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-001}
+    - {pattern: WF-PATTERN-002}
+    - {pattern: WF-PATTERN-003}
+    - {pattern: WF-PATTERN-004}
+    - {pattern: WF-PATTERN-005}
+    - {pattern: WF-PATTERN-006}
+    - {pattern: WF-PATTERN-007}
+    - {pattern: WF-PATTERN-008}
+    - {pattern: WF-PATTERN-009}
+    - {pattern: WF-PATTERN-010}
+    - {pattern: WF-PATTERN-011}
+    - {pattern: WF-PATTERN-012}
+    - {pattern: WF-PATTERN-013}
+    - {pattern: WF-PATTERN-014}
+    - {pattern: WF-PATTERN-015}
+    - {pattern: WF-PATTERN-016}
+    executable_checks:
+      geminal:
+        site: tests/test_jqmc_kernel/test_independent_orbital_composites.py::_compare_geminal#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-geminal, expression: actual}
+        reference: {role: independent-numpy-geminal, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval]}
+      as-regularization:
+        site: tests/test_jqmc_kernel/test_independent_orbital_composites.py::_compare_as#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-as-regularization, expression: actual}
+        reference: {role: independent-numpy-as-regularization, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_independent_orbital_composites.py::test_independent_composites_reject_production_operand_fault
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {target: geminal}
+    - {target: jastrow}
+    - {target: as}

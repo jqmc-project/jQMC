@@ -1,0 +1,25 @@
+id: IMPL-RS-MCMC-PERSTEP-CONTINUATION-001
+kind: implementation
+name: Rust per-step MCMC continues across run() calls and checkpoints like the uninterrupted run
+plain_language: >-
+  With the shipped Rust backend active, on the per-step native MCMC route (the mcmc_sweep_batch or
+  mcmc_sweep_complex_batch sweep called once per step, no energy chunk), two consecutive run(2) calls on one driver,
+  and run(2) followed by checkpoint save, merge, load and run(2), reproduce the uninterrupted run(4) of the same
+  settings (the per-step proposal normals are a function of the current walker keys, not of a generator
+  created per run() call). Cases: H2 ccECP cc-pVDZ Cartesian with exp J1+J2 and parameter derivatives on, and the
+  lithium k = 0.25 complex twist with J1+J2 and position derivatives on; four walkers, seed 12345. Walker positions
+  and threefry keys are exactly equal; stored local energies, weights and the parameter-derivative or force
+  histories agree at the same-mode strict restart tolerance. Native per-step execution is witnessed for every call;
+  walkers moved by 1e-6 bohr must fail the check. This complements IMPL-RS-DRIVER-LOOPS-001 (chunk route) and
+  IMPL-MCMC-CHECKPOINT-001 (XLA). Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_driver_loops_rust.py::test_rust_perstep_continuation_equals_uninterrupted_run
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: real_param_deriv, continuation: split_calls}
+    - {case: real_param_deriv, continuation: checkpoint}
+    - {case: complex_twist_force, continuation: split_calls}
+    - {case: complex_twist_force, continuation: checkpoint}

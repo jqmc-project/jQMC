@@ -1,0 +1,28 @@
+id: MATH-AO-PGTO-IMAGE-TRUNCATION-VALUE-BOUND-001
+kind: mathematical
+name: Each lattice image dropped from a periodic pGTO shell is below AO_IMAGE_TRUNCATION_ATOL in normalised AO value
+plain_language: >-
+  For every periodic pGTO leaf built with image truncation tolerance tol, each lattice image left out of a
+  shell's image set contributes at most tol to every normalised AO value of that shell at every point of the
+  home cell, including the primitive normalisation N(alpha, l) and the contraction coefficient c (an image
+  radius that bounded only r^l exp(-alpha r^2), would let a dropped image of a tight shell reach |c| N tol).
+  For one tight shell built with AOs_sphe_pgto_data.build and AOs_cart_pgto_data.build, O ccECP cc-pVQZ d
+  (alpha 4.008867, c 1) in a 5.9 Bohr cubic cell at fractional (0.6913, 0.1786, 0.3963) and Cu ccECP cc-pVTZ f
+  (alpha 5.230236, c 1.3398) in a 6.822 Bohr cubic cell at fractional (0.5865, 0.8397, 0.7265), every image the
+  built leaf drops, evaluated alone with the open-boundary AO kernel at the home-cell points closest to it and at
+  seeded points around them, is at most AO_IMAGE_TRUNCATION_ATOL; and the XLA compute_AOs and Rust
+  jqmc_rs.compute_AOs values of the leaf at those points equal the brute-force lattice sum of the open-boundary
+  AO kernel over every image inside a Gaussian cutoff the test derives itself, reduced in the ao_eval zone dtype, within the ao_eval strict policy plus AO_IMAGE_TRUNCATION_ATOL. The check uses
+  neither the production image radius nor the _debug image-expansion oracle. AO gradients and Laplacians are
+  not claimed. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_pgto_image_truncation_normalization.py::test_pgto_dropped_images_stay_below_truncation_tolerance_for_tight_normalised_shells
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: o_qz_d_sphe}
+    - {case: o_qz_d_cart}
+    - {case: cu_tz_f_sphe}
+    - {case: cu_tz_f_cart}

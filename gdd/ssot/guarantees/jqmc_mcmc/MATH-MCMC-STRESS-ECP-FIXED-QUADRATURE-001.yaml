@@ -1,0 +1,30 @@
+id: MATH-MCMC-STRESS-ECP-FIXED-QUADRATURE-001
+kind: mathematical
+name: Stored MCMC HF stress keeps the non-local ECP quadrature directions fixed under strain
+plain_language: >-
+  For a fixed configuration the rotation average of a normalized sphere quadrature is the exact
+  angular integral, so the strain derivative of the non-local ECP energy evaluated with the
+  quadrature directions held fixed is, after rotation averaging, the exact strain derivative;
+  carrying the directions with the strain (rotation RT -> RT F^T) moves the points off the sphere
+  of the strained electron-nucleus distance and biases the stress. On committed
+  lithium.h5 (real Gamma) and lithium_k025.h5 (complex Bloch twist), bcc Li ccECP spherical pGTO SD
+  with exponential J1/J2, two production MCMC measurements (seed 34, two walkers, two moves per
+  measurement, Dt=1, AS=0, identity quadrature, force and stress on) store stress_HF tensors that
+  equal, in all nine entries, jax AD of the production forward Re e_L with the cell, nuclei and
+  electrons mapped by I + eps and the quadrature rotation held at the identity. At every walker the
+  same AD with the rotation carried as F^T must differ beyond the same tolerance, so the two
+  conventions are discriminated. Both sides run in the active precision: full at the strict and
+  mixed at the medium zone tolerance of their own mode; no mixed output is compared with an fp64
+  reference. XLA and Rust are both required. No statistical window or Monte Carlo convergence is
+  certified.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::test_mcmc_stress_hf_matches_fixed_quadrature_strain_ad
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {stem: lithium.h5, backend: xla}
+    - {stem: lithium.h5, backend: rust}
+    - {stem: lithium_k025.h5, backend: xla}
+    - {stem: lithium_k025.h5, backend: rust}

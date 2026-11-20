@@ -1,0 +1,51 @@
+id: MATH-QE-STRUCTURAL-IDENTITIES-001
+kind: mathematical
+name: Structural identities of converted systems
+plain_language: >-
+  Fractional k-point coordinates round-trip exactly and a purely cell-anchored basis
+  has exactly zero position gradient. The original twist-grid all-axis gradient
+  retains its full-precision strict AD oracle. Its mixed analytical production
+  derivatives instead have independently rebuilt full-route numerical evidence in
+  NUM-ORBITAL-ELEMENTARY-DERIVATIVE-MIXED-FIDELITY-001; coordinate/cell identities
+  and their precision scope are unchanged.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_aos_data_k_point_fractional_round_trip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicIntegration::test_pure_cell_anchored_basis_has_zero_R_gradient
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_grid_composite.py::test_twist_grid_composite_grad_vs_auto
+    required_precision_modes: [full]
+    required_parameter_cases: [{ik: 1, quantity: ln_Psi}, {ik: 8, quantity: ln_Psi}, {ik: 1, quantity: e_L}, {ik: 8, quantity: e_L}]
+    executable_checks:
+      strict-basis-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_qe_twist_grid_composite.py::_assert_param_blocks_allclose#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+        iterations:
+          variable: name
+          required_values:
+          - j1_param
+          - j2_param
+          - lambda_basis_coeff
+          - lambda_basis_exp
+          - mo_coefficients_up

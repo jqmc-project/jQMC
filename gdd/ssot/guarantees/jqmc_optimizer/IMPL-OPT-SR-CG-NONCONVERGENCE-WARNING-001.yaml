@@ -1,0 +1,23 @@
+id: IMPL-OPT-SR-CG-NONCONVERGENCE-WARNING-001
+kind: implementation
+name: An unconverged SR CG solve is reported once at default verbosity and its step is applied
+plain_language: >-
+  When an SR CG solve stops above its target cg_tol * ||b||, because it reached cg_max_iter or broke down, the
+  optimizer target entry logs one WARNING at default verbosity stating the regime, the iterations and cg_max_iter,
+  the residual, the target and whether the CG broke down, and then returns the unconverged step, which is applied.
+  The single-k entry logs one line per solve (its values are reduced over the sampler, so every rank agrees). The
+  twist-decomposed entry logs at most one line per ownership scope: one world allgather tells every rank how many
+  samplers did not converge in the shared or twist-local scope, and the line shows the worst of them (largest
+  residual / target). A converged scope logs nothing. The target records the breakdown flag next to converged.
+  Evidence: the host and device (streaming) routes of both entries with cg_max_iter = 1.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_solver_guards.py::test_unconverged_sr_cg_warns_once_per_solve_and_keeps_the_step
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {entry: single-k, route: host}
+    - {entry: single-k, route: device}
+    - {entry: twist, route: host}
+    - {entry: twist, route: device}

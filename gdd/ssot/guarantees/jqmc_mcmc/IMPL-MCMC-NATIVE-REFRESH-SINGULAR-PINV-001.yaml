@@ -1,0 +1,23 @@
+id: IMPL-MCMC-NATIVE-REFRESH-SINGULAR-PINV-001
+native_evidence:
+- jqmc_rs::determinant::tests::pinv_real_matches_complex_routine
+kind: implementation
+name: The native carried-inverse refresh of an exactly zero carried geminal matches the finite Python fallback
+plain_language: >-
+  The carried-inverse refresh used by the native MCMC energy chunk replaces a drifted carried inverse by
+  the same row/column-equilibrated, rcond_svd-thresholded finite generalized inverse as the Python
+  carried-inverse refresh (_geminal_pinv_from_matrix) whenever the guarded LU inverse is rejected, so an exactly singular carried geminal gives a finite inverse (whose
+  probe residual stays above the threshold) instead of the inf/NaN of a Gauss-Jordan elimination and the NaN local
+  energies that followed. Evidence: an exactly zero 2x2 geminal, real and complex, with a zero carried inverse,
+  representing the tail state after every orbital underflows. The production real and complex native refresh
+  functions must fire and return finite zero matrices equal to numpy.linalg.pinv and the Python carried-inverse refresh at
+  the det_eval strict pair. The input is independent of AO evaluation and is run in full and mixed; the native
+  refresh is float64 in both modes. Nonzero rank-deficient matrices are not claimed: row/column equilibration is
+  nonunitary, so their finite generalized inverse can depend on the backend SVD.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_large_ratio_carried_inverse_native.py::test_native_zero_geminal_refresh_matches_python_equilibrated_fallback
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

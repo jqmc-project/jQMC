@@ -1,0 +1,25 @@
+id: MATH-AO-PGTO-IMAGE-TRUNCATION-CONTRACTION-BOUND-001
+kind: mathematical
+name: A periodic pGTO shell keeps every lattice image whose contracted AO value exceeds AO_IMAGE_TRUNCATION_ATOL
+plain_language: >-
+  For every periodic pGTO leaf built with image truncation tolerance tol, the bound on a dropped lattice image
+  covers the whole contraction of an AO: the image's AO value is the sum over the K primitives of that AO, so an
+  image whose primitives are each below tol but whose contracted AO value exceeds tol in the home cell is kept
+  (dividing the per-primitive tolerance by |c| N alone, without the number of primitives K, dropped
+  such an image). For one real-spherical d shell built with AOs_sphe_pgto_data.build from two primitives
+  (alpha 4.008867 and 4.012, coefficients 1 and 1) at (3, 3, 2.2877506501988543) in a 6 Bohr cubic cell, at the
+  home-cell electron (3, 3, 6 - 1e-12), where image (0, 0, 1) contributes about 1.5e-7 to the m = 0 AO while each
+  of its primitives alone is below AO_IMAGE_TRUNCATION_ATOL = 1e-7, the built leaf keeps image (0, 0, 1) for the
+  m = 0 AO; and the m = 0 AO value from XLA compute_AOs and Rust jqmc_rs.compute_AOs of the leaf, and from
+  _compute_AOs_debug of the _with_periodic_image_expansion_debug oracle, equals the analytic lattice sum of the
+  contracted AO over images within two cells, built from N_r^2 = 2 (2 alpha)^(l + 3/2) / Gamma(l + 3/2) and
+  r^2 Y_20 = sqrt(5 / (16 pi)) (3 z^2 - r^2) with no jqmc code, within the ao_eval strict relative tolerance of the
+  active mode. Cartesian contracted shells, other points, AO gradients and Laplacians are not claimed by this
+  guarantee. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_pgto_image_truncation_normalization.py::test_pgto_contracted_shell_keeps_image_whose_primitive_sum_exceeds_truncation_tolerance
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

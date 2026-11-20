@@ -1,0 +1,56 @@
+id: IMPL-JQMCQE-ENTRY-CONTRACTS-001
+kind: implementation
+name: run_qe2jqmc entry-point contracts
+plain_language: The TOML-driven QE conversion completes end to end (LSDA, fixed-cutoff with exponent optimization, and automatic
+  ecutwfc selection), rejects wrong kinds, and raises when the automatic target is unreachable. Automatic pgto+pw selection
+  probes at most eight geometric trials from the 7.5 Ry entry to 40 Ry, clipped by the QE cutoff; below 30 Ry QE
+  input its entry remains one quarter of the QE cutoff. Actual projection must represent a Bloch band needing more than 30
+  Ry, preserve first-success stopping, and respect lower QE cutoffs without changing the residual target or condition policy.
+  An automatic derived-floor exponent attempt with an infeasible tail ceiling or spread is rejected without losing seed projections
+  or other cutoff trials; if none reaches the unchanged target, the normal unreachable-target RuntimeError is retained. Other
+  optimizer ValueErrors propagate, as do infeasible bounds at an explicit user floor or numeric cutoff.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestRunQE2JQMCLSDA::test_fixed_10ry_pgto_pw_runs_exponent_optimisation
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestRunQE2JQMCLSDA::test_lsda_conversion_end_to_end
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_qe2jqmc_ecutwfc_auto_end_to_end
+  - pytest_node: tests/test_jqmc_kernel/test_qe_auto_cutoff_range.py::test_auto_cutoff_represents_a_band_requiring_more_than_30_ry
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_auto_cutoff_range.py::test_auto_cutoff_preserves_the_first_sufficient_trial
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - miller: 2
+      qe_cutoff_ry: 100.0
+      expected_first_ry: 7.5
+      expected_trials: 1
+      expected_last_ry: 7.5
+    - miller: 2
+      qe_cutoff_ry: 24.0
+      expected_first_ry: 6.0
+      expected_trials: 1
+      expected_last_ry: 6.0
+    - miller: 4
+      qe_cutoff_ry: 20.0
+      expected_first_ry: 5.0
+      expected_trials: 8
+      expected_last_ry: 20.0
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_qe2jqmc_ecutwfc_auto_rejects_wrong_kind
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_qe2jqmc_ecutwfc_auto_raises_when_target_unreachable
+  - pytest_node: tests/test_jqmc_kernel/test_qe_auto_cutoff_range.py::test_auto_cutoff_does_not_hide_other_optimizer_errors
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}

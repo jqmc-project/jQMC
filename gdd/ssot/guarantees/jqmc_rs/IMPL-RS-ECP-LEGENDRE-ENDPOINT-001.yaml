@@ -1,0 +1,154 @@
+id: IMPL-RS-ECP-LEGENDRE-ENDPOINT-001
+native_evidence:
+- jqmc_rs::coulomb_potential::tests::legendre_deriv_closed_form_including_endpoints
+kind: implementation
+name: Rust/XLA ECP non-local force and stress stay finite and agree with an electron on a quadrature direction
+plain_language: >-
+  The native GFMC HF force and stress (molecular, real periodic Gamma and complex k025 twist, T-move and
+  DLT-move) and the native MCMC HF force are evaluated next to their XLA production twins at a generic
+  configuration and at one where an up electron sits exactly on the first direction of the current mesh
+  rotation, so cos theta is exactly +1 for it and -1 for its antipode, the configuration GFMC reaches after
+  every accepted T-move or DLT-move. The systems carry a live non-local l >= 1 channel: the committed Cl2
+  ccECP and the committed Li cells with a non-local p projector added. Both sides must be finite (NaN is
+  never agreement) and agree at the medium XLA-Rust tier. The recurrence form of the Legendre derivative
+  l (P_(l-1) - x P_l) / (1 - x^2) is 0/0 there and fails every on_mesh row; the native kernel uses the closed form
+  including the endpoints. Full and mixed are judged
+  separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_legendre_endpoint_parity.py::test_gfmc_ecp_force_rust_vs_xla_on_mesh
+    executable_checks:
+      check-comparison-1:
+        site: tests/test_rs_kernel/test_ecp_legendre_endpoint_parity.py::_check#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: rust
+        reference:
+          role: existing-test-reference
+          expression: xla
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - ewald
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - ewald
+            - jastrow_eval
+            - jastrow_grad_lap
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {system: cl2_mol, non_local_move: tmove, kind: generic}
+    - {system: cl2_mol, non_local_move: tmove, kind: on_mesh}
+    - {system: cl2_mol, non_local_move: dltmove, kind: generic}
+    - {system: cl2_mol, non_local_move: dltmove, kind: on_mesh}
+    - {system: li_gamma_p, non_local_move: tmove, kind: generic}
+    - {system: li_gamma_p, non_local_move: tmove, kind: on_mesh}
+    - {system: li_gamma_p, non_local_move: dltmove, kind: generic}
+    - {system: li_gamma_p, non_local_move: dltmove, kind: on_mesh}
+    - {system: li_twist_p, non_local_move: tmove, kind: generic}
+    - {system: li_twist_p, non_local_move: tmove, kind: on_mesh}
+    - {system: li_twist_p, non_local_move: dltmove, kind: generic}
+    - {system: li_twist_p, non_local_move: dltmove, kind: on_mesh}
+  - pytest_node: tests/test_rs_kernel/test_ecp_legendre_endpoint_parity.py::test_gfmc_ecp_stress_rust_vs_xla_on_mesh
+    executable_checks:
+      check-comparison-1:
+        site: tests/test_rs_kernel/test_ecp_legendre_endpoint_parity.py::_check#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: rust
+        reference:
+          role: existing-test-reference
+          expression: xla
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - ewald
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - ewald
+            - jastrow_eval
+            - jastrow_grad_lap
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {system: cl2_mol, non_local_move: tmove, kind: generic}
+    - {system: cl2_mol, non_local_move: tmove, kind: on_mesh}
+    - {system: cl2_mol, non_local_move: dltmove, kind: generic}
+    - {system: cl2_mol, non_local_move: dltmove, kind: on_mesh}
+    - {system: li_gamma_p, non_local_move: tmove, kind: generic}
+    - {system: li_gamma_p, non_local_move: tmove, kind: on_mesh}
+    - {system: li_gamma_p, non_local_move: dltmove, kind: generic}
+    - {system: li_gamma_p, non_local_move: dltmove, kind: on_mesh}
+    - {system: li_twist_p, non_local_move: tmove, kind: generic}
+    - {system: li_twist_p, non_local_move: tmove, kind: on_mesh}
+    - {system: li_twist_p, non_local_move: dltmove, kind: generic}
+    - {system: li_twist_p, non_local_move: dltmove, kind: on_mesh}
+  - pytest_node: tests/test_rs_kernel/test_ecp_legendre_endpoint_parity.py::test_vmc_ecp_force_rust_vs_xla_on_mesh
+    executable_checks:
+      check-comparison-1:
+        site: tests/test_rs_kernel/test_ecp_legendre_endpoint_parity.py::_check#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: rust
+        reference:
+          role: existing-test-reference
+          expression: xla
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - ewald
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - ewald
+            - jastrow_eval
+            - jastrow_grad_lap
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: generic}
+    - {kind: on_mesh}

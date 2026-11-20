@@ -1,0 +1,102 @@
+id: IMPL-JAS-PERIODIC-ZERO-AD-CONVENTION-001
+kind: implementation
+name: Periodic coincidence keeps numerical masks and finite outer autodiff
+plain_language: >-
+  Exact coincidence is not a differentiable physical cusp. The reviewed
+  numerical extension sets the smooth distance and its selected AD tangents
+  to zero at the origin and lattice images. The Cartesian self-pair mask
+  makes J2 gradient/Laplacian and their coordinate and cell outer derivatives
+  exactly zero. A nonzero lattice-vector displacement retains the existing
+  EPS_safe_distance clamp rather than claiming zero analytic Laplacian;
+  its pair fields and coordinate/cell outer derivatives must be finite.
+  Explicit cubic and integer-triclinic cells, exp/Pade self-pairs and a Pade
+  image pair use no files, random sampling, determinant or cond(G) selection.
+  This is a numerical convention/finiteness check, never a mathematical
+  oracle for physical derivatives at coalescence or a replacement for the
+  independent nonzero periodic-law and cusp-response tests.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_masked_zero_outer_ad
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {form: exp, cell_kind: cubic}
+    - {form: exp, cell_kind: dyadic-triclinic}
+    - {form: pade, cell_kind: cubic}
+    - {form: pade, cell_kind: dyadic-triclinic}
+    executable_checks:
+      actual-fields:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_masked_zero_outer_ad#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-periodic-actual-fields, expression: actual_fields}
+        reference: {role: declared-reference-fields, expression: reference_fields}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      actual-position-jacobian:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_masked_zero_outer_ad#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-periodic-actual-position-jacobian, expression: actual_position_jacobian}
+        reference: {role: declared-reference-position-jacobian, expression: reference_position_jacobian}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      actual-cell-jacobian:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_masked_zero_outer_ad#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-periodic-actual-cell-jacobian, expression: actual_cell_jacobian}
+        reference: {role: declared-reference-cell-jacobian, expression: reference_cell_jacobian}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      actual-cell-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_masked_zero_outer_ad#exact-comparison-4
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-periodic-actual-cell-gradient, expression: actual_cell_gradient}
+        reference: {role: declared-reference-cell-gradient, expression: reference_cell_gradient}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_distance_lattice_zero_ad_convention
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_kind: cubic}
+    - {cell_kind: dyadic-triclinic}
+    executable_checks:
+      actual-distance:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_distance_lattice_zero_ad_convention#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-periodic-actual-distance, expression: actual_distance}
+        reference: {role: declared-reference-distance, expression: reference_distance}
+        iterations: {variable: sample_label, required_values: ['0', '1']}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      actual-position-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_distance_lattice_zero_ad_convention#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-periodic-actual-position-gradient, expression: actual_position_gradient}
+        reference: {role: declared-reference-position-gradient, expression: reference_position_gradient}
+        iterations: {variable: sample_label, required_values: ['0', '1']}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      actual-cell-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_distance_lattice_zero_ad_convention#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-periodic-actual-cell-gradient, expression: actual_cell_gradient}
+        reference: {role: declared-reference-cell-gradient, expression: reference_cell_gradient}
+        iterations: {variable: sample_label, required_values: ['0', '1']}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      actual-finite:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_distance_lattice_zero_ad_convention#exact-comparison-4
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-periodic-actual-finite, expression: actual_finite}
+        reference: {role: declared-reference-finite, expression: reference_finite}
+        iterations: {variable: sample_label, required_values: ['0', '1']}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

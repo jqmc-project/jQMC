@@ -1,0 +1,46 @@
+id: IMPL-RS-GFMC-INTERVAL-STATE-XLA-ANCHOR-001
+kind: implementation
+name: Carried Rust LRDMC interval state equals XLA at configurations of the same 1000-hop chain
+plain_language: >-
+  Production chain: NativeObsCtx.debug_mesh_chain builds the projection-scoped
+  interval state (real MeshFastState, complex MeshFastStateC) with one fixed non-identity kinetic rotation and one
+  fixed ECP rotation and runs 1000 production sub-steps: interval_eval (kinetic mesh, ECP mesh, e_L), the
+  categorical FN hop with a seeded uniform (policy=categorical), and advance_after_hop, which includes the
+  per-hop refresh rule: after every hop the carried G^-1 is screened by the probe residual max|G (G^-1 P) - P|
+  against the geminal the post-hop caches imply (factored form, O(N^2)), and when it exceeds the internal constant
+  SM_INVERSE_REFRESH_RESIDUAL_THRESHOLD the determinant base, G^-1 and the winv tables (complex: also the
+  derivative cache with its own inverse copy) are rebuilt from scratch at the post-hop positions with the interval
+  seed itself. The policy=adversarial cases of the same nodes replace the categorical hop by the 1/rho protocol of
+  the XLA sibling (smallest finite kinetic element above its rho floor, electron different from the previous hop;
+  cond(G) 1e7 to 1e10) and are run in full precision only (the mixed independent oracle carries fp32
+  error above the mixed tolerance there; the precision-independent refresh logic keeps its mixed coverage through
+  the required categorical cases). Every electron starts one lattice vector outside
+  the home cell. Cases: committed Si diamond cell (8 atoms, 16 up / 16 dn, ccECP, real Gamma pGTO, J1+J2+DTN), the
+  committed 8-atom H cell (4 up / 4 dn, all-electron) as real Gamma and complex k=1/4 B-spline with J1+J2+DTN, and
+  the O-lsda k=1/4 save as a complex B-spline (4 up / 2 dn, ccECP) with J2+DTN; the DTN f cutoff is the production
+  default (0.95 of half the inscribed radius), far below the multi-atom cells. At hops 0, 500 and 1000 the carried Rust state equals XLA
+  evaluated at the same configuration with the same rotations: the kinetic mesh elements
+  (compute_discretized_kinetic_energy), the fixed-node part min(V, 0) of the ECP mesh
+  (compute_ecp_non_local_parts_nearest_neighbors), e_L and b_L (_compute_V_elements_t), G^-1 (inverse of
+  compute_geminal_all_elements) and the DTN grad/lap (compute_grads_and_laplacian_Jastrow_DTN), maximum-normalised
+  within the periodic GFMC fast-interval backend pair get_tolerance_gfmc_fast_pbc(zones), whose absolute side for
+  e_L also carries the first-order conditioning term cond_2(G) * eps * sum |determinant-ratio terms| (kinetic mesh
+  elements and ECP mesh values, which cancel to a much smaller e_L); the state built from
+  scratch at the same configuration is judged against the same XLA oracle as the fairness control. The
+  determinant-derived quantities are judged at the anchors that pass the conditioning screen of the XLA sibling
+  (cond_2(G) * eps < RTOL_LRDMC_STREAMING_MESH_CHAIN, eps of the det_ratio zone); the start and at least one later
+  anchor must pass, and the DTN grad/lap is judged at every anchor. On the
+  adversarial chains (full only) this is the independent-oracle verdict of the per-hop refresh: without the
+  refresh the carried kinetic elements depart from XLA by 1.1e5 at scale 2.5e2 (H8 real, hop 500) and by 8.6e2 at
+  scale 1.9e6 (Si, hop 500). Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_lrdmc_mesh_chain_rust.py::test_rust_lrdmc_chain_matches_xla_anchors
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: h8_bspline_real_jdtn, policy: categorical}
+    - {case: h8_bspline_twist_jdtn, policy: categorical}
+    - {case: o_bspline_twist_jdtn, policy: categorical}
+    - {case: si_pgto_real_jdtn, policy: categorical}

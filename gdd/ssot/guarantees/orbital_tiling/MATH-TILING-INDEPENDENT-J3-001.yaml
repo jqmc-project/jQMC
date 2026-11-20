@@ -1,0 +1,47 @@
+id: MATH-TILING-INDEPENDENT-J3-001
+kind: mathematical
+name: Independent supercell J3 coexists with frozen tiled determinants
+plain_language: >-
+  J3 uses an ordinary phase-free physical-supercell AO or MO basis, shared by
+  spins; it never consumes determinant k blocks. Its real symmetric matrix has
+  unconstrained cross-cell entries and remains variational with a frozen Slater
+  provider. A nonzero supercell J3 gives the same wavefunction, kinetic and local
+  energy with explicit and tiled B-spline/pGTO determinants at Gamma and general
+  (+k_s,-k_s) twists, with restricted and independent spin sources. PW covers an
+  independent AO/MO J3, analytic matrix gradients, disabled-gradient masking and
+  HDF5 roundtrip. Tiled or wrong-cell J3 bases are rejected.
+  Native drivers, MPI restart, J3 basis optimization, tiling with twist averaging,
+  real-QE J3 end-to-end and measured memory scaling are not certified here.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-ERROR-DISPOSITION-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_j3.py::test_supercell_j3_matches_expanded_determinant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: bspline3, sector: gamma, restricted: true}
+    - {backend: bspline3, sector: gamma, restricted: false}
+    - {backend: bspline3, sector: general, restricted: true}
+    - {backend: bspline3, sector: general, restricted: false}
+    - {backend: bspline5, sector: gamma, restricted: true}
+    - {backend: bspline5, sector: gamma, restricted: false}
+    - {backend: bspline5, sector: general, restricted: true}
+    - {backend: bspline5, sector: general, restricted: false}
+    - {backend: pgto_cart, sector: gamma, restricted: true}
+    - {backend: pgto_cart, sector: gamma, restricted: false}
+    - {backend: pgto_cart, sector: general, restricted: true}
+    - {backend: pgto_cart, sector: general, restricted: false}
+    - {backend: pgto_sphe, sector: gamma, restricted: true}
+    - {backend: pgto_sphe, sector: gamma, restricted: false}
+    - {backend: pgto_sphe, sector: general, restricted: true}
+    - {backend: pgto_sphe, sector: general, restricted: false}
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_j3.py::test_supercell_j3_matrix_gradient_and_hdf5_with_tiled_pw
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{mo: false}, {mo: true}]
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_j3.py::test_j3_rejects_determinant_blocks_and_primitive_cell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

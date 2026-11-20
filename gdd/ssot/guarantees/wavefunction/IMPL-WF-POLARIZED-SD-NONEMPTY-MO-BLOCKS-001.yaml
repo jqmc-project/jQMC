@@ -1,0 +1,48 @@
+id: IMPL-WF-POLARIZED-SD-NONEMPTY-MO-BLOCKS-001
+kind: implementation
+name: Empty SD spin channels publish no MO block and active parameter workflows complete
+plain_language: For publicly validated independent-spin SD inputs, zero-size occupied MO arrays contribute no variational
+  block, for either empty spin channel. Nonempty independent SD/AGPn MO arrays remain published; the existing AGPn empty-unpaired
+  omission and shared VariationalParameterBlock nonempty guard remain strict. The WF-PATTERN-008 three-up/zero-down complex
+  plane-wave SD runs MCMC parameter derivatives and actually completes one geminal-enabled optimizer step on XLA and Rust
+  in full and mixed precision. The public gradient map exactly matches the selected nonempty block set, so inactive raw entries
+  are not selected. Stored gradient shapes and finite values, public MO flattening equality, and native/XLA execution counters
+  are explicit controls. The spin-swapped accepted SD covers block publication; this guarantee does not infer its sampler
+  numerical behavior.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_polarized_sd_publishes_only_nonempty_mo_channel
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - active_spin: up
+    - active_spin: down
+  - pytest_node: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_nonempty_independent_mo_channels_remain_published
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - pattern_id: WF-PATTERN-002
+    - pattern_id: WF-PATTERN-006
+  - pytest_node: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_empty_storage_variational_block_is_still_rejected
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_polarized_sd_mcmc_parameters_match_raw_full_fd_or_mixed_fidelity
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases: &id001
+    - rust_on: false
+    - rust_on: true
+  - pytest_node: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_polarized_sd_geminal_optimization_completes_one_step
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases: *id001

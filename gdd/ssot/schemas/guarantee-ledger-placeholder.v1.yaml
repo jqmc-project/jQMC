@@ -1,0 +1,16 @@
+schema_format: 1
+schema_id: gdd.schema.guarantee-ledger-placeholder.v1
+match:
+  path_glob: gdd/ssot/guarantees/*.yaml
+  lifecycle: placeholder
+document_schema_version: 1
+required_top_level:
+  - schema_version
+  - document
+  - symbol_contract
+  - guarantees
+optional_top_level: []
+document_block:
+  required_fields: [id, version, lifecycle]
+placeholder_invariants: true
+prose_keys_extra: []

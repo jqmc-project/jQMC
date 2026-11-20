@@ -1,0 +1,18 @@
+id: IMPL-QE-UPF-SPECIES-KEY-RESOLUTION-001
+kind: implementation
+name: Every QE UPF lookup resolves a species by its label, then its element
+plain_language: >-
+  A QE species is covered by a UPF map entry for its label (for example Li1) or its element (Li), and an explicit
+  label entry overrides the element entry. Every UPF lookup of the QE converters uses that same mapping: the pGTO
+  determinant seeds on the single-k, tiled and twist routes, the deduced core charges, the ECP and the twist-average
+  J3 seeds. A copy of the committed Li_gamma save with only its species renamed Li1, converted with kind pgto and the
+  UPF key Li, converts on the single-k and twist routes, passes Hamiltonian sanity_check and carries the Li ccECP core
+  charge on every atom. The J3 seed lookup is evidenced under IMPL-TOOL-TWIST-AVERAGE-SHARED-AO-J3-001. Full and mixed
+  are each required.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQENoUPFECPGuard::test_tagged_species_uses_element_upf_key_for_pgto_seeds_and_core_charge
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{twist_average: false}, {twist_average: true}]

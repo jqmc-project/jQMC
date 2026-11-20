@@ -1,0 +1,73 @@
+id: MATH-AO-COMPOSITE-SAMPLED-GRAM-DYNAMIC-001
+kind: mathematical
+name: Stable sampled complex Gram with live composite AO parameters
+plain_language: The numerical composite overlap quadrature (the independent reference of the exact block-assembled
+  overlap) of the complex H2 non-Gamma pGTO plus plane-wave composite matches an independent contraction of
+  the same rounded AO samples for host chunk lengths 1, 7, 31, and 73. The private overlap evaluator
+  keeps radial coefficients and cell strain differentiable, matching independent coefficient-scaling
+  and nonzero plane-wave strain identities. Both full and mixed precision retain their existing zone
+  tolerances; the mixed reference uses float32 compensated products and summation, not full-precision AO reevaluation.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_contract.py::test_complex_composite_overlap_host_chunks_match_sampled_gram
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {chunk_size: 1}
+    - {chunk_size: 7}
+    - {chunk_size: 31}
+    - {chunk_size: 73}
+    executable_checks:
+      native-host-chunked-gram:
+        site: tests/test_jqmc_kernel/test_composite_overlap_contract.py::test_complex_composite_overlap_host_chunks_match_sampled_gram#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-host-chunked-complex-gram, expression: actual}
+        reference: {role: independent-same-sampled-ao-gram, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_contract.py::test_composite_overlap_evaluator_keeps_radial_parameters_dynamic
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+    executable_checks:
+      coefficient-jvp:
+        site: tests/test_jqmc_kernel/test_composite_overlap_contract.py::test_composite_overlap_evaluator_keeps_radial_parameters_dynamic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: compiled-composite-coefficient-autodiff-jvp, expression: tangent}
+        reference: {role: independent-coefficient-scaling-identity, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+      changed-coefficient-values:
+        site: tests/test_jqmc_kernel/test_composite_overlap_contract.py::test_composite_overlap_evaluator_keeps_radial_parameters_dynamic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: changed-pgto-values, expression: 'changed[:pgto.num_ao]'}
+        reference: {role: independent-linearly-scaled-pgto-values, expression: 'base[:pgto.num_ao] * 1.125'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+      unchanged-other-child:
+        site: tests/test_jqmc_kernel/test_composite_overlap_contract.py::test_composite_overlap_evaluator_keeps_radial_parameters_dynamic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: unchanged-plane-wave-child, expression: 'changed[pgto.num_ao:]'}
+        reference: {role: original-plane-wave-child, expression: 'base[pgto.num_ao:]'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_contract.py::test_overlap_pw_evaluator_cell_strain_matches_nonzero_analytic_identity
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+    executable_checks:
+      nonzero-fixed-cartesian-strain:
+        site: tests/test_jqmc_kernel/test_composite_overlap_contract.py::test_overlap_pw_evaluator_cell_strain_matches_nonzero_analytic_identity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: overlap-pw-cell-strain-autodiff, expression: actual}
+        reference: {role: independent-pw-cell-strain-identity, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}

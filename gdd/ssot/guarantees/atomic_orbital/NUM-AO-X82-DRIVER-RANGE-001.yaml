@@ -1,0 +1,20 @@
+id: NUM-AO-X82-DRIVER-RANGE-001
+kind: numerical
+name: The original x82 driver gives correct full energies and rejects mixed range violations
+plain_language: >-
+  The bare Z=7 one-electron model psi=N*x^82*exp(-r^2), with four
+  walkers, seed34, Dt=0.3, two proposals per measurement, epsilon_AS=0 and fixed
+  meshes, is rejected at MCMC construction with AOEvalRangeError in mixed.
+  In full, three public MCMC.run calls of one measurement step produce twelve
+  finite local energies equal to -0.5*(82*81/x^2-2*(2*82+3)+4*r^2)-7/r at the
+  sampled positions, within the central strict local_energy tolerance. Both the
+  XLA and native driver routes are required and native context engagement is
+  checked. This preserves detecting evidence for the original full-precision
+  residual, which had already recovered before the zero-radial-tail repair.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ao_zero_radial_tails.py::test_original_x82_driver_is_correct_in_full_or_rejected_in_mixed
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{backend: XLA}, {backend: Rust}]

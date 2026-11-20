@@ -1,0 +1,21 @@
+id: IMPL-WORKFLOW-JOBCHECK-UNRELIABLE-LISTING-001
+kind: implementation
+name: A queued job counts as done only on a listing that reliably no longer shows it
+plain_language: >-
+  On a queuing machine, a workflow job is recorded as completed and fetched only after the
+  jobcheck listing no longer shows the job ID: either the listing shows other jobs but not
+  this one, or the listing has been empty (exit status 0, no output) on three consecutive
+  polls. A single empty listing while the job runs does not end it; the workflow keeps
+  polling, and once the job has really ended, both an empty queue (PBS qstat, squeue
+  --noheader) and a queue with other jobs still complete the workflow. A jobsubmit output
+  whose word at jobnum_index contains no digit (for example a warning printed before the ID)
+  is not accepted as a job ID; the submission raises with the raw output instead of recording
+  an ID that no listing can show. The reference is the job's own output, written only when
+  the job ends, which must exist when the record becomes fetched. This is a
+  precision-independent Python workflow contract, owned by the full precision lane.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_job.py::TestJobCheck::test_empty_listing_does_not_end_a_running_job
+  - pytest_node: tests/test_jqmc_workflow/test_job.py::TestJobCheck::test_submit_output_without_job_id_is_rejected

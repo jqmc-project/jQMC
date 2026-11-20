@@ -1,0 +1,16 @@
+schema_version: 1
+document:
+  id: jqmc._precision
+  version: 1
+  lifecycle: cutover
+  title: Precision-policy guarantees
+  purpose: Which test guarantees what, by which verdict method, for the mixed-precision zone policy on the Python side (the
+    Rust bridge contracts live in the jqmc_rs ledger).
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-PREC-POLICY-CONTRACTS-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

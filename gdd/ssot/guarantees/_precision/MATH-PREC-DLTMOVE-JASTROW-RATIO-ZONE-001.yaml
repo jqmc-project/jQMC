@@ -1,0 +1,37 @@
+id: MATH-PREC-DLTMOVE-JASTROW-RATIO-ZONE-001
+kind: mathematical
+name: The dltmove ECP correction's Jastrow ratio is evaluated in the fp64 jastrow_ratio zone
+plain_language: >-
+  On the committed N2 ccECP Cartesian fixture with the reviewed exp J1/J2 builder
+  (_build_ham_ecp(..., "j12")), NumPy seeds 0 and 1 (normal scale 0.9, up then down),
+  identity mesh rotation and the default Nv=12 mesh, the per-candidate Jastrow ratio
+  exp(J(R')-J(R)) used by the molecular XLA dltmove ECP non-local correction
+  (ecp_force._dltmove_delta_terms) agrees with the fp64 NumPy debug Jastrow evaluator
+  applied to the same ECP mesh configurations of an independently rebuilt full-precision
+  case of the same serialized input. The precision policy assigns this ratio to the
+  jastrow_ratio zone, float64 in both modes; J1/J2 read no AO values, so the ratio's whole
+  path lies in that zone and the strict jastrow_ratio tolerance applies in full and mixed
+  alike. Mixed mesh configurations must equal the full ones exactly, the rank-one route
+  must serve the case, and the ratio must be finite and live. Full is a same-case
+  consistency check. A ratio formed from two whole jastrow_eval values (float32 in mixed)
+  fails this budget. This does not claim mixed fidelity of AO-reading Jastrow
+  channels (J3), of the determinant ratio, of the assembled dltmove force/stress, of the
+  streamed (non-rank-one) route, or of the native Rust route.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_dltmove_jastrow_ratio_zone.py::test_dltmove_jastrow_ratio_matches_full_precision_debug_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 0}
+    - {seed: 1}
+    executable_checks:
+      dltmove-jastrow-ratio:
+        site: tests/test_jqmc_kernel/test_gfmc_dltmove_jastrow_ratio_zone.py::test_dltmove_jastrow_ratio_matches_full_precision_debug_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: dltmove-jastrow-ratio, expression: actual}
+        reference: {role: full-rebuild-fp64-debug-whole-jastrow-ratio, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}

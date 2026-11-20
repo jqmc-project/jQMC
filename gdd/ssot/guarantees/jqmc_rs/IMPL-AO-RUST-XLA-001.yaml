@@ -1,0 +1,599 @@
+id: IMPL-AO-RUST-XLA-001
+native_evidence:
+- jqmc_rs::atomic_orbital::simd_trig_tests::cos_and_sincos_match_libm
+- jqmc_rs::atomic_orbital::tests::kernel_cart_soa_matches_shell_loop_bitwise
+- jqmc_rs::atomic_orbital::tests::kernel_sphe_soa_matches_shell_eval_bitwise
+- jqmc_rs::atomic_orbital::tests::s_orbital_value
+- jqmc_rs::atomic_orbital::tests::single_vgl_shell_matches_per_ao
+- jqmc_rs::atomic_orbital::tests::solid_harmonic_pz
+- jqmc_rs::bspline::bspline_layout_tests::batch_value_matches_value_single
+- jqmc_rs::bspline::bspline_layout_tests::complex_time_reversal_sibling_shares_coefficients
+- jqmc_rs::bspline::bspline_layout_tests::grid_major_value_single_matches_band_outer_reference_bitexact
+- jqmc_rs::bspline::bspline_layout_tests::value_single_pair_matches_two_value_single_bitexact
+kind: implementation
+name: Rust/XLA parity of atomic-orbital kernels
+plain_language: The Rust atomic-orbital kernels reproduce the XLA evaluators for values, gradients, and Laplacians across
+  the GTO/pGTO real and complex, cartesian and spherical, isotropic and anisotropic-cell, and B-spline families.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_sphe_matches_jax
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_sphe_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_cart_matches_jax
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_cart_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_grad_sphe_matches_jax
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_grad_sphe_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: native-existing-output
+          expression: got
+        reference:
+          role: xla-existing-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_grad_lap
+        iterations:
+          variable: axis
+          required_values:
+          - x
+          - y
+          - z
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_grad_cart_matches_jax
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_grad_cart_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: native-existing-output
+          expression: got
+        reference:
+          role: xla-existing-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_grad_lap
+        iterations:
+          variable: axis
+          required_values:
+          - x
+          - y
+          - z
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_laplacian_sphe_matches_jax
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_laplacian_sphe_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_laplacian_cart_matches_jax
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_laplacian_cart_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital_pgto.py::test_pgto_value_matches_jax
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital_pgto.py::test_pgto_grad_matches_jax
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital_pgto.py::test_pgto_laplacian_matches_jax
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_pgto_anisotropic_value_matches_jax
+    executable_checks:
+      periodic-ao-value:
+        site: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_pgto_anisotropic_value_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: native-observable-periodic-ao-value
+          expression: got
+        reference:
+          role: xla-periodic-ao-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+        iterations:
+          variable: tag
+          required_values:
+          - in
+          - far_face
+          - seam
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_pgto_anisotropic_grad_matches_jax
+    executable_checks:
+      periodic-ao-grad:
+        site: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_pgto_anisotropic_grad_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: native-observable-periodic-ao-grad
+          expression: got
+        reference:
+          role: xla-periodic-ao-grad
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: regime_axis
+          required_values:
+          - in/x
+          - in/y
+          - in/z
+          - far_face/x
+          - far_face/y
+          - far_face/z
+          - seam/x
+          - seam/y
+          - seam/z
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_pgto_anisotropic_laplacian_matches_jax
+    executable_checks:
+      periodic-ao-laplacian:
+        site: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_pgto_anisotropic_laplacian_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: native-observable-periodic-ao-laplacian
+          expression: got
+        reference:
+          role: xla-periodic-ao-laplacian
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: tag
+          required_values:
+          - in
+          - far_face
+          - seam
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_complex_pgto_fullcell_vgl_matches_jax
+    executable_checks:
+      complex-ao-value:
+        site: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_complex_pgto_fullcell_vgl_matches_jax#inequality-1
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-value
+          expression: v
+        reference:
+          role: xla-complex-ao-value
+          expression: ref_v
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      complex-ao-grad-x:
+        site: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_complex_pgto_fullcell_vgl_matches_jax#inequality-2
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-grad-x
+          expression: gx
+        reference:
+          role: xla-complex-ao-grad-x
+          expression: grx
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      complex-ao-grad-y:
+        site: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_complex_pgto_fullcell_vgl_matches_jax#inequality-3
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-grad-y
+          expression: gy
+        reference:
+          role: xla-complex-ao-grad-y
+          expression: gry
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      complex-ao-grad-z:
+        site: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_complex_pgto_fullcell_vgl_matches_jax#inequality-4
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-grad-z
+          expression: gz
+        reference:
+          role: xla-complex-ao-grad-z
+          expression: grz
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      complex-ao-laplacian:
+        site: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_complex_pgto_fullcell_vgl_matches_jax#inequality-5
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-laplacian
+          expression: lap
+        reference:
+          role: xla-complex-ao-laplacian
+          expression: ref_lap
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_ao.py::test_compute_aos_complex
+    executable_checks:
+      d8-i-087:
+        site: tests/test_rs_kernel/test_complex_ao.py::test_compute_aos_complex#inequality-1
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_ao.py::test_compute_aos_vgl_complex
+    executable_checks:
+      complex-ao-value:
+        site: tests/test_rs_kernel/test_complex_ao.py::test_compute_aos_vgl_complex#inequality-1
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-value
+          expression: v
+        reference:
+          role: xla-complex-ao-value
+          expression: ref_v
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      complex-ao-grad-x:
+        site: tests/test_rs_kernel/test_complex_ao.py::test_compute_aos_vgl_complex#inequality-2
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-grad-x
+          expression: gx
+        reference:
+          role: xla-complex-ao-grad-x
+          expression: grx
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      complex-ao-grad-y:
+        site: tests/test_rs_kernel/test_complex_ao.py::test_compute_aos_vgl_complex#inequality-3
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-grad-y
+          expression: gy
+        reference:
+          role: xla-complex-ao-grad-y
+          expression: gry
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      complex-ao-grad-z:
+        site: tests/test_rs_kernel/test_complex_ao.py::test_compute_aos_vgl_complex#inequality-4
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-grad-z
+          expression: gz
+        reference:
+          role: xla-complex-ao-grad-z
+          expression: grz
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      complex-ao-laplacian:
+        site: tests/test_rs_kernel/test_complex_ao.py::test_compute_aos_vgl_complex#inequality-5
+        comparator: python.inequality
+        actual:
+          role: native-complex-ao-laplacian
+          expression: lap
+        reference:
+          role: xla-complex-ao-laplacian
+          expression: ref_lap
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_ao_cart_deriv.py::test_value_grad_lap
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ao_cart_deriv.py::test_value_grad_lap#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: _D(aos, r, 0, 0, 0)
+        reference:
+          role: existing-test-reference
+          expression: value_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_ao_cart_deriv.py::test_value_grad_lap#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: g
+        reference:
+          role: existing-test-reference
+          expression: grad_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_ao_cart_deriv.py::test_value_grad_lap#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: lap
+        reference:
+          role: existing-test-reference
+          expression: lap_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_pgto_deriv.py::test_pgto_deriv
+  - pytest_node: tests/test_rs_kernel/test_bspline.py::test_bspline_ao_value_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_bspline.py::test_bspline_complex_ao_value_grad_lap

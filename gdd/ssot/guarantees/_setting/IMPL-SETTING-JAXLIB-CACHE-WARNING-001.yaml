@@ -1,0 +1,22 @@
+id: IMPL-SETTING-JAXLIB-CACHE-WARNING-001
+kind: implementation
+name: jaxlib persistent-cache load-overflow warning
+plain_language: 'jaxlib 0.9.1 and 0.9.2 can crash the process silently (SIGSEGV, no Python traceback) when they load a large
+  executable from the JAX persistent compilation cache, because the cache-load thread overflows its stack. jqmc keeps its
+  supported jax range and, when jqmc._precision is imported, logs exactly one WARNING if the installed jaxlib is in [0.9.1,
+  0.10.0) and the cache is enabled (a cache directory set in jax.config or JAX_COMPILATION_CACHE_DIR, and
+  JAX_ENABLE_COMPILATION_CACHE / jax_enable_compilation_cache not false). The message names the bug, the affected versions
+  and both remedies (upgrade to jaxlib >= 0.10.0, or set JAX_ENABLE_COMPILATION_CACHE=false). It is silent when the cache
+  is disabled or the release is unaffected, never raises, and changes no setting. The affected-release table is one constant
+  shared with the test-harness gate. Version and config are mocked; this does not reproduce the crash itself.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jaxlib_cache_warning.py::test_warning_fires_for_affected_jaxlib_with_cache_enabled
+  - pytest_node: tests/test_jqmc_kernel/test_jaxlib_cache_warning.py::test_warning_fires_when_cache_dir_comes_from_environment
+  - pytest_node: tests/test_jqmc_kernel/test_jaxlib_cache_warning.py::test_warning_is_emitted_once_per_process
+  - pytest_node: tests/test_jqmc_kernel/test_jaxlib_cache_warning.py::test_warning_silent_when_cache_disabled_or_jaxlib_unaffected
+  - pytest_node: tests/test_jqmc_kernel/test_jaxlib_cache_warning.py::test_warning_never_raises
+  - pytest_node: tests/test_jqmc_kernel/test_jaxlib_cache_warning.py::test_import_of_jqmc_precision_runs_the_check_and_changes_nothing

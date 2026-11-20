@@ -1,0 +1,34 @@
+id: IMPL-GFMC-INCREMENTAL-TWIN-AE-PBC-DRIVER-001
+kind: implementation
+name: Driver-level incremental versus full-recompute GFMC twin on the periodic all-electron H4 cell (XLA)
+plain_language: >-
+  GFMC_t and GFMC_n production runs (incremental interval potential) and runs with JQMC_GFMC_POT_FULL_RECOMPUTE=1,
+  same seed, on H4_pbc_ae_cart.h5 (four nuclei, periodic, all-electron, J1 + J2) have byte-identical walkers and PRNG
+  keys, and stored w_L, e_L and e_L2 equal at the incremental-twin tolerance. The production route traces the
+  incremental branch and reports positive per-walker update counts; the twin reports zeros.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_incremental_twin_xla.py::test_gfmc_xla_incremental_twin_ae_pbc
+    executable_checks:
+      incremental-components:
+        site: tests/test_jqmc_kernel/test_gfmc_incremental_twin_xla.py::test_gfmc_xla_incremental_twin_ae_pbc#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: prod_values
+        reference:
+          role: existing-test-reference
+          expression: twin_values
+        precision:
+          full:
+            policy: CMP-GFMC-INCREMENTAL-TWIN-001
+          mixed:
+            policy: CMP-GFMC-INCREMENTAL-TWIN-001
+        iterations:
+          variable: name
+          required_values:
+          - _stored_w_L
+          - _stored_e_L
+          - _stored_e_L2

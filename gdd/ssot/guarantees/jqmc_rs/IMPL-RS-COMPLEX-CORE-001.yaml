@@ -1,0 +1,904 @@
+id: IMPL-RS-COMPLEX-CORE-001
+kind: implementation
+name: Rust/XLA parity of the complex core
+plain_language: The complex Rust core (geminal, ln(det), kinetic, ECP non-local, strain and position gradients, with and
+  without Jastrow/DTN/composite) reproduces the XLA evaluators on identical input.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_geminal_and_lndet_complex
+    executable_checks:
+      d8-h-077:
+        site: tests/test_rs_kernel/test_complex_core.py::test_geminal_and_lndet_complex#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: lgot
+        reference:
+          role: source-reference-value
+          expression: lref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      d8-h-078:
+        site: tests/test_rs_kernel/test_complex_core.py::test_geminal_and_lndet_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: Ggot
+        reference:
+          role: source-reference-value
+          expression: Gref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_kinetic_complex
+    executable_checks:
+      d8-h-079:
+        site: tests/test_rs_kernel/test_complex_core.py::test_kinetic_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: complex(re, im)
+        reference:
+          role: source-reference-value
+          expression: tref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_grad
+            - wf_kinetic
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_grad
+            - wf_kinetic
+            - det_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_ecp_nonlocal_complex
+    executable_checks:
+      d8-h-080:
+        site: tests/test_rs_kernel/test_complex_core.py::test_ecp_nonlocal_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: re
+        reference:
+          role: source-reference-value
+          expression: ref.real
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_ln_det_complex_Ok
+    executable_checks:
+      d8-h-081:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_ln_det_complex_Ok#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: mu
+        reference:
+          role: source-reference-value
+          expression: np.asarray(g.orb_data_up_spin.mo_coefficients)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      d8-h-082:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_ln_det_complex_Ok#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: md
+        reference:
+          role: source-reference-value
+          expression: np.asarray(g.orb_data_dn_spin.mo_coefficients)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_lndet_R_complex_G3
+    executable_checks:
+      d8-h-083:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_lndet_R_complex_G3#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_grad_lap
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_grad_lap
+            - det_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_lnPsi_strain_complex_G5
+    executable_checks:
+      d8-h-084:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_lnPsi_strain_complex_G5#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_grad_lap
+            - swct
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_grad_lap
+            - swct
+            - det_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_T_strain_complex_G6
+    executable_checks:
+      d8-h-085:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_T_strain_complex_G6#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - swct
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - swct
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_eL_strain_complex_ECP_full
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_eL_R_complex_ECP_full
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_mo_complex
+    executable_checks:
+      d8-h-086:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_mo_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: gu
+        reference:
+          role: xla-same-precision
+          expression: np.asarray(g.orb_data_up_spin.mo_coefficients)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+      d8-h-087:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_mo_complex#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: gdn
+        reference:
+          role: xla-same-precision
+          expression: np.asarray(g.orb_data_dn_spin.mo_coefficients)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_kinetic_withj_complex
+    executable_checks:
+      d8-h-088:
+        site: tests/test_rs_kernel/test_complex_core.py::test_kinetic_withj_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: complex(re, im)
+        reference:
+          role: source-reference-value
+          expression: tref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_T_mo_withJ_complex
+    executable_checks:
+      d8-h-089:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_T_mo_withJ_complex#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: gdn
+        reference:
+          role: xla-same-precision
+          expression: np.asarray(g.orb_data_dn_spin.mo_coefficients)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+      d8-h-090:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_T_mo_withJ_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: gu
+        reference:
+          role: xla-same-precision
+          expression: np.asarray(g.orb_data_up_spin.mo_coefficients)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_T_strain_withJ_complex
+    executable_checks:
+      d8-h-091:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_T_strain_withJ_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+            - ao_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_T_withJ_J3_complex
+    executable_checks:
+      d8-h-092:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_T_withJ_J3_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: st
+        reference:
+          role: source-reference-value
+          expression: st_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+            - ao_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_T_withJ_J3_composite_complex
+    executable_checks:
+      d8-h-093:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_T_withJ_J3_composite_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: st
+        reference:
+          role: source-reference-value
+          expression: st_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+            - ao_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+      d8-h-094:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_T_withJ_J3_composite_complex#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: fc
+        reference:
+          role: source-reference-value
+          expression: fref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+            - ao_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_ecp_nonlocal_withJ_complex
+    executable_checks:
+      d8-h-095:
+        site: tests/test_rs_kernel/test_complex_core.py::test_ecp_nonlocal_withJ_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: re
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - jastrow_ratio
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_mo_withJ_complex
+    executable_checks:
+      d8-h-096:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_mo_withJ_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: gu
+        reference:
+          role: xla-same-precision
+          expression: ru_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - jastrow_ratio
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - jastrow_ratio
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+      d8-h-097:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_mo_withJ_complex#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: gdn
+        reference:
+          role: xla-same-precision
+          expression: rd_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - jastrow_ratio
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - jastrow_ratio
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_strain_withJ_complex
+    executable_checks:
+      d8-h-098:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_strain_withJ_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: got
+        reference:
+          role: xla-same-precision
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - swct
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - swct
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_R_withJ_complex
+    executable_checks:
+      d8-h-099:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_R_withJ_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: got
+        reference:
+          role: xla-same-precision
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_ecp_nonlocal_withDTN_complex
+    executable_checks:
+      d8-h-100:
+        site: tests/test_rs_kernel/test_complex_core.py::test_ecp_nonlocal_withDTN_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: re
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - det_ratio
+            - coulomb
+            - jastrow_ratio
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_withDTN_strain_force_complex
+    executable_checks:
+      d8-h-101:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_withDTN_strain_force_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: got_s
+        reference:
+          role: xla-same-precision
+          expression: ref_s
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - swct
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - swct
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+      d8-h-102:
+        site: tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_withDTN_strain_force_complex#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: got_f
+        reference:
+          role: xla-same-precision
+          expression: ref_f
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_complex_kinetic_DTN_stress_force
+    executable_checks:
+      d8-h-103:
+        site: tests/test_rs_kernel/test_complex_core.py::test_complex_kinetic_DTN_stress_force#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: st
+        reference:
+          role: xla-same-precision
+          expression: st_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+      d8-h-104:
+        site: tests/test_rs_kernel/test_complex_core.py::test_complex_kinetic_DTN_stress_force#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: fc
+        reference:
+          role: xla-same-precision
+          expression: fc_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_core.py::test_complex_composite_kinetic_stress_force
+    executable_checks:
+      d8-h-105:
+        site: tests/test_rs_kernel/test_complex_core.py::test_complex_composite_kinetic_stress_force#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: st
+        reference:
+          role: source-reference-value
+          expression: st_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'
+      d8-h-106:
+        site: tests/test_rs_kernel/test_complex_core.py::test_complex_composite_kinetic_stress_force#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: fc
+        reference:
+          role: source-reference-value
+          expression: fc_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+            - mo_grad
+        iterations:
+          variable: sample_label
+          required_values:
+          - '1'
+          - '2'

@@ -1,0 +1,45 @@
+id: IMPL-PREC-STREAMED-ECP-MESH-RATIO-TABLE-001
+kind: implementation
+name: Streamed no-inverse ECP mesh derivatives build every inverse from the determinant-ratio table
+plain_language: >-
+  The streamed (non-rank-one) ECP non-local derivatives weight each mesh configuration by the value-only ratio
+  det(G'_g)/det(G) and hand Sherman-Morrison inverses to per-configuration fields that read the value-only
+  compute_orb_api table. Without a supplied geminal inverse, the base of those inverses and every base field
+  differenced against the mesh therefore come from the value-only table, not the fused value table that the
+  rank-one route and the no-inverse determinant kernels invert. On the periodic real-Gamma bcc Li ccECP, its
+  complex twist k=(0.25,0,0), the molecular Li ccECP (SD and AGP) and N2 ccECP, each with exponential J1 and J2
+  factors, at the seed-0 configuration drawn with scale 0.7, the streamed route is selected by rejecting the
+  rank-one fast path. Each streamed entry point (ecp_force.grad_V_ecp_wrt_strain, grad_V_ecp_wrt_R,
+  grad_V_ecp_wrt_r, grad_V_ecp_wrt_strain_mol, grad_V_ecp_nl_dltmove r/R/eps, assemble._dV_ecp_dc and
+  gfmc._dltmove_delta_strain_pbc) is evaluated without an inverse, once unpatched and once with the fused value
+  table (determinant._orbital_value_grad_lap_tables) returning NaN values. The results must be identical, finite
+  and nonzero. As a liveness control, the same entry point on the rank-one route (where served) reads the
+  patched fused table. This does not claim the rank-one route, supplied-inverse routes or the native route.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_streamed_ecp_mesh_ratio_table.py::test_streamed_ecp_mesh_does_not_read_the_fused_value_table
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: lithium.h5, geminal: SD, route: eps_pbc}
+    - {trexio_file: lithium.h5, geminal: SD, route: R}
+    - {trexio_file: lithium.h5, geminal: SD, route: c}
+    - {trexio_file: lithium.h5, geminal: SD, route: dltmove_eps_pbc}
+    - {trexio_file: lithium_k025.h5, geminal: SD, route: eps_pbc}
+    - {trexio_file: lithium_k025.h5, geminal: SD, route: c}
+    - {trexio_file: Li_ecp_ccpvdz_cart.h5, geminal: AGP, route: eps_mol}
+    - {trexio_file: Li_ecp_ccpvdz_cart.h5, geminal: SD, route: r}
+    - {trexio_file: Li_ecp_ccpvdz_cart.h5, geminal: AGP, route: c}
+    - {trexio_file: N2_ecp_ccpvtz_cart.h5, geminal: SD, route: dltmove_r}
+    - {trexio_file: N2_ecp_ccpvtz_cart.h5, geminal: SD, route: dltmove_R}
+    - {trexio_file: N2_ecp_ccpvtz_cart.h5, geminal: SD, route: dltmove_eps_mol}
+    executable_checks:
+      streamed-ecp-derivative-independent-of-fused-table:
+        site: tests/test_jqmc_kernel/test_streamed_ecp_mesh_ratio_table.py::test_streamed_ecp_mesh_does_not_read_the_fused_value_table#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: streamed-noinv-derivative-with-poisoned-fused-table, expression: probed}
+        reference: {role: streamed-noinv-derivative-unpatched, expression: reference}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

@@ -1,0 +1,13 @@
+id: IMPL-DERIVAPI-GFMC-FUSED-ENTRY-001
+kind: implementation
+name: Fused GFMC force+stress entry parity
+plain_language: 'The FUSED public entries the live GFMC/LRDMC drivers call (grad_e_L_t/n_wrt_positions_and_strain, their
+  own dispatch route) equal the separate position and strain entries elementwise, with a non-vacuity check that both compared
+  quantities are alive. Without this node a defect confined to the fusion (tuple order, dropped stress term, stale
+  geminal inverse) would reach production silently.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_entry_and_representation_parity.py::test_gfmc_fused_positions_and_strain_matches_separate_entries

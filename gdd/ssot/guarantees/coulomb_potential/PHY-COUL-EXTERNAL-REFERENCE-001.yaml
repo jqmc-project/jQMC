@@ -1,0 +1,304 @@
+id: PHY-COUL-EXTERNAL-REFERENCE-001
+kind: physical
+name: External-reference agreement of the Ewald sums
+plain_language: The Ewald ion-ion, electron-ion, and electron-electron sums agree with pymatgen on reviewed bulk, monoclinic,
+  slab, and vacuum-electron systems, and the NaCl Madelung constant is reproduced; molecular input is rejected by the Ewald
+  builder.
+verdict_methods:
+- VM-PHY-REFERENCE-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-PHY-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal::test_compute_ewald_potential_ii_vs_pymatgen_nacl_sc
+    executable_checks:
+      d8-n-102:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal.test_compute_ewald_potential_ii_vs_pymatgen_nacl_sc#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: float(ewald_data.ii_energy)
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_II_NACL_SC_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal::test_compute_ewald_potential_ii_vs_pymatgen_mgo_b1
+    executable_checks:
+      d8-n-103:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal.test_compute_ewald_potential_ii_vs_pymatgen_mgo_b1#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: float(ewald_data.ii_energy)
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_II_MGO_B1_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal::test_compute_ewald_potential_ii_vs_pymatgen_zno_wurtzite
+    executable_checks:
+      d8-n-104:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal.test_compute_ewald_potential_ii_vs_pymatgen_zno_wurtzite#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: float(ewald_data.ii_energy)
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_II_ZNO_WURTZITE_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal::test_compute_ewald_potential_ii_vs_pymatgen_cuo_tenorite
+    executable_checks:
+      d8-n-105:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal.test_compute_ewald_potential_ii_vs_pymatgen_cuo_tenorite#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: float(ewald_data.ii_energy)
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_II_CUO_TENORITE_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal::test_compute_ewald_potential_ei_vs_pymatgen_h2_box
+    executable_checks:
+      d8-n-106:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal.test_compute_ewald_potential_ei_vs_pymatgen_h2_box#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_ei
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_EI_H2_BOX_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal::test_compute_ewald_potential_ee_vs_pymatgen_h2_box
+    executable_checks:
+      d8-n-107:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal.test_compute_ewald_potential_ee_vs_pymatgen_h2_box#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_ee
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_EE_H2_BOX_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal::test_compute_ewald_potential_ei_vs_pymatgen_h2_monoclinic
+    executable_checks:
+      d8-n-108:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal.test_compute_ewald_potential_ei_vs_pymatgen_h2_monoclinic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_ei
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_EI_H2_MONO_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal::test_compute_ewald_potential_ee_vs_pymatgen_h2_monoclinic
+    executable_checks:
+      d8-n-109:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal.test_compute_ewald_potential_ee_vs_pymatgen_h2_monoclinic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_ee
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_EE_H2_MONO_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal::test_compute_ewald_potential_ii_madelung_constant_nacl_sc
+    executable_checks:
+      d8-n-110:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldExternal.test_compute_ewald_potential_ii_madelung_constant_nacl_sc#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: alpha_M_test
+        reference:
+          role: source-reference-value
+          expression: ALPHA_M_NACL
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum::test_compute_ewald_potential_ii_vs_pymatgen_nacl_slab_vacuum
+    executable_checks:
+      d8-n-111:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum.test_compute_ewald_potential_ii_vs_pymatgen_nacl_slab_vacuum#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: float(ewald_data.ii_energy)
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_II_NACL_SLAB_VAC_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum::test_compute_ewald_potential_ii_vs_pymatgen_water_lih
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum::test_compute_ewald_potential_total_vs_pymatgen_water_lih_slab
+    executable_checks:
+      d8-n-112:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum.test_compute_ewald_potential_total_vs_pymatgen_water_lih_slab#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_ii + E_ei + E_ee
+        reference:
+          role: source-reference-value
+          expression: reference
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-EWALD-VS-PYMATGEN-CHARGED-SLAB-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-EWALD-VS-PYMATGEN-CHARGED-SLAB-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum::test_compute_ewald_potential_ei_vs_pymatgen_h4_slab
+    executable_checks:
+      d8-n-113:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum.test_compute_ewald_potential_ei_vs_pymatgen_h4_slab#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_ei
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_EI_H4_SLAB_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum::test_compute_ewald_potential_ee_vs_pymatgen_h4_slab
+    executable_checks:
+      d8-n-114:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum.test_compute_ewald_potential_ee_vs_pymatgen_h4_slab#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_ee
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_EE_H4_SLAB_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum::test_compute_ewald_potential_ei_vs_pymatgen_h4_slab_vacuum_electron
+    executable_checks:
+      d8-n-115:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum.test_compute_ewald_potential_ei_vs_pymatgen_h4_slab_vacuum_electron#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_ei
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_EI_H4_SLAB_VACUUM_ELECTRON_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum::test_compute_ewald_potential_ee_vs_pymatgen_h4_slab_vacuum_electron
+    executable_checks:
+      d8-n-116:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum.test_compute_ewald_potential_ee_vs_pymatgen_h4_slab_vacuum_electron#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_ee
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_EE_H4_SLAB_VACUUM_ELECTRON_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum::test_compute_ewald_potential_total_vs_pymatgen_h4_slab_vacuum_electron
+    executable_checks:
+      d8-n-117:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum.test_compute_ewald_potential_total_vs_pymatgen_h4_slab_vacuum_electron#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_total
+        reference:
+          role: source-reference-value
+          expression: PYMATGEN_E_TOTAL_H4_SLAB_VACUUM_ELECTRON_HA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-EWALD-VS-EXTERNAL-REFERENCE-R-EWALD-VS-EXTERNAL-REFERENCE-001
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldError::test_build_ewald_data_rejects_molecular_input

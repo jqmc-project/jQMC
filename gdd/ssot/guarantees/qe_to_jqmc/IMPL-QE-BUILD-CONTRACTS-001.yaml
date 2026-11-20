@@ -1,0 +1,40 @@
+id: IMPL-QE-BUILD-CONTRACTS-001
+kind: implementation
+name: Wavefunction build contracts
+plain_language: Every conversion kind (PW, B-spline, pGTO, and composites, restricted and unrestricted, Gamma and non-Gamma)
+  builds the declared wavefunction with the reviewed occupation, k-point, and dispatch behavior; malformed occupations,
+  band counts, kinds, and kwargs are hard errors.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_sd_occupation_truncates_h128_like_nbnd72_to_64_rows_per_twist
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_build_wavefunction_pw
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_build_wavefunction_bspline
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_build_wavefunction_bspline_force_complex_gamma_is_opt_in
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_build_wavefunction_pgto
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_build_wavefunction_pgto_plus_pw
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_build_wavefunction_pgto_plus_bspline
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEToJQMCUnrestricted::test_build_wavefunction_pw_unrestricted
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEToJQMCUnrestricted::test_source_band_count_mismatch_is_allowed_when_each_spin_is_filled
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEToJQMCUnrestricted::test_check_binary_occupations_tolerance
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEToJQMCUnrestricted::test_multi_twist_converter_lsda_pgto
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_wfc_k_point_is_nonzero_cartesian
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_build_gto_pw_matrix_lifts_gamma_stub
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_build_gto_pw_matrix_explicit_k_overrides_default
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_qe_pgto_projection_dispatches_complex_ao_leaf
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_qe_pgto_plus_pw_composite_at_non_gamma
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_qe_pgto_plus_bspline_composite_at_non_gamma
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_qe_pw_only_at_non_gamma
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_qe_bspline_only_at_non_gamma
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_twist_fixed_cutoff_runs_one_shared_exponent_optimisation
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_twist_auto_runs_shared_exponent_optimisation_before_k_loop
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_sd_restricted_conversion_rejects_too_few_occupied_bands
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCOrbitalFidelity::test_invalid_kind_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEToJQMCUnrestricted::test_dn_kwargs_must_come_together
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEToJQMCUnrestricted::test_fractional_occupations_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEToJQMCUnrestricted::test_restricted_fractional_occupations_rejected

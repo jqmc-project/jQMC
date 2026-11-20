@@ -1,0 +1,35 @@
+id: MATH-DET-OPEN-SHELL-MO-SCALE-001
+kind: mathematical
+name: Open-shell local energy and log determinant preserve a uniform MO normalization
+plain_language: >-
+  On committed O-lsda_gamma real pGTO SD and O-lsda_k025 complex Bloch pGTO SD
+  (four up/two down, no Jastrow, PCG64(13) Gaussian(scale=0.6) electron starts,
+  constant exp(i*row) MO phases on the genuine complex twist only),
+  multiplying both occupied MO coefficient arrays by c=1e-85 or c=1e85 changes
+  the wavefunction by the configuration-independent amplitude c^6. Both unscaled/scaled Hamiltonians pass public sanity_check validation and
+  remain nonsingular with a finite NumPy inverse and slogdet. Its XLA
+  local energy is finite and equals the unscaled local energy at unchanged
+  positions under the strict det_ratio budget, in each precision separately.
+  Paired geminal columns scale by c^2 and unpaired columns by c, so raw singular
+  value grading alone must not discard a physical direction. The public
+  logarithmic determinant and no-Jastrow log wavefunction (ordinary and
+  supplied-inverse variants) stay finite and equal NumPy slogdet when the raw
+  determinant amplitude underflows or overflows, under strict det_eval.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_open_shell_mo_scale.py::test_open_shell_local_energy_is_invariant_to_uniform_mo_scale
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save, scale: 1.0e-85}
+    - {fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save, scale: 1.0e+85}
+    - {fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, scale: 1.0e-85}
+    - {fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, scale: 1.0e+85}
+  - pytest_node: tests/test_jqmc_kernel/test_open_shell_mo_scale.py::test_open_shell_logdet_has_the_global_mo_scale_shift
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save, scale: 1.0e-85}
+    - {fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save, scale: 1.0e+85}
+    - {fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, scale: 1.0e-85}
+    - {fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, scale: 1.0e+85}

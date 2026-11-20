@@ -1,0 +1,20 @@
+id: IMPL-CLI-JOB-TYPE-VALIDATION-001
+kind: implementation
+name: An unsupported [control] job_type is rejected before any input is read
+plain_language: >-
+  The jqmc CLI runs a job only for the documented [control] job_type values mcmc, vmc, lrdmc-bra and lrdmc-tau.
+  Any other value, including a different case, a trailing blank, an underscore spelling or a non-string, raises
+  an error that names job_type and the allowed values before the Hamiltonian or restart checkpoint is opened, so a
+  misspelled job cannot end without a calculation and a normal exit.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_input_contracts.py::test_single_twist_rejects_unsupported_job_type
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {job_type: mcmcc}
+    - {job_type: MCMC}
+    - {job_type: 'mcmc '}
+    - {job_type: lrdmc_bra}
+    - {job_type: 1}

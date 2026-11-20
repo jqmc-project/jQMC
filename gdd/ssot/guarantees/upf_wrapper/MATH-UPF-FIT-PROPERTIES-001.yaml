@@ -1,0 +1,19 @@
+id: MATH-UPF-FIT-PROPERTIES-001
+kind: mathematical
+name: Fit properties of UPF-derived bases
+plain_language: The Gaussian radial overlap condition number matches the fit_pswfc convention, the automatic fit selects
+  a reasonable shell count, and tight shell extension follows the geometric progression.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-MATH-UPF-FIT-CARDINALITY-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_gaussian_radial_overlap_cond_matches_fit_pswfc_convention
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_extend_shells_tight_geometric_progression
+- verdict_method: VM-MATH-UPF-FIT-CARDINALITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_fit_auto_selects_reasonable_n

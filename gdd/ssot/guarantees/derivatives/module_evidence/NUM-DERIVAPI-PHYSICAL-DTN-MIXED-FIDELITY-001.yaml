@@ -1,0 +1,110 @@
+id: NUM-DERIVAPI-PHYSICAL-DTN-MIXED-FIDELITY-001
+kind: numerical
+name: Periodic physical derivatives, DTN energy parameters and molecular ECP force preserve full analytical fidelity
+plain_language: For the five deterministic public-API cases, each homogeneous mixed analytical-production derivative
+  block agrees with the identical analytical route independently rebuilt in full precision from the same source
+  at the central parameter_derivative infinity-norm budget. Coordinate values, model preconditions, field sets,
+  leaf shapes and finite nonempty blocks are retained. A mixed-only excess perturbation is rejected at the same
+  primary comparison. The original strict full-precision mathematical AD checks are retained unchanged. Electron
+  and nuclear energy gradients are parameter derivatives of the public energy, rather than AO/MO orbital-derivative
+  fields.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_eL_dr_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: lithium.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_first5#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-public-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-public-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_eL_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: lithium.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_first5#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-public-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-public-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_force_lnpsi_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: lithium.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_first5#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-public-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-public-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_e_L_dc_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: N_ae_ccpvdz_cart.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_first5#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-public-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-public-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_force_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: N2_ecp_ccpvtz_cart.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_first5#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-public-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-public-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

@@ -1,0 +1,17 @@
+id: MATH-TOOL-EXTRAPOLATION-CLOSED-FORM-001
+kind: mathematical
+name: Deterministic closed-form continuum-fit error propagation
+plain_language: 'extrapolate-energy fits each printed series (E and, when present, E_MPC) by unweighted least squares
+  in a^2 and reports the constant term E0 = c . y with c the constant-term row of the least-squares projector, and the
+  exactly propagated uncertainty sqrt(sum_i (c_i sigma_i)^2) for independent points. No random draws are involved: repeated
+  calls on the same checkpoints print bit-identical continuum lines regardless of the global NumPy RNG state. Points that do
+  not lie on the fitted polynomial (over-determined linear and quadratic fits) and the exactly determined quadratic are
+  pinned against an independent normal-equation reference, for both E and E_MPC. This states the arithmetic of the fit, not the adequacy
+  of the polynomial model or the independence of the sampled runs.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_continuum_estimate_is_deterministic_and_independent_of_global_rng
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_overdetermined_and_interpolating_fits_match_normal_equations

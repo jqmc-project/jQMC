@@ -1,0 +1,25 @@
+id: MATH-AO-IMAGE-SELECTION-SCALE-SAFE-001
+kind: mathematical
+name: Periodic AO closest-approach image selection is scale safe on every finite cell of its domain
+plain_language: >-
+  The box closest-approach test behind periodic AO image selection (_images_within_rcut_from_box) forms no squared
+  length, Gram entry or squared distance in absolute units: each cell row is split into a unit vector and a power-of-two
+  length, the domain test is |det(a_hat, b_hat, c_hat)| > float64 eps (volume > eps |a| |b| |c| without under- or
+  overflow), projections and the Lagrange-Gauss pair reduction use unit vectors, and Cartesian points and the r_cut
+  comparison carry a per-candidate power-of-two exponent. For the counterexample diag(1e-200, 1e100,
+  1e100) (volume 1, row-norm product 1) with candidate (0, 0, 0) and fractional box [1, 2]^3, the exact closest point is
+  the lower corner at distance sqrt(2e200 + 1e-400): r_cut = 1e99 keeps nothing and r_cut = 2e100 keeps the candidate,
+  with no exception. For tiny (1e-170), huge (1e170), sheared tiny/huge (1e-160 / 1e150 times the 1e8 shear of a
+  triclinic cell), mixed-scale triclinic (row scales 1e-170, 1, 1e170), mixed-scale skewed (two 1e-200 rows with a 1e6
+  shear and a 1e150 row) and range-edge (row scales 1e300, 1e-300, 1) bases, for cell-cell and per-atom boxes over the
+  candidate cube [-3, 3]^3, the kept set equals the set whose exact rational-arithmetic Cartesian closest-approach
+  distance is within r_cut (r_cut placed in log space inside a gap of the exact distances). Full and mixed are each
+  required.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_image_selection_on_extreme_scale_bases_matches_exact_rational_closest_approach
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

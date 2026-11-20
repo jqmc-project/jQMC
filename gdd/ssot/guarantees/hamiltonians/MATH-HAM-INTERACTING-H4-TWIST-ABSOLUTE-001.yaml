@@ -1,0 +1,23 @@
+id: MATH-HAM-INTERACTING-H4-TWIST-ABSOLUTE-001
+kind: mathematical
+name: Interacting H4 twist local energy equals independent primitive and Ewald formulas
+plain_language: The unchanged h4_twist_j12 periodic-invariant fixture, H4_pbc_ae_k025_cart.h5 with time-reversal SD, two electrons per spin and conventional J1/J2, has the complex local energy given by independently expressed Gaussian primitives, image Bloch phases, MO and determinant contractions, periodic J1/J2, a complex Hessian kinetic energy and a NumPy Ewald sum. The fixed image-offset configuration uses PCG64(700000+attempt), at most 300 proposals, accepted only when cond(G)<1e4. Both full and mixed consume their own active zone arithmetic at the existing strict tolerance. An actual 1.01 production Bloch-momentum phase fault must fail after a passing baseline. No production AO, Jastrow, derivative or energy numerical helper supplies the reference. Shared primitive/image/MO input data remain explicit. This claim excludes the Li ECP twist pattern whose discarded imaginary nonlocal energy is covered separately, and makes no Rust route claim.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_h4_twist_absolute.py::test_interacting_h4_twist_local_energy_matches_independent_absolute_value
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      absolute-complex-energy:
+        site: tests/test_jqmc_kernel/test_h4_twist_absolute.py::test_interacting_h4_twist_local_energy_matches_independent_absolute_value#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-local-energy, expression: actual}
+        reference: {role: independent-primitive-hessian-and-ewald-reference, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_eval, jastrow_grad_lap, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_eval, jastrow_grad_lap, wf_kinetic, coulomb, ewald, local_energy]}
+  - pytest_node: tests/test_jqmc_kernel/test_h4_twist_absolute.py::test_interacting_h4_absolute_anchor_rejects_wrong_bloch_momentum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

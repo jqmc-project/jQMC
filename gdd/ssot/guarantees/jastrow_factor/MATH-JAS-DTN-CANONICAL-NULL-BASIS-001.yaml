@@ -1,0 +1,57 @@
+id: MATH-JAS-DTN-CANONICAL-NULL-BASIS-001
+kind: mathematical
+name: DTN f-channel inflation basis is the canonical basis of its constraint null space
+plain_language: The independent f-channel coefficients of a newly built DTN Jastrow are coordinates in one fixed basis
+  of the constraint null space (permutation symmetry, e-e and e-n cuspless rows). That basis is the Gram-Schmidt basis
+  of the projected unit vectors taken in index order, with a positive component at each pivot. It depends only on the
+  null space, not on the rotation a LAPACK build returns, so build(random_init=True, seed) gives the same Jastrow on
+  every platform. The reference uses the pinv projector and a sign-fixed QR factor, not the production construction, and an
+  orthogonal row mixing of the constraints returns the same basis.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_f_null_basis_is_canonical
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      basis:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints.test_dtn_f_null_basis_is_canonical#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: production-f-inflation-basis
+          expression: basis
+        reference:
+          role: projector-qr-canonical-basis
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+      row-mixing:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints.test_dtn_f_null_basis_is_canonical#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: basis-of-row-mixed-constraints
+          expression: mixed_basis
+        reference:
+          role: production-f-inflation-basis
+          expression: basis
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval

@@ -1,0 +1,19 @@
+id: MATH-HAM-TWIST-HERMITICITY-001
+kind: mathematical
+name: Hermiticity of the local-energy operator at a twist on an exact periodic quadrature
+plain_language: >-
+  At k = (0.25, -0.1, 0.4) on a triclinic all-electron Li cell with Ewald Coulomb, three Jastrow-free
+  spin-unrestricted plane-wave Slater determinants with seeded complex coefficients give a local-energy
+  matrix and a kinetic matrix, summed over a uniform fractional grid that integrates the kinetic
+  integrand exactly. Both matrices must equal their conjugate transposes, and the kinetic matrix must
+  not depend on the grid offset, within the strict zone policy rebased on the summand scale. The
+  off-diagonal imaginary parts must exceed that bound. A complex slip in the plane-wave Laplacian cross
+  term must break Hermiticity. Full and mixed are judged separately. This covers band-limited
+  plane-wave determinants only: Jastrow, pGTO and B-spline integrands and the real-projected non-local
+  ECP give no exact finite identity and are not claimed.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bloch_phase_hermiticity.py::test_local_energy_operator_is_hermitian_on_exact_periodic_quadrature
+  - pytest_node: tests/test_jqmc_kernel/test_bloch_phase_hermiticity.py::test_hermiticity_check_rejects_a_non_hermitian_kinetic_cross_term

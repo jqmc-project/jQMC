@@ -1,0 +1,324 @@
+name: jQMC public distribution build
+
+# One build-and-check recipe for the public distribution check, TestPyPI and
+# PyPI; the jQMC-forge repository calls the same recipe. No publishing
+# credentials enter this workflow. Apart from the short run of the installed
+# package below, it runs no numerical tests.
+#
+# One sdist, then one ABI3 wheel per platform built FROM that sdist and checked
+# on that platform: installed with its dependencies (Python x JAX, MPI), its
+# command-line entry points, input generation and templates, and a short
+# MCMC/VMC/LRDMC run of the installed package. `public-distributions` (what the
+# deploy jobs publish) is assembled only after every platform's wheel passed.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  JAX_PLATFORMS: cpu
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  JQMC_RS_NUM_THREADS: '2'
+  JQMC_FLAG_RUST_ON_CPU: '1'
+
+jobs:
+  sdist:
+    name: Source distribution
+    if: contains(fromJSON('["jqmc-project/jQMC", "jqmc-project/jQMC-forge"]'), github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install distribution tools
+        run: python -m pip install --upgrade build twine
+      - name: Build and inspect the source distribution
+        run: |
+          python -m build --sdist
+          python -m twine check --strict dist/*
+          python - <<'PY'
+          import subprocess
+          import tarfile
+          from pathlib import Path
+
+          archives = list(Path("dist").glob("*.tar.gz"))
+          if len(archives) != 1:
+              raise SystemExit(f"Expected one source distribution, got {archives}")
+          archive = archives[0]
+          with tarfile.open(archive) as source:
+              names = {name.partition("/")[2] for name in source.getnames()}
+          required = set(subprocess.check_output(
+              ["git", "ls-files", "jqmc/rs", ".cargo/config.toml"], text=True
+          ).splitlines())
+          required.update({"pyproject.toml", "jqmc/rs/Cargo.toml", "jqmc/rs/Cargo.lock",
+                           "jqmc/rs/build.rs", "jqmc/rs/src/lib.rs"})
+          if missing := required - names:
+              raise SystemExit(f"Source distribution is missing Rust build inputs: {sorted(missing)}")
+          licences = set(subprocess.check_output(["git", "ls-files", "LICENSE", "LICENSES"], text=True).splitlines())
+          if missing := licences - names:
+              raise SystemExit(f"Source distribution is missing licence files: {sorted(missing)}")
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  wheel:
+    name: Wheel ${{ matrix.platform }}
+    if: contains(fromJSON('["jqmc-project/jQMC", "jqmc-project/jQMC-forge"]'), github.repository)
+    needs: sdist
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # Platforms with jaxlib wheels for the supported jax range. Each target
+        # overrides the Cargo configs' target-cpu=native with that platform's
+        # baseline, so the wheel runs on every CPU of the platform.
+        include:
+          - platform: linux-x86_64
+            runner: ubuntu-latest
+            build: cp311-manylinux_x86_64
+            rustflags: -C target-cpu=x86-64
+            tag: manylinux
+          - platform: linux-aarch64
+            runner: ubuntu-24.04-arm
+            build: cp311-manylinux_aarch64
+            rustflags: -C target-cpu=generic
+            tag: manylinux
+          - platform: macos-arm64
+            runner: macos-26
+            build: cp311-macosx_arm64
+            rustflags: -C target-cpu=apple-m1
+            tag: macosx
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v8
+        with:
+          name: sdist
+          path: sdist
+      - name: Locate the source distribution
+        id: sdist
+        shell: bash
+        run: |
+          archives=(sdist/*.tar.gz)
+          if [ "${#archives[@]}" -ne 1 ]; then echo "Expected one sdist: ${archives[*]}"; exit 1; fi
+          echo "path=${archives[0]}" >> "$GITHUB_OUTPUT"
+      - name: Build a portable ABI3 wheel from that source distribution
+        uses: pypa/cibuildwheel@v4.3.0
+        with:
+          package-dir: ${{ steps.sdist.outputs.path }}
+          output-dir: dist
+        env:
+          # The extension is abi3-py310, but jQMC itself requires Python >=3.11.
+          # Build once per platform; test this same wheel on every advertised
+          # Python below.
+          CIBW_BUILD: ${{ matrix.build }}
+          CIBW_ARCHS: native
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+          CIBW_BEFORE_ALL_LINUX: >-
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs |
+            sh -s -- -y --profile minimal --default-toolchain stable
+          CIBW_ENVIRONMENT_LINUX: >-
+            PATH="$HOME/.cargo/bin:$PATH"
+            RUSTFLAGS="${{ matrix.rustflags }}" CARGO_BUILD_JOBS=2
+          # jaxlib's own macOS minimum; the runner's Rust toolchain is used.
+          CIBW_ENVIRONMENT_MACOS: >-
+            MACOSX_DEPLOYMENT_TARGET=11.0
+            RUSTFLAGS="${{ matrix.rustflags }}"
+          # The installed wheel is checked on each platform below (job
+          # verify): jaxlib's own system minimum is independent of the Rust
+          # extension's tag.
+      - name: Validate the wheel against the source distribution
+        env:
+          PLATFORM_TAG: ${{ matrix.tag }}
+        run: |
+          python -m pip install --upgrade twine packaging
+          python -m twine check --strict dist/*.whl
+          python - <<'PY'
+          import os
+          import tarfile
+          import zipfile
+          from pathlib import Path
+          from packaging.utils import parse_sdist_filename, parse_wheel_filename
+
+          wheel, = Path("dist").glob("*.whl")
+          source, = Path("sdist").glob("*.tar.gz")
+          name, version, _, tags = parse_wheel_filename(wheel.name)
+          if (name, version) != parse_sdist_filename(source.name) or name != "jqmc":
+              raise SystemExit("Wheel and source distribution name/version differ")
+          prefix = os.environ["PLATFORM_TAG"]
+          if not all(tag.abi == "abi3" and tag.platform.startswith(prefix) for tag in tags):
+              raise SystemExit(f"Not a portable {prefix} ABI3 wheel: {wheel.name}")
+          with zipfile.ZipFile(wheel) as package:
+              names = package.namelist()
+              if not any(name.startswith("jqmc_rs.") and name.endswith(".so") for name in names):
+                  raise SystemExit("Rust extension is missing from the wheel")
+              if not {"jqmc/__init__.py", "jqmc_workflow/__init__.py"}.issubset(names):
+                  raise SystemExit("Python packages are missing from the wheel")
+          # Every licence file of the sdist is shipped in the wheel's .dist-info/licenses.
+          with tarfile.open(source) as archive:
+              licences = {member.partition("/")[2] for member in archive.getnames()}
+          licences = {path for path in licences if path == "LICENSE" or path.startswith("LICENSES/")}
+          shipped = {name.partition(".dist-info/licenses/")[2] for name in names if ".dist-info/licenses/" in name}
+          if missing := licences - shipped:
+              raise SystemExit(f"Licence files are missing from the wheel: {sorted(missing)}")
+          ref = os.environ["GITHUB_REF"]
+          if ref.startswith("refs/tags/v") and str(version) != ref.removeprefix("refs/tags/v"):
+              raise SystemExit(f"Built version {version} does not match release tag {ref}")
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheel-${{ matrix.platform }}
+          path: dist/*.whl
+          if-no-files-found: error
+          retention-days: 7
+
+  verify:
+    name: Wheel ${{ matrix.platform }} Python ${{ matrix.python }} jax ${{ matrix.jax }}
+    if: contains(fromJSON('["jqmc-project/jQMC", "jqmc-project/jQMC-forge"]'), github.repository)
+    needs: wheel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [linux-x86_64, linux-aarch64, macos-arm64]
+        python: ['3.11', '3.12', '3.13']
+        # minimum: jax 0.7.2, pinned, near the bottom of the supported range
+        # (the package requires jax >= 0.7.0). newest: what a plain
+        # `pip install jqmc` resolves today within the package's jax range.
+        jax: [minimum]
+        include:
+          - {platform: linux-x86_64, runner: ubuntu-latest}
+          - {platform: linux-aarch64, runner: ubuntu-24.04-arm}
+          - {platform: macos-arm64, runner: macos-26}
+          - {platform: linux-x86_64, runner: ubuntu-latest, python: '3.13', jax: newest}
+          - {platform: linux-aarch64, runner: ubuntu-24.04-arm, python: '3.13', jax: newest}
+          - {platform: macos-arm64, runner: macos-26, python: '3.13', jax: newest}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: wheel-${{ matrix.platform }}
+          path: dist
+      - name: Install MPI
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            brew install open-mpi
+          else
+            sudo apt-get update
+            sudo apt-get install -y openmpi-bin libopenmpi-dev
+          fi
+      - name: Install the wheel with its runtime dependencies
+        env:
+          JAX_VERSIONS: ${{ matrix.jax }}
+        run: |
+          python -m pip install --upgrade pip
+          if [ "$JAX_VERSIONS" = minimum ]; then
+            python -m pip install dist/*.whl 'jax==0.7.2' 'jaxlib==0.7.2'
+          else
+            python -m pip install dist/*.whl
+          fi
+          python -m pip check
+          python -c "import jax, jaxlib; print('jax', jax.__version__, 'jaxlib', jaxlib.__version__)"
+      - name: Check installed CLI entry points, input generation and templates
+        run: |
+          python -I - <<'PY'
+          import subprocess
+          import sys
+          import sysconfig
+          import tempfile
+          import tomllib
+          from importlib.resources import files
+          from pathlib import Path
+          import jqmc_workflow
+          import yaml
+
+          root = Path.cwd().resolve()
+          if Path(jqmc_workflow.__file__).resolve().is_relative_to(root):
+              raise SystemExit("Template checks must use the installed wheel")
+          scripts = Path(sysconfig.get_path("scripts"))
+          # Execute the actual installed console scripts, not entry_point.load()
+          # or functions from the checkout. Isolate their imports and working
+          # directory too; no user settings or remote machines are needed.
+          with tempfile.TemporaryDirectory(prefix="jqmc-wheel-cli-") as directory:
+              for command in ("jqmc", "jqmc-tool", "jqmc-jobmanager"):
+                  result = subprocess.run(
+                      [sys.executable, "-I", str(scripts / command), "--help"],
+                      cwd=directory, check=True, capture_output=True, text=True, timeout=60,
+                  )
+                  if "usage:" not in result.stdout.lower():
+                      raise SystemExit(f"Missing help output from {command}: {result.stdout}")
+                  print(f"{command} --help: OK")
+              for job, section in (("mcmc", "mcmc"), ("vmc", "vmc"), ("lrdmc", "lrdmc-bra")):
+                  output = Path(directory) / f"{job}.toml"
+                  subprocess.run(
+                      [sys.executable, "-I", str(scripts / "jqmc-tool"), job,
+                       "generate-input", "--generate", "--filename", str(output)],
+                      cwd=directory, check=True, timeout=60,
+                  )
+                  document = tomllib.loads(output.read_text())
+                  if document["control"]["job_type"] != section or not document[section] or not document["coulomb"]:
+                      raise SystemExit(f"Invalid generated {job} input: {document}")
+                  print(f"{job} input generation and TOML parsing: OK")
+
+          templates = files(jqmc_workflow).joinpath("template")
+          machine = yaml.safe_load(templates.joinpath("machine_data.yaml").read_text())
+          if machine["localhost"]["machine_type"] != "local":
+              raise SystemExit("Installed machine template is missing the local configuration")
+          local = templates.joinpath("localhost")
+          queue = tomllib.loads(local.joinpath("queue_data.toml").read_text())
+          if queue["default"]["submit_template"] != "submit_mpi.sh":
+              raise SystemExit("Installed queue template does not reference the MPI template")
+          for name in ("submit_mpi.sh", "submit_nompi.sh"):
+              template = local.joinpath(name).read_text()
+              if not template.startswith("#!/bin/sh") or "_OUTPUT_" not in template:
+                  raise SystemExit(f"Invalid installed submission template: {name}")
+              # Parse only. Never run these templates or submit a job.
+              subprocess.run(["sh", "-n"], input=template, text=True, check=True, timeout=10)
+          print("Installed workflow YAML, TOML and submission templates: OK")
+          PY
+      - name: Run short MCMC, VMC and LRDMC calculations with the installed jqmc
+        run: python -I scripts/check_installed_jqmc_run.py tests/trexio_example_files/H2_ecp_ccpvdz_cart.h5
+
+  collect:
+    name: Collect the tested distributions
+    if: contains(fromJSON('["jqmc-project/jQMC", "jqmc-project/jQMC-forge"]'), github.repository)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: '{sdist,wheel-*}'
+          path: dist
+          merge-multiple: true
+      - name: Require the sdist and one wheel per platform
+        run: |
+          ls -l dist
+          test "$(ls dist/*.tar.gz | wc -l)" -eq 1
+          test "$(ls dist/*.whl | wc -l)" -eq 3
+      - uses: actions/upload-artifact@v7
+        with:
+          name: public-distributions
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7

@@ -1,0 +1,44 @@
+id: PHY-QE-TWIST-BAND-VALUE-001
+kind: physical
+name: Twist-route converted orbitals equal independent QE band values at a non-Gamma k point
+plain_language: >-
+  The committed Li_k025 QE save (non-Gamma twist k = (1/4, 1/4, 1/4)) is converted with
+  convert_qe_to_twist_average_input for kinds pw, bspline, pgto+pw and pgto+bspline (default per-kind options)
+  and loaded with load_twist. The converted complex up-spin MO values from production compute_MOs are compared
+  with the QE band sum over c_G exp(i (k + G) . r), which numpy evaluates from the wfc1.hdf5 coefficients,
+  Miller indices and k in the production precision zones (phase argument reconstructed in fp64 and cast to
+  ao_eval, plane-wave values in ao_eval, contraction in mo_eval). Each band is
+  compared after removing one least-squares complex scalar (uniform rescale and global phase). Zero or
+  nonfinite bands are rejected. For pw, bspline and pgto+bspline, the values at 16 fixed off-lattice points
+  agree within RTOL_PW_PROJECTION_FP64 for pw in full mode, the strict AO/MO tolerance for pw in mixed mode,
+  and RTOL_QE_COMPOSITE_PER_BAND_REGRESSION_GATE for the B-spline kinds. For pgto+pw only the PW-represented
+  component is asserted. Production samples the composite MO on twice the QE FFT grid, and the Bloch phase is
+  removed. Its Fourier coefficients on the PW child's G set (|k + G| <= 0.5 sqrt(2 ecutwfc), checked equal to
+  the converted child's Miller set) agree within RTOL_QE_PW_RECONSTRUCTION_LOOSE with the coefficients
+  obtained by the same fp64 Fourier analysis of the zone-evaluated QE band sum over that G set on the same
+  grid (equal to c_G to fp64 round-off in full). The pgto+pw components with
+  |k + G| above that cutoff, the pGTO content beyond the wfc sphere, and pointwise real-space agreement are
+  not asserted. The aligned converted bands must have an imaginary part of at least one tenth of their peak
+  modulus, and the real part of the aligned bands must fail the same oracle. Replacing the complex PW,
+  B-spline or Bloch pGTO leaf evaluation by its real part must fail the oracle's residual assertion. Full and
+  mixed are judged separately.
+verdict_methods: [VM-PHY-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-PHY-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_band_value_oracle.py::test_qe_twist_route_mo_values_match_qe_bands_at_non_gamma
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pw}
+    - {kind: bspline}
+    - {kind: pgto+pw}
+    - {kind: pgto+bspline}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_band_value_oracle.py::test_qe_twist_band_value_oracle_rejects_real_projected_leaf
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: bspline-bspline}
+    - {case: pgto_bspline-bspline}
+    - {case: pgto_bspline-pgto}
+    - {case: pgto_pw-pgto}
+    - {case: pgto_pw-pw}
+    - {case: pw-pw}

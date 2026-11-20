@@ -1,0 +1,20 @@
+id: IMPL-RS-J3-STRAIN-BINDING-COMPOSITE-REFUSAL-001
+kind: implementation
+name: The free J3 strain binding refuses a same-family composite J3 orbital instead of panicking
+plain_language: >-
+  The free native binding _grad_lnJ3_pbc_strain builds its J3 pieces without parsing a native orbital, and those
+  pieces hold one GTO/pGTO block plus at most one real plane-wave block. For a J3 orbital over an AOs_composite_data
+  with two GTO/pGTO children or with two real plane-wave children, the binding must raise NotImplementedError naming
+  the unsupported composite and the XLA backend (JQMC_FLAG_RUST_ON_CPU=0); it must never abort with a Rust panic or
+  return a value computed from a subset of the children. Checked on the committed Li Gamma cell with an identity-MO
+  J3 orbital over (sphe pGTO, the same pGTO) and over (sphe pGTO, constant plane wave, cos plane wave); the plain
+  sphe pGTO J3 orbital of the same cell still returns a finite 3x3 strain. Full and mixed are judged separately.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_j3_strain_binding_composite_refusal.py::test_free_j3_strain_binding_refuses_same_family_composite
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: pgto_pgto}
+    - {case: pgto_pw_pw}

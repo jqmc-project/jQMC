@@ -1,0 +1,83 @@
+id: NUM-DTN-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: DTN electron and scalar-kernel derivatives retain full analytical fidelity
+plain_language: >-
+  For the deterministic molecular/periodic DTN presets, both cutoff smoothness
+  values, Li all-electron case, scalar f-kernel and periodic distance cases, each
+  homogeneous electron-coordinate gradient, Laplacian, scalar value or Hessian block from the analytical production route in mixed
+  precision agrees with the identical route independently rebuilt from the same
+  source in full precision at the central parameter_derivative infinity-norm budget.
+  Host-materialized blocks must be finite, and a mixed-only perturbation beyond
+  the budget must be rejected without modifying the full reference. The independent
+  mathematical AD checks retain their existing strict full-precision comparisons.
+  Value/debug, finite-difference, parity and invariant checks are unchanged.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_grads_and_laplacian_Jastrow_dtn_molecular
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{C: 3, preset: u}, {C: 4, preset: u}, {C: 3, preset: u_chi}, {C: 4, preset: u_chi}, {C: 3, preset: u_f}, {C: 4, preset: u_f}, {C: 3, preset: u_chi_f}, {C: 4, preset: u_chi_f}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_dtn_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-electron-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-electron-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_grads_and_laplacian_Jastrow_dtn_periodic
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{C: 3, preset: u}, {C: 4, preset: u}, {C: 3, preset: u_chi}, {C: 4, preset: u_chi}, {C: 3, preset: u_f}, {C: 4, preset: u_f}, {C: 3, preset: u_chi_f}, {C: 4, preset: u_chi_f}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_dtn_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-electron-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-electron-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_grads_and_laplacian_Jastrow_dtn_li_ae
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{C: 3, preset: u}, {C: 4, preset: u}, {C: 3, preset: u_chi}, {C: 4, preset: u_chi}, {C: 3, preset: u_f}, {C: 4, preset: u_f}, {C: 3, preset: u_chi_f}, {C: 4, preset: u_chi_f}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_dtn_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-electron-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-electron-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_f_atom_value_grad_hess
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{C: 3, seed: 0}, {C: 4, seed: 0}, {C: 3, seed: 1}, {C: 4, seed: 1}, {C: 3, seed: 2}, {C: 4, seed: 2}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_dtn_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-electron-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-electron-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_scalar_dist_with_derivs_pbc
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{cell_name_idx: 0, seed: 0}, {cell_name_idx: 1, seed: 0}, {cell_name_idx: 0, seed: 1}, {cell_name_idx: 1, seed: 1}, {cell_name_idx: 0, seed: 2}, {cell_name_idx: 1, seed: 2}, {cell_name_idx: 0, seed: 3}, {cell_name_idx: 1, seed: 3}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_dtn_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-electron-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-electron-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_dtn_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-electron-derivative-block, expression: mixed_block}
+        reference: {role: full-analytical-electron-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}

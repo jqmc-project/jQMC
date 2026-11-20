@@ -1,0 +1,67 @@
+id: IMPL-MESH-CACHE-ROUTE-ENGAGEMENT-001
+kind: implementation
+name: Production mesh caches engage on both backends
+plain_language: 'The negative counterpart to positive route proofs ("the fast route ran at least once", which passes even
+  when nearly every sub-step took the slow one): for a given fixture and driver the required cache route must run in every
+  supported precision mode. On XLA this reads trace-time counters per (channel, mesh, site); the site distinguishes the
+  deliberately uncached substep-0 warm-up, which builds interval state, from projection sub-steps that must be cached. The
+  analytic force/stress path must stay uncached because it is a single-shot evaluation outside the interval loop with no
+  hop sequence to amortize a cache over. On Rust the real-path derivative miss counters must remain zero in both full and
+  mixed precision. A different accumulation order in a delta update belongs to numerical backend-parity tolerance and must
+  not disable a production cache.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_xla_kinetic_mesh_caches_every_jastrow_channel
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_j12, expected: [det, j1, j2], driver: n}
+    - {pattern: mol_ecp_cart_j12, expected: [det, j1, j2], driver: t}
+    - {pattern: mol_ecp_cart_j123, expected: [det, j1, j2, j3], driver: n}
+    - {pattern: mol_ecp_cart_j123, expected: [det, j1, j2, j3], driver: t}
+    - {pattern: mol_ecp_cart_jdtn, expected: [det, dtn, j1, j2], driver: n}
+    - {pattern: mol_ecp_cart_jdtn, expected: [det, dtn, j1, j2], driver: t}
+    - {pattern: pbc_gamma_sphepgto_j12, expected: [det, j1, j2], driver: n}
+    - {pattern: pbc_gamma_sphepgto_j12, expected: [det, j1, j2], driver: t}
+    - {pattern: twist_sphepgto_j12, expected: [det, j1, j2], driver: n}
+    - {pattern: twist_sphepgto_j12, expected: [det, j1, j2], driver: t}
+    - {pattern: mol_ecp_single_spin_j12, expected: [det, j1, j2], driver: n}
+    - {pattern: mol_ecp_single_spin_j12, expected: [det, j1, j2], driver: t}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_xla_ecp_mesh_caches_every_jastrow_channel
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_j12, expected: [det, j1, j2], driver: n}
+    - {pattern: mol_ecp_cart_j12, expected: [det, j1, j2], driver: t}
+    - {pattern: mol_ecp_cart_j123, expected: [det, j1, j2, j3], driver: n}
+    - {pattern: mol_ecp_cart_j123, expected: [det, j1, j2, j3], driver: t}
+    - {pattern: mol_ecp_cart_jdtn, expected: [det, dtn, j1, j2], driver: n}
+    - {pattern: mol_ecp_cart_jdtn, expected: [det, dtn, j1, j2], driver: t}
+    - {pattern: pbc_gamma_sphepgto_j12, expected: [det, j1, j2], driver: n}
+    - {pattern: pbc_gamma_sphepgto_j12, expected: [det, j1, j2], driver: t}
+    - {pattern: twist_sphepgto_j12, expected: [det, j1, j2], driver: n}
+    - {pattern: twist_sphepgto_j12, expected: [det, j1, j2], driver: t}
+    - {pattern: mol_ecp_single_spin_j12, expected: [det, j1, j2], driver: n}
+    - {pattern: mol_ecp_single_spin_j12, expected: [det, j1, j2], driver: t}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_xla_force_path_evaluates_no_mesh_route_itself
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_rust_real_path_derivative_caches_engage
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_rust_j12_candidate_table_covers_forms_boundaries_and_twist
+  - pytest_node: tests/test_jqmc_kernel/test_xla_periodic_cache_routes.py::test_periodic_xla_cache_gate_rejects_real_uncached_j1
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: n, pattern: pbc_gamma_sphepgto_j12, mesh: kinetic}
+    - {driver: n, pattern: pbc_gamma_sphepgto_j12, mesh: ecp}
+    - {driver: n, pattern: twist_sphepgto_j12, mesh: kinetic}
+    - {driver: n, pattern: twist_sphepgto_j12, mesh: ecp}
+    - {driver: t, pattern: pbc_gamma_sphepgto_j12, mesh: kinetic}
+    - {driver: t, pattern: pbc_gamma_sphepgto_j12, mesh: ecp}
+    - {driver: t, pattern: twist_sphepgto_j12, mesh: kinetic}
+    - {driver: t, pattern: twist_sphepgto_j12, mesh: ecp}
+  - pytest_node: tests/test_jqmc_kernel/test_xla_periodic_cache_routes.py::test_empty_spin_xla_cache_gate_rejects_real_jastrow_fallback
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: n, mesh: kinetic}
+    - {driver: n, mesh: ecp}
+    - {driver: t, mesh: kinetic}
+    - {driver: t, mesh: ecp}

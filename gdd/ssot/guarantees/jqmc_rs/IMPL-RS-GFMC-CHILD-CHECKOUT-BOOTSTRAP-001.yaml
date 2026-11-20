@@ -1,0 +1,29 @@
+id: IMPL-RS-GFMC-CHILD-CHECKOUT-BOOTSTRAP-001
+kind: implementation
+name: GFMC pure-leaf driver children import their checkout from private working directories
+plain_language: >-
+  The fresh-process pure PW and B-spline J3 GFMC driver harness imports its own
+  checkout's tests and Python implementation while retaining the per-test private
+  working directory. It does not depend on an inherited PYTHONPATH or an editable
+  installation. A short import-only child probe uses genuine JAX, central precision
+  policy and the current-source native extension; the parent verifies the child
+  script, tests package, Python source, native binary identity and unchanged private
+  directory in both Full and Mixed precision. The original four canonical GFMC_t/GFMC_n
+  driver cases also launch with PYTHONPATH removed, retaining all original inputs,
+  trajectories, native engagement witnesses, stored observations and tolerances.
+  The bootstrap probe does not claim to execute or certify a physical trajectory;
+  the existing independent scientific guarantee and all of its cases remain intact.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_pure_leaf_child_bootstrap.py::test_pure_leaf_driver_child_imports_from_private_workdir
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_gfmc_pure_leaf_j3_force_stress.py::test_pure_leaf_j3_gfmc_driver_force_stress
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-008, driver: t}
+    - {pattern: WF-PATTERN-010, driver: t}
+    - {pattern: WF-PATTERN-008, driver: n}
+    - {pattern: WF-PATTERN-010, driver: n}

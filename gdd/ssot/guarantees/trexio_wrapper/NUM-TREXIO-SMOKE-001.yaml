@@ -1,0 +1,11 @@
+id: NUM-TREXIO-SMOKE-001
+kind: numerical
+name: Loaded-twist smoke run
+plain_language: A twist loaded from the converted input completes an MCMC smoke run; this is a smoke check, never a correctness
+  oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_loaded_twist_runs_mcmc_smoke

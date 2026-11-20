@@ -1,0 +1,337 @@
+id: IMPL-COUL-FAST-UPDATE-001
+kind: implementation
+name: Fast-update and dispatch equivalence of the Coulomb layer
+plain_language: The fast and streaming Coulomb routes equal the reference recomputation (nearest-neighbor ECP fast update,
+  streaming state vs the reference path, fast vs LU reference, fast vs fast debug), and the dispatcher selects the correct
+  PBC/molecular branch.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNPhaseB::test_compute_coulomb_potential_fast_with_dtn
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNPhaseB.test_compute_coulomb_potential_fast_with_dtn#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(V_fast)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(V_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal::test_compute_ecp_non_local_parts_nearest_neighbors_fast_update_vs_reference
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpNonLocal::test_compute_ecp_non_local_parts_nearest_neighbors_fast_update_streaming_vs_reference
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpCoulombFast::test_compute_ecp_coulomb_potential_fast_vs_reference
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpCoulombFast.test_compute_ecp_coulomb_potential_fast_vs_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(V_fast)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(V_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestCoulombFast::test_compute_coulomb_potential_fast_vs_reference
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestCoulombFast.test_compute_coulomb_potential_fast_vs_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(V_fast)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(V_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestFastVsFastDebug::test_compute_ecp_coulomb_potential_fast_vs_fast_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestFastVsFastDebug.test_compute_ecp_coulomb_potential_fast_vs_fast_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(V_fast)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(V_debug)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestFastVsFastDebug::test_compute_coulomb_potential_fast_vs_fast_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestFastVsFastDebug.test_compute_coulomb_potential_fast_vs_fast_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(V_fast)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(V_debug)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch::test_compute_coulomb_potential_dispatch_pbc
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_dispatch_pbc#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_ei_up_shim)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_ei_up_direct)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_dispatch_pbc#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_ei_dn_shim)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_ei_dn_direct)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_dispatch_pbc#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_ii_shim
+        reference:
+          role: existing-test-reference
+          expression: E_ii_direct
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_dispatch_pbc#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_ee_shim
+        reference:
+          role: existing-test-reference
+          expression: E_ee_direct
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch::test_compute_coulomb_potential_dispatch_molecular
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_dispatch_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_ee_shim
+        reference:
+          role: existing-test-reference
+          expression: E_ee_direct
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_dispatch_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_ei_up_shim)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_ei_up_direct)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_dispatch_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_ei_dn_shim)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_ei_dn_direct)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_dispatch_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_ii_shim
+        reference:
+          role: existing-test-reference
+          expression: E_ii_direct
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch::test_compute_coulomb_potential_ei_discretized_dispatch_pbc
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_ei_discretized_dispatch_pbc#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_dn_shim)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_dn_direct)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_ei_discretized_dispatch_pbc#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_up_shim)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_up_direct)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch::test_compute_coulomb_potential_ei_discretized_dispatch_molecular
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_ei_discretized_dispatch_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_dn_shim)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_dn_direct)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestDispatch.test_compute_coulomb_potential_ei_discretized_dispatch_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(E_up_shim)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(E_up_direct)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb

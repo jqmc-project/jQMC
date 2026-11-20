@@ -1,0 +1,63 @@
+id: MATH-GFMC-MPI-ESTIMATORS-001
+kind: mathematical
+name: Distributed force and root-owned stress and pressure against raw-ensemble AD
+plain_language: >-
+  Conventional and load-balanced GFMC force means and jackknife errors,
+  scattered over two MPI ranks, must equal independent raw-ensemble AD and
+  actual serial accessors on the same fixed global moments. Stress and
+  pressure must match the independent reference on root and return exact
+  zeros elsewhere, as their API is root-owned. Poison non-root stored buffers
+  with NaNs to catch accidental use as additional samples. Ten slices of
+  three unequal walkers, real/complex energy, zero/two-step weight histories,
+  zero/one warmup slice, four/three unequal blocks, and full/mixed are required.
+  Dropping non-root scattered force bins must fail. Same-mode local_energy
+  strict tolerances apply to deterministic means and errors. No statistical
+  confidence band, rank-invariant random trajectory, sampling or force physics
+  is certified by this stored-buffer aggregation contract.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_gfmc_mpi_estimators_match_fixed_ensemble_derivatives
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, history: uniform, complex_values: false}
+    - {driver_kind: conventional, history: uniform, complex_values: true}
+    - {driver_kind: conventional, history: history-warmup, complex_values: false}
+    - {driver_kind: conventional, history: history-warmup, complex_values: true}
+    - {driver_kind: load-balanced, history: uniform, complex_values: false}
+    - {driver_kind: load-balanced, history: uniform, complex_values: true}
+    - {driver_kind: load-balanced, history: history-warmup, complex_values: false}
+    - {driver_kind: load-balanced, history: history-warmup, complex_values: true}
+    executable_checks:
+      serial-mean-and-error:
+        site: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_gfmc_mpi_estimators_match_fixed_ensemble_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: serial-gfmc-mean-and-jackknife-error, expression: serial_actual}
+        reference: {role: independent-raw-ensemble-derivative, expression: expected}
+        iterations: {variable: quantity, required_values: [force, stress, pressure]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      mpi-mean-and-error:
+        site: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_gfmc_mpi_estimators_match_fixed_ensemble_derivatives#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: mpi-gfmc-mean-and-jackknife-error, expression: actual}
+        reference: {role: independent-raw-ensemble-derivative, expression: expected}
+        iterations: {variable: quantity, required_values: [force, stress, pressure]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_gfmc_mpi_force_oracle_rejects_missing_nonroot_bin
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, history: uniform, complex_values: false}
+    - {driver_kind: conventional, history: uniform, complex_values: true}
+    - {driver_kind: conventional, history: history-warmup, complex_values: false}
+    - {driver_kind: conventional, history: history-warmup, complex_values: true}
+    - {driver_kind: load-balanced, history: uniform, complex_values: false}
+    - {driver_kind: load-balanced, history: uniform, complex_values: true}
+    - {driver_kind: load-balanced, history: history-warmup, complex_values: false}
+    - {driver_kind: load-balanced, history: history-warmup, complex_values: true}

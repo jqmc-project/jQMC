@@ -1,0 +1,23 @@
+id: IMPL-GFMC-DLTMOVE-PROPAGATION-SAME-INPUT-001
+kind: implementation
+name: GFMC_t and GFMC_n dltmove propagation equals its per-hop same-input reference on a live non-local ECP
+plain_language: >-
+  On the committed N2 ccECP (non-local l=0 coefficients 34.77692 and 15.2033) with J1+J2, random mesh and
+  non_local_move dltmove, short energy-only production XLA runs of GFMC_n (two walkers, forty intervals of
+  five hops) and GFMC_t (one walker, tau 0.05, twenty intervals) are observed at every real projection hop
+  through the categorical-move call. At each hop's captured configuration and mesh rotations, the
+  full-recompute leaf reference of tests/_gfmc_n_same_input.py (discretized kinetic, non-local ECP
+  quadrature with the determinant-only amplitude and an explicit exp(J(mesh) - J(r)) factor, no streaming
+  state or rank-1 kernel) supplies the off-diagonal candidates, the transition CDF and the diagonal.
+  GFMC_n must match them together with the branching factor, running weight, fresh inverse and selected
+  move (projection_comparisons); GFMC_t must match candidates, CDF, off-diagonal sum, the lattice e_L
+  (diagonal plus off-diagonal sum, which sets escape time and weight) and the selected move. The non-local
+  candidates must be non-zero, and the tmove reference at the same inputs must give a different diagonal
+  from both the dltmove reference and the driver. Full and mixed are each judged with their own strict or
+  medium zone tolerance.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_dltmove_propagation_reference.py::test_gfmc_n_dltmove_propagation_matches_same_input_reference
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_dltmove_propagation_reference.py::test_gfmc_t_dltmove_propagation_matches_same_input_reference

@@ -1,0 +1,45 @@
+id: IMPL-AO-PERIODIC-LATTICE-SHELL-PAIR-REUSE-001
+kind: implementation
+name: Periodic pGTO lattice overlap reuses Cartesian shell products and a Hermitian half
+plain_language: >-
+  The Cartesian shell-pair implementation preserves the original primitive-pair closed-form lattice sum,
+  per-pair rho and total-angular cutoff, term_tolerance, off-cell image offsets and Bloch phase. Cartesian
+  and spherical public overlaps at Gamma and a nonzero twist equal an unbatched AO-pair reference at the
+  unchanged strict det_eval tolerance in full and mixed. Interleaved, incomplete Cartesian shells and
+  unequal component coefficients retain the same result. On the fixed s/p/d fixture, the number of
+  one-dimensional primitive integral evaluations is less than half the unbatched count, proving reuse
+  beyond the Hermitian half without a machine-dependent wall-clock threshold. This does not certify a
+  particular speedup on every basis or machine; the committed 401-AO synthetic slab supports separate
+  reproducible timing and is not a production slab geometry.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_overlap_shell_pairs.py::test_periodic_shell_pair_overlap_preserves_unbatched_terms
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: cart, twisted: false}
+    - {kind: cart, twisted: true}
+    - {kind: sphe, twisted: false}
+    - {kind: sphe, twisted: true}
+    executable_checks:
+      exact-lattice-terms:
+        site: tests/test_jqmc_kernel/test_periodic_overlap_shell_pairs.py::test_periodic_shell_pair_overlap_preserves_unbatched_terms#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: shell-pair-public-periodic-overlap, expression: actual}
+        reference: {role: unbatched-original-primitive-pair-lattice-sum, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_overlap_shell_pairs.py::test_periodic_shell_pair_overlap_reuses_cartesian_products
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{incomplete: false}, {incomplete: true}]
+    executable_checks:
+      incomplete-and-component-contraction:
+        site: tests/test_jqmc_kernel/test_periodic_overlap_shell_pairs.py::test_periodic_shell_pair_overlap_reuses_cartesian_products#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: shell-pair-interleaved-cartesian-overlap, expression: actual}
+        reference: {role: original-unbatched-cartesian-overlap, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}

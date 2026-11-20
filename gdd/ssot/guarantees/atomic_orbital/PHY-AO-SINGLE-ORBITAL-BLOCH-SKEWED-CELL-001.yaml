@@ -1,0 +1,47 @@
+id: PHY-AO-SINGLE-ORBITAL-BLOCH-SKEWED-CELL-001
+kind: physical
+name: Single-orbital Bloch boundary condition of every complex AO leaf family on skewed cells
+plain_language: >-
+  At k_frac = (0.25, -0.1, 0.4), every AO of a periodic Cartesian and a spherical pGTO leaf (two centres,
+  s, p, d and f shells), a six-plane-wave leaf and a three-band complex quintic B-spline leaf satisfies
+  chi(r + n.cell) = exp(2 pi i k_frac.n) chi(r) for n = a1, a2, a3 and a1 + a2 - a3, on the cubic_10bohr,
+  primitive FCC, triclinic, hexagonal and monoclinic cells, at ten seeded points next to every face or
+  outside the home cell. The expected phase is written from k_frac and the integer shift. Each mode uses
+  its own ao_eval strict zone policy. Replacing inv_cell by its transpose in the fractional k map (the
+  pGTO wrap-restore floor, the plane-wave and B-spline Cartesian twist) must fail on the triclinic,
+  hexagonal and monoclinic cells and must pass on the two cells whose matrix is symmetric (cubic and the
+  FCC cell as written), where the fault is the identity. Full and mixed are judged separately.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bloch_phase_hermiticity.py::test_single_orbital_bloch_boundary_condition_on_skewed_cells
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pgto-cart, cell_name: cubic_10bohr}
+    - {kind: pgto-cart, cell_name: primitive_fcc_si}
+    - {kind: pgto-cart, cell_name: triclinic_skewed}
+    - {kind: pgto-cart, cell_name: hexagonal}
+    - {kind: pgto-cart, cell_name: monoclinic}
+    - {kind: pgto-sphe, cell_name: cubic_10bohr}
+    - {kind: pgto-sphe, cell_name: primitive_fcc_si}
+    - {kind: pgto-sphe, cell_name: triclinic_skewed}
+    - {kind: pgto-sphe, cell_name: hexagonal}
+    - {kind: pgto-sphe, cell_name: monoclinic}
+    - {kind: plane-wave, cell_name: cubic_10bohr}
+    - {kind: plane-wave, cell_name: primitive_fcc_si}
+    - {kind: plane-wave, cell_name: triclinic_skewed}
+    - {kind: plane-wave, cell_name: hexagonal}
+    - {kind: plane-wave, cell_name: monoclinic}
+    - {kind: bspline, cell_name: cubic_10bohr}
+    - {kind: bspline, cell_name: primitive_fcc_si}
+    - {kind: bspline, cell_name: triclinic_skewed}
+    - {kind: bspline, cell_name: hexagonal}
+    - {kind: bspline, cell_name: monoclinic}
+  - pytest_node: tests/test_jqmc_kernel/test_bloch_phase_hermiticity.py::test_single_orbital_bloch_check_rejects_a_transposed_inverse_cell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pgto-cart}
+    - {kind: pgto-sphe}
+    - {kind: plane-wave}
+    - {kind: bspline}

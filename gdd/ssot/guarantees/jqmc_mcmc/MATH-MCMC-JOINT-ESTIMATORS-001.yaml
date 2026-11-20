@@ -1,0 +1,79 @@
+id: MATH-MCMC-JOINT-ESTIMATORS-001
+kind: mathematical
+name: Covariance-aware combined estimators
+plain_language: 'Estimators built from several averages over the SAME walkers and weights report the joint jackknife error,
+  never a quadrature of separate bars: the MPC-corrected total energy uses the summed-numerator identity (E_jk + dV_jk equals
+  the jackknife of w(e_L+dV) because the denominator is shared), and the hydrostatic pressure takes its jackknife over the
+  trace of the stress replicates. Both were wrong in the shipped CLI (AUD2-001: 0.0422 vs 0.0190; AUD2-002: 3.76 vs 6.40),
+  so the gates pin the joint value AND reject the quadrature value.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMPCJointJackknife::test_get_E_mpc_matches_joint_jackknife_and_rejects_quadrature
+    executable_checks:
+      d8-n-196:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMPCJointJackknife.test_get_E_mpc_matches_joint_jackknife_and_rejects_quadrature#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: std
+        reference:
+          role: source-reference-value
+          expression: ref_std
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-C9-GAMMA-SR-UPDATE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-C9-GAMMA-SR-UPDATE-001
+      d8-n-197:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMPCJointJackknife.test_get_E_mpc_matches_joint_jackknife_and_rejects_quadrature#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: mean
+        reference:
+          role: source-reference-value
+          expression: ref_mean
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-C9-GAMMA-SR-UPDATE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-C9-GAMMA-SR-UPDATE-001
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestHydrostaticCovariance::test_trace_first_differs_from_diagonal_quadrature
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_pressure_reference.py::test_pressure_matches_correlated_stored_moments
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {correlation: positive}
+    - {correlation: negative}
+    executable_checks:
+      pressure-mean-and-error:
+        site: tests/test_jqmc_kernel/test_mcmc_pressure_reference.py::_assert_pressure#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: mcmc-hydrostatic-mean-and-error, expression: actual}
+        reference: {role: raw-sample-deletion-trace-and-pairwise-variance, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_pressure_reference.py::test_pressure_matches_actual_silicon_moments
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: silicon.h5}
+    executable_checks:
+      pressure-mean-and-error:
+        site: tests/test_jqmc_kernel/test_mcmc_pressure_reference.py::_assert_pressure#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: mcmc-hydrostatic-mean-and-error, expression: actual}
+        reference: {role: raw-sample-deletion-trace-and-pairwise-variance, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMPCJointJackknife::test_get_E_mpc_refuses_without_mpc

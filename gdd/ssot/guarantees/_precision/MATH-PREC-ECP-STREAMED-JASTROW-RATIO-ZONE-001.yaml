@@ -1,0 +1,50 @@
+id: MATH-PREC-ECP-STREAMED-JASTROW-RATIO-ZONE-001
+kind: mathematical
+name: The XLA streamed ECP force/stress route evaluates its mesh Jastrow ratio in the fp64 jastrow_ratio zone
+plain_language: >-
+  On the committed lithium_k025.h5 input (bcc Li ccECP, k = (1/4, 1/4, 1/4), complex sphe-pGTO
+  single determinant) built by the reviewed generated-matrix builder with exp J1/J2 and a complex
+  Bloch pGTO J3 ({"j3": "pgto"}) and with the same plus DTN ({"j3": "pgto", "dtn": True}), NumPy
+  seed 0 (each up then down electron at a nucleus drawn by the stream plus a normal offset of scale
+  0.6), identity mesh rotation and the default Nv mesh, the complex Bloch J3 leaf routes the XLA
+  ECP non-local force / stress setup (ecp_force._ecp_nl_common) to its streamed (non-rank-one)
+  branch. There the per-candidate Jastrow factor exp(J(R')-J(R)) of the tmove ratio c["ratio"] and
+  the dltmove reweight jr (ecp_force._dltmove_delta_terms) agree with the fp64 NumPy debug Jastrow
+  evaluator (zone jastrow_ratio) applied to the same ECP mesh configurations of an independently
+  rebuilt full-precision case of the same serialized input; the tmove Jastrow factor is the tmove
+  ratio divided by that full case's whole-determinant ratio at those configurations. The comparison
+  is on the log-ratio. The precision policy assigns this ratio to jastrow_ratio, float64 in both
+  modes, and at this twist every other zone it crosses (ao_bloch_eval, mo_eval, det_eval,
+  det_ratio) is float64 in both modes, so the strict budget of those zones applies in full and mixed
+  alike. Mixed mesh configurations must equal the full ones exactly, the streamed route must serve
+  the case, values must be finite and the ratio live. Full is a same-case consistency check. A ratio
+  formed from two whole jastrow_eval values (float32 in mixed) fails this budget. This
+  does not claim mixed fidelity of the jastrow_grad_lap-zone drift, Pulay or strain fields of the
+  assembled force / stress, of real-AO (ao_eval, float32 in mixed) J3 ratios, of the fully
+  spin-polarised whole-value fallback of the shared ratio kernel, or of the native Rust route.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_force_streamed_jastrow_ratio_zone.py::test_streamed_ecp_mesh_jastrow_ratio_matches_full_precision_debug_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {jastrow: j123, seed: 0}
+    - {jastrow: j123_dtn, seed: 0}
+    executable_checks:
+      streamed-dltmove-jastrow-ratio:
+        site: tests/test_jqmc_kernel/test_ecp_force_streamed_jastrow_ratio_zone.py::test_streamed_ecp_mesh_jastrow_ratio_matches_full_precision_debug_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: streamed-dltmove-jastrow-log-ratio, expression: np.log(jastrow_ratio)}
+        reference: {role: full-rebuild-fp64-debug-whole-jastrow-log-ratio, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio, ao_bloch_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio, ao_bloch_eval, mo_eval, det_eval, det_ratio]}
+      streamed-tmove-jastrow-ratio:
+        site: tests/test_jqmc_kernel/test_ecp_force_streamed_jastrow_ratio_zone.py::test_streamed_ecp_mesh_jastrow_ratio_matches_full_precision_debug_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: streamed-tmove-jastrow-log-ratio, expression: np.log(tmove_jastrow)}
+        reference: {role: full-rebuild-fp64-debug-whole-jastrow-log-ratio, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio, ao_bloch_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio, ao_bloch_eval, mo_eval, det_eval, det_ratio]}

@@ -1,0 +1,27 @@
+id: MATH-MCMC-MPI-COMPLEX-LM-FORCE-001
+# MPI evidence of the complex-twist get_aH force.
+kind: mathematical
+name: Two-rank get_aH complex generalized force and overlap at a complex twist equal the global raw-sample reference
+plain_language: >-
+  On two actual MPI ranks that sample different chains of the committed H2 PBC all-electron k=(0.25,0.25,0.25)
+  Cartesian MO wavefunction with J1 + J2 Pade (four walkers, twenty steps, five warmup steps, seed 12345), production
+  MCMC.get_aH in LM mode with the J1, J2 and complex MO-coefficient blocks returns H_0, the complex generalized force
+  f = -2 <w conj(O_k - <O_k>) (e_L - <e_L>)> (real-projected <e_L>) and the Hermitian overlap
+  S = <w conj(O_k - <O_k>) (O_l - <O_l>)> equal to an independent reference built from the raw rank-local w_L, e_L and
+  d ln Psi / dc caches. The reference sums sum w, sum w e, sum w O and the centred covariances over the driver's
+  communicator with mpi4py's object allreduce before forming f and S; it does not use production's buffer reduction
+  helpers. f and S are compared as complex arrays, so Re and Im both count. Non-vacuity is required on every rank: a
+  complex O_k block is present, Im(f) and Im(S) exceed the comparison tolerance, and the rank-local references differ
+  from the global ones, so a rank-local or Im-dropping reduction of these sums fails. Deterministic values are compared
+  at same-mode ao_eval / jastrow_eval / det_eval / coulomb / local_energy strict tolerances. Only the two-rank run is
+  required evidence; a serial run of the node on one rank does not check the rank-local non-vacuity. The one-rank complex force
+  at the same twist is the heavy debug/production twist row, whose reference uses the same communicator-reduced
+  construction. This is the get_aH estimator reduction, not sampler correctness or the K/B matrices.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM::test_get_aH_complex_twist_force_multirank_global_reference
+    required_precision_modes: [full, mixed]
+    required_execution_profiles: [{name: mpi, world_size: 2}]
+    required_parameter_cases: [{}]

@@ -1,0 +1,33 @@
+id: MATH-MCMC-LARGE-RATIO-CARRIED-INVERSE-001
+kind: mathematical
+name: After an accepted move with a huge determinant ratio the carried inverse stays exact and later Metropolis decisions are exact
+plain_language: >-
+  After any accepted single-electron move, including one whose exact determinant ratio |R| exceeds
+  2^48 (an electron returning from a deep orbital tail; beyond 1/eps the plain rank-1 update keeps no digit of
+  the moved electron's inverse column, or row for a down move), the XLA MCMC kernels (two-spin and up-only) and
+  the native sweep (ObsCtx.mcmc_sweep) keep a carried geminal equal to the geminal rebuilt at the held positions
+  and a carried inverse equal to the dense inverse of that geminal, and every later Metropolis decision of the
+  sweep equals the decision of the exact acceptance computed from rebuilt-G slogdet (or the closed-form orbital)
+  and the independently evaluated transition density. Evidence: committed water ccECP cc-pVQZ, no Jastrow,
+  PCG64 seed 2025 start with electron 0 of the moved spin (up and down) at 28 bohr on +x from nucleus 0,
+  moves 28 -> 12 (|R| ~ 1e15.5, exact acceptance 1) -> 13 bohr (exact acceptance ~0.16, uniform draw 0.2927 on
+  XLA, the first native threefry key with a second draw above 0.25); and one electron in a normalized
+  x^12 exp(-r^2) orbital on Z = 7, x 0.01 -> 0.3 (|R| ~ 5e17) -> 0.02 (exact acceptance ~1e-28), whose values stay
+  in the float32 range. Dt = 2. Carried G is compared row-scaled at the ao_eval/det_eval strict pair and the
+  carried inverse column-scaled at the det_eval/det_ratio strict pair; decisions are exact. The shared XLA
+  rank-1 helper used by MCMC, GFMC_n and GFMC_t returns the dense inverse of the rebuilt G_new and the slogdet
+  ratio for the water 28 -> 12 bohr up and down moves. Full and mixed are judged separately. This is
+  fixed-input finite-chain state accuracy, not a statistical distribution test.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_large_ratio_carried_inverse.py::test_xla_large_ratio_move_keeps_exact_decisions_and_carried_inverse
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{model: water, spin: up}, {model: water, spin: down}, {model: power, spin: up}]
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_large_ratio_carried_inverse.py::test_shared_sherman_morrison_update_is_exact_for_large_ratio
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{spin: up}, {spin: down}]
+  - pytest_node: tests/test_rs_kernel/test_mcmc_large_ratio_carried_inverse_native.py::test_native_large_ratio_move_keeps_exact_decisions_and_carried_inverse
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{model: water, spin: up}, {model: water, spin: down}, {model: power, spin: up}]

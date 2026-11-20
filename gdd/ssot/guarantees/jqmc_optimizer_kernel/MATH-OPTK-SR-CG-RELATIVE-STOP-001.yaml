@@ -1,0 +1,50 @@
+id: MATH-OPTK-SR-CG-RELATIVE-STOP-001
+kind: mathematical
+name: Every SR conjugate-gradient route stops on the relative residual cg_tol * ||b||
+plain_language: >-
+  cg_tol is a relative tolerance. Every SR CG route stops at the first
+  iteration whose recurrence residual satisfies ||r|| <= cg_tol * ||b||, where b is the right-hand side of the
+  system the route solves and ||b|| is its global norm: the coordinate-replicated b of the wide system
+  Re(X X^dagger) + epsilon I, and the dual h = [Re F; -Im F] of the tall system Z^T Z + epsilon I, distributed
+  over the ranks of a sharded solve. The routes are the host NumPy and Rust wide and tall CGs (with and without a
+  caller Allreduce), and the XLA wide and tall CGs (sampler-local, chunked and sharded-chunked).
+  On clustered-spectrum wide and tall systems with real and complex samples, each route stops at the same
+  iteration as a textbook CG on the explicitly assembled operator stopped by the absolute rule at
+  cg_tol * ||b||, for the right-hand side scaled by 1e-6, 1 and 1e6 (the iterates scale with b and the
+  iteration count does not). The returned residual is the absolute ||r|| and satisfies the rule. The returned
+  update solves its explicit system (the primal (Z Z^T + epsilon I) q = Z h for tall) to that residual, and its
+  distance from the dense solution is bounded by that residual over the smallest operator eigenvalue. The Rust,
+  XLA and NumPy results agree within the strict Rust/XLA tier of the fp64 optimizer zones. Under mpirun -np 2 the
+  same holds with the global norm: the wide Allreduce CG and the tall dual CG sharded over the two processes. A
+  zero right-hand side returns the exact solution 0 with a zero residual after zero iterations on every route,
+  whatever the warm start. The optimizer arrays are float64 in both precision modes; full and mixed are judged
+  separately. The guarantee does not claim a statistical accuracy of the SR direction for a given cg_tol.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_sr_cg_relative_stopping_rule_on_every_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {regime: wide, kind: real, stop: 3}
+    - {regime: wide, kind: real, stop: 6}
+    - {regime: wide, kind: complex, stop: 3}
+    - {regime: wide, kind: complex, stop: 6}
+    - {regime: tall, kind: real, stop: 3}
+    - {regime: tall, kind: real, stop: 6}
+    - {regime: tall, kind: complex, stop: 3}
+    - {regime: tall, kind: complex, stop: 6}
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_sr_cg_zero_rhs_returns_exact_zero_on_every_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {regime: wide, kind: real}
+    - {regime: wide, kind: complex}
+    - {regime: tall, kind: real}
+    - {regime: tall, kind: complex}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_host_rust_mpi.py::test_two_rank_sr_cg_relative_rule_uses_the_global_rhs_norm
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {regime: wide, kind: real}
+    - {regime: wide, kind: complex}
+    - {regime: tall, kind: real}
+    - {regime: tall, kind: complex}

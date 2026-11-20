@@ -1,0 +1,21 @@
+id: MATH-HAM-FREE-ELECTRON-ABSOLUTE-LOCAL-ENERGY-001
+kind: mathematical
+name: Absolute local energy of a plane-wave determinant at a twist on a triclinic cell
+plain_language: >-
+  For four H nuclei in a triclinic cell and a Jastrow-free Slater determinant of single plane waves exp(i (G +
+  k) . r) for two up electrons and exp(i (G - k) . r) for two down electrons at k = (0.25, -0.1, 0.4), the
+  production local energy at three seeded configurations, with electrons also outside the home cell, equals,
+  full complex, within the strict zone policy, an independent NumPy reference: the determinant kinetic energy
+  -1/2 sum_i lap_i D / D (exactly sum_occ |G + k|^2 / 2 in exact arithmetic) evaluated per precision zone
+  (plane-wave values in the ao_eval dtype as the denominator, their gradients and Laplacians in ao_grad_lap,
+  the determinant algebra in det_eval; fp64 throughout in full) plus a NumPy Ewald energy of the neutral point
+  charges in the ewald zone. This holds for the JAX route and for the native
+  Rust route. A 1 percent error in the plane-wave Bloch momentum must fail. Full and mixed are judged
+  separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_invariants.py::test_free_electron_plane_wave_local_energy_absolute_value
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_invariants.py::test_free_electron_absolute_value_rejects_a_scaled_bloch_momentum
+  - pytest_node: tests/test_rs_kernel/test_periodic_invariants.py::test_free_electron_plane_wave_local_energy_absolute_value_native

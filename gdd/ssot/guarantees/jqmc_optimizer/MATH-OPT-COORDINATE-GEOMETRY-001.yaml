@@ -1,0 +1,420 @@
+id: MATH-OPT-COORDINATE-GEOMETRY-001
+kind: mathematical
+name: Coordinate-map geometry oracles
+plain_language: Stiefel actions, projections, factor tangents, and tie projections match independent dense embeddings and
+  projector oracles, and exact sources transform by the forward directional chain rule.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_s_stiefel_actions_match_independent_dense_embedding_and_real_adjoint
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_s_stiefel_actions_match_independent_dense_embedding_and_real_adjoint#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: encoded_basis
+        reference:
+          role: reference
+          expression: expected_basis
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_s_stiefel_actions_match_independent_dense_embedding_and_real_adjoint#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: pulled_back
+        reference:
+          role: reference
+          expression: np.real(covector @ dense.conj())
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      central-pair-3:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_s_stiefel_actions_match_independent_dense_embedding_and_real_adjoint#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: lhs
+        reference:
+          role: reference
+          expression: rhs
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_stiefel_projection_off_manifold_matches_independent_dense_constraint_projector
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_stiefel_projection_off_manifold_matches_independent_dense_constraint_projector#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: actual
+        reference:
+          role: reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_stiefel_projection_off_manifold_matches_independent_dense_constraint_projector#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: constraint(actual)
+        reference:
+          role: reference
+          expression: np.zeros_like(constraint(actual))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_factor_tangent_obeys_independent_dense_rank_projector_oracle
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_factor_tangent_obeys_independent_dense_rank_projector_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: virtual_virtual
+        reference:
+          role: reference
+          expression: np.zeros_like(virtual_virtual)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_factor_tangent_obeys_independent_dense_rank_projector_oracle#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: delta_geminal
+        reference:
+          role: reference
+          expression: dense_projected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      central-pair-3:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_factor_tangent_obeys_independent_dense_rank_projector_oracle#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: delta_geminal
+        reference:
+          role: reference
+          expression: expected_geminal
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_batched_actions_match_independently_assembled_dense_embedding_and_adjoint_identity
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_batched_actions_match_independently_assembled_dense_embedding_and_adjoint_identity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: encoded
+        reference:
+          role: reference
+          expression: q @ dense.T
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_batched_actions_match_independently_assembled_dense_embedding_and_adjoint_identity#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: pulled_back
+        reference:
+          role: reference
+          expression: np.real(u @ dense.conj())
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      central-pair-3:
+        site: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_batched_actions_match_independently_assembled_dense_embedding_and_adjoint_identity#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: lhs
+        reference:
+          role: reference
+          expression: rhs
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_tie_projection_coo_matches_dense_oracle
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_tie_projection_coo_matches_dense_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: projected
+        reference:
+          role: reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_symmetric_real_tie_matches_independent_projection_for_complex_sources
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_symmetric_real_tie_matches_independent_projection_for_complex_sources#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: projected
+        reference:
+          role: reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_symmetric_real_tie_matches_independent_projection_for_complex_sources#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: dense.T @ dense
+        reference:
+          role: reference
+          expression: np.eye(tie.coordinate_size)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_hermitian_tie_matches_owner_projection_and_real_metric
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_hermitian_tie_matches_owner_projection_and_real_metric#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: projected
+        reference:
+          role: reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_hermitian_tie_matches_owner_projection_and_real_metric#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: np.real(dense.conj().T @ dense)
+        reference:
+          role: reference
+          expression: np.eye(tie.coordinate_size)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_exact_sources_transform_by_forward_directional_chain_rule_for_mixed_tangents
+    executable_checks:
+      d8-n-230:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_exact_sources_transform_by_forward_directional_chain_rule_for_mixed_tangents#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: transformed[..., complex_slice.start + 1]
+        reference:
+          role: source-reference-value
+          expression: 1j * holomorphic[..., 0]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-228:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_exact_sources_transform_by_forward_directional_chain_rule_for_mixed_tangents#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: transformed
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-229:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_exact_sources_transform_by_forward_directional_chain_rule_for_mixed_tangents#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(coordinate_map.transform_derivatives_device(device_sources))
+        reference:
+          role: source-reference-value
+          expression: transformed
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_linear_tie_is_composed_without_materializing_an_ambient_xy_unknown
+    executable_checks:
+      d8-n-231:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_linear_tie_is_composed_without_materializing_an_ambient_xy_unknown#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: coordinate_map.encode(q)
+        reference:
+          role: source-reference-value
+          expression: dense @ q
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-232:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_linear_tie_is_composed_without_materializing_an_ambient_xy_unknown#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: coordinate_map.real_adjoint(covector)
+        reference:
+          role: source-reference-value
+          expression: np.real(covector @ dense.conj())
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-233:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_linear_tie_is_composed_without_materializing_an_ambient_xy_unknown#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: coordinate_map.transform_derivatives([source])
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_real_adjoint_uses_hermitian_not_transpose_sign_for_imaginary_direction
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_real_gamma_lambda_tie_is_symmetric_without_imaginary_coordinates
+    executable_checks:
+      d8-n-234:
+        site: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_real_gamma_lambda_tie_is_symmetric_without_imaginary_coordinates#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: projected
+        reference:
+          role: source-reference-value
+          expression: reference
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_mixed_complex_cross_term_survives_realification_before_tall_solve
+    executable_checks:
+      d8-n-235:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_mixed_complex_cross_term_survives_realification_before_tall_solve#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001

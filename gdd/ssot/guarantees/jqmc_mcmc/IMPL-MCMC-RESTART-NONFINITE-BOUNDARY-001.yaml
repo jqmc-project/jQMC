@@ -1,0 +1,29 @@
+id: IMPL-MCMC-RESTART-NONFINITE-BOUNDARY-001
+kind: implementation
+name: MCMC restart and publication boundaries fail closed on non-finite walkers
+plain_language: >-
+  A checkpoint whose rank-local energy history contains NaN is rejected before continuation. Independently, a no-Jastrow
+  molecular H2 walker doctored to 123 bohr has a finite checkpoint payload but a zero freshly rebuilt Gaussian determinant;
+  the production MCMC continuation rebuilds the determinant and local energy with the selected XLA or Rust backend, identifies
+  walker zero and its 115-bohr component, and raises before the first sweep. During sampling, XLA per-step and native chunk
+  energies, squared energies and AS weights pass through the same collective fail-closed boundary before a run can return or
+  be checkpointed. Full and mixed are required. This is an operational safety guarantee, not a claim that arbitrary far-tail
+  walkers are physically impossible.
+verdict_methods: [VM-ERROR-DISPOSITION-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::test_restart_rejects_far_walker_when_fresh_determinant_underflows
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{rust_enabled: false}, {rust_enabled: true}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::test_restart_rejects_nonfinite_fresh_local_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{rust_enabled: false}, {rust_enabled: true}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::test_production_step_rejects_nonfinite_energy_before_publication
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{rust_enabled: false}, {rust_enabled: true}]
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::test_complex_rust_restart_rebuild_uses_batched_native_seed
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

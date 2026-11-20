@@ -1,0 +1,13 @@
+id: IMPL-MPC-SAMPLER-SETUP-ONCE-001
+kind: implementation
+name: Samplers build MPC tables once per Hamiltonian
+plain_language: Constructing an MCMC, GFMC-t or GFMC-n sampler with MPC enabled builds the MPC tables exactly once, from
+  the Hamiltonian the sampler holds and with the requested cutoff, and the sampler keeps that very result. Assigning a
+  new Hamiltonian rebuilds them exactly once more. This pins the set-up cost of the most expensive sampler initialization
+  step; it is not a check of the MPC table values, which other MPC guarantees cover.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestSamplerSetup::test_sampler_builds_mpc_tables_once_per_hamiltonian

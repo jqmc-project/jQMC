@@ -1,0 +1,1885 @@
+{
+  "schema_version": 1,
+  "vocabularies": {
+    "test_kinds": [
+      "external-oracle",
+      "property",
+      "route-twin",
+      "negative-control",
+      "benchmark"
+    ],
+    "export_statuses": [
+      "tested",
+      "test-only",
+      "production-only",
+      "unused"
+    ]
+  },
+  "rust_tests": [
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::s_orbital_value",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::solid_harmonic_pz",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::cos_and_sincos_match_libm",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/bspline.rs::grid_major_value_single_matches_band_outer_reference_bitexact",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/bspline.rs::batch_value_matches_value_single",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/bspline.rs::complex_time_reversal_sibling_shares_coefficients",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/coulomb_potential.rs::legendre_deriv_closed_form_including_endpoints",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/coulomb_potential.rs::el_el_two_electrons_unit_distance",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/coulomb_potential.rs::ion_ion_h2",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/coulomb_potential.rs::el_ion_sign_is_attractive",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/determinant.rs::ln_det_2x2",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/determinant.rs::ln_det_pivot",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/determinant.rs::matmul_basic",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/determinant.rs::inverse_roundtrip",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/determinant.rs::sm_row_update_matches_full_recompute",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/dtn.rs::ratio_state_caches_all_five_geometry_tables",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/dtn.rs::streaming_ratio_and_accepted_update_match_independent_recomputation",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/ewald.rs::ee_incremental_matches_full_recompute",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/ewald.rs::ei_incremental_only_moved_row_changes",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/ewald.rs::ewald_incremental_bench",
+      "kind": "benchmark"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::g_l_window_product",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::reconfigure_uniform_is_identity_like",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::reconfigure_concentrates_on_heavy_walker",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::nan_min_max_propagate_nan_in_either_operand",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::nan_min_max_identity_on_finite_inputs",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::complex_helpers_match_jax_lexicographic_nan_semantics",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::complex_helpers_identity_on_finite_inputs",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::j3_candidate_table_advance_matches_fresh_rebuild",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::candidate_aos_bitwise_legacy_all_pairs",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::candidate_mos_sparse_bitwise_dense",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc_forces.rs::mesh_group_aggregate_matches_reference",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/mesh_vgs.rs::mesh_vgs_matches_derivative_kernel_tables",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/mesh_vgs.rs::kin_contract_matches_derivative_kernel_tables",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/mesh_vgs.rs::mesh_vgs_multi_matches_derivative_kernel_tables",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/bspline.rs::complex_value_grad_matches_value_grad_lap_bitexact",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/ao_cart_deriv.rs::mesh_screened_val_grad_matches_fast_mesh_contraction",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/ao_cart_deriv.rs::fast_cut_bundle_is_derivative_of_fast_kinetic_tables",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/forces.rs::kin_sweep_matches_bundle_contraction",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc.rs::force_shell_screen_is_candidate_batch_model",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc_forces.rs::swct_streaming_retains_complex_fields_and_empty_spin",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc_forces.rs::swct_periodic_images_preserve_ties_and_lattice_shifts",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/gfmc_forces.rs::swct_streaming_matches_dense_molecular_contraction",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/jastrow_factor.rs::j2_pade_single_pair",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/jastrow_factor.rs::j1_exp_sign_negative",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/jastrow_factor.rs::j3_j1_column_only",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/mcmc.rs::kato_and_tratio_basic",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/mcmc.rs::metropolis_threshold",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/mcmc.rs::metropolis_nan_ratio_rejects_like_xla",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/mcmc.rs::nearest_atom_picks_closest",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/threefry.rs::threefry_known_vectors",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/threefry.rs::split_known_vector",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/threefry.rs::erfinv_known_values",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/threefry.rs::native_normal_inverse_transform",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/threefry.rs::native_normal_rejects_sign_flip",
+      "kind": "negative-control"
+    },
+    {
+      "id": "jqmc/rs/src/threefry.rs::native_normal_rejects_scale_error",
+      "kind": "negative-control"
+    },
+    {
+      "id": "jqmc/rs/src/threefry.rs::native_normal_rejects_untransformed_uniform",
+      "kind": "negative-control"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::single_vgl_shell_matches_per_ao",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::cart_f32_shell_reuse_is_bitwise_per_ao",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::fold_image_axis_f32_rows_is_bitwise_per_element_tree",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::single_f32_fast_screen_drops_only_bounded_values",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::single_f32_value_is_bitwise_one_point_batch",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/complex_ao.rs::fold_complex_f32_rows_is_bitwise_per_element",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/fastmath.rs::exp_f32_and_sincos_f32_match_libm_to_fp32_ulps",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::wdot_family_matches_shell_kernel",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::wdot_sphe_soa_matches_generic_bitwise",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::kernel_sphe_soa_matches_shell_eval_bitwise",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::kernel_cart_soa_matches_shell_loop_bitwise",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::single_fold_cutoff_drops_only_sub_bound_values",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/bspline.rs::value_single_pair_matches_two_value_single_bitexact",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/fastmath.rs::erfc_and_exp_accuracy",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/fastmath.rs::image_sum_matches_libm",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/jastrow_factor.rs::fast_periodic_j12_matches_exact",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/coulomb_potential.rs::ecp_pow_matches_powf_bitwise",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/determinant.rs::pinv_real_matches_complex_routine",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::mesh_dot_prim_screen_changes_each_ao_below_bound",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/jastrow_factor.rs::j12_ratio_mesh_matches_per_point_bitwise",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/jastrow_factor.rs::j3_grad_outputs_unchanged_mirror_is_bitwise_legacy",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/atomic_orbital.rs::bloch_mesh_dot_matches_exact_folded_kernel",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/complex_det.rs::mesh_wdot_matches_candidate_batch_ratio",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/complex_det.rs::guarded_inverse_over_pathological_table",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/dtn.rs::group_log_ratio_matches_single_candidate_bitwise",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/dtn.rs::grad_row_f32_matches_full_kernel_row_bitwise",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/dtn.rs::grad_terms_f32_move_delta_matches_full_kernel_bitwise",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/complex_stress.rs::pure_bspline_moved_group_matches_per_point_reference_in_both_modes",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/coulomb_potential.rs::fast_ecp_nonlocal_radial_cut_pinned_to_setting",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/coulomb_potential.rs::fast_ecp_radial_cut_drops_exactly_sub_bound_pairs",
+      "kind": "property"
+    },
+    {
+      "id": "jqmc/rs/src/param_grad_dtn.rs::moved_ok_matches_full_recompute",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/dtn.rs::value_strain_move_delta_batch_matches_per_hop",
+      "kind": "route-twin"
+    },
+    {
+      "id": "jqmc/rs/src/optimizer_transform.rs::real_linear_tie_matches_dense_matrix_product",
+      "kind": "external-oracle"
+    },
+    {
+      "id": "jqmc/rs/src/optimizer_transform.rs::stiefel_adjoint_output_is_a_whitened_tangent",
+      "kind": "property"
+    }
+  ],
+  "python_exports": [
+    {
+      "name": "NativeConstructionPrecision",
+      "status": "tested"
+    },
+    {
+      "name": "NativeConstructionPrecision.new",
+      "status": "unused"
+    },
+    {
+      "name": "NativeConstructionPrecision.precision_policy",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx",
+      "status": "unused"
+    },
+    {
+      "name": "NativeObsCtx._debug_complex_bspline_coefficient_storage_count",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx._debug_complex_geminal_storage_count",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.debug_det_grad_lap_chain",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.debug_mesh_chain",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.e_L",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.e_L_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.e_L_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.e_L_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_ae",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_ae_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_ecp",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_ecp_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_eps_pbc",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_eps_pbc_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_eps_pbc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_eps_pbc_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_pbc",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_pbc_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_pbc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_e_L_pbc_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi_eps_pbc",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi_eps_pbc_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi_eps_pbc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi_eps_pbc_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi_pbc",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi_pbc_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi_pbc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.grad_ln_psi_pbc_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.has_complex_param_deriv",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.mcmc_sweep",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.mcmc_sweep_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.mcmc_sweep_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.mcmc_sweep_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_basis",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_basis_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_dtn",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_dtn_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_dtn_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_basis",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_basis_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_dtn",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_dtn_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_dtn_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j1",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j1_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j1_complex",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j1_complex_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j2",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j2_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j2_complex",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j2_complex_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j3",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j3_basis",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j3_basis_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j3_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j3_complex",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_j3_complex_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_lambda",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_lambda_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_mo",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_ecp_mo_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j1",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j1_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j1_complex",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j1_complex_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j2",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j2_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j2_complex",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j2_complex_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j3",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j3_basis",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j3_basis_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j3_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j3_complex",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_j3_complex_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_lambda",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_lambda_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_lambda_diag",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_lambda_diag_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_mo",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_el_mo_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_basis",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_basis_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_dtn",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_dtn_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_dtn_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j1",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j1_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j2",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j2_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j3",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j3_basis",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j3_basis_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j3_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j3_complex",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_j3_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_lambda",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_lambda_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_lambda_diag",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_lambda_diag_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_mo",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.pd_ok_mo_batch",
+      "status": "production-only"
+    },
+    {
+      "name": "NativeObsCtx.precision_dispatch_support",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.precision_policy",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.run_energy_chunk",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.run_energy_chunk_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.run_gfmc_projection_n",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.run_gfmc_projection_n_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.run_gfmc_projection_n_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.run_gfmc_projection_n_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.run_gfmc_projection_t",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.run_gfmc_projection_t_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.run_gfmc_projection_t_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "NativeObsCtx.run_gfmc_projection_t_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.sweep_seed_geminal_batch",
+      "status": "tested"
+    },
+    {
+      "name": "NativeObsCtx.sweep_seed_geminal_complex_batch",
+      "status": "tested"
+    },
+    {
+      "name": "_bench_faer_mo",
+      "status": "unused"
+    },
+    {
+      "name": "_bench_orb_split",
+      "status": "unused"
+    },
+    {
+      "name": "_compute_mpc_correction_ee",
+      "status": "test-only"
+    },
+    {
+      "name": "_compute_mpc_correction_ee_batch",
+      "status": "tested"
+    },
+    {
+      "name": "_compute_mpc_potential_ee",
+      "status": "test-only"
+    },
+    {
+      "name": "_det_advance_state",
+      "status": "test-only"
+    },
+    {
+      "name": "_det_init_state",
+      "status": "test-only"
+    },
+    {
+      "name": "_det_sm_update",
+      "status": "test-only"
+    },
+    {
+      "name": "_det_u_dn_move",
+      "status": "test-only"
+    },
+    {
+      "name": "_det_v_up_move",
+      "status": "test-only"
+    },
+    {
+      "name": "_dtn_grad_lap_carry_probe",
+      "status": "test-only"
+    },
+    {
+      "name": "_dtn_value_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "_e_L_fast_screened",
+      "status": "test-only"
+    },
+    {
+      "name": "_ecp_nonlocal_fast_radial_cut_probe",
+      "status": "test-only"
+    },
+    {
+      "name": "_ewald_ei_per_electron",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_discretized_kinetic_elements",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_grad_e_L_ae",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_grad_e_L_ecp",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_grad_e_L_ecp_pbc",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_grad_e_L_ecp_pbc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_grad_ln_Psi",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_lrdmc_ae",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_lrdmc_ae_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_lrdmc_ecp",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_lrdmc_ecp_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_run_ae",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_run_ae_complex",
+      "status": "unused"
+    },
+    {
+      "name": "_gfmc_run_ae_n",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_run_ae_pop",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_run_ecp",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_run_ecp_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_run_ecp_n",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_stress_ae",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_stress_ecp_jnone",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_stress_ecp_pbc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_stress_ecp_pbc_jnone",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_stress_ecp_pbc_withj",
+      "status": "test-only"
+    },
+    {
+      "name": "_gfmc_stress_ecp_withj",
+      "status": "test-only"
+    },
+    {
+      "name": "_grad_T_pbc_det_wrt_r",
+      "status": "test-only"
+    },
+    {
+      "name": "_grad_T_pbc_withj_wrt_r",
+      "status": "test-only"
+    },
+    {
+      "name": "_grad_lnDet_pbc_wrt_R",
+      "status": "test-only"
+    },
+    {
+      "name": "_grad_lnJ3_pbc_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "_j3_advance_state",
+      "status": "test-only"
+    },
+    {
+      "name": "_j3_init_state",
+      "status": "test-only"
+    },
+    {
+      "name": "_j3_ratio",
+      "status": "test-only"
+    },
+    {
+      "name": "_jastrow_kstress_debug",
+      "status": "unused"
+    },
+    {
+      "name": "_kato_f_l",
+      "status": "test-only"
+    },
+    {
+      "name": "_matrix_inverse",
+      "status": "test-only"
+    },
+    {
+      "name": "_mcmc_sweep",
+      "status": "test-only"
+    },
+    {
+      "name": "_mcmc_sweep_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "_metropolis_accept",
+      "status": "test-only"
+    },
+    {
+      "name": "_move_draws",
+      "status": "test-only"
+    },
+    {
+      "name": "_nearest_atom_periodic",
+      "status": "test-only"
+    },
+    {
+      "name": "_prof_dump",
+      "status": "test-only"
+    },
+    {
+      "name": "_prof_enable",
+      "status": "test-only"
+    },
+    {
+      "name": "_refresh_running_inverse_if_needed",
+      "status": "test-only"
+    },
+    {
+      "name": "_refresh_running_inverse_if_needed_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "_single_move",
+      "status": "test-only"
+    },
+    {
+      "name": "_smooth_dist_debug",
+      "status": "unused"
+    },
+    {
+      "name": "_smooth_dist_hess_debug",
+      "status": "unused"
+    },
+    {
+      "name": "_structure_data_from_py_roundtrip",
+      "status": "test-only"
+    },
+    {
+      "name": "_swct_corrections_batched",
+      "status": "tested"
+    },
+    {
+      "name": "_swct_domega",
+      "status": "test-only"
+    },
+    {
+      "name": "_swct_omega",
+      "status": "test-only"
+    },
+    {
+      "name": "_t_ratio",
+      "status": "test-only"
+    },
+    {
+      "name": "_tf_randint_i32",
+      "status": "test-only"
+    },
+    {
+      "name": "_tf_randint_i64",
+      "status": "test-only"
+    },
+    {
+      "name": "_tf_split",
+      "status": "test-only"
+    },
+    {
+      "name": "_tf_threefry",
+      "status": "test-only"
+    },
+    {
+      "name": "_tf_uniform_f64",
+      "status": "test-only"
+    },
+    {
+      "name": "_verify_sm_ratio_complex",
+      "status": "unused"
+    },
+    {
+      "name": "_walker_batch_probe",
+      "status": "unused"
+    },
+    {
+      "name": "ao_cart_deriv",
+      "status": "test-only"
+    },
+    {
+      "name": "build_obs_ctx",
+      "status": "tested"
+    },
+    {
+      "name": "compute_AOs",
+      "status": "tested"
+    },
+    {
+      "name": "compute_AOs_exact",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_AOs_grad",
+      "status": "tested"
+    },
+    {
+      "name": "compute_AOs_grad_exact",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_AOs_grad_lap_fast_cut",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_AOs_laplacian",
+      "status": "tested"
+    },
+    {
+      "name": "compute_AOs_value_fast_cut",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_AS_regularization_factor_fast_update",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_G_L",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_Jastrow_one_body",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_Jastrow_three_body_value",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_Jastrow_two_body",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_aos_bspline_complex_vgl",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_aos_bspline_vgl",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_aos_bspline_vgl_dcell",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_aos_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_aos_hessian_complex",
+      "status": "unused"
+    },
+    {
+      "name": "compute_aos_vgl_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_bare_coulomb_potential",
+      "status": "tested"
+    },
+    {
+      "name": "compute_bare_coulomb_potential_el_el",
+      "status": "tested"
+    },
+    {
+      "name": "compute_bare_coulomb_potential_el_ion_element_wise",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_bare_coulomb_potential_ion_ion",
+      "status": "tested"
+    },
+    {
+      "name": "compute_dtn_ratio",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_dtn_value",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_ecp_local_parts_all_pairs",
+      "status": "tested"
+    },
+    {
+      "name": "compute_ecp_nonlocal_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_ecp_nonlocal_parts_all_pairs",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_ecp_nonlocal_withJ_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_ewald_potential_ee",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_ewald_potential_ei",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_ewald_potential_ii",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_geminal_all_elements",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_geminal_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_grads_and_laplacian_dtn",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_grads_and_laplacian_jastrow_part",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_grads_and_laplacian_jastrow_three_body",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_grads_and_laplacian_ln_det",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_kinetic_det_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_kinetic_energy",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_kinetic_withj_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_ln_det_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_ln_det_geminal_all_elements",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_local_energy",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_local_energy_fast",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_local_energy_fast_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_tiled_orbitals_vgl",
+      "status": "test-only"
+    },
+    {
+      "name": "compute_tiled_orbitals_vjp",
+      "status": "test-only"
+    },
+    {
+      "name": "configure_native_precision",
+      "status": "test-only"
+    },
+    {
+      "name": "configure_threads",
+      "status": "tested"
+    },
+    {
+      "name": "current_num_threads",
+      "status": "tested"
+    },
+    {
+      "name": "fast_ecp_nonlocal_radial_cut",
+      "status": "test-only"
+    },
+    {
+      "name": "geminal_equilibration_max_exponent",
+      "status": "test-only"
+    },
+    {
+      "name": "geminal_lu_guard_residual_threshold",
+      "status": "test-only"
+    },
+    {
+      "name": "gfmc_reconfigure_indices",
+      "status": "test-only"
+    },
+    {
+      "name": "gfmc_route_counters",
+      "status": "test-only"
+    },
+    {
+      "name": "gfmc_route_counters_reset",
+      "status": "test-only"
+    },
+    {
+      "name": "gfmc_take_j3_slow_fallback_seen",
+      "status": "tested"
+    },
+    {
+      "name": "grad_Eee_wrt_r",
+      "status": "tested"
+    },
+    {
+      "name": "grad_Eee_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_Eei",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_Eei_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_Eii_wrt_R",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_Eii_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_J1_wrt_R",
+      "status": "unused"
+    },
+    {
+      "name": "grad_J3_wrt_R",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_J_dtn_wrt_R",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_bspline_dcell",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_bspline_kinetic_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_det_pbc_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_dtn_pbc_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_lambda_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_lambda_diag_complex",
+      "status": "unused"
+    },
+    {
+      "name": "grad_T_lambda_withJ_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_T_mo_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_mo_withJ_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_T_pbc_wrt_R",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_pbc_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_wrt_R",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_wrt_R_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_wrt_R_withJ_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_wrt_strain_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_T_wrt_strain_withJ_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_V_ecp_local_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_V_ecp_nonlocal_wrt_R_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_V_ecp_nonlocal_wrt_R_withJ_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_V_ecp_nonlocal_wrt_mo_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_V_ecp_nonlocal_wrt_mo_withJ_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_V_ecp_nonlocal_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_V_ecp_nonlocal_wrt_strain_bspline",
+      "status": "unused"
+    },
+    {
+      "name": "grad_V_ecp_nonlocal_wrt_strain_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_V_ecp_nonlocal_wrt_strain_withJ_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_V_wrt_R",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_dtn_kinetic_params",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_dtn_kinetic_params_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_ecp_dtn_params",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_dtn_params_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_ecp_force_wrt_R",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_local_force_wrt_R",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_jastrow_1b_param",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_jastrow_1b_param_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_jastrow_2b_param",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_jastrow_2b_param_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_jastrow_3b_jmatrix",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_jastrow_3b_jmatrix_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_jastrow_3b_radial_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_lambda",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_lambda_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_lambda_diag",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_lambda_diag_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_mo_coeff",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_mo_coeff_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_radial",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_ecp_wrt_radial_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_wrt_jastrow_1b_param",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_jastrow_1b_param_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_wrt_jastrow_2b_param",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_jastrow_2b_param_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_wrt_jastrow_3b_jmatrix",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_jastrow_3b_jmatrix_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_wrt_jastrow_3b_radial_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_wrt_lambda",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_lambda_diag",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_lambda_diag_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_mo_coeff",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_radial",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_radial_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_eL_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_strain_dtn",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_strain_ecp",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_eL_wrt_strain_withJ",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_lnPsi_pbc_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_lnPsi_wrt_strain",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_lnPsi_wrt_strain_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_ln_Psi_dtn_params",
+      "status": "tested"
+    },
+    {
+      "name": "grad_ln_Psi_jastrow_1b_param",
+      "status": "tested"
+    },
+    {
+      "name": "grad_ln_Psi_jastrow_2b_param",
+      "status": "tested"
+    },
+    {
+      "name": "grad_ln_Psi_jastrow_3b_jmatrix",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_ln_Psi_jastrow_3b_jmatrix_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_ln_Psi_jastrow_3b_radial_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_ln_det_lambda_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_ln_det_lambda_diag_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_ln_det_mo_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_ln_det_wrt_lambda",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_ln_det_wrt_lambda_diag",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_ln_det_wrt_mo_coeff",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_ln_det_wrt_radial",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_ln_det_wrt_radial_complex",
+      "status": "tested"
+    },
+    {
+      "name": "grad_lndet_wrt_R",
+      "status": "test-only"
+    },
+    {
+      "name": "grad_lndet_wrt_R_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "jastrow_1b2b_ratio",
+      "status": "test-only"
+    },
+    {
+      "name": "native_normals",
+      "status": "test-only"
+    },
+    {
+      "name": "native_precision_support",
+      "status": "test-only"
+    },
+    {
+      "name": "native_precision_zones",
+      "status": "test-only"
+    },
+    {
+      "name": "native_vmc",
+      "status": "test-only"
+    },
+    {
+      "name": "native_vmc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "optimizer_coordinate_force_jackknife",
+      "status": "production-only"
+    },
+    {
+      "name": "optimizer_lm_pencil_core",
+      "status": "production-only"
+    },
+    {
+      "name": "optimizer_sr_operator_counts",
+      "status": "test-only"
+    },
+    {
+      "name": "optimizer_sr_precondition_sample_major",
+      "status": "production-only"
+    },
+    {
+      "name": "optimizer_tall_sr_real_cg",
+      "status": "production-only"
+    },
+    {
+      "name": "optimizer_tall_sr_real_direct",
+      "status": "production-only"
+    },
+    {
+      "name": "optimizer_transform_derivatives",
+      "status": "production-only"
+    },
+    {
+      "name": "optimizer_wide_sr_real_cg",
+      "status": "production-only"
+    },
+    {
+      "name": "optimizer_wide_sr_real_direct",
+      "status": "production-only"
+    },
+    {
+      "name": "pgto_cart_deriv",
+      "status": "test-only"
+    },
+    {
+      "name": "route_predicate_counters",
+      "status": "test-only"
+    },
+    {
+      "name": "sm_inverse_refresh_residual_threshold",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_e_L_ae",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_e_L_ecp",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_e_L_eps_pbc",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_e_L_eps_pbc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_e_L_pbc",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_e_L_pbc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_ln_psi",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_ln_psi_eps_pbc",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_ln_psi_eps_pbc_complex",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_ln_psi_pbc",
+      "status": "test-only"
+    },
+    {
+      "name": "vmc_grad_ln_psi_pbc_complex",
+      "status": "test-only"
+    }
+  ],
+  "document": {
+    "id": "jqmc.inventories.rust-inventory",
+    "version": 1,
+    "title": "Reviewed Rust test and export inventory",
+    "lifecycle": "pre-cutover",
+    "purpose": "Record reviewed Rust unit-test kinds and Python-visible export statuses without promoting cargo tests to a runtime GDD evidence lane."
+  }
+}

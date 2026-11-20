@@ -1,0 +1,34 @@
+id: IMPL-CLI-TWIST-DISPATCH-001
+kind: implementation
+name: CLI twist-dispatch contracts
+plain_language: >-
+  Fresh runs select single-k or twist averaging from the current Hamiltonian
+  layout, including the one-twist combined case. On restart, an existing file
+  selects a self-contained single-run checkpoint without reading the frozen
+  initialization input; an existing directory selects the twist driver, which
+  validates its combined input and shards. A missing target retains the existing
+  input-based resume behavior. Unreadable fresh inputs and malformed checkpoint
+  payloads raise without trying another format or starting a fresh sampler.
+  Generated core inputs expose no dispatch override. The process finalizes
+  distributed runtimes at exit, and a combined VMC continuation forwards
+  restart=true as resume=true and uses the selected checkpoint directory.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::test_cli_process_entrypoint_finalizes_distributed_runtimes
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::TestCLITwistDispatch::test_dispatch_unreadable_file_raises
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::TestCLITwistDispatch::test_control_schema_omits_twist_dispatch_overrides
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::TestCLITwistDispatch::test_removed_control_key_is_rejected_before_runtime_initialization
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::TestCLITwistDispatch::test_dispatch_combined_routes_to_twist_average
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_restart_contract.py::test_crystal_twist_continuation_forwards_restart_to_optimizer
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::test_single_file_restart_does_not_read_initial_hamiltonian
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{initial_input: omitted}, {initial_input: unreadable}, {initial_input: combined}]
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::test_bad_restart_checkpoint_is_rejected_without_fresh_initialization
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::test_restart_directory_selects_twist_dispatch
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

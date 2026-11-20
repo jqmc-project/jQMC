@@ -1,0 +1,17 @@
+id: IMPL-GFMC-INCREMENTAL-TWIN-AE-PBC-FLOOR-001
+kind: implementation
+name: Rust GFMC_n incremental twin on the periodic all-electron cell where a floor-active carried ei_disc row enters V_diag
+plain_language: >-
+  On H4_pbc_ae_cart.h5 (periodic, all-electron) the native GFMC_n interval, started with same-spin pairs 0.25 bohr on
+  either side of protons 0 (up) and 2 (down) and run for nsub = 1 .. 4 sub-steps from PRNGKey(0), reproduces the
+  debug_full_recompute route at every nsub: byte-identical walker, w_L, V_diag and e_L at the incremental-twin
+  tolerance, update counter equal to nsub on the incremental route and zero on the twin. On at least one returned
+  configuration an electron that has moved sits inside the alat floor (its discretized electron-ion row differs from
+  the bare row) and that row is selected into V_diag (sign-flipped kinetic elements and ei_disc above ZV, evaluated
+  with the XLA kernels), so the floor branch of the carried ei_disc row update is consumed. Writing that row as 1.5
+  times its value in the native advance fails the comparison in both modes.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_incremental_twin_ae_pbc.py::test_rust_ae_pbc_gfmc_n_floor_active_carried_row_matches_full_recompute

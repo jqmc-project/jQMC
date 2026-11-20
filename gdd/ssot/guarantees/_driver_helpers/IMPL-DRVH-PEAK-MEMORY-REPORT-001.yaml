@@ -1,0 +1,50 @@
+id: IMPL-DRVH-PEAK-MEMORY-REPORT-001
+kind: implementation
+name: End-of-run driver stages report the cluster-wide peak memory in the default output
+plain_language: >-
+  _log_memory_usage logs the cluster-wide maximum peak RSS (and, on a non-CPU JAX backend, the device peak) as one line
+  "[memory] stage=<stage>, RSS_peak_max=<x> GB[, JAX_peak_max=<y> GB]". The end-of-run stages mcmc_post_run,
+  gfmc_t_post_run, gfmc_n_post_run and optimize_post_loop log it at INFO, so the rank-0 logger that jqmc_cli installs for
+  verbosity low (INFO) and high (DEBUG) prints exactly one complete line for each; the post-warmup and pre-loop stages
+  stay at DEBUG and appear only under high. The printed RSS is the returned value, bracketed by the process high-water
+  mark read before and after the call; the JAX field is present only on a non-CPU backend and equals its
+  peak_bytes_in_use in GB.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_memory_usage_logging.py::test_end_of_run_memory_line_is_reported_at_default_verbosity
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {stage: mcmc_post_run, verbosity: low, backend: cpu}
+    - {stage: mcmc_post_run, verbosity: low, backend: device}
+    - {stage: mcmc_post_run, verbosity: high, backend: cpu}
+    - {stage: mcmc_post_run, verbosity: high, backend: device}
+    - {stage: gfmc_t_post_run, verbosity: low, backend: cpu}
+    - {stage: gfmc_t_post_run, verbosity: low, backend: device}
+    - {stage: gfmc_t_post_run, verbosity: high, backend: cpu}
+    - {stage: gfmc_t_post_run, verbosity: high, backend: device}
+    - {stage: gfmc_n_post_run, verbosity: low, backend: cpu}
+    - {stage: gfmc_n_post_run, verbosity: low, backend: device}
+    - {stage: gfmc_n_post_run, verbosity: high, backend: cpu}
+    - {stage: gfmc_n_post_run, verbosity: high, backend: device}
+    - {stage: optimize_post_loop, verbosity: low, backend: cpu}
+    - {stage: optimize_post_loop, verbosity: low, backend: device}
+    - {stage: optimize_post_loop, verbosity: high, backend: cpu}
+    - {stage: optimize_post_loop, verbosity: high, backend: device}
+    - {stage: mcmc_post_warmup, verbosity: low, backend: cpu}
+    - {stage: mcmc_post_warmup, verbosity: low, backend: device}
+    - {stage: mcmc_post_warmup, verbosity: high, backend: cpu}
+    - {stage: mcmc_post_warmup, verbosity: high, backend: device}
+    - {stage: gfmc_t_post_warmup, verbosity: low, backend: cpu}
+    - {stage: gfmc_t_post_warmup, verbosity: low, backend: device}
+    - {stage: gfmc_t_post_warmup, verbosity: high, backend: cpu}
+    - {stage: gfmc_t_post_warmup, verbosity: high, backend: device}
+    - {stage: gfmc_n_post_warmup, verbosity: low, backend: cpu}
+    - {stage: gfmc_n_post_warmup, verbosity: low, backend: device}
+    - {stage: gfmc_n_post_warmup, verbosity: high, backend: cpu}
+    - {stage: gfmc_n_post_warmup, verbosity: high, backend: device}
+    - {stage: optimize_pre_loop, verbosity: low, backend: cpu}
+    - {stage: optimize_pre_loop, verbosity: low, backend: device}
+    - {stage: optimize_pre_loop, verbosity: high, backend: cpu}
+    - {stage: optimize_pre_loop, verbosity: high, backend: device}

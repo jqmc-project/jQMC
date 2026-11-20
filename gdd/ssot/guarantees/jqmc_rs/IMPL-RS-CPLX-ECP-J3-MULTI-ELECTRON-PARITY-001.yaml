@@ -1,0 +1,40 @@
+id: IMPL-RS-CPLX-ECP-J3-MULTI-ELECTRON-PARITY-001
+kind: implementation
+name: Native complex-twist ECP routes with an active J3 equal XLA when a spin has more than one electron
+plain_language: >-
+  On a complex twist (k != Gamma) with a ccECP, an active complex-pGTO three-body Jastrow and several electrons per
+  spin, the native routes that address the J3 candidate rows of an individual electron equal XLA on identical input.
+  These are the FAST complex ECP candidate mesh (gfmc::compute_ecp_nonlocal_mesh_complex_fast: the J3 candidate row
+  of each quadrature group and the J3 candidate-row refresh of the hopped electron in the GFMC interval cache) and
+  the complex HF force (gfmc_forces::gfmc_ecp_nonlocal_force_complex: the down-spin J3 drift row of every mesh
+  candidate). The input is the committed QE O-lsda_k025 save (triplet oxygen at k = (1/4, 1/4, 1/4), 4 up and 2 down
+  electrons) converted by the production twist converter (kind=pgto, J2 pade), with the generated-matrix J3 attached.
+  (a) At fixed configurations the native compute_local_energy_fast_complex equals the XLA compute_local_energy_fast
+  and the cache-free XLA compute_local_energy, real and imaginary parts, within the strict Rust/XLA zone budget;
+  the J3 is checked to change e_L by more than 1e3 times that budget. (b) The native vmc_grad_e_L_pbc_complex HF
+  force dE_L/d(R, r_up, r_dn) equals the XLA assemble.compute_grad_e_L within the medium periodic-force budget.
+  (c) The production GFMC_t and GFMC_n dltmove chains (2 walkers, 80 branching steps, seed 34356, random mesh)
+  give identical PRNG keys, final walkers at the random-mesh ULP pin, and every stored complex e_L, e_L2 and w_L and
+  the public energy within the periodic fast-interval Rust/XLA envelope. Every other complex-twist ECP parity fixture
+  has one electron per spin, where these per-electron offsets are all zero. The XLA GFMC_t t-move chain on this
+  input class is not part of this guarantee. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_twist_multi_electron_ecp_j3.py::test_local_energy_fast_complex_twist_multi_electron_ecp_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 0}
+    - {seed: 1}
+    - {seed: 2}
+  - pytest_node: tests/test_rs_kernel/test_twist_multi_electron_ecp_j3.py::test_hf_force_complex_twist_multi_electron_ecp_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 0}
+    - {seed: 1}
+  - pytest_node: tests/test_rs_kernel/test_twist_multi_electron_ecp_j3.py::test_gfmc_dltmove_chain_complex_twist_multi_electron_ecp_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: t}
+    - {driver: n}

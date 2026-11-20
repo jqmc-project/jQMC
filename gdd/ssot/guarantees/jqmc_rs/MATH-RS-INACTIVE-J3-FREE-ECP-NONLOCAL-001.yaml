@@ -1,0 +1,26 @@
+id: MATH-RS-INACTIVE-J3-FREE-ECP-NONLOCAL-001
+kind: mathematical
+name: The free real native non-local ECP energy with an all-zero-j_matrix J3 equals the J3-free value
+plain_language: >-
+  An all-zero j_matrix makes the three-body Jastrow factor identically zero, so the non-local ECP energy returned by
+  the free real native binding compute_ecp_nonlocal_parts_all_pairs must be exactly the value of the same call with
+  jastrow_three_body_data=None, also when the J3 orbital is an MO over a composite of a real pGTO and a complex
+  plane-wave child (whose orbital the real parser cannot read and which must therefore never be evaluated). On the
+  committed Li Gamma ccECP cell with a real constant plane-wave single determinant and an identity-MO-wrapped
+  (pGTO s, plane-wave) composite J3 orbital, for a complex plane-wave child with a nonzero G vector, a complex
+  constant (k = 0) child and a real constant child as the control, at one fixed electron configuration and the MCMC
+  driver's default non-local mesh: with every ECP coefficient set to zero both calls return exactly 0, and with the
+  committed coefficients they agree exactly and are nonzero. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_inactive_j3_explicit_parse.py::test_free_ecp_nonlocal_inactive_complex_pw_j3_equals_j3_free
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {child: complex_pw_G, ecp: zero}
+    - {child: complex_pw_G, ecp: original}
+    - {child: complex_pw_0, ecp: zero}
+    - {child: complex_pw_0, ecp: original}
+    - {child: real_pw, ecp: zero}
+    - {child: real_pw, ecp: original}

@@ -1,0 +1,44 @@
+name: jQMC public TestPyPI deploy
+
+# Preserve the existing public release-candidate policy (rc, not main).
+on:
+  push:
+    branches: [rc]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-testpypi
+  cancel-in-progress: false
+
+jobs:
+  package:
+    if: github.repository == 'jqmc-project/jQMC'
+    uses: ./.github/workflows/public-build-distributions.yml
+
+  deploy-test-pypi:
+    name: publish jqmc to test-pypi
+    if: github.repository == 'jqmc-project/jQMC' && github.ref == 'refs/heads/rc'
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: public-distributions
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_JQMC_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+          verbose: true
+
+  verify-test-pypi:
+    if: github.repository == 'jqmc-project/jQMC' && github.ref == 'refs/heads/rc'
+    needs: deploy-test-pypi
+    uses: ./.github/workflows/public-verify-index.yml
+    with:
+      index: https://test.pypi.org/simple/

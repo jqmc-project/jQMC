@@ -1,0 +1,42 @@
+id: IMPL-RS-GFMC-DET-GRADLAP-CACHE-LONG-CHAIN-001
+kind: implementation
+name: Carried Rust GFMC determinant grad/lap caches equal a fresh state and XLA over a 1000-hop chain
+plain_language: >-
+  The projection-scoped determinant derivative caches of the native GFMC interval (real MeshFastState: derivative
+  columns plus winvup/winvdo rows advanced by the Sherman-Morrison factors of G^-1; complex MeshFastStateC: the fp64
+  kinetic-family kin_ginv, value state and the carried contraction weights m kin_ginv and O_up kin_ginv^T), driven
+  by the production advance_after_hop through NativeObsCtx.debug_det_grad_lap_chain along a deterministic 1000-hop
+  LRDMC-like walk (single-electron 0.3 bohr lattice-axis moves, every configuration below the
+  draw_well_conditioned_cfg conditioning cap, one electron per multi-electron spin never moved), give per-electron
+  grad and lap of ln|Det| that equal, every 10 hops, (i) a fresh state built at the same configuration and (ii)
+  the matrix-product contraction of the carried tables with the carried inverse, and, also every 10 hops, (iii) the
+  XLA compute_grads_and_laplacian_ln_Det. Cases: real molecular SD (N) and dense MO-basis AGP with more orbitals
+  than electrons (N); real periodic SD and AO-basis AGP (O-lsda Gamma pGTO); complex twist SD and AO-basis AGP
+  (O-lsda k=0.25 pGTO) and complex B-spline SD (Li k=0.25). Tolerances: the strict pair of the ln|Det| zones
+  (get_tolerance_min over ao_eval, ao_grad_lap, det_grad_lap: the fp64 det_grad_lap pair in full, the fp32 zone tier
+  in mixed, because the value state and G^-1 cross ao_eval; the same family as the sibling LRDMC interval chain) for
+  (ii) and for (i) except on real periodic caches, where (i) uses the periodic fast-interval floor
+  get_tolerance_gfmc_fast_pbc of the same zones
+  because the moved electron's carried value column comes from the screened fast-cut kernel; (iii) uses the strict
+  XLA-Rust pair of the ln|Det| zones, raised to the periodic route-parity floor on periodic cells. Full and mixed
+  are judged separately. It also covers multi-electron B-spline SD cases (O-lsda Gamma real and
+  O-lsda k=0.25 complex converted to B-spline leaves, 4 up / 2 dn, square up block, so index and transpose faults of
+  the per-electron contraction are not hidden by 1x1 blocks); the real one is a real periodic cache and uses the
+  periodic fast-interval floor for (i).
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_det_gradlap_long_chain_rust.py::test_rust_det_gradlap_cache_long_chain_matches_fresh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp_complex_twist_open}
+    - {case: agp_mo_real_mol_open}
+    - {case: agp_real_mol_open}
+    - {case: agp_real_pbc_open}
+    - {case: sd_complex_bspline_twist}
+    - {case: sd_complex_twist_open}
+    - {case: sd_real_mol_open}
+    - {case: sd_real_pbc_open}
+    - {case: sd_complex_bspline_open}
+    - {case: sd_real_bspline_open}

@@ -1,0 +1,41 @@
+id: MATH-MCMC-ONLY-UP-COMPLEX-TWIST-REFERENCE-001
+kind: mathematical
+name: Only-up XLA MCMC kernel at a complex twist keeps a complex inverse and accepts with the squared modulus of the determinant ratio
+plain_language: >-
+  For a complex Bloch-twist wavefunction with no down-spin electrons, the XLA only-up MCMC kernel
+  (_update_electron_positions_only_up_electron, the n_dn = 0 route of MCMC.run through _jit_vmap_update_up)
+  keeps the carried Sherman-Morrison inverse complex and accepts proposals with the squared modulus of the
+  complex determinant ratio, matching a brute-force complex determinant reference, in full and mixed precision.
+  The fixture is the committed twist H4_pbc_ae_k025_cart.h5 (k = 0.25, complex Cartesian pGTO), no Jastrow, with
+  an n_up-up / 0-down Slater determinant (n_up = 1 and 3; the extra up orbitals are PCG64-seed-11 random complex
+  AO combinations). Six actual kernel moves with fixed injected draws (moved electron, axis, normal, uniform 0.2/0.8
+  alternating) and AS epsilon 0 or 1 are compared move by move with an independent reference: numpy.linalg.det of
+  a fresh compute_geminal_all_elements matrix at the old and proposed configuration, an SVD form of the AS factor
+  and a 125-image nuclear-distance enumeration for the proposal widths. The acceptance probability the kernel
+  computes, its decision, the walker update, the carried geminal and the carried inverse (complex, with a
+  non-zero imaginary part) agree at same-mode det_eval/wf_eval strict tolerances, every up electron moves, and at
+  least one move separates the |ratio|^2 acceptance from a Re(ratio)^2 one beyond that tolerance. The production
+  _jit_vmap_update_up wrapper run for four walkers and 40 random-number-driven steps keeps the carried complex
+  geminal and inverse equal to a fresh rebuild at the final positions (det_ratio/det_eval medium tolerance), with
+  accepted and rejected moves present. This is deterministic fixed-input composition and finite-chain state
+  accuracy, not a statistical distribution test.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_only_up_complex_twist_mcmc.py::test_only_up_xla_kernel_complex_twist_acceptance_matches_complex_determinant_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {n_up: 1, epsilon: 0.0, draw: 0.2}
+    - {n_up: 1, epsilon: 0.0, draw: 0.8}
+    - {n_up: 1, epsilon: 1.0, draw: 0.2}
+    - {n_up: 1, epsilon: 1.0, draw: 0.8}
+    - {n_up: 3, epsilon: 0.0, draw: 0.2}
+    - {n_up: 3, epsilon: 0.0, draw: 0.8}
+    - {n_up: 3, epsilon: 1.0, draw: 0.2}
+    - {n_up: 3, epsilon: 1.0, draw: 0.8}
+  - pytest_node: tests/test_jqmc_kernel/test_only_up_complex_twist_mcmc.py::test_only_up_xla_mcmc_complex_twist_chain_keeps_carried_state_consistent
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {n_up: 1}
+    - {n_up: 3}

@@ -1,0 +1,12 @@
+id: IMPL-UPF-FIT-LSQ-FAILURE-001
+kind: implementation
+name: An unsuccessful PSWFC least-squares fit is never used
+plain_language: fit_pswfc_channel raises PSWFCFitError, carrying the least_squares status, evaluation count and message,
+  whenever least_squares does not report success, including the max_nfev limit. The unconverged exponents are never
+  turned into a PrimitiveShell.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_unsuccessful_least_squares_fit_is_never_used

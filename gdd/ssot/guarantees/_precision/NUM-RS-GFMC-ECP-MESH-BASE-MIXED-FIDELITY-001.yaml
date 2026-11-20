@@ -1,0 +1,36 @@
+id: NUM-RS-GFMC-ECP-MESH-BASE-MIXED-FIDELITY-001
+kind: numerical
+name: Native GFMC ECP force and stress without a supplied inverse retain Mixed Full fidelity
+plain_language: On the committed Cl2 ccECP cc-pVTZ Cartesian molecule with a live non-local p channel, one up electron
+  exactly on a rotated quadrature direction (the on_mesh configuration of the Legendre endpoint parity rows), the
+  native GFMC HF force (nuclear, electron-up, electron-down) and stress entries are evaluated for tmove and dltmove
+  without a supplied geminal inverse. One full physical source is serialized and reloaded under each policy with the
+  native precision policy switched alongside. Each output array is a homogeneous block under the existing central
+  parameter_derivative budget, with an isolated excessive-error control. Without a supplied inverse the native ECP
+  mesh base assembles the geminal from the fused value table that the kinetic forward inverts. The AO
+  value zone, budget, configuration and quadrature are unchanged.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_legendre_endpoint_parity.py::test_gfmc_ecp_native_force_stress_keep_mixed_fidelity_on_mesh
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - non_local_move: tmove
+    - non_local_move: dltmove
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_ecp_legendre_endpoint_parity.py::test_gfmc_ecp_native_force_stress_keep_mixed_fidelity_on_mesh#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-native-gfmc-ecp-hf-force-or-stress-block
+          expression: mixed_block
+        reference:
+          role: independent-full-native-gfmc-ecp-hf-force-or-stress-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

@@ -1,0 +1,43 @@
+id: IMPL-RS-GFMC-MO-J3-STREAMING-001
+kind: implementation
+name: A nonzero molecular MO-wrapped J3 streams through the native GFMC mesh caches and keeps XLA parity
+plain_language: >-
+  The production three-body Jastrow written by jqmc-tool convert-to -j3 mo is MO-wrapped (MOs_data
+  over the molecular GTO basis, num_mo < num_ao). The real-path native GFMC parse lowers a nonzero molecular
+  MO-wrapped J3 to its exact raw-AO equivalent (M_ao = C^T M_mo C, j1_ao = C^T j1_mo), so the projection mesh
+  state streams it: for such a J3 (all-electron Cartesian N and ECP spherical water fixtures, GFMC_n and GFMC_t)
+  the J3 slow-fallback route counter (gfmc_route_counters index 12) stays zero and the molecular candidate
+  tables are built and refreshed across hops (indices 3 and 4 positive), in full and mixed precision. For
+  both fixtures the native GFMC_n interval with the lowered J3 equals the XLA reference machine on the
+  MO-wrapped J3 for 1..3 sub-steps at a pinned key (w_L, e_L, V_diag within the established projection
+  policy, walkers and keys exact, counter 12 zero), and for the all-electron fixture the GFMC_n and GFMC_t
+  production walks are deterministic across Rust and XLA (identical walk and keys, per-step weights and
+  local energies at the backend-parity tier of each precision mode). A J3 that still has no
+  streaming state (periodic MO-wrapped composite) raises the always-on Rust witness
+  gfmc_take_j3_slow_fallback_seen, a lowered molecular MO-wrapped J3 does not, and the GFMC driver logs
+  exactly one slow-fallback warning per run. Periodic MO-wrapped J3 is not lowered and is not part of this
+  guarantee.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_mo_j3_lowering.py::test_rust_gfmc_mo_j3_takes_streaming_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: n, kind: ae_cart}
+    - {driver: n, kind: ecp_sphe}
+    - {driver: t, kind: ae_cart}
+    - {driver: t, kind: ecp_sphe}
+  - pytest_node: tests/test_rs_kernel/test_gfmc_mo_j3_lowering.py::test_rust_gfmc_j3_slow_fallback_warns_once
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_mo_j3_lowering.py::test_rust_gfmc_mo_j3_interval_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: ae_cart}
+    - {kind: ecp_sphe}
+  - pytest_node: tests/test_rs_kernel/test_gfmc_mo_j3_lowering.py::test_rust_gfmc_mo_j3_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: n}
+    - {driver: t}

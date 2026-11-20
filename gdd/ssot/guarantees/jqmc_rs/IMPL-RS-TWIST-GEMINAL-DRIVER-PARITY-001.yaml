@@ -1,0 +1,97 @@
+id: IMPL-RS-TWIST-GEMINAL-DRIVER-PARITY-001
+kind: implementation
+name: Native complex MCMC and GFMC routes equal XLA at k != Gamma for AGP, AGPn and SD geminals
+plain_language: On the all-electron H4 periodic twist H4_pbc_ae_k025_cart.h5 with J1+J2 and seed 3446, the production
+  GFMC_n (2 walkers) and GFMC_t (1 walker) native complex projection intervals, run for six branching steps,
+  equal the XLA drivers for a dense complex AO AGP, a four-MO AGPn and an untied SD; PRNG keys are identical and final
+  walkers agree at the random-mesh ULP pin before the stored complex e_L, e_L2 and w_L are compared within the periodic
+  fast-interval Rust/XLA envelope. The production MCMC per-step native complex sweep (parameter derivatives on), fed
+  the XLA proposal normals of the same keys, reproduces the XLA walk byte for byte for these geminals and the
+  time-reversal SD; stored e_L and w_L, and for every case including AGPn each optimizer derivative source component,
+  agree within the Rust/XLA consistency envelope. Each Rust run is witnessed to execute the native complex route and
+  each XLA run no native method. The AGPn MCMC row also retains the complex occupation derivative in the
+  optimizer sources, so the optimizer sources are not projected to real. The energy-only native complex
+  MCMC chunk refuses injected inputs with an explicit ValueError, so it has no deterministic XLA twin.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_twist_geminal_driver_rust_xla.py::test_twist_geminal_gfmc_rust_matches_xla
+    executable_checks:
+      d8-n-434:
+        site: tests/test_rs_kernel/test_twist_geminal_driver_rust_xla.py::test_twist_geminal_gfmc_rust_matches_xla#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: rust._latest_r_up_carts
+        reference:
+          role: source-reference-value
+          expression: xla._latest_r_up_carts
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-435:
+        site: tests/test_rs_kernel/test_twist_geminal_driver_rust_xla.py::test_twist_geminal_gfmc_rust_matches_xla#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: rust._latest_r_dn_carts
+        reference:
+          role: source-reference-value
+          expression: xla._latest_r_dn_carts
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp, driver: n}
+    - {case: agp, driver: t}
+    - {case: agpn, driver: n}
+    - {case: agpn, driver: t}
+    - {case: sd_untied, driver: n}
+    - {case: sd_untied, driver: t}
+  - pytest_node: tests/test_rs_kernel/test_twist_geminal_driver_rust_xla.py::test_twist_geminal_mcmc_as_guide_tracks_accepted_state
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      initial-guide-matrix-anchor:
+        site: tests/test_rs_kernel/test_twist_geminal_driver_rust_xla.py::test_twist_geminal_mcmc_as_guide_tracks_accepted_state#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: initial-xla-as-factors, expression: initial_factors}
+        reference: {role: independent-geminal-svd-as-factors, expression: reference_factors}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, det_ratio]}
+      native-sweep-guide-anchor:
+        site: tests/test_rs_kernel/test_twist_geminal_driver_rust_xla.py::test_twist_geminal_mcmc_as_guide_tracks_accepted_state#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-native-sweep-input-as-factors, expression: first_factors}
+        reference: {role: independently-anchored-initial-as-factors, expression: initial_factors}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, det_ratio]}
+  - pytest_node: tests/test_rs_kernel/test_twist_geminal_driver_rust_xla.py::test_twist_geminal_mcmc_rust_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp}
+    - {case: agpn}
+    - {case: sd_untied}
+    - {case: sd_tr}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_twist_geminal_driver_rust_xla.py::test_twist_geminal_mcmc_energy_chunk_refuses_injected_inputs
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp}
+    - {case: agpn}
+    - {case: sd_untied}

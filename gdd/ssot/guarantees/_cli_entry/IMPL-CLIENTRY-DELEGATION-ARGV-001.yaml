@@ -1,0 +1,16 @@
+id: IMPL-CLIENTRY-DELEGATION-ARGV-001
+kind: implementation
+name: The delegated jqmc and jqmc-tool CLIs receive the user's arguments unchanged
+plain_language: >-
+  When the light entry hands a job over, jqmc_cli.main sees sys.argv == ["jqmc",
+  <existing input file>], and jqmc_tool._cli_main sees the original jqmc-tool arguments (here trexio show-info
+  x.h5). The argv is recorded inside each delegated function, which is called exactly once and whose return value
+  is passed through. An entry that cleared or rewrote the arguments before delegating, so that the real CLI would
+  print the usage and exit 2 without reading the input, is detected.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_entry.py::test_delegated_clis_receive_the_original_arguments
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

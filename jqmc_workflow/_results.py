@@ -3,7 +3,7 @@
 These dataclasses represent **facts only** -- deterministic data extracted
 from jQMC stdout/stderr and associated files.  They contain no heuristic
 judgments; diagnostic analysis (failure categorization, convergence
-assessment, etc.) belongs to a higher-level layer (e.g. jqmc-mcp).
+assessment, etc.) belongs to a higher-level layer.
 
 Classes
 -------
@@ -36,7 +36,7 @@ Input_Parameters
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -72,11 +72,11 @@ class VMC_Step_Data:
         energy_error (float or None):
             Energy statistical error -> Y  (Ha).
         max_force (float or None):
-            Maximum force ``Max f = X +- Y`` -> X  (Ha/a.u.).
+            Maximum generalized force ``Max generalized force = X +- Y`` -> X (Ha/a.u.).
         max_force_error (float or None):
             Force error -> Y  (Ha/a.u.).
         signal_to_noise_ratio (float or None):
-            ``Max of signal-to-noise of f = max(|f|/|std f|) = X``.
+            ``Max generalized force signal-to-noise = X``.
         avg_walker_weight (float or None):
             ``Average of walker weights is X``.
         acceptance_ratio (float or None):
@@ -178,12 +178,33 @@ class MCMC_Diagnostic_Data:
             ``"e_L"``, ``"de_L_dR_dr"``, ``"dln_Psi_dR_dr"``,
             ``"dln_Psi_dc"``, ``"de_L_dc"``, ``"mpi_barrier"``, ``"misc"``.
         energy (float or None):
-            Energy from jqmc-tool post-processing.
+            Energy from jqmc-tool post-processing.  Pure Ewald, i.e.
+            *not* MPC-corrected (see ``dE_mpc``).
         energy_error (float or None):
             Energy error from jqmc-tool post-processing.
+        dE_mpc (float or None):
+            MPC finite-size correction ``dE_MPC`` from jqmc-tool
+            post-processing.  MPC is passive and energy-only, so the
+            corrected total is ``energy + dE_mpc`` -- formed by the
+            consumer, keeping the two error bars separable.
+            ``None`` when the run had ``mpc = false``.
+        dE_mpc_error (float or None):
+            Statistical error on ``dE_mpc``.  ``None`` when the run had
+            ``mpc = false``.
         atomic_forces (list of dict or None):
             Per-atom forces from ``jqmc-tool mcmc compute-force``.
             Each dict: ``{label, Fx, Fx_err, Fy, Fy_err, Fz, Fz_err}``.
+        stress_tensor (dict or None):
+            Symmetric stress tensor (Ha/bohr^3) from the MCMC ``get_aT``
+            estimator, parsed from the ``Stress Tensor (sigma):`` table.
+            Keys: ``{sigma_xx, sigma_xx_err, sigma_yy, sigma_yy_err,
+            sigma_zz, sigma_zz_err, sigma_xy, sigma_xy_err,
+            sigma_xz, sigma_xz_err, sigma_yz, sigma_yz_err}``.
+            ``None`` if ``compute_stress`` was off or the system is molecular.
+        pressure (dict or None):
+            Diagonal pressure ``P = -diag(sigma)`` (Ha/bohr^3) and the
+            hydrostatic mean. Keys: ``{Px, Px_err, Py, Py_err, Pz, Pz_err,
+            P_hydro, P_hydro_err}``. ``None`` if ``compute_stress`` was off.
         hamiltonian_data_file (str or None):
             ``[control] hamiltonian_h5`` value from the input TOML.
         restart_checkpoint (str or None):
@@ -209,7 +230,11 @@ class MCMC_Diagnostic_Data:
     timing_breakdown: dict = field(default_factory=dict)
     energy: float | None = None
     energy_error: float | None = None
+    dE_mpc: float | None = None
+    dE_mpc_error: float | None = None
     atomic_forces: list | None = None
+    stress_tensor: dict | None = None
+    pressure: dict | None = None
     hamiltonian_data_file: str | None = None
     restart_checkpoint: str | None = None
     num_mpi_processes: int | None = None
@@ -243,12 +268,34 @@ class LRDMC_Diagnostic_Data:
             ``"mpi_barrier"``, ``"collection"``, ``"reconfiguration"``,
             ``"e_L"``, ``"de_L_dR_dr"``, ``"update_E_scf"``, ``"misc"``.
         energy (float or None):
-            Energy from jqmc-tool post-processing.
+            Energy from jqmc-tool post-processing.  Pure Ewald, i.e.
+            *not* MPC-corrected (see ``dE_mpc``).
         energy_error (float or None):
             Energy error from jqmc-tool post-processing.
+        dE_mpc (float or None):
+            MPC finite-size correction ``dE_MPC`` from jqmc-tool
+            post-processing.  MPC is passive and energy-only, so the
+            corrected total is ``energy + dE_mpc`` -- formed by the
+            consumer, keeping the two error bars separable.
+            ``None`` when the run had ``mpc = false``.
+        dE_mpc_error (float or None):
+            Statistical error on ``dE_mpc``.  ``None`` when the run had
+            ``mpc = false``.
         atomic_forces (list of dict or None):
             Per-atom forces from ``jqmc-tool lrdmc compute-force``.
             Each dict: ``{label, Fx, Fx_err, Fy, Fy_err, Fz, Fz_err}``.
+        stress_tensor (dict or None):
+            Symmetric stress tensor (Ha/bohr^3) from the LRDMC ``get_aT``
+            estimator. Available for both ``lrdmc-tau`` (GFMC_t) and
+            ``lrdmc-bra`` (GFMC_n) -- the two drivers expose the same
+            ``get_aT`` / ``get_aP`` API. Keys: same as
+            ``MCMC_Diagnostic_Data.stress_tensor``.
+            ``None`` if ``compute_stress`` was off or the system is molecular.
+        pressure (dict or None):
+            Diagonal pressure ``P = -diag(sigma)`` (Ha/bohr^3) plus
+            hydrostatic mean. Keys: same as
+            ``MCMC_Diagnostic_Data.pressure``. ``None`` if ``compute_stress``
+            was off.
         hamiltonian_data_file (str or None):
             ``[control] hamiltonian_h5`` value from the input TOML.
         restart_checkpoint (str or None):
@@ -274,7 +321,11 @@ class LRDMC_Diagnostic_Data:
     timing_breakdown: dict = field(default_factory=dict)
     energy: float | None = None
     energy_error: float | None = None
+    dE_mpc: float | None = None
+    dE_mpc_error: float | None = None
     atomic_forces: list | None = None
+    stress_tensor: dict | None = None
+    pressure: dict | None = None
     hamiltonian_data_file: str | None = None
     restart_checkpoint: str | None = None
     num_mpi_processes: int | None = None

@@ -1,0 +1,16 @@
+schema_version: 1
+document:
+  id: jqmc.qe_to_jqmc
+  version: 1
+  lifecycle: cutover
+  title: QE-to-jQMC converter guarantees
+  purpose: Which test guarantees what, by which verdict method, for converting QE wavefunctions into jQMC Hamiltonians across
+    PW, B-spline, pGTO, and composite kinds.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - PHY-QE-ORBITAL-FIDELITY-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

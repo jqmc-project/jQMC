@@ -1,0 +1,23 @@
+id: MATH-AO-TILED-BSPLINE-DERIVATIVE-AD-001
+kind: mathematical
+name: Frozen tiled B-spline adapter physical derivatives equal autodiff
+plain_language: >-
+  The retained AOs_bspline_tiled_complex_data compatibility adapter has multiple
+  primitive k blocks in one physical supercell and frozen orbital coefficients.
+  It is accounted for separately from the single-k, variable-geminal continuous
+  derivative matrix. Its electron gradient and Laplacian and all nine raw strain
+  responses at fixed Cartesian coordinates agree with value autodiff, including
+  off-cell electrons, Gamma and general supertwist, and logical conjugation.
+  WF-PATTERN-017 separately covers its SD kinetic oracle. This adapter contract
+  does not replace the representation-independent TiledOrbitalSet contracts.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tiled_bspline_compatibility.py::test_frozen_tiled_bspline_physical_derivatives_match_autodiff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: gamma, conjugate: false}
+    - {twist: general, conjugate: false}
+    - {twist: gamma, conjugate: true}
+    - {twist: general, conjugate: true}

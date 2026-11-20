@@ -1,0 +1,19 @@
+id: IMPL-RS-FREE-LOCAL-ENERGY-COMPLEX-ONLY-J3-REJECTED-001
+kind: implementation
+name: The exported free real compute_local_energy evaluates a supported J3 and rejects a complex-only J3
+plain_language: >-
+  The exported real native free kernel jqmc_rs.compute_local_energy must never return an energy with an active J3
+  silently left out. The fixture is the real Li_gamma determinant of MATH-RS-REAL-DISPATCH-GAMMA-COMPLEX-PGTO-
+  COMPOSITE-J3-ENERGY-001. Supported controls: with the phase-free Gamma-complex pGTO child and with the identical
+  real pGTO child the free kernel must give e_L(J3) - e_L(no J3) equal to the analytic J3 kinetic reference
+  (0.5666084267722298 Ha at the documented configuration). Unsupported input: with the J3 constant child replaced
+  by a phase-free (k = 0) complex plane wave, which only the complex native path evaluates, the free kernel must
+  raise NotImplementedError naming the complex native path instead of returning the J3-free energy. Full and mixed
+  are judged separately.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_real_gamma_complex_pgto_j3_composite.py::test_real_free_compute_local_energy_keeps_supported_j3_and_rejects_complex_only_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

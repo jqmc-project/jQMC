@@ -1,0 +1,14 @@
+id: IMPL-LRDMC-STRESS-CONTRACTS-001
+kind: implementation
+name: LRDMC stress buffer contracts
+plain_language: The LRDMC stress buffers have the declared PBC/molecular shapes and pseudopotential population for both
+  drivers.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCTStress::test_get_aT_shape_pbc_vs_molecular_lrdmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCTStress::test_stress_PP_buffer_populated_pbc_lrdmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCNStress::test_get_aT_shape_pbc_vs_molecular_lrdmc_n
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCNStress::test_stress_PP_buffer_populated_pbc_lrdmc_n

@@ -1,0 +1,48 @@
+id: IMPL-RS-COMPLEX-PURE-LEAF-J3-GFMC-FORCE-STRESS-001
+kind: implementation
+name: Pure complex PW and B-spline J3 reach GFMC measurement force and stress
+plain_language: >-
+  On the unchanged canonical WF-PATTERN-008 and WF-PATTERN-010 inputs, native
+  complex-twist GFMC measurement nuclear/electron derivatives and strain retain
+  the pure plane-wave or B-spline J3 batch channel, including its cross term with
+  the nuclear-dependent DTN or J1 Jastrow. The public production and debug wrappers
+  agree with both GFMC_t and GFMC_n XLA analytical implementations for tmove and
+  dltmove under the existing same-precision backend policy. Full additionally
+  compares the nuclear force and all nine strain components with fourth-order
+  finite differences of the production continuum measurement energy, rebuilding
+  every Structure_data leaf and Ewald table independently, with seed 5 electron
+  coordinates, fixed rotation seed 7, h=5e-4 and step doubling. DTN strain follows
+  MATH-JAS-COMOVING-STRAIN-001: NumPy independently computes cbrt(det(F)) times the
+  original cutoff_scale; the independent free coefficients and constraint maps
+  stay fixed and the production forward energy applies their existing transport.
+  Mixed uses its
+  same-mode analytical backend comparison, not an fp32 finite-difference oracle.
+  Both public GFMC drivers also compare stored energy, weights, trajectory,
+  HF force and HF stress across native/XLA routes with the original issue reproduction
+  settings (four walkers, seed 34467, six steps, random mesh, alat 0.3, tau 0.1 or
+  two substeps, collection factor one). Each backend runs in a fresh process;
+  an actual native projection engagement witness is required. The six-step
+  stored observations do not claim a converged statistical force estimator.
+  Existing pGTO J3 force/stress evidence remains unchanged.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_pure_leaf_j3_force_stress.py::test_pure_leaf_j3_native_measurement_force_stress
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-008, nlm: tmove, quantity: force}
+    - {pattern: WF-PATTERN-008, nlm: tmove, quantity: stress}
+    - {pattern: WF-PATTERN-008, nlm: dltmove, quantity: force}
+    - {pattern: WF-PATTERN-008, nlm: dltmove, quantity: stress}
+    - {pattern: WF-PATTERN-010, nlm: tmove, quantity: force}
+    - {pattern: WF-PATTERN-010, nlm: tmove, quantity: stress}
+    - {pattern: WF-PATTERN-010, nlm: dltmove, quantity: force}
+    - {pattern: WF-PATTERN-010, nlm: dltmove, quantity: stress}
+  - pytest_node: tests/test_rs_kernel/test_gfmc_pure_leaf_j3_force_stress.py::test_pure_leaf_j3_gfmc_driver_force_stress
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-008, driver: t}
+    - {pattern: WF-PATTERN-010, driver: t}
+    - {pattern: WF-PATTERN-008, driver: n}
+    - {pattern: WF-PATTERN-010, driver: n}

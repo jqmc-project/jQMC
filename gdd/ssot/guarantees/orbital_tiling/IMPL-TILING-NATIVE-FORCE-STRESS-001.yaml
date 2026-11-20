@@ -1,0 +1,33 @@
+id: IMPL-TILING-NATIVE-FORCE-STRESS-001
+kind: implementation
+name: Native complete tiled force and stress with supercell J3
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  Native full local-energy and log-wavefunction derivative wrappers agree with
+  XLA analytical for every physical atom and all nine raw strain components,
+  including electron gradients, finite cross-cell ordinary supercell J3,
+  all four primitive backends and restricted/independent spins. XLA orbital
+  and tiled derivative entry points are forbidden during native evaluation.
+  Real-source conversion and twist averaging have separate guarantees.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_orbital_tiling.py::test_native_tiled_full_force_stress_with_supercell_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw, restricted: true}
+    - {backend: pw, restricted: false}
+    - {backend: bspline, restricted: true}
+    - {backend: bspline, restricted: false}
+    - {backend: pgto_cart, restricted: true}
+    - {backend: pgto_cart, restricted: false}
+    - {backend: pgto_sphe, restricted: true}
+    - {backend: pgto_sphe, restricted: false}
+    - {backend: composite_cart, restricted: true}
+    - {backend: composite_cart, restricted: false}
+    - {backend: composite_sphe, restricted: true}
+    - {backend: composite_sphe, restricted: false}

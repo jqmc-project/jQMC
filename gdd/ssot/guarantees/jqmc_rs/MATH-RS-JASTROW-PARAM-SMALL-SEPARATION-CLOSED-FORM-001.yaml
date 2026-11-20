@@ -1,0 +1,50 @@
+id: MATH-RS-JASTROW-PARAM-SMALL-SEPARATION-CLOSED-FORM-001
+kind: mathematical
+name: Rust J1/J2 parameter derivatives at a tiny separation against exact closed forms
+plain_language: >-
+  With the fixtures of MATH-DERIV-JASTROW-PARAM-SMALL-SEPARATION-CLOSED-FORM-001, the native
+  grad_ln_Psi_jastrow_1b_param and grad_ln_Psi_jastrow_2b_param divided by h**2 (h in 2**-16, 2**-26, 2**-38
+  Bohr; molecular and cubic periodic; Pade and exp) equal the exact closed form within the jastrow_eval strict
+  zone policy of the active precision mode, and the exp form also at separations whose exponent straddles the
+  |y| = 1/4 Taylor / direct switch of the native helper. Full and mixed are judged separately. Evaluating
+  q(y) = 1 - (1 + y) exp(-y) by subtraction fails in both modes.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_jastrow_param_derivative_small_separation.py::test_rust_jastrow_param_derivative_small_separation_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, kind: J1, form: pade}
+    - {geometry: molecular, kind: J1, form: exp}
+    - {geometry: molecular, kind: J2, form: pade}
+    - {geometry: molecular, kind: J2, form: exp}
+    - {geometry: cubic_10bohr, kind: J1, form: pade}
+    - {geometry: cubic_10bohr, kind: J1, form: exp}
+    - {geometry: cubic_10bohr, kind: J2, form: pade}
+    - {geometry: cubic_10bohr, kind: J2, form: exp}
+    executable_checks:
+      closed-form:
+        site: tests/test_rs_kernel/test_jastrow_param_derivative_small_separation.py::test_rust_jastrow_param_derivative_small_separation_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-param-derivative-quotient, expression: derivative_over_h2}
+        reference: {role: exact-closed-form-param-derivative-quotient, expression: closed_derivative_over_h2}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+  - pytest_node: tests/test_rs_kernel/test_jastrow_param_derivative_small_separation.py::test_rust_jastrow_exp_param_derivative_across_branch_points_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, kind: J1}
+    - {geometry: molecular, kind: J2}
+    - {geometry: cubic_10bohr, kind: J1}
+    - {geometry: cubic_10bohr, kind: J2}
+    executable_checks:
+      closed-form:
+        site: tests/test_rs_kernel/test_jastrow_param_derivative_small_separation.py::test_rust_jastrow_exp_param_derivative_across_branch_points_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-param-derivative-quotient, expression: derivative_over_h2}
+        reference: {role: exact-closed-form-param-derivative-quotient, expression: closed_derivative_over_h2}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}

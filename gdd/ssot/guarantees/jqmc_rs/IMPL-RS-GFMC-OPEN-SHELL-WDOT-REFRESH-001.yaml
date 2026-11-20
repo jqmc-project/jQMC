@@ -1,0 +1,17 @@
+id: IMPL-RS-GFMC-OPEN-SHELL-WDOT-REFRESH-001
+kind: implementation
+name: Native GFMC on an open-shell Slater determinant completes through the down-spin winv refresh
+plain_language: >-
+  After every hop the native GFMC state rank-one advances the determinant contraction rows (winv) and
+  re-evaluates the affine bases of both spins. The moved electron's orbital column has only that spin's
+  MO count, so it is read only on the moved spin's branch. On an open-shell Slater determinant with
+  N_up != N_dn, native GFMC_n therefore runs to the end with finite stored weights, local energies and
+  their squares and a finite public energy, with at least one winv advance: on the all-electron Li atom
+  (2 up, 1 down) through the real refresh, and on the periodic ccECP oxygen triplet (4 up, 2 down,
+  complex Bloch orbitals) through the complex refresh, with the complex native state engaged only there.
+  Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_open_shell_wdot_refresh.py::test_gfmc_open_shell_down_hops_complete

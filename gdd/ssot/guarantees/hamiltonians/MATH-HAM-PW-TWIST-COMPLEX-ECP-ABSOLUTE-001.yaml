@@ -1,0 +1,58 @@
+id: MATH-HAM-PW-TWIST-COMPLEX-ECP-ABSOLUTE-001
+kind: mathematical
+name: Plane-wave and pGTO plus plane-wave twist VMC energy equals independent formulas
+plain_language: >-
+  The periodic-invariant patterns composite_twist_j12 (QE Li_k025 projected
+  onto windowed Cartesian pGTO plus 40 complex plane waves) and pw_twist_j12
+  (the same save projected onto 48 complex plane waves), each a time-reversal
+  SD with J1 + J2 and the Li ccECP, have the complex VMC local energy given by
+  an independent reference: complex plane waves rebuilt from the stored Miller
+  triples and fractional twist, primitive Gaussian image Bloch sums for the
+  pGTO child, MO determinant, periodic J1/J2, complex Hessian kinetic energy,
+  NumPy Ewald and explicit radial/Legendre twelve-point nonlocal quadrature
+  before any real projection. No production AO, Jastrow, ECP or energy
+  evaluator supplies that reference; Miller triples, twist, primitive data,
+  image indices and MO coefficients are shared inputs. One up and one down
+  electron use the seed7 image-offset configuration with cond(G)<1e4, identity
+  rotation, NN=1 and Nv=12; imaginary kinetic and nonlocal parts must be
+  active. Standard and fast consumers are compared in full and mixed
+  separately at the existing strict zone policy. Omitting the plane-wave twist
+  or projecting the nonlocal sum to its real part must fail after a passing
+  baseline. This is a fixed-configuration finite-quadrature guarantee, not
+  exact angular integration, Monte Carlo convergence or a B-spline claim.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pw_twist_absolute.py::test_pw_twist_vmc_energy_matches_independent_absolute_value
+    executable_checks:
+      pw-twist-complex-energy:
+        site: tests/test_jqmc_kernel/test_complex_pw_twist_absolute.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-local-energy, expression: 'actual'}
+        reference: {role: independent-plane-wave-pgto-hessian-ewald-and-quadrature-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: composite_twist_j12, route: standard}
+    - {pattern: composite_twist_j12, route: fast}
+    - {pattern: pw_twist_j12, route: standard}
+    - {pattern: pw_twist_j12, route: fast}
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pw_twist_absolute.py::test_pw_twist_absolute_value_rejects_production_fault
+    executable_checks:
+      pw-twist-complex-energy:
+        site: tests/test_jqmc_kernel/test_complex_pw_twist_absolute.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-local-energy, expression: 'actual'}
+        reference: {role: independent-plane-wave-pgto-hessian-ewald-and-quadrature-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: composite_twist_j12, fault: omit-plane-wave-twist}
+    - {pattern: composite_twist_j12, fault: force-real-ecp}
+    - {pattern: pw_twist_j12, fault: omit-plane-wave-twist}
+    - {pattern: pw_twist_j12, fault: force-real-ecp}

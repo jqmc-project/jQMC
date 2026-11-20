@@ -1,0 +1,175 @@
+id: IMPL-TILING-NATIVE-LRDMC-001
+kind: implementation
+name: Native tiled LRDMC projection measurements and sector restart
+plain_language: >-
+  Actual Rust LRDMC-n and LRDMC-t projection batches execute with force and
+  stress enabled for PW, B-spline, Cartesian and spherical pGTO, and both
+  PW+pGTO composite variants. Finite J1/J2 and independent supercell J3 with
+  cross-cell M, and finite DTN, are separate required families. Restricted
+  and independent-spin committed QE/TREXIO ECP sources cover Gamma, general
+  supertwist and a nonuniform two-sector twist ensemble. Cartesian composite
+  fixtures explicitly add a nonzero PW child after TREXIO conversion.
+  HDF5 checkpoint continuation preserves walker coordinates, RNG, energy,
+  weights and force/stress histories, as well as logical shared payloads.
+  At identical configurations the continuum T-move measurement energy and
+  every atomic and raw strain derivative agree with ordinary explicit
+  supercell orbitals. XLA analytical derivatives agree with autograd, and
+  Rust analytical derivatives agree with XLA, including Pulay terms. Sector
+  and weighted aggregate comparisons are required. Native method counters,
+  actual force/stress flags and evaluator guards reject silent XLA fallback.
+  Both precisions are required. This contract uses single-rank Ewald,
+  T-move and no SWCT; it does not certify statistical convergence or every
+  independent LRDMC algorithm option.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_orbital_tiling_lrdmc.py::test_native_tiled_lrdmc_observables_and_restart
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: n, backend: pw, family: j123, mode: gamma, independent: false}
+    - {driver: n, backend: pw, family: j123, mode: gamma, independent: true}
+    - {driver: n, backend: pw, family: j123, mode: general, independent: false}
+    - {driver: n, backend: pw, family: j123, mode: general, independent: true}
+    - {driver: n, backend: pw, family: j123, mode: average, independent: false}
+    - {driver: n, backend: pw, family: j123, mode: average, independent: true}
+    - {driver: n, backend: pw, family: dtn, mode: gamma, independent: false}
+    - {driver: n, backend: pw, family: dtn, mode: gamma, independent: true}
+    - {driver: n, backend: pw, family: dtn, mode: general, independent: false}
+    - {driver: n, backend: pw, family: dtn, mode: general, independent: true}
+    - {driver: n, backend: pw, family: dtn, mode: average, independent: false}
+    - {driver: n, backend: pw, family: dtn, mode: average, independent: true}
+    - {driver: n, backend: bspline, family: j123, mode: gamma, independent: false}
+    - {driver: n, backend: bspline, family: j123, mode: gamma, independent: true}
+    - {driver: n, backend: bspline, family: j123, mode: general, independent: false}
+    - {driver: n, backend: bspline, family: j123, mode: general, independent: true}
+    - {driver: n, backend: bspline, family: j123, mode: average, independent: false}
+    - {driver: n, backend: bspline, family: j123, mode: average, independent: true}
+    - {driver: n, backend: bspline, family: dtn, mode: gamma, independent: false}
+    - {driver: n, backend: bspline, family: dtn, mode: gamma, independent: true}
+    - {driver: n, backend: bspline, family: dtn, mode: general, independent: false}
+    - {driver: n, backend: bspline, family: dtn, mode: general, independent: true}
+    - {driver: n, backend: bspline, family: dtn, mode: average, independent: false}
+    - {driver: n, backend: bspline, family: dtn, mode: average, independent: true}
+    - {driver: n, backend: pgto_cart, family: j123, mode: gamma, independent: false}
+    - {driver: n, backend: pgto_cart, family: j123, mode: gamma, independent: true}
+    - {driver: n, backend: pgto_cart, family: j123, mode: general, independent: false}
+    - {driver: n, backend: pgto_cart, family: j123, mode: general, independent: true}
+    - {driver: n, backend: pgto_cart, family: j123, mode: average, independent: false}
+    - {driver: n, backend: pgto_cart, family: j123, mode: average, independent: true}
+    - {driver: n, backend: pgto_cart, family: dtn, mode: gamma, independent: false}
+    - {driver: n, backend: pgto_cart, family: dtn, mode: gamma, independent: true}
+    - {driver: n, backend: pgto_cart, family: dtn, mode: general, independent: false}
+    - {driver: n, backend: pgto_cart, family: dtn, mode: general, independent: true}
+    - {driver: n, backend: pgto_cart, family: dtn, mode: average, independent: false}
+    - {driver: n, backend: pgto_cart, family: dtn, mode: average, independent: true}
+    - {driver: n, backend: pgto_sphe, family: j123, mode: gamma, independent: false}
+    - {driver: n, backend: pgto_sphe, family: j123, mode: gamma, independent: true}
+    - {driver: n, backend: pgto_sphe, family: j123, mode: general, independent: false}
+    - {driver: n, backend: pgto_sphe, family: j123, mode: general, independent: true}
+    - {driver: n, backend: pgto_sphe, family: j123, mode: average, independent: false}
+    - {driver: n, backend: pgto_sphe, family: j123, mode: average, independent: true}
+    - {driver: n, backend: pgto_sphe, family: dtn, mode: gamma, independent: false}
+    - {driver: n, backend: pgto_sphe, family: dtn, mode: gamma, independent: true}
+    - {driver: n, backend: pgto_sphe, family: dtn, mode: general, independent: false}
+    - {driver: n, backend: pgto_sphe, family: dtn, mode: general, independent: true}
+    - {driver: n, backend: pgto_sphe, family: dtn, mode: average, independent: false}
+    - {driver: n, backend: pgto_sphe, family: dtn, mode: average, independent: true}
+    - {driver: n, backend: composite_cart, family: j123, mode: gamma, independent: false}
+    - {driver: n, backend: composite_cart, family: j123, mode: gamma, independent: true}
+    - {driver: n, backend: composite_cart, family: j123, mode: general, independent: false}
+    - {driver: n, backend: composite_cart, family: j123, mode: general, independent: true}
+    - {driver: n, backend: composite_cart, family: j123, mode: average, independent: false}
+    - {driver: n, backend: composite_cart, family: j123, mode: average, independent: true}
+    - {driver: n, backend: composite_cart, family: dtn, mode: gamma, independent: false}
+    - {driver: n, backend: composite_cart, family: dtn, mode: gamma, independent: true}
+    - {driver: n, backend: composite_cart, family: dtn, mode: general, independent: false}
+    - {driver: n, backend: composite_cart, family: dtn, mode: general, independent: true}
+    - {driver: n, backend: composite_cart, family: dtn, mode: average, independent: false}
+    - {driver: n, backend: composite_cart, family: dtn, mode: average, independent: true}
+    - {driver: n, backend: composite_sphe, family: j123, mode: gamma, independent: false}
+    - {driver: n, backend: composite_sphe, family: j123, mode: gamma, independent: true}
+    - {driver: n, backend: composite_sphe, family: j123, mode: general, independent: false}
+    - {driver: n, backend: composite_sphe, family: j123, mode: general, independent: true}
+    - {driver: n, backend: composite_sphe, family: j123, mode: average, independent: false}
+    - {driver: n, backend: composite_sphe, family: j123, mode: average, independent: true}
+    - {driver: n, backend: composite_sphe, family: dtn, mode: gamma, independent: false}
+    - {driver: n, backend: composite_sphe, family: dtn, mode: gamma, independent: true}
+    - {driver: n, backend: composite_sphe, family: dtn, mode: general, independent: false}
+    - {driver: n, backend: composite_sphe, family: dtn, mode: general, independent: true}
+    - {driver: n, backend: composite_sphe, family: dtn, mode: average, independent: false}
+    - {driver: n, backend: composite_sphe, family: dtn, mode: average, independent: true}
+    - {driver: t, backend: pw, family: j123, mode: gamma, independent: false}
+    - {driver: t, backend: pw, family: j123, mode: gamma, independent: true}
+    - {driver: t, backend: pw, family: j123, mode: general, independent: false}
+    - {driver: t, backend: pw, family: j123, mode: general, independent: true}
+    - {driver: t, backend: pw, family: j123, mode: average, independent: false}
+    - {driver: t, backend: pw, family: j123, mode: average, independent: true}
+    - {driver: t, backend: pw, family: dtn, mode: gamma, independent: false}
+    - {driver: t, backend: pw, family: dtn, mode: gamma, independent: true}
+    - {driver: t, backend: pw, family: dtn, mode: general, independent: false}
+    - {driver: t, backend: pw, family: dtn, mode: general, independent: true}
+    - {driver: t, backend: pw, family: dtn, mode: average, independent: false}
+    - {driver: t, backend: pw, family: dtn, mode: average, independent: true}
+    - {driver: t, backend: bspline, family: j123, mode: gamma, independent: false}
+    - {driver: t, backend: bspline, family: j123, mode: gamma, independent: true}
+    - {driver: t, backend: bspline, family: j123, mode: general, independent: false}
+    - {driver: t, backend: bspline, family: j123, mode: general, independent: true}
+    - {driver: t, backend: bspline, family: j123, mode: average, independent: false}
+    - {driver: t, backend: bspline, family: j123, mode: average, independent: true}
+    - {driver: t, backend: bspline, family: dtn, mode: gamma, independent: false}
+    - {driver: t, backend: bspline, family: dtn, mode: gamma, independent: true}
+    - {driver: t, backend: bspline, family: dtn, mode: general, independent: false}
+    - {driver: t, backend: bspline, family: dtn, mode: general, independent: true}
+    - {driver: t, backend: bspline, family: dtn, mode: average, independent: false}
+    - {driver: t, backend: bspline, family: dtn, mode: average, independent: true}
+    - {driver: t, backend: pgto_cart, family: j123, mode: gamma, independent: false}
+    - {driver: t, backend: pgto_cart, family: j123, mode: gamma, independent: true}
+    - {driver: t, backend: pgto_cart, family: j123, mode: general, independent: false}
+    - {driver: t, backend: pgto_cart, family: j123, mode: general, independent: true}
+    - {driver: t, backend: pgto_cart, family: j123, mode: average, independent: false}
+    - {driver: t, backend: pgto_cart, family: j123, mode: average, independent: true}
+    - {driver: t, backend: pgto_cart, family: dtn, mode: gamma, independent: false}
+    - {driver: t, backend: pgto_cart, family: dtn, mode: gamma, independent: true}
+    - {driver: t, backend: pgto_cart, family: dtn, mode: general, independent: false}
+    - {driver: t, backend: pgto_cart, family: dtn, mode: general, independent: true}
+    - {driver: t, backend: pgto_cart, family: dtn, mode: average, independent: false}
+    - {driver: t, backend: pgto_cart, family: dtn, mode: average, independent: true}
+    - {driver: t, backend: pgto_sphe, family: j123, mode: gamma, independent: false}
+    - {driver: t, backend: pgto_sphe, family: j123, mode: gamma, independent: true}
+    - {driver: t, backend: pgto_sphe, family: j123, mode: general, independent: false}
+    - {driver: t, backend: pgto_sphe, family: j123, mode: general, independent: true}
+    - {driver: t, backend: pgto_sphe, family: j123, mode: average, independent: false}
+    - {driver: t, backend: pgto_sphe, family: j123, mode: average, independent: true}
+    - {driver: t, backend: pgto_sphe, family: dtn, mode: gamma, independent: false}
+    - {driver: t, backend: pgto_sphe, family: dtn, mode: gamma, independent: true}
+    - {driver: t, backend: pgto_sphe, family: dtn, mode: general, independent: false}
+    - {driver: t, backend: pgto_sphe, family: dtn, mode: general, independent: true}
+    - {driver: t, backend: pgto_sphe, family: dtn, mode: average, independent: false}
+    - {driver: t, backend: pgto_sphe, family: dtn, mode: average, independent: true}
+    - {driver: t, backend: composite_cart, family: j123, mode: gamma, independent: false}
+    - {driver: t, backend: composite_cart, family: j123, mode: gamma, independent: true}
+    - {driver: t, backend: composite_cart, family: j123, mode: general, independent: false}
+    - {driver: t, backend: composite_cart, family: j123, mode: general, independent: true}
+    - {driver: t, backend: composite_cart, family: j123, mode: average, independent: false}
+    - {driver: t, backend: composite_cart, family: j123, mode: average, independent: true}
+    - {driver: t, backend: composite_cart, family: dtn, mode: gamma, independent: false}
+    - {driver: t, backend: composite_cart, family: dtn, mode: gamma, independent: true}
+    - {driver: t, backend: composite_cart, family: dtn, mode: general, independent: false}
+    - {driver: t, backend: composite_cart, family: dtn, mode: general, independent: true}
+    - {driver: t, backend: composite_cart, family: dtn, mode: average, independent: false}
+    - {driver: t, backend: composite_cart, family: dtn, mode: average, independent: true}
+    - {driver: t, backend: composite_sphe, family: j123, mode: gamma, independent: false}
+    - {driver: t, backend: composite_sphe, family: j123, mode: gamma, independent: true}
+    - {driver: t, backend: composite_sphe, family: j123, mode: general, independent: false}
+    - {driver: t, backend: composite_sphe, family: j123, mode: general, independent: true}
+    - {driver: t, backend: composite_sphe, family: j123, mode: average, independent: false}
+    - {driver: t, backend: composite_sphe, family: j123, mode: average, independent: true}
+    - {driver: t, backend: composite_sphe, family: dtn, mode: gamma, independent: false}
+    - {driver: t, backend: composite_sphe, family: dtn, mode: gamma, independent: true}
+    - {driver: t, backend: composite_sphe, family: dtn, mode: general, independent: false}
+    - {driver: t, backend: composite_sphe, family: dtn, mode: general, independent: true}
+    - {driver: t, backend: composite_sphe, family: dtn, mode: average, independent: false}
+    - {driver: t, backend: composite_sphe, family: dtn, mode: average, independent: true}

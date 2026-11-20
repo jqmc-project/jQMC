@@ -1,0 +1,508 @@
+id: MATH-TOOL-ESTIMATORS-001
+kind: mathematical
+name: Energy and force estimator correctness
+plain_language: 'The jackknife energy and force estimators reproduce the exactly known statistics of synthetic random data
+  (mathematical reference), including multi-rank aggregation and the LRDMC extrapolation; finite equal-weight,
+  equal-sized bin inputs obey the exact identity jackknife-error == sd_sample(bin means)/sqrt(N_bin), independently evaluated
+  through pairwise bin-mean differences. Fourfold repetition preserves the bin means and their standard error; halving deviations
+  halves the standard error; zero-variance data have zero error. Each specified independent input is checked against its
+  own finite-data reference, never against a sampling-error band or an unconditional 1/sqrt(raw sample count) rule; the
+  a->0 extrapolation recovers a known linear intercept and REFUSES an underdetermined polynomial order instead of returning
+  a minimum-norm garbage intercept; the MPC-corrected error bar is the covariance-aware combined jackknife, never
+  the independent quadrature that under-reported by 25.5%; LRDMC compute-energy detects the correction of a genuine
+  mpc=True run even when the merged checkpoint reduces every observable onto rank_0 only, so the placeholder empty ranks
+  left over from that reduction never mask a real correction as "mpc=False"; twist-sharded MCMC and LRDMC checkpoints are
+  reduced from independent per-twist estimators with embedded normalized BZ weights (including unequal weights), never pooled
+  or silently assigned equal weights; pre-upgrade directories without embedded weight/count metadata are rejected; single-process
+  post-processing reproduces the E/F/P summaries produced internally by the MPI twist driver; the constant-value force is
+  exact, and force requests without derivatives are hard errors. Single-checkpoint mcmc and lrdmc compute-force at the
+  smallest accepted windows (one measurement per bin, uneven bins, two ranks), and lrdmc compute-energy, compute-force
+  (checkpoint file and twist directory) and extrapolate-energy at the documented minima -b 10 -w 25 -c 5, print the force
+  table, energy and two-spacing linear continuum intercept of an independent delete-one-replica jackknife written from
+  the estimator definition.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-ERROR-DISPOSITION-001
+- VM-MATH-FIXED-SAMPLE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestEstimatorAgainstAnalyticStatistics::test_unweighted_iid_error_matches_sigma_over_sqrt_nbin
+    executable_checks:
+      d8-n-436:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestEstimatorAgainstAnalyticStatistics.test_unweighted_iid_error_matches_sigma_over_sqrt_nbin#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: std
+        reference:
+          role: source-reference-value
+          expression: analytic_std
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-PYTHON-FP64-AGGREGATOR-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-PYTHON-FP64-AGGREGATOR-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestEstimatorAgainstAnalyticStatistics::test_zero_variance_data_reports_zero_error
+    executable_checks:
+      d8-n-437:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestEstimatorAgainstAnalyticStatistics.test_zero_variance_data_reports_zero_error#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: mean
+        reference:
+          role: source-reference-value
+          expression: '-2.75'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_lrdmc_extrapolate_recovers_linear_intercept
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_lrdmc_extrapolate_energy_resampling_is_deterministic
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergyMPC::test_mpc_total_error_uses_combined_jackknife
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_mcmc_random_energy_jackknife
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_mcmc_random_energy_jackknife#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_cli
+        reference:
+          role: existing-test-reference
+          expression: E_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_mcmc_random_energy_jackknife#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: std_cli
+        reference:
+          role: existing-test-reference
+          expression: std_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_mcmc_multi_rank_random
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_mcmc_multi_rank_random#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_cli
+        reference:
+          role: existing-test-reference
+          expression: E_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_mcmc_multi_rank_random#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: std_cli
+        reference:
+          role: existing-test-reference
+          expression: std_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_lrdmc_random_energy_jackknife
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_lrdmc_random_energy_jackknife#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_cli
+        reference:
+          role: existing-test-reference
+          expression: E_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_lrdmc_random_energy_jackknife#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: std_cli
+        reference:
+          role: existing-test-reference
+          expression: std_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergyMPC::test_lrdmc_reports_mpc_when_only_rank0_holds_reduced_observables
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergyMPC.test_lrdmc_reports_mpc_when_only_rank0_holds_reduced_observables#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual_mean
+        reference:
+          role: existing-test-reference
+          expression: expected_dE_mean
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergyMPC.test_lrdmc_reports_mpc_when_only_rank0_holds_reduced_observables#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual_std
+        reference:
+          role: existing-test-reference
+          expression: expected_dE_std
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_lrdmc_multi_rank_random
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_lrdmc_multi_rank_random#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_cli
+        reference:
+          role: existing-test-reference
+          expression: E_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_lrdmc_multi_rank_random#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: std_cli
+        reference:
+          role: existing-test-reference
+          expression: std_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_lrdmc_extrapolate_energy
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_mcmc_compute_force_basic
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_mcmc_compute_force_multi_rank
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_lrdmc_compute_force_basic
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_mcmc_force_constant_values
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_lrdmc_extrapolate_refuses_underdetermined_order
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_mcmc_compute_force_without_deriv_raises
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_lrdmc_compute_force_without_deriv_raises
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_mcmc_pre_upgrade_twist_checkpoint_is_rejected
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_mcmc_twist_checkpoint_directory_uses_stored_weights
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_mcmc_twist_checkpoint_directory_uses_stored_weights#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual_mean
+        reference:
+          role: existing-test-reference
+          expression: expected_mean
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_mcmc_twist_checkpoint_directory_uses_stored_weights#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual_std
+        reference:
+          role: existing-test-reference
+          expression: expected_std
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_lrdmc_twist_checkpoint_directory_uses_stored_weights
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_lrdmc_twist_checkpoint_directory_uses_stored_weights#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual_mean
+        reference:
+          role: existing-test-reference
+          expression: expected_mean
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy.test_lrdmc_twist_checkpoint_directory_uses_stored_weights#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual_std
+        reference:
+          role: existing-test-reference
+          expression: expected_std
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_twist_tool_matches_internal_energy_force_pressure_summaries
+    executable_checks:
+      d8-n-439:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce.test_twist_tool_matches_internal_energy_force_pressure_summaries#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: '[row[''Fx''], row[''Fy''], row[''Fz'']]'
+        reference:
+          role: source-reference-value
+          expression: internal_F[atom_idx]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-TOOL-FORCE-TEXT-ROUNDTRIP-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-TOOL-FORCE-TEXT-ROUNDTRIP-R-PYTHON-FP64-ZERO-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+      d8-n-440:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce.test_twist_tool_matches_internal_energy_force_pressure_summaries#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: '[row[''Fx_err''], row[''Fy_err''], row[''Fz_err'']]'
+        reference:
+          role: source-reference-value
+          expression: internal_sigma_F[atom_idx]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-TOOL-FORCE-TEXT-ROUNDTRIP-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-TOOL-FORCE-TEXT-ROUNDTRIP-R-PYTHON-FP64-ZERO-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+      d8-n-438:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce.test_twist_tool_matches_internal_energy_force_pressure_summaries#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(energy_match.groups(), dtype=float)
+        reference:
+          role: source-reference-value
+          expression: '[internal_E, internal_sigma_E]'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-441:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce.test_twist_tool_matches_internal_energy_force_pressure_summaries#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(pressure_match.groups(), dtype=float)
+        reference:
+          role: source-reference-value
+          expression: '[internal_P, internal_sigma_P]'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForceRefusals::test_compute_force_boundary_settings_match_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {command: mcmc, num_steps: 40, num_ranks: 1, args: {"-b": 10, "-w": 30}}
+    - {command: mcmc, num_steps: 43, num_ranks: 2, args: {"-b": 10, "-w": 30}}
+    - {command: lrdmc, num_steps: 40, num_ranks: 1, args: {"-b": 10, "-w": 25, "-c": 5}}
+    - {command: lrdmc, num_steps: 47, num_ranks: 1, args: {"-b": 10, "-w": 25, "-c": 7}}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForceRefusals::test_lrdmc_analysis_at_documented_minima_matches_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: compute-energy}
+    - {route: compute-force}
+    - {route: compute-force-twist}
+    - {route: extrapolate-energy}
+- verdict_method: VM-MATH-FIXED-SAMPLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestEstimatorAgainstAnalyticStatistics::test_error_scales_as_inverse_sqrt_of_sample_count
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - profile: independent-fixed-streams
+      seed: 99
+      short_steps: 100
+      long_steps: 400
+      walkers: 4
+      bins: 10
+    - profile: repeated-fixed-sample
+      seed: 99
+      short_steps: 100
+      long_steps: 400
+      walkers: 4
+      bins: 10
+    - profile: scaled-fixed-sample
+      seed: 99
+      short_steps: 100
+      long_steps: 400
+      walkers: 4
+      bins: 10
+    executable_checks:
+      realized-input-classification:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestEstimatorAgainstAnalyticStatistics.test_error_scales_as_inverse_sqrt_of_sample_count#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: realized-shapes-dtypes-and-input-distinctness
+          expression: input_signature
+        reference:
+          role: required-layout-and-profile-signature
+          expression: required_signature
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      both-sample-estimates:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestEstimatorAgainstAnalyticStatistics.test_error_scales_as_inverse_sqrt_of_sample_count#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: cli-means-and-standard-errors
+          expression: actual
+        reference:
+          role: pairwise-finite-bin-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-FIXED-SAMPLE-FP64-001
+          mixed:
+            policy: CMP-FIXED-SAMPLE-FP64-001
+      error-ratio:
+        site: tests/test_jqmc_kernel/test_jqmc_tool.py::TestEstimatorAgainstAnalyticStatistics.test_error_scales_as_inverse_sqrt_of_sample_count#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: cli-standard-error-ratio
+          expression: ratio
+        reference:
+          role: fixed-sample-reference-ratio
+          expression: reference_ratio
+        precision:
+          full:
+            policy: CMP-FIXED-SAMPLE-FP64-001
+          mixed:
+            policy: CMP-FIXED-SAMPLE-FP64-001

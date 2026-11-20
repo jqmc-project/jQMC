@@ -1,0 +1,19 @@
+id: MATH-RS-INACTIVE-COMPLEX-CHILD-J3-NATIVE-PARAM-DERIV-NON-J3-BLOCKS-001
+kind: mathematical
+name: The native parameter-derivative context treats an all-zero-j_matrix complex-child J3 as absent for non-J3 blocks
+plain_language: >-
+  An all-zero j_matrix makes the three-body Jastrow factor identically zero, so every non-J3 parameter derivative of
+  the native real parameter-derivative context (build_obs_ctx with want_param_deriv) must equal the one of the same
+  context built with jastrow_three_body_data=None, also when the J3 orbital is an MO over a composite of a real pGTO
+  and a complex plane-wave child. On the fixture of MATH-RS-INACTIVE-COMPLEX-CHILD-J3-NATIVE-MCMC-RUN-001 at one
+  fixed electron configuration, the MO-coefficient O_k, its dT/dc with and without the supplied geminal inverse,
+  and its non-local ECP dV/dc add agree exactly with the J3-free context; at least one compared block is nonzero.
+  Children: complex plane wave with nonzero G, complex constant (k = 0), and the real constant control. Full and
+  mixed are judged separately.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_inactive_complex_j3_native_mcmc.py::test_native_param_deriv_ctx_inactive_complex_child_j3_non_j3_blocks_equal_j3_free
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{child: complex_pw_G}, {child: complex_pw_0}, {child: real_pw}]

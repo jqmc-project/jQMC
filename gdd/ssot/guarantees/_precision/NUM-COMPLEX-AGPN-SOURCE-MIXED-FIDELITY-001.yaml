@@ -1,0 +1,55 @@
+id: NUM-COMPLEX-AGPN-SOURCE-MIXED-FIDELITY-001
+kind: numerical
+name: Complex AGPn optimizer source fields retain Mixed Full fidelity
+plain_language: All six original closed-real/open-real/open-complex and ln_Psi/e_L cases retain the committed H4
+  or oxygen twist inputs, all original seeds and real parameter-coordinate domains, original source_mode=True route,
+  complex outputs, empty closed-shell unpaired block and i-times-unpaired imaginary-coordinate mapping. Full/Mixed
+  analytical models are independently rebuilt after clearing precision-sensitive bridge/QE caches, with matching
+  fixed coordinates and exact active fields. Every nonempty homogeneous real/imaginary field is checked separately
+  at the unchanged central parameter_derivative maximum-deviation budget and rejects an isolated excess-budget copy.
+  Source imaginary projection must fail beyond the unchanged entry-Mixed comparison band in both callbacks. Original
+  Both-precision independent mathematical AD and comparison bands remain in MATH-RS-AGPN-COMPLEX-SOURCE-REFERENCE-001.
+  No seed, tolerance, conditioning filter, skip or production algorithm changes. This is auxiliary production fidelity;
+  legitimate original Mixed real-coordinate AD remains under the mathematical guarantee and is not claimed as zero
+  or banned.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_agpn_complex_derivative_reference.py::test_agpn_complex_optimizer_sources_match_real_coordinate_reference
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - case: closed-real
+      fixture_path: tests/trexio_example_files/H4_pbc_ae_k025_cart.h5
+      quantity: ln_Psi
+    - case: open-real
+      fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      quantity: ln_Psi
+    - case: open-complex
+      fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      quantity: ln_Psi
+    - case: closed-real
+      fixture_path: tests/trexio_example_files/H4_pbc_ae_k025_cart.h5
+      quantity: e_L
+    - case: open-real
+      fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      quantity: e_L
+    - case: open-complex
+      fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      quantity: e_L
+    executable_checks:
+      mixed-analytical-vs-full-analytical:
+        site: tests/test_jqmc_kernel/test_agpn_complex_derivative_reference.py::_complex_agpn_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-complex-source-real-coordinate-component
+          expression: mixed_block
+        reference:
+          role: full-XLA-complex-source-same-coordinate-component
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

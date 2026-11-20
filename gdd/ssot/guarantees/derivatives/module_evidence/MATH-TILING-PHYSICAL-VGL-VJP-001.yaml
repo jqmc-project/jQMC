@@ -1,0 +1,37 @@
+id: MATH-TILING-PHYSICAL-VGL-VJP-001
+kind: mathematical
+name: Tiled analytic VGL cotangents equal coordinate autodiff
+plain_language: >-
+  Local coefficient contractions and primitive image kernels produce analytic
+  VGL responses for independent physical atoms, all raw strain components and
+  electrons. These agree with XLA autodiff for PW, B-spline and Cartesian/spherical
+  pGTO, including logical conjugation, non-diagonal cells, displaced atoms and
+  unwrapped electrons. No global identity or coefficient matrix is constructed.
+  This is a derivative-kernel contract; full source-route energy, force and
+  stress and Rust parity have separate acceptance gates.
+verdict_methods: [VM-MATH-REFERENCE-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_geometry.py::test_physical_vgl_analytic_cotangents_equal_autograd
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw, conjugate: false}
+    - {backend: pw, conjugate: true}
+    - {backend: bspline3, conjugate: false}
+    - {backend: bspline3, conjugate: true}
+    - {backend: pgto_cart, conjugate: false}
+    - {backend: pgto_cart, conjugate: true}
+    - {backend: pgto_sphe, conjugate: false}
+    - {backend: pgto_sphe, conjugate: true}
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_derivatives.py::test_tiled_full_energy_force_stress_with_nonzero_jastrow
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: bspline3, restricted: true}
+    - {backend: bspline3, restricted: false}
+    - {backend: pgto_cart, restricted: true}
+    - {backend: pgto_cart, restricted: false}
+    - {backend: pgto_sphe, restricted: true}
+    - {backend: pgto_sphe, restricted: false}

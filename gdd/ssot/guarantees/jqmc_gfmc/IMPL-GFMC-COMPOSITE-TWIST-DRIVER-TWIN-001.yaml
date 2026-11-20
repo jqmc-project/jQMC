@@ -1,0 +1,28 @@
+id: IMPL-GFMC-COMPOSITE-TWIST-DRIVER-TWIN-001
+kind: implementation
+name: Composite and twist XLA driver incremental twins
+plain_language: Actual XLA GFMC runs on real periodic pGTO+PW and complex spherical-pGTO J1/J2 inputs preserve the
+  full-recompute twin with the same seed, two walkers and three stored steps. For both conventional and load-balanced
+  algorithms, final walkers and random keys agree exactly, all finite complex stored energy and weight components
+  satisfy the existing incremental-twin policy, and trace and update counters independently prove incremental execution.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_extended_incremental_twin_xla.py::test_xla_composite_twist_incremental_twin
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: pbc_composite_jnone, driver: t}
+    - {pattern: pbc_composite_jnone, driver: n}
+    - {pattern: twist_sphepgto_j12, driver: t}
+    - {pattern: twist_sphepgto_j12, driver: n}
+    executable_checks:
+      complex-stored-observables:
+        site: tests/test_jqmc_kernel/test_gfmc_extended_incremental_twin_xla.py::test_xla_composite_twist_incremental_twin#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: incremental-driver-stored-values, expression: actual_values}
+        reference: {role: same-xla-full-recompute-driver-stored-values, expression: reference_values}
+        iterations: {variable: name, required_values: [_stored_w_L, _stored_e_L, _stored_e_L2]}
+        precision:
+          full: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+          mixed: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}

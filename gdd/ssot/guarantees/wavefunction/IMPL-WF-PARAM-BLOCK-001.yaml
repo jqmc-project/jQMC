@@ -1,0 +1,30 @@
+id: IMPL-WF-PARAM-BLOCK-001
+kind: implementation
+name: Variational parameter block contracts
+plain_language: Real-coordinate decoding supplies a real storage update, complex parameters keep complex deltas, and real-parameter
+  real-delta updates are bit identical, as the reviewed block contract requires.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestVariationalParameterBlock::test_real_coordinate_decode_supplies_a_real_storage_update
+    executable_checks:
+      d8-n-468:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestVariationalParameterBlock.test_real_coordinate_decode_supplies_a_real_storage_update#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: new.values
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-BIT-EXACT-001
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestVariationalParameterBlock::test_apply_update_complex_param_keeps_complex_delta
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestVariationalParameterBlock::test_apply_update_real_param_real_delta_bit_identical

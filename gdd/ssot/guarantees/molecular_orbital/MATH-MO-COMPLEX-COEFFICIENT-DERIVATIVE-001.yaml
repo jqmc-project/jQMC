@@ -1,0 +1,108 @@
+id: MATH-MO-COMPLEX-COEFFICIENT-DERIVATIVE-001
+kind: mathematical
+name: Complex-coefficient periodic MO gradients, Laplacians and fused outputs equal autodiff of the complex MO value
+plain_language: >-
+  On lithium_k025.h5 and H2_pbc_ae_k025_cart.h5 with the original fixed complex MO
+  row mixing and inside/outside-cell coordinates, full analytical gradient, Laplacian
+  and fused derivative outputs retain strict AD of the complex MO value. Nontrivial
+  real/imaginary parts and rejection of conjugated coefficients remain required.
+  Conjugating analytical AO derivatives must fail all three checks; the mixed fault
+  is compared to a clean full host reference captured before installing it. Mixed
+  numerical derivative evidence is NUM-ORBITAL-ELEMENTARY-DERIVATIVE-MIXED-FIDELITY-001.
+  Same-mode fused/standalone value, gradient and Laplacian parity remains strict
+  in IMPL-ORBITAL-FUSED-API-PARITY-001, separately from cross-precision fidelity.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::test_complex_periodic_MOs_grad_analytic_vs_auto
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_grad#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: existing-test-actual, expression: actual}
+        reference: {role: existing-test-reference, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_grad]}
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {trexio_file: lithium_k025.h5}
+    - {trexio_file: H2_pbc_ae_k025_cart.h5}
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::test_complex_periodic_MOs_laplacian_analytic_vs_auto
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_lap#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: existing-test-actual, expression: actual}
+        reference: {role: existing-test-reference, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_lap]}
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {trexio_file: lithium_k025.h5}
+    - {trexio_file: H2_pbc_ae_k025_cart.h5}
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::test_complex_periodic_MOs_fused_matches_standalone_and_autodiff
+    executable_checks:
+      value:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_value#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: existing-test-actual, expression: actual}
+        reference: {role: existing-test-reference, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+      gradient:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_grad#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: existing-test-actual, expression: actual}
+        reference: {role: existing-test-reference, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_grad]}
+      laplacian:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_lap#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: existing-test-actual, expression: actual}
+        reference: {role: existing-test-reference, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_lap]}
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {trexio_file: lithium_k025.h5}
+    - {trexio_file: H2_pbc_ae_k025_cart.h5}
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::test_negative_control_conjugated_ao_derivatives_fail_complex_mo_rows
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      full-gradient-ad-rejection:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_grad#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-output-or-control-fault
+          expression: actual
+        reference:
+          role: full-same-forward-value-autodiff-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_grad
+      full-laplacian-ad-rejection:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_lap#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-output-or-control-fault
+          expression: actual
+        reference:
+          role: full-same-forward-value-autodiff-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_lap

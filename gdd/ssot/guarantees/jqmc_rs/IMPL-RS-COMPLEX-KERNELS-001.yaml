@@ -1,0 +1,664 @@
+id: IMPL-RS-COMPLEX-KERNELS-001
+kind: implementation
+name: Rust/XLA parity of complex kernel signatures and sweeps
+plain_language: The Rust complex composite kernels, complex sweeps, and complex signature ports reproduce the XLA evaluators,
+  with real/complex signature parity.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_composite.py::test_composite_lndet_and_kinetic
+    executable_checks:
+      d8-i-095:
+        site: tests/test_rs_kernel/test_complex_composite.py::test_composite_lndet_and_kinetic#inequality-2
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: k_got
+        reference:
+          role: source-reference-value
+          expression: k_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+      rust-complex-ln-det:
+        site: tests/test_rs_kernel/test_complex_composite.py::test_composite_lndet_and_kinetic#inequality-1
+        comparator: python.inequality
+        actual:
+          role: rust-complex-ln-abs-det
+          expression: ld_got
+        reference:
+          role: xla-complex-ln-abs-det
+          expression: ld_ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - det_eval
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_complex_composite.py::test_composite_Ok_and_dT_dMO
+    executable_checks:
+      rust-grad-ln-det-mo-up:
+        site: tests/test_rs_kernel/test_complex_composite.py::test_composite_Ok_and_dT_dMO#inequality-1
+        comparator: python.inequality
+        actual:
+          role: rust-grad-ln-det-mo-up
+          expression: ou
+        reference:
+          role: jax-grad-ln-det-mo-up
+          expression: ref_ou
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_grad_lap
+      rust-grad-ln-det-mo-dn:
+        site: tests/test_rs_kernel/test_complex_composite.py::test_composite_Ok_and_dT_dMO#inequality-2
+        comparator: python.inequality
+        actual:
+          role: rust-grad-ln-det-mo-dn
+          expression: od
+        reference:
+          role: jax-grad-ln-det-mo-dn
+          expression: ref_od
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_grad_lap
+      rust-grad-kinetic-mo-up:
+        site: tests/test_rs_kernel/test_complex_composite.py::test_composite_Ok_and_dT_dMO#inequality-3
+        comparator: python.inequality
+        actual:
+          role: rust-grad-kinetic-mo-up
+          expression: tu
+        reference:
+          role: jax-grad-kinetic-mo-up
+          expression: ref_tu
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_grad_lap
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_grad_lap
+            - wf_kinetic
+      rust-grad-kinetic-mo-dn:
+        site: tests/test_rs_kernel/test_complex_composite.py::test_composite_Ok_and_dT_dMO#inequality-4
+        comparator: python.inequality
+        actual:
+          role: rust-grad-kinetic-mo-dn
+          expression: td
+        reference:
+          role: jax-grad-kinetic-mo-dn
+          expression: ref_td
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_grad_lap
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_grad
+            - det_grad_lap
+            - wf_kinetic
+  - pytest_node: tests/test_rs_kernel/test_complex_composite.py::test_composite_farfield_lndet
+    executable_checks:
+      rust-farfield-ln-det:
+        site: tests/test_rs_kernel/test_complex_composite.py::test_composite_farfield_lndet#inequality-1
+        comparator: python.inequality
+        actual:
+          role: rust-complex-ln-abs-det
+          expression: got
+        reference:
+          role: xla-complex-ln-abs-det
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - det_eval
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_complex_composite.py::test_composite_ecp_nonlocal
+    executable_checks:
+      rust-ecp-nonlocal-real:
+        site: tests/test_rs_kernel/test_complex_composite.py::test_composite_ecp_nonlocal#inequality-1
+        comparator: python.inequality
+        actual:
+          role: rust-complex-ecp-nonlocal-real-part
+          expression: re
+        reference:
+          role: xla-ecp-nonlocal-real-part
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - ao_eval
+            - det_eval
+  - pytest_node: tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_state_consistency
+    executable_checks:
+      d8-i-103:
+        site: tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_state_consistency#inequality-2
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - ao_eval
+        iterations:
+          variable: f
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+  - pytest_node: tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_acceptance
+  - pytest_node: tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_e_L_fast
+    executable_checks:
+      d8-i-102:
+        site: tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_e_L_fast#inequality-1
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: ef
+        reference:
+          role: source-reference-value
+          expression: es
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - local_energy
+            - det_ratio
+            - wf_kinetic
+            - coulomb
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - local_energy
+            - det_ratio
+            - wf_kinetic
+            - coulomb
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_as_regularization
+  - pytest_node: tests/test_rs_kernel/test_complex_sweep.py::test_native_vmc_complex
+    executable_checks:
+      d8-i-104:
+        site: tests/test_rs_kernel/test_complex_sweep.py::test_native_vmc_complex#inequality-1
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: assembled
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - local_energy
+            - wf_kinetic
+            - coulomb
+            - ewald
+            - ao_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - local_energy
+            - wf_kinetic
+            - coulomb
+            - ewald
+            - ao_eval
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+  - pytest_node: tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_j3
+    executable_checks:
+      d8-i-105:
+        site: tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_j3#inequality-2
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - ao_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - ao_eval
+            - jastrow_eval
+        iterations:
+          variable: f
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+  - pytest_node: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_force_pulay_consume_sm_geminal_inv
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_force_pulay_consume_sm_geminal_inv#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got_sm
+        reference:
+          role: existing-test-reference
+          expression: got_fresh
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+        iterations:
+          variable: tag
+          required_values:
+          - dR
+          - dr_up
+          - dr_dn
+      comparison-2:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_force_pulay_consume_sm_geminal_inv#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got_sm
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+        iterations:
+          variable: tag
+          required_values:
+          - dR
+          - dr_up
+          - dr_dn
+      comparison-3:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_force_pulay_consume_sm_geminal_inv#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got_sm
+        reference:
+          role: existing-test-reference
+          expression: got_fresh
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+        iterations:
+          variable: tag
+          required_values:
+          - dR
+          - dr_up
+          - dr_dn
+      comparison-4:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_force_pulay_consume_sm_geminal_inv#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got_sm
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+        iterations:
+          variable: tag
+          required_values:
+          - dR
+          - dr_up
+          - dr_dn
+  - pytest_node: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_stress_consumes_geminal_inv_and_fast_mesh
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_stress_consumes_geminal_inv_and_fast_mesh#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: hf_slow
+        reference:
+          role: existing-test-reference
+          expression: hf_fresh
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+      comparison-2:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_stress_consumes_geminal_inv_and_fast_mesh#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: hf_fast
+        reference:
+          role: existing-test-reference
+          expression: hf_slow
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+      comparison-3:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_stress_consumes_geminal_inv_and_fast_mesh#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: hf_fast
+        reference:
+          role: existing-test-reference
+          expression: hf_x
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+      comparison-4:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_stress_consumes_geminal_inv_and_fast_mesh#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: pp_sm
+        reference:
+          role: existing-test-reference
+          expression: pp_fresh
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+      comparison-5:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_complex_stress_consumes_geminal_inv_and_fast_mesh#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: pp_sm
+        reference:
+          role: existing-test-reference
+          expression: pp_x
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+  - pytest_node: tests/test_rs_kernel/test_complex_signature_ports.py::test_grad_T_wrt_R_complex_is_with_jastrow_capable
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_grad_T_wrt_R_complex_is_with_jastrow_capable#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - swct
+            - jastrow_grad_lap
+        iterations:
+          variable: seed_label
+          required_values:
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_complex_signature_ports.py::test_grad_lnPsi_wrt_strain_complex_is_with_jastrow_capable
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_grad_lnPsi_wrt_strain_complex_is_with_jastrow_capable#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - wf_kinetic
+            - local_energy
+            - swct
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+  - pytest_node: tests/test_rs_kernel/test_complex_signature_ports.py::test_grad_V_ecp_nonlocal_wrt_strain_complex_is_with_jastrow_capable
+    executable_checks:
+      existing-strict-comparison-1:
+        site: tests/test_rs_kernel/test_complex_signature_ports.py::test_grad_V_ecp_nonlocal_wrt_strain_complex_is_with_jastrow_capable#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: withj
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - swct
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - swct
+            - jastrow_eval
+        iterations:
+          variable: seed_label
+          required_values:
+          - '0'
+          - '1'
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_signature_parity_real_complex.py::test_complex_entries_accept_every_real_argument
+  - pytest_node: tests/test_rs_kernel/test_signature_parity_real_complex.py::test_known_asymmetry_allowlist_has_no_stale_entries
+  - pytest_node: tests/test_rs_kernel/test_signature_parity_real_complex.py::test_known_asymmetry_allowlist_is_empty
+  - pytest_node: tests/test_rs_kernel/test_signature_parity_real_complex.py::test_lib_rs_is_parsable

@@ -1,0 +1,49 @@
+id: IMPL-SETTING-ECP-QUADRATURE-DEFAULT-001
+kind: implementation
+name: Twelve-point default ECP quadrature
+plain_language: Every production route that leaves Nv unspecified uses the global 12-point icosahedral non-local ECP quadrature.
+  Direct kernels bind Nv_default; derivative wrappers with Nv=None must reach the one central resolver; production call
+  sites may not hide literal Nv values. The selected mesh is checked as an equal-weight unit-sphere icosahedron. Rust parity,
+  invariant, dispatch, and driver suites that mirror an implicit production route must also use Nv=12. Lower-order meshes
+  remain available only through explicit arguments and a reviewed test-suite allowlist; the pinned TurboRVB ECP
+  references remain explicit Nv=6 comparisons.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::test_default_ecp_quadrature_is_nv12_icosahedron
+    executable_checks:
+      d8-n-002:
+        site: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::test_default_ecp_quadrature_is_nv12_icosahedron#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.linalg.norm(points, axis=1)
+        reference:
+          role: source-reference-value
+          expression: np.ones(12)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-LRDMC-ICOSAHEDRON-GEOMETRY-R-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-LRDMC-ICOSAHEDRON-GEOMETRY-R-BIT-EXACT-001
+      d8-n-003:
+        site: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::test_default_ecp_quadrature_is_nv12_icosahedron#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: weights
+        reference:
+          role: source-reference-value
+          expression: np.full(12, 1.0 / 12.0)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::test_nv6_mesh_is_confined_to_explicit_quadrature_suites

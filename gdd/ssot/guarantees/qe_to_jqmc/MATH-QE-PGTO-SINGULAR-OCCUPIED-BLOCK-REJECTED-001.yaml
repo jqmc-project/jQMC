@@ -1,0 +1,39 @@
+id: MATH-QE-PGTO-SINGULAR-OCCUPIED-BLOCK-REJECTED-001
+kind: mathematical
+name: A pure pGTO QE conversion whose occupied MO block is zero or linearly dependent is rejected, never written
+plain_language: >-
+  For kind pgto the occupied MO rows of every (k, spin) block (projection occupation > 0.5, the rows the
+  Slater determinant uses) are checked in the AO metric S = compute_overlap_matrix of their leaf, with or
+  without the band-order orthonormalization, on the single-k, twist-average and tiled routes: an
+  identically zero occupied MO, or a per-MO-normalized occupied Gram D^(-1/2) conj(C) S C^T D^(-1/2) with
+  lambda_min <= PW_PGTO_SVD_RCOND lambda_max (the converter's own fp64 linear-dependence floor), raises
+  ValueError stating that the determinant vanishes identically, before any output is written. Through the
+  real jqmc-tool qe command on the committed saves, --max-cond-number 1.5 on O LSDA Gamma (3 kept modes
+  for 4 occupied up bands) and --max-cond-number 0.5 on Li Gamma (every mode dropped, all MO coefficients
+  0.0), each with and without --no-orthonormalize, --twist-average --max-cond-number 0.5 on Li_k_twist and
+  --tiling '2 1 1' --supertwist '0 0 0' --max-cond-number 0.5 on Li_tiling_sectors exit non-zero with that
+  ValueError and leave no output file instead of exiting 0 with warnings only. The default conversions of O LSDA Gamma and Li Gamma still exit 0, and for both
+  determinant spin channels of the saved file the occupied Gram conj(C) S C^T is the identity within the
+  fp64 projection pair tolerance (all singular values 1, a non-singular determinant). The residual of a
+  full-rank fit is not judged (no residual ceiling is set for explicit options). Full and mixed
+  are each required; the conversion is an fp64 preprocessing step in both modes.
+verdict_methods: [VM-ERROR-DISPOSITION-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEPGTOFitFailureRejected::test_pgto_fit_that_drops_the_occupied_subspace_is_rejected
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: o-lsda-gamma-cond1.5}
+    - {case: o-lsda-gamma-cond1.5-no-orthonormalize}
+    - {case: li-gamma-cond0.5}
+    - {case: li-gamma-cond0.5-no-orthonormalize}
+    - {case: li-k-twist-average-cond0.5}
+    - {case: li-tiling-211-cond0.5}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEPGTOFitFailureRejected::test_default_pgto_conversion_writes_a_nonsingular_orthonormal_determinant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: o-lsda-gamma}
+    - {fixture: li-gamma}

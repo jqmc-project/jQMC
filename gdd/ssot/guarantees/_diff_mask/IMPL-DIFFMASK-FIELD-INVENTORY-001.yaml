@@ -1,0 +1,23 @@
+id: IMPL-DIFFMASK-FIELD-INVENTORY-001
+kind: implementation
+name: Every variational pytree field is reviewed and frozen by its own optimization flag
+plain_language: 'Every pytree leaf field of every flax dataclass reachable from Wavefunction_data (walked through the type
+  hints, including AGPn, SD and every AO leaf family through their shared jqmc base classes) appears in a reviewed table
+  with a role and a reason, and the table has no stale rows, so a new or renamed field fails until it is reviewed. Fields
+  reviewed as name-masked variational parameters are classified "param" by the rule apply_diff_mask uses (diff_tag metadata,
+  else _PARAM_FIELD_NAMES) and the nuclear positions "coord". On five fixtures (AGP over MOs with J1, J2, J3 and DTN; AO
+  AGP with J3 over MOs; open-shell SD; open-shell AGPn; periodic complex SD) every block returned by get_variational_blocks
+  with every flag on maps to reviewed variational source fields whose values equal the block values, its ln Psi gradient
+  is nonzero with every flag on, exactly zero when only its own flag is off, and nonzero when another flag is off. A synthetic
+  dataclass with an unreviewed field fails the inventory with the specific message, and dropping jastrow_1b_param from
+  _PARAM_FIELD_NAMES fails both the classification and the freeze check.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_diff_mask_field_inventory.py::test_every_wavefunction_pytree_leaf_field_is_reviewed
+  - pytest_node: tests/test_jqmc_kernel/test_diff_mask_field_inventory.py::test_reviewed_variational_fields_are_classified_by_the_mask
+  - pytest_node: tests/test_jqmc_kernel/test_diff_mask_field_inventory.py::test_each_flag_off_freezes_exactly_its_variational_blocks
+  - pytest_node: tests/test_jqmc_kernel/test_diff_mask_field_inventory.py::test_inventory_gate_rejects_an_unreviewed_variational_field
+  - pytest_node: tests/test_jqmc_kernel/test_diff_mask_field_inventory.py::test_mask_gate_rejects_a_name_list_that_misses_a_variational_field

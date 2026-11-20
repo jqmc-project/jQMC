@@ -1,0 +1,221 @@
+id: MATH-AO-PERIODIC-BASIS-UPDATE-001
+kind: mathematical
+name: Periodic basis updates preserve physical shell parameters and finite accepted wavefunctions
+plain_language: A periodic Cartesian or real-spherical GTO basis preserves the canonical home radial parameter identity
+  and its angular-component sharing across every lattice image. The normalized s/p reference cases have one independent
+  exponent and contraction coefficient per physical shell primitive. Optimization
+  keeps the physical alpha/c coordinates and derivatives. A concrete exponent update must be finite and strictly
+  positive, and a coefficient update must be finite. Invalid raw arrays and complete optimizer candidates are rejected
+  before accepted model state changes. Accepted exponent or coefficient changes rebuild the image envelope at the
+  original truncation tolerance before publication. Direct AO and MO-wrapped nonzero J3 bases exercise matrix-only/exponent-only/coefficient-only/combined
+  flags. The independent closed-form normalized s/p Gaussian lattice sum with nonzero contraction coefficients over
+  [-6,6]^3 and explicit electron pairs provides the physical value and analytic alpha/c derivatives; XLA AD and
+  native radial scatter reductions agree under the existing active-precision mathematical-reference tolerance. The sampler evaluates a candidate log wavefunction
+  on actual current walkers before publication and rejects non-finite values collectively across sampler and twist
+  ranks before Hamiltonian/revision mutation. A real two-rank optimizer witness and typed communicator negative
+  controls enforce rank-uniform rejection. No J3 optimization flag is disabled according to determinant tiling.
+  Full and mixed are evaluated separately.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_j3_basis_updates.py::test_periodic_j3_physical_updates_and_derivatives
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - angular: cart
+      wrapper: ao
+      flags: matrix
+    - angular: cart
+      wrapper: ao
+      flags: exp
+    - angular: cart
+      wrapper: ao
+      flags: coeff
+    - angular: cart
+      wrapper: ao
+      flags: combined
+    - angular: cart
+      wrapper: mo
+      flags: matrix
+    - angular: cart
+      wrapper: mo
+      flags: exp
+    - angular: cart
+      wrapper: mo
+      flags: coeff
+    - angular: cart
+      wrapper: mo
+      flags: combined
+    - angular: sphe
+      wrapper: ao
+      flags: matrix
+    - angular: sphe
+      wrapper: ao
+      flags: exp
+    - angular: sphe
+      wrapper: ao
+      flags: coeff
+    - angular: sphe
+      wrapper: ao
+      flags: combined
+    - angular: sphe
+      wrapper: mo
+      flags: matrix
+    - angular: sphe
+      wrapper: mo
+      flags: exp
+    - angular: sphe
+      wrapper: mo
+      flags: coeff
+    - angular: sphe
+      wrapper: mo
+      flags: combined
+  - pytest_node: tests/test_rs_kernel/test_periodic_j3_basis_updates.py::test_native_periodic_j3_physical_radial_derivatives
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - angular: cart
+      wrapper: ao
+    - angular: cart
+      wrapper: mo
+    - angular: sphe
+      wrapper: ao
+    - angular: sphe
+      wrapper: mo
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_j3_basis_updates.py::test_invalid_periodic_basis_candidate_is_atomic
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - angular: cart
+      wrapper: ao
+      parameter: exp
+      bad_case: zero
+    - angular: cart
+      wrapper: ao
+      parameter: exp
+      bad_case: negative
+    - angular: cart
+      wrapper: ao
+      parameter: exp
+      bad_case: nan
+    - angular: cart
+      wrapper: ao
+      parameter: exp
+      bad_case: infinity
+    - angular: cart
+      wrapper: ao
+      parameter: coeff
+      bad_case: nan
+    - angular: cart
+      wrapper: ao
+      parameter: coeff
+      bad_case: infinity
+    - angular: cart
+      wrapper: mo
+      parameter: exp
+      bad_case: zero
+    - angular: cart
+      wrapper: mo
+      parameter: exp
+      bad_case: negative
+    - angular: cart
+      wrapper: mo
+      parameter: exp
+      bad_case: nan
+    - angular: cart
+      wrapper: mo
+      parameter: exp
+      bad_case: infinity
+    - angular: cart
+      wrapper: mo
+      parameter: coeff
+      bad_case: nan
+    - angular: cart
+      wrapper: mo
+      parameter: coeff
+      bad_case: infinity
+    - angular: sphe
+      wrapper: ao
+      parameter: exp
+      bad_case: zero
+    - angular: sphe
+      wrapper: ao
+      parameter: exp
+      bad_case: negative
+    - angular: sphe
+      wrapper: ao
+      parameter: exp
+      bad_case: nan
+    - angular: sphe
+      wrapper: ao
+      parameter: exp
+      bad_case: infinity
+    - angular: sphe
+      wrapper: ao
+      parameter: coeff
+      bad_case: nan
+    - angular: sphe
+      wrapper: ao
+      parameter: coeff
+      bad_case: infinity
+    - angular: sphe
+      wrapper: mo
+      parameter: exp
+      bad_case: zero
+    - angular: sphe
+      wrapper: mo
+      parameter: exp
+      bad_case: negative
+    - angular: sphe
+      wrapper: mo
+      parameter: exp
+      bad_case: nan
+    - angular: sphe
+      wrapper: mo
+      parameter: exp
+      bad_case: infinity
+    - angular: sphe
+      wrapper: mo
+      parameter: coeff
+      bad_case: nan
+    - angular: sphe
+      wrapper: mo
+      parameter: coeff
+      bad_case: infinity
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_j3_basis_updates.py::test_optimizer_rejects_nonfinite_candidate_observable
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_two_rank_candidate_rejection_preserves_accepted_state
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_optimizer_control.py::test_candidate_acceptance_rejects_on_every_sampler_rank
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - local_ok: true
+      peer_ok: false
+      twists: false
+    - local_ok: false
+      peer_ok: true
+      twists: false
+    - local_ok: true
+      peer_ok: true
+      twists: false
+    - local_ok: true
+      peer_ok: false
+      twists: true

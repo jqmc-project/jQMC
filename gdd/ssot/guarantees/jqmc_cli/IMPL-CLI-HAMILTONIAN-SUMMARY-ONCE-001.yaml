@@ -1,0 +1,22 @@
+id: IMPL-CLI-HAMILTONIAN-SUMMARY-ONCE-001
+kind: implementation
+name: The CLI prints the Hamiltonian summary once per run for every job type
+plain_language: >-
+  The jqmc CLI prints the Hamiltonian summary (the "Printing out information in
+  hamiltonian_data instance." line followed by the Hamiltonian, structure and
+  wavefunction summary, including each spin channel's tiled-orbital summary)
+  exactly once per run, from one CLI helper, for mcmc, vmc, lrdmc-bra and
+  lrdmc-tau. A twist-averaged run prints it in the twist dispatch, before its
+  twist driver is called, for twist 0, which is the twist of MPI rank 0 (the
+  rank that writes the log). The GFMC drivers do not print it themselves. The
+  evidence runs the real twist dispatch on a combined periodic input with each
+  job type's twist driver replaced by a stop. It checks one summary and that
+  jqmc.output_parser.parse_system_info reads the periodic system from the
+  captured log. It does not sample, and the single-twist count is covered by
+  the CLI code path, not by this node.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::test_twist_dispatch_prints_the_hamiltonian_summary_once

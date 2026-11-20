@@ -1,0 +1,21 @@
+id: IMPL-RS-AGPN-REAL-EL-PARITY-001
+kind: implementation
+name: Real open-shell AGPn kinetic and ECP parameter derivatives match XLA
+plain_language: >-
+  On the committed O-lsda_k025 pGTO ccECP fixture with four up and two down
+  electrons, nonfactorized real AGPn parameters (seed 431) and one electron
+  configuration (seed 41, no cond(G) rejection), the Rust kinetic plus ECP
+  paired and unpaired parameter derivatives of Re(e_L) reproduce the XLA
+  analytical derivatives in each active precision. Each ECP block is nonzero.
+  MATH-RS-AGPN-REAL-EL-REFERENCE-001 independently anchors that XLA reference.
+  This covers native free kernels, not the unwired complex AGPn driver adapter
+  or complex-valued parameter conventions.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_rs_complex_twist_param_parity.py::test_rs_open_shell_twist_agpn_real_el_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {block: paired}
+    - {block: unpaired}

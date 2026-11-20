@@ -1,0 +1,97 @@
+&CONTROL
+    calculation   = 'scf'
+    prefix        = 'h_k025'
+    outdir        = './out'
+    pseudo_dir    = './'
+    verbosity     = 'high'
+    tstress       = .false.
+    tprnfor       = .false.
+    disk_io       = 'medium'
+/
+&SYSTEM
+    ! Dense packed H2 at k = (1/4, 1/4, 1/4) (crystal basis). Two H2 molecules (4 H atoms) in a SIMPLE-
+    ! ORTHORHOMBIC cell with a = 5.00, b = 6.00, c = 7.00 Bohr (ratios
+    ! 1 : 1.20 : 1.40). Cell volume = 210.0 Bohr^3 (~ 31.1 A^3) ->
+    ! per-molecule volume ~ 105 Bohr^3 (~ 15.6 A^3) -> mass density
+    ! ~ 215 kg/m^3, ~ 3x saturated liquid H2 (~71 kg/m^3) -- the
+    ! "megabar / dense molecular H2" regime. Closest intermolecular
+    ! H-H is ~2.38 Bohr (~1.26 A) so the molecules are intentionally
+    ! in interaction range, and the smallest PBC self-image distance
+    ! is 5.0 Bohr (~2.65 A) so inter-cell interaction is also
+    ! non-trivial. The orthorhombic shape with a != b != c is
+    ! intentional: it tests the conversion on a non-cubic lattice.
+    !
+    ! H.coulomb-ae.UPF is a true 1/r all-electron Coulomb potential
+    ! (Z_valence = 1 per H, no pseudization). 4 valence electrons total
+    ! -> 2 occupied bands (RHF, paramagnetic, nspin=1). H2 is a
+    ! molecular insulator so fixed occupations (no smearing); the gap
+    ! is large.
+    !
+    ! ecutwfc=800 / ecutrho=3200 Ry is a conservative choice for
+    ! the 1/r cusp (the suggested cutoff in the UPF is 0 because it is
+    ! mathematically infinite -- a true cusp can never be resolved
+    ! exactly in a PW basis; the SCF energy converges variationally as
+    ! ecutwfc -> infinity). Bump if SCF struggles or etot is not
+    ! converged to the threshold you need.
+    ibrav         = 8
+    celldm(1)     = 5.00
+    celldm(2)     = 1.20    ! b/a = 6.00 / 5.00
+    celldm(3)     = 1.40    ! c/a = 7.00 / 5.00
+    nat           = 4
+    ntyp          = 1
+    nbnd          = 6
+    ecutwfc       = 800.0
+    ecutrho       = 3200.0
+    occupations   = 'fixed'
+    nspin         = 1
+    ! H.coulomb-ae.UPF was generated with functional="SLA PW PBX PBC"
+    ! (= PBE) in its header. Without input_dft here QE silently picks
+    ! up that UPF default and runs PBE, not the LDA-PZ we want; force
+    ! the override. For a true 1/r AE potential the UPF carries no
+    ! real XC information beyond the metadata tag, so the override is
+    ! physically safe -- QE will print an "input dft different from
+    ! the one read from PP files" warning, which is expected.
+    input_dft     = 'pz'
+    ! nosym + noinv disable spatial symmetry AND time-reversal so the
+    ! explicit k = (1/4, 1/4, 1/4) stays as a SINGLE k-point. The
+    ! orthorhombic shell still admits residual 2-fold operations that
+    ! could otherwise fold the supplied k into a star; combined with
+    ! time-reversal this would generate (+/-1/4, +/-1/4, +/-1/4)
+    ! instead of a single k. Disabling both keeps the user-supplied
+    ! list verbatim -> nks=1, weight=2 (the weight 2 is the
+    ! paramagnetic spin factor, NOT a folded time-reversal partner).
+    nosym         = .true.
+    noinv         = .true.
+/
+&ELECTRONS
+    conv_thr      = 1.0d-8
+    mixing_beta   = 0.3
+    electron_maxstep = 200
+/
+ATOMIC_SPECIES
+    H  1.00794  H.coulomb-ae.UPF
+
+! Two H2 molecules in the orthorhombic cell. Bond length 1.4 Bohr in
+! every molecule, but the fractional bond offset differs per axis
+! because a != b != c:
+!   along x (a=5.00):  delta = 1.4 / (2*5.00) = 0.14000
+!   diagonal (1,1,1)/sqrt(3): half-axis Cartesian = 1.4/(2*sqrt(3))
+!                              = 0.40415 Bohr, so deltas are
+!                              (0.08083, 0.06736, 0.05774) along (a,b,c).
+! The two bond directions (+x and (1,1,1) body diagonal) share NO
+! point-group operation, so the cell has only trivial identity
+! symmetry -- the explicit k = (1/4, 1/4, 1/4) point below is then
+! NOT collapsed by symmetry to a different IBZ representative.
+! Molecule 1: bond along +x,      centred at (0.20000, 0.30000, 0.20000).
+! Molecule 2: bond along (1,1,1), centred at (0.75000, 0.65000, 0.30000).
+ATOMIC_POSITIONS {crystal}
+    H  0.06000  0.30000  0.20000
+    H  0.34000  0.30000  0.20000
+    H  0.66917  0.58264  0.24226
+    H  0.83083  0.71736  0.35774
+
+! Single explicit k-point at crystal (1/4, 1/4, 1/4): a general twist,
+! so the orbitals are complex.
+K_POINTS {crystal}
+1
+    0.25  0.25  0.25  1.0

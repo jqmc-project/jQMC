@@ -1,0 +1,23 @@
+id: IMPL-TWCKPT-SAMPLER-IDENTITY-001
+kind: implementation
+name: Completed twist checkpoints match the requested sampler
+plain_language: >-
+  A completed MCMC, GFMC_t or GFMC_n twist checkpoint is reused only with the same
+  driver, checked frozen sampler settings and walker count. A mismatch raises ValueError
+  without replacing the stored result. Matching settings reuse the stored value
+  without writing to the checkpoint. The checked settings include MCMC time step,
+  LRDMC tau, lattice spacing, nonlocal move, projection steps and the initial GFMC_n
+  reference energy. A legacy GFMC_n checkpoint missing its initial reference energy
+  is incomplete for resume and is sampled again. In a two-rank calculation, a
+  mismatch on either twist raises on both ranks before sampling can continue.
+  Ranks sharing a twist use the twist root's reuse decision.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_resume.py::test_twist_resume_rejects_different_sampler_settings
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}, {route: gfmc_n}]
+  - pytest_node: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_partial_twist_resume_matches_uninterrupted_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{cached_index: 0}, {cached_index: 1}]

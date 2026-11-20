@@ -1,0 +1,89 @@
+id: IMPL-RS-OPTIMIZER-HOST-LINALG-XLA-PARITY-001
+kind: implementation
+name: Native host optimizer SR solves and LM pencil core equal XLA on identical inputs
+plain_language: >-
+  Under the production CPU dispatch (JQMC_FLAG_RUST_ON_CPU / flag_rust_on_CPU on the JAX cpu backend) the host
+  optimizer functions solve_wide_sr_real_cg, solve_wide_sr_real_direct, solve_tall_sr_real_cg,
+  solve_tall_sr_real_direct (jqmc_optimizer_kernel) and _build_lm_real_pencil_from_coordinate_arrays (jqmc_optimizer)
+  run in jqmc_rs. On identical inputs their results equal the XLA implementations of the same operations
+  (the production world-mesh kernels solve_device_wide_real_cg_chunks_sharded, solve_device_wide_real_direct_sharded,
+  solve_device_tall_real_cg_chunks_sharded and solve_device_tall_real_direct_sharded, and build_device_lm_pencil)
+  and the NumPy/SciPy route selected by
+  JQMC_FLAG_RUST_ON_CPU=0, within the strict Rust/XLA tier of the fp64 zones that produce the optimizer samples
+  (the arrays are float64 in both precision modes): the CG solution, residual norm and iteration count for cold and
+  warm starts and for a max_iter truncation; the refined direct solutions; and the pencil H, S, H_0 and conditioning
+  metric. Inputs cover real, complex and complex-with-zero-imaginary sample matrices, C- and Fortran-ordered
+  storage, complex local energies, and shapes with several Rust row blocks, column strips and Gram tiles. A caller
+  reduction that doubles its argument (two ranks holding the same samples) equals XLA on the duplicated sample axis,
+  and under mpirun -np 2 the real mpi4py Allreduce equals the XLA kernels sharded over the two processes. The CG
+  systems have six exact operator eigenvalue clusters, so the stopping iteration is well defined for every route.
+  Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_wide_sr_real_cg_rust_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {start: cold-converged, kind: real, order: C, shape: tiled}
+    - {start: warm-converged, kind: complex, order: F, shape: tiled}
+    - {start: warm-truncated, kind: complex-real-valued, order: F, shape: small}
+    - {start: warm-truncated, kind: complex, order: C, shape: tiled}
+    - {start: cold-converged, kind: complex-real-valued, order: C, shape: small}
+    - {start: warm-converged, kind: real, order: F, shape: small}
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_wide_sr_real_cg_rust_reduction_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {start: warm-converged, kind: real}
+    - {start: warm-truncated, kind: complex}
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_wide_sr_real_direct_rust_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {reduction: none, kind: real, order: C, shape: tiled}
+    - {reduction: none, kind: complex, order: F, shape: tiled}
+    - {reduction: two-identical-ranks, kind: complex-real-valued, order: F, shape: small}
+    - {reduction: two-identical-ranks, kind: complex, order: C, shape: small}
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_tall_sr_real_cg_rust_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {start: cold-converged, order: C, shape: tiled}
+    - {start: cold-truncated, order: F, shape: tiled}
+    - {start: cold-converged, order: F, shape: small}
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_tall_sr_real_direct_rust_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {order: C, shape: tiled}
+    - {order: F, shape: tiled}
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_lm_pencil_core_rust_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {reduction: none, fields: real, shape: tiled}
+    - {reduction: none, fields: complex-energy, shape: tiled}
+    - {reduction: two-identical-ranks, fields: complex, shape: small}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_host_rust_mpi.py::test_two_rank_wide_sr_real_cg_rust_matches_sharded_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {start: cold-converged, kind: real}
+    - {start: warm-truncated, kind: complex}
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_sr_cg_relative_stopping_rule_on_every_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {regime: wide, kind: real, stop: 3}
+    - {regime: wide, kind: complex, stop: 6}
+    - {regime: tall, kind: real, stop: 6}
+    - {regime: tall, kind: complex, stop: 3}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_host_rust_mpi.py::test_two_rank_sr_cg_relative_rule_uses_the_global_rhs_norm
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {regime: wide, kind: complex}
+    - {regime: tall, kind: complex}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_host_rust_mpi.py::test_two_rank_wide_sr_real_direct_rust_matches_sharded_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: real}
+    - {kind: complex}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_host_rust_mpi.py::test_two_rank_lm_pencil_core_rust_matches_sharded_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fields: real}
+    - {fields: complex}

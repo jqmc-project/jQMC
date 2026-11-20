@@ -1,0 +1,126 @@
+id: IMPL-RS-FAST-FORCE-SCREEN-001
+native_evidence:
+- jqmc_rs::ao_cart_deriv::mesh_screen_tests::fast_cut_bundle_is_derivative_of_fast_kinetic_tables
+- jqmc_rs::ao_cart_deriv::mesh_screen_tests::mesh_screened_val_grad_matches_fast_mesh_contraction
+- jqmc_rs::forces::fused_kin_tests::kin_sweep_matches_bundle_contraction
+- jqmc_rs::gfmc::mol_candidate_exact_tests::force_shell_screen_is_candidate_batch_model
+kind: implementation
+name: The FAST-chunk VMC force differentiates the FAST e_L's screened AO tables
+plain_language: >-
+  In the FAST MCMC chunk the local energy evaluates the ECP non-local mesh AO contractions with the FAST value
+  screen (shell kept iff pz_val r^2 <= LEPSBAS, primitive kept iff prim_val r^2 <= LEPSBAS) and the kinetic AO
+  gradients and Laplacians with the FAST derivative screen (pz_deriv r^2 <= LEPSBAS) against unscreened AO
+  values, and drops ECP channels whose radial factor is below FAST_ECP_NONLOCAL_RADIAL_CUT. For molecular
+  Cartesian leaves the native force drops the same channels and takes the same tables: mesh AO values and gradients on
+  the value keep set, kinetic AO gradients / Laplacians (determinant and J3) on the derivative keep set, Hessians
+  and grad-Laplacians as their derivatives on that keep set, and unscreened value derivatives. Rust unit tests
+  compare these tables with the FAST e_L kernels themselves (dot_aos_multi_cutoff_cart and
+  compute_aos_grad_lap_fast_cut) and with their centred finite differences wherever the keep set is unchanged
+  across the stencil. The screened force (vmc_grad_e_L_ecp with fast_mesh_screen) on committed Cartesian ECP SD
+  fixtures with J1+J2 and a symmetric random J3 agrees with the exact XLA compute_grad_e_L at the medium XLA-Rust
+  tolerance used by the native-vs-XLA force parity tests. The GFMC (LRDMC) molecular force differentiates the
+  measurement e_L of its projection the same way: that e_L screens the ECP mesh AOs per shell only (the molecular
+  candidate batch keeps every primitive of a kept shell), so the force takes the mesh AO values and gradients on
+  the shell keep set, compared by a Rust unit test with the candidate batch itself and its centred finite
+  differences. Full and mixed are each required.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ecp_fast_mesh_screen
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {stem: N2_ecp_ccpvtz_cart.h5, seed: 0}
+    - {stem: H2_ecp_ccpvdz_cart.h5, seed: 0}
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ecp_fast_mesh_screen#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nR)
+        reference:
+          role: existing-test-reference
+          expression: dR_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ecp_fast_mesh_screen#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nu)
+        reference:
+          role: existing-test-reference
+          expression: dru_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ecp_fast_mesh_screen#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nd)
+        reference:
+          role: existing-test-reference
+          expression: drd_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap

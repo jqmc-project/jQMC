@@ -1,0 +1,46 @@
+[control]
+job_type = "vmc"          # Specify the job type. "mcmc", "vmc", "lrdmc-bra", or "lrdmc-tau".
+mcmc_seed = 34456         # Random seed for MCMC.
+number_of_walkers = 4     # Number of walkers per MPI process.
+max_time = 86400          # Maximum time in sec.
+restart = false
+restart_chk = "restart.h5"
+hamiltonian_h5 = "hamiltonian_data.h5"
+verbosity = "high"
+
+[vmc]
+num_mcmc_steps = 500
+num_mcmc_per_measurement = 40
+num_mcmc_warmup_steps = 30       # Initial measurements discarded per optimization step (code minimum: 30).
+num_mcmc_bin_blocks = 10         # Bins per rank and walker for the error estimate (code minimum: 10).
+Dt = 1.5                  # MCMC step size (bohr).
+epsilon_AS = 0.0
+num_opt_steps = 200
+wf_dump_freq = 1
+optimizer_kwargs = { method = "sr", delta = 0.15, epsilon = 0.001, cg_flag = true, cg_max_iter = 10000, use_lm = true, lm_subspace_dim = 0, lm_cond = 0.001 }
+
+# --- Jastrow-only optimisation -------------------------------------------------
+# J1 / J2 / J3 are all OFF: this wavefunction was built with the DTN
+# polynomial Jastrow preset (--jastrow-dtn u_chi_f), which is mutually exclusive
+# with the J1 + J2 + J3 family.
+opt_J1_param = false
+opt_J2_param = false
+opt_J3_param = false
+
+# DTN polynomial channels (this is the active Jastrow):
+#   u   : e-e channel        (J2 analogue)
+#   chi : e-N channel        (J1 analogue)
+#   f   : factorised e-e-N   (J3 analogue)
+opt_JDTN_u_param = true
+opt_JDTN_chi_param = true
+opt_JDTN_f_param = true
+
+# --- Slater determinant FROZEN -------------------------------------------------
+# QE -> jQMC handed us a B-spline determinant; we keep it frozen and only let
+# the Jastrow relax.
+opt_geminal = false
+fix_geminal_rank = 0
+opt_J3_basis_exp = false
+opt_J3_basis_coeff = false
+opt_lambda_basis_exp = false
+opt_lambda_basis_coeff = false

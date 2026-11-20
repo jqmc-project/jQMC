@@ -1,0 +1,14 @@
+id: MATH-RS-ECP-LOCAL-ONE-PBC-MIN-IMAGE-001
+kind: mathematical
+name: Rust per-electron local ECP rows use the minimum image
+plain_language: The Rust per-electron local ECP kernel compute_ecp_local_one, which feeds the GFMC stateful chain and the
+  incremental projection-interval rows, uses the shortest nucleus-electron distance over all lattice translations. On a
+  periodic all-electron H4 wavefunction (orthogonal or skewed cell) with electrons several cells away from the home cell,
+  the stateful LRDMC local energy (jqmc_rs._gfmc_lrdmc_ecp with fast=True) of an ECP minus that of the same ECP with its
+  local coefficients set to zero equals the local-channel energy at the brute-force minimum-image distances.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_ecp_local_per_electron_pbc_brute_force_images

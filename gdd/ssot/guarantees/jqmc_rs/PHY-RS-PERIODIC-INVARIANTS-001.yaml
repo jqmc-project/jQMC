@@ -1,0 +1,44 @@
+id: PHY-RS-PERIODIC-INVARIANTS-001
+kind: physical
+name: Physical periodic invariants on the Rust backend
+plain_language: 'On the Rust backend, single-electron lattice translations leave the wavefunction invariant and the per-configuration
+  translation sum rule holds to the reviewed floating-point floor (physical on the Rust side). A separate
+  implementation-level guard proves that the reviewed fixtures contain an engaged, nonzero two-body term; that guard prevents
+  a vacuous pass but is not itself a physical oracle.'
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_periodic_invariants.py::test_nonvacuous_two_body_sanity
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: li_twist_j123}
+  - pytest_node: tests/test_rs_kernel/test_periodic_invariants.py::test_single_electron_lattice_translation_invariance
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: li_twist_j123, n: 1, direction: a1, elec: [up, 0]}
+    - {pattern: li_twist_j123, n: 1, direction: a1, elec: [dn, 0]}
+    - {pattern: li_twist_j123, n: 1, direction: a2, elec: [up, 0]}
+    - {pattern: li_twist_j123, n: 1, direction: a2, elec: [dn, 0]}
+    - {pattern: li_twist_j123, n: 1, direction: a1+a2-a3, elec: [up, 0]}
+    - {pattern: li_twist_j123, n: 1, direction: a1+a2-a3, elec: [dn, 0]}
+    - {pattern: li_twist_j123, n: 3, direction: a1, elec: [up, 0]}
+    - {pattern: li_twist_j123, n: 3, direction: a1, elec: [dn, 0]}
+    - {pattern: li_twist_j123, n: 3, direction: a2, elec: [up, 0]}
+    - {pattern: li_twist_j123, n: 3, direction: a2, elec: [dn, 0]}
+    - {pattern: li_twist_j123, n: 3, direction: a1+a2-a3, elec: [up, 0]}
+    - {pattern: li_twist_j123, n: 3, direction: a1+a2-a3, elec: [dn, 0]}
+    - {pattern: li_twist_j123, n: 6, direction: a1, elec: [up, 0]}
+    - {pattern: li_twist_j123, n: 6, direction: a1, elec: [dn, 0]}
+    - {pattern: li_twist_j123, n: 6, direction: a2, elec: [up, 0]}
+    - {pattern: li_twist_j123, n: 6, direction: a2, elec: [dn, 0]}
+    - {pattern: li_twist_j123, n: 6, direction: a1+a2-a3, elec: [up, 0]}
+    - {pattern: li_twist_j123, n: 6, direction: a1+a2-a3, elec: [dn, 0]}
+  - pytest_node: tests/test_rs_kernel/test_periodic_invariants.py::test_per_config_translation_sum_rule
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: li_twist_j123, seed: 0}
+    - {pattern: li_twist_j123, seed: 1}
+    - {pattern: li_twist_j123, seed: 2}
+  - pytest_node: tests/test_rs_kernel/test_periodic_invariants.py::test_per_config_translation_sum_rule_fp_floor

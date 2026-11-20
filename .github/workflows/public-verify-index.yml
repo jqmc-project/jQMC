@@ -1,0 +1,109 @@
+name: jQMC public wheel index verification
+
+# Called by the deploy workflows after an upload. For each wheel platform:
+# download that platform's jqmc wheel from the index, require it to be the file
+# that passed the distribution check (same sha256 as public-distributions), install
+# it with its dependencies from PyPI in a fresh environment and run short
+# calculations with it. Dependencies never come from TestPyPI.
+on:
+  workflow_call:
+    inputs:
+      index:
+        description: Simple index URL the files were uploaded to
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  JAX_PLATFORMS: cpu
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  JQMC_RS_NUM_THREADS: '2'
+  JQMC_FLAG_RUST_ON_CPU: '1'
+
+jobs:
+  verify-index:
+    name: Uploaded wheel ${{ matrix.platform }}
+    if: github.repository == 'jqmc-project/jQMC'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {platform: linux-x86_64, runner: ubuntu-latest, tag: x86_64}
+          - {platform: linux-aarch64, runner: ubuntu-24.04-arm, tag: aarch64}
+          - {platform: macos-arm64, runner: macos-26, tag: macosx}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v8
+        with:
+          name: public-distributions
+          path: tested
+      - name: Install MPI
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            brew install open-mpi
+          else
+            sudo apt-get update
+            sudo apt-get install -y openmpi-bin libopenmpi-dev
+          fi
+      - name: Download the uploaded wheel and compare it with the tested one
+        env:
+          INDEX_URL: ${{ inputs.index }}
+          PLATFORM_TAG: ${{ matrix.tag }}
+        run: |
+          python -m pip install --upgrade pip packaging
+          python - <<'PY'
+          import hashlib
+          import os
+          import subprocess
+          import sys
+          import time
+          from pathlib import Path
+          from packaging.utils import parse_wheel_filename
+
+          tag = os.environ["PLATFORM_TAG"]
+          tested = [w for w in Path("tested").glob("*.whl") if tag in w.name]
+          if len(tested) != 1:
+              raise SystemExit(f"Expected one tested {tag} wheel, got {tested}")
+          tested = tested[0]
+          version = parse_wheel_filename(tested.name)[1]
+          index = Path("index")
+          # The index can take minutes to list a new upload.
+          for attempt in range(40):
+              result = subprocess.run(
+                  [sys.executable, "-m", "pip", "download", "--no-deps", "--only-binary", ":all:",
+                   "--no-cache-dir", "--index-url", os.environ["INDEX_URL"], f"jqmc=={version}", "-d", str(index)],
+                  capture_output=True, text=True,
+              )
+              if result.returncode == 0:
+                  break
+              print(f"jqmc=={version} not available yet ({attempt + 1}/40)", flush=True)
+              time.sleep(30)
+          else:
+              raise SystemExit(f"jqmc=={version} never became downloadable:\n{result.stderr}")
+          downloaded, = index.glob("*.whl")
+          digest = {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in (tested, downloaded)}
+          print(f"tested     {tested.name} {digest[tested]}")
+          print(f"downloaded {downloaded.name} {digest[downloaded]}")
+          if downloaded.name != tested.name or digest[downloaded] != digest[tested]:
+              raise SystemExit("The uploaded wheel is not the tested wheel")
+          PY
+      - name: Install the uploaded wheel with its dependencies from PyPI
+        run: |
+          python -m venv "$RUNNER_TEMP/user"
+          "$RUNNER_TEMP/user/bin/python" -m pip install --upgrade pip
+          "$RUNNER_TEMP/user/bin/python" -m pip install index/*.whl
+          "$RUNNER_TEMP/user/bin/python" -m pip check
+      - name: Run short MCMC, VMC and LRDMC calculations with it
+        run: |
+          "$RUNNER_TEMP/user/bin/python" -I scripts/check_installed_jqmc_run.py \
+            tests/trexio_example_files/H2_ecp_ccpvdz_cart.h5

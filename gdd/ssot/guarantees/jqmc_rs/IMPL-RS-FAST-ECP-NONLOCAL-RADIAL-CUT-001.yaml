@@ -1,0 +1,40 @@
+id: IMPL-RS-FAST-ECP-NONLOCAL-RADIAL-CUT-001
+native_evidence:
+- jqmc_rs::coulomb_potential::tests::fast_ecp_nonlocal_radial_cut_pinned_to_setting
+- jqmc_rs::coulomb_potential::tests::fast_ecp_radial_cut_drops_exactly_sub_bound_pairs
+kind: implementation
+name: The FAST Rust ECP non-local radial cut drops only pairs below the bound and moves energy expectations by at most N_e n_t EPS
+plain_language: >-
+  On the FAST Rust route of the real ECP non-local energy (compute_ecp_nonlocal_parts_all_pairs with the mesh AO
+  cutoff and the Sherman-Morrison inverse, i.e. the native production energy chunk and native_vmc), an (electron,
+  non-local term) pair whose radial factor |v_t(r)| = |c r^(p-2) exp(-e r^2)| at the distance from the electron to
+  its nearest ECP nucleus is below FAST_ECP_NONLOCAL_RADIAL_CUT = 1e-12 Ha (jqmc._setting, mirrored and pinned in
+  jqmc/rs/src/coulomb_potential.rs) skips its whole quadrature: mesh build, determinant w-dot, J1/J2, J3 and DTN mesh
+  ratios. Dropping these terms is exactly evaluating a modified Hamiltonian H' whose semilocal radial functions are
+  truncated where |v_t| < EPS, so pointwise |delta v_t| <= EPS. The per-sample local energy change is NOT bounded by
+  EPS, because the wavefunction ratio on the mesh is unbounded near nodes. In expectation, for each electron the
+  change of the non-local operator is sum_t delta v_t(r) sum_m |lm><lm|, whose angular projector has norm at most 1;
+  this holds under the random mesh rotation the chunk applies every step, whose rotation-averaged quadrature is the
+  projector. Hence ||H - H'|| <= N_e n_t EPS (n_t = non-local terms per nucleus), and the VMC energy expectation and
+  the fixed-node ground-state energy move by at most N_e n_t EPS; water 20 (160 electrons, one non-local term per O)
+  at EPS = 1e-12 Ha gives at most 1.6e-10 Ha. The exact (non-FAST) route never cuts and is bit-identical to the uncut
+  code; the XLA evaluators are unchanged. Native evidence: on a two-nucleus system with three non-local channels
+  (spherical and Cartesian GTO, SD with an unpaired electron, pade J2) the dropped pairs are exactly those with
+  |v_t| < EPS, and the FAST value with the cut equals the FAST value without it minus the dropped pairs'
+  contributions recomputed independently from full determinants and Jastrow values, within the central
+  reduction-order pair, at the production EPS and at a data-derived EPS that drops half the pairs (non-vacuity: some
+  pairs dropped, some kept; the dropped sum exceeds the tolerance); the exact route ignores the cut bit for bit. On
+  the committed water ccECP fixture, sixteen seeded configurations with random mesh rotations: the kept and dropped
+  pair counts equal those of an independent NumPy evaluation of |v_t|, some pairs are dropped and some kept, and the
+  mean change of the non-local energy is within N_e n_t EPS plus the central reduction-order floor. The kept and
+  dropped pairs of every FAST local energy are counted in jqmc_rs.route_predicate_counters indices 18 and
+  19. Full
+  and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_fast_ecp_nonlocal_radial_cut.py::test_fast_ecp_radial_cut_moves_energy_within_bound
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_sphe_j12}

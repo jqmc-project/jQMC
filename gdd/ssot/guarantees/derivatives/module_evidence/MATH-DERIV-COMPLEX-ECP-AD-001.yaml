@@ -1,0 +1,44 @@
+id: MATH-DERIV-COMPLEX-ECP-AD-001
+kind: mathematical
+name: Complex ECP parameter sources equal same-precision autodiff
+plain_language: >-
+  On committed lithium_cart.h5 and lithium_k025_cart.h5, independently perturbed
+  untied up/down MOs (seed 11) and exponential J2=0.8, the first J2 and each
+  spin-MO coefficient's allowed real/imaginary directions have analytic local
+  energy and logarithmic wavefunction sources equal to same-mode autodiff.
+  Eight fixed seed-2026 electron configurations and identity ECP rotation are
+  reused. The AD energy is assembled with complex-wavefunction Hessian kinetic
+  energy and unprojected nonlocal ECP, not by differentiating analytic sources.
+  Full uses central strict and mixed central medium element-wise zone tolerances,
+  separately for real and imaginary components. Actual-sampler twist source
+  controls must reject real projection and conjugation. Absolute ECP values
+  are independently anchored by MATH-HAM-COMPLEX-ECP-ABSOLUTE-001; this source
+  test does not itself establish every primitive formula or all coefficients.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_pointwise_sources_match_same_mode_autodiff
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_same_mode#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{point_case: gamma}, {point_case: twist}]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_source_projection_and_conjugation_controls
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_same_mode#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, mo_eval, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, coulomb, local_energy]}
+    required_precision_modes: [full, mixed]

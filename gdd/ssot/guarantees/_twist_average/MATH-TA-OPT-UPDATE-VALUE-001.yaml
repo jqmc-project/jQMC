@@ -1,0 +1,17 @@
+id: MATH-TA-OPT-UPDATE-VALUE-001
+kind: mathematical
+name: A two-twist optimization step applies the fixed-BZ weighted SR update recomputed from both sampled batches
+plain_language: >-
+  run_twist_average_optimize on two distinct real Hamiltonians sharing one Jastrow structure (H2 all-electron
+  Cartesian and spherical cc-pVDZ, Pade J1 + J2), raw weights 1:3, one SR step, with the two twists running as two
+  ranks of an in-process world communicator whose collectives reduce both ranks' operands as MPI does. Each twist's
+  consumed local energies and log derivatives equal an independent evaluation at its stored configurations; the
+  shared update equals the dense solve of (S + epsilon diag S) q = f with S and f the W-weighted sums of the per-twist
+  centred moments; both twists apply delta times q and end with identical parameters. The uniform-weight combination
+  and the twist-0-only update must fail the same verdict.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_update_value.py::test_two_twist_batches_match_independent_evaluation
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_update_value.py::test_two_twist_shared_update_equals_fixed_bz_weighted_recomputation

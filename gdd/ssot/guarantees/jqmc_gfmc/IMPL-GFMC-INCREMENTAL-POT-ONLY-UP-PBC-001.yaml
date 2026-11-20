@@ -1,0 +1,28 @@
+id: IMPL-GFMC-INCREMENTAL-POT-ONLY-UP-PBC-001
+kind: implementation
+name: Carried interval potential equals a same-configuration full recompute after every move with no down electrons (XLA, periodic all-electron)
+plain_language: 'For a periodic Hamiltonian with no down-spin electrons and two or more up-spin electrons, the XLA GFMC
+  interval potential carry (the Ewald ee state and the per-electron bare and alat-floored e-i rows) built by
+  _gfmc_build_interval_pot_state and advanced by _gfmc_advance_interval_pot_state through its empty-down-channel branch
+  equals a from-scratch recompute at the current configuration after every single-electron hop, whichever up electron
+  moved. On H4_pbc_ae_cart.h5 with the geminal replaced by an n_up-up / 0-down Slater determinant (n_up = 2 and 3), a
+  fixed schedule of up-electron moves (alat hops, hops across cell faces, lattice-translated unwrapped jumps and moves
+  inside the alat floor of a proton) is compared after every move with the dispatch kernels of the full-recompute route:
+  the ee Ewald energy composed from the carried structure factor, the bare e-i rows, the alat-floored e-i rows and the
+  total diagonal Coulomb term, at the tight absolute twin pin, in full and mixed precision. Every up electron moves, at
+  least half of the moves are of an electron with index other than 0, the carried update counter equals the number of
+  moves, faces are crossed and the alat floor is active on some moved rows; a control that writes the moved electron
+  into row 0 of the carry fails the comparison.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_incremental_pot_state_only_up_pbc.py::test_only_up_pbc_interval_pot_state_matches_full_recompute_after_every_move
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {n_up: 2}
+    - {n_up: 3}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_incremental_pot_state_only_up_pbc.py::test_only_up_pbc_interval_pot_state_twin_detects_a_wrong_moved_row_index
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

@@ -1,0 +1,41 @@
+id: MATH-PREC-ECP-INVERSE-LINEARITY-001
+kind: mathematical
+name: ECP projector retains the running inverse low-bit contribution
+plain_language: >-
+  On the committed CuBr ccECP Cartesian fixture with exp J1/J2 and all eight
+  seed100..107 configurations, the XLA nearest-neighbour fast-update nonlocal
+  projector F without cached candidate or streaming states is linear in its
+  supplied running geminal inverse with mesh,
+  orbitals and Jastrow ratios fixed. For the actual fp64 inverse A, let H be
+  its fp32-rounded part widened to fp64 and L=A-H. The nonzero low-part
+  contribution obeys F(A)-F(H)=F(L), using the existing strict det_ratio and
+  Coulomb comparison budget in full and mixed separately; F(0)=0 exactly.
+  Both modes retain fp64 outputs. H and L are diagnostic arithmetic inputs,
+  not new physically consistent walker states. This identity detects hidden
+  operand rounding on this ECP route without a cross-precision value budget;
+  it does not claim every fp64-zone instruction, absolute ECP accuracy,
+  multi-step driver fidelity or coverage of all quadrature grids/backends.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_precision_inverse_linearity.py::test_ecp_projector_preserves_running_inverse_low_bits
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 100}
+    - {seed: 101}
+    - {seed: 102}
+    - {seed: 103}
+    - {seed: 104}
+    - {seed: 105}
+    - {seed: 106}
+    - {seed: 107}
+    executable_checks:
+      carried-inverse-low-part:
+        site: tests/test_jqmc_kernel/test_precision_inverse_linearity.py::test_ecp_projector_preserves_running_inverse_low_bits#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: projector-response-to-inverse-low-part, expression: actual}
+        reference: {role: exact-linearity-low-part-projector, expression: low_projection}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio, coulomb]}

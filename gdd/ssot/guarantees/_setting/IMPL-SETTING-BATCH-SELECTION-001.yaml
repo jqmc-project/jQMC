@@ -1,0 +1,10 @@
+id: IMPL-SETTING-BATCH-SELECTION-001
+kind: implementation
+name: Arithmetic stream batch selection
+plain_language: Ten fixed boundary inputs check power-of-two flooring below the population size, the minimum occupancy floor, the total-population cap, the zero-byte denominator guard and the unit result for nonpositive populations. The occupancy floor can exceed the nominal budget; this arithmetic helper contract does not assert measured peak-memory containment.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_setting_policy_resolvers.py::test_stream_batch_budget_boundaries

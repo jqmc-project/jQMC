@@ -1,0 +1,11 @@
+id: NUM-TOOL-SMOKE-001
+kind: numerical
+name: Tool subprocess smoke
+plain_language: The installed jqmc-tool completes a TREXIO conversion in a subprocess; this is a smoke check, never a correctness
+  oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli.py::TestCLI::test_jqmc_tool_trexio_conversion

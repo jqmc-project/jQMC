@@ -1,0 +1,21 @@
+[control]
+job_type = "mcmc"         # Specify the job type. "mcmc", "vmc", "lrdmc-bra", or "lrdmc-tau".
+mcmc_seed = 34456         # Random seed for MCMC.
+number_of_walkers = 4     # Number of walkers per MPI process.
+max_time = 86400          # Maximum time in sec.
+restart = false
+restart_chk = "restart.h5"
+hamiltonian_h5 = "hamiltonian_data.h5"
+verbosity = "high"
+
+[mcmc]
+num_mcmc_steps = 5000
+num_mcmc_per_measurement = 40
+num_mcmc_warmup_steps = 30
+num_mcmc_bin_blocks = 10
+Dt = 1.5
+epsilon_AS = 0.0
+atomic_force = false
+compute_stress = false
+use_swct = true
+parameter_derivatives = false

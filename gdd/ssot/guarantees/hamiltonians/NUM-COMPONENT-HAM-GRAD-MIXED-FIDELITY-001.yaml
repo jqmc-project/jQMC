@@ -1,0 +1,49 @@
+id: NUM-COMPONENT-HAM-GRAD-MIXED-FIDELITY-001
+kind: numerical
+name: Analytical Hamiltonian value and gradient trees retain full-production fidelity in mixed precision
+plain_language: On the original H2 all-electron/ECP and N all-electron TREXIO sources at PCG64(123) coordinates, independently
+  rebuilt mixed/full analytical production gives finite local energies and Hamiltonian parameter-gradient trees. Local energy,
+  whose kinetic term is a spatial second derivative, uses the unchanged orbital_derivative block budget; each homogeneous
+  parameter-gradient leaf uses parameter_derivative. Both are infinity-norm comparisons with mixed-only out-of-budget negative
+  controls. Leaf counts, pytree structure, shapes, and empty leaves limited to molecular vec_a/vec_b/vec_c with exact shape(0,)
+  remain explicit. Full preserves the original strict custom-VJP-production versus fully automatic-AD value/gradient oracle,
+  including its reviewed strict-pair check.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyGrad::test_grad_compute_local_energy
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: H2_ecp_ccpvtz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    executable_checks:
+      production-fidelity-orbital_derivative:
+        site: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyGrad.test_grad_compute_local_energy#helper-inequality-2
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-orbital-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-orbital-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+      production-fidelity-parameter_derivative:
+        site: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyGrad.test_grad_compute_local_energy#helper-inequality-4
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-parameter-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-parameter-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

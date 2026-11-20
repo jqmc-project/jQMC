@@ -1,0 +1,15 @@
+id: MATH-MPC-FFT-INDICES-001
+kind: mathematical
+name: Exact FFT frequency indices
+plain_language: The integer FFT frequency indices match numpy fftfreq exactly and survive the case where the float round
+  trip breaks truncation.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestFFTFrequencyIndices::test_matches_numpy_fftfreq_exactly
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestFFTFrequencyIndices::test_beats_the_float_round_trip_that_truncation_breaks

@@ -1,0 +1,22 @@
+id: IMPL-TOOL-TWIST-DIR-CONSISTENCY-001
+kind: implementation
+name: jqmc-tool refuses a twist checkpoint directory assembled from different runs
+plain_language: >-
+  mcmc and lrdmc compute-energy and compute-force, and lrdmc extrapolate-energy, combine the twists of a twist
+  checkpoint directory only when every twist file comes from one twist-averaged run: the same stored driver type, the
+  same frozen sampler settings (walkers, Dt or tau, alat, non-local move, collect steps, MPC switch and cutoff, GFMC_n
+  input E_scf), the same stored structure, ECP and Jastrow, and pairwise distinct k points (a twist with a stored
+  identity digest but no k point is the Gamma twist). A twist copied in from a run with another Jastrow, structure,
+  ECP or sampler setting, or a duplicated twist, makes compute-energy and compute-force exit with status 1 naming the
+  file and the mismatching item, and extrapolate-energy reject the input, without printing an energy, force or
+  pressure. Per-twist orbitals, identity digests, seeds and step counts may differ, and a directory of one run prints
+  the BZ-weighted per-twist estimate as before.
+verdict_methods: [VM-ERROR-DISPOSITION-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTwistDirectoryConsistency::test_twists_from_different_runs_are_refused
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTwistDirectoryConsistency::test_extrapolation_refuses_a_directory_mixing_tau
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTwistDirectoryConsistency::test_twists_of_one_run_give_the_weighted_twist_average

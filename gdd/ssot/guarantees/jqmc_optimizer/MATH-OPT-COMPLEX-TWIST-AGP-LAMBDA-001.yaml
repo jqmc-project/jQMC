@@ -1,0 +1,41 @@
+id: MATH-OPT-COMPLEX-TWIST-AGP-LAMBDA-001
+kind: mathematical
+name: Complex AGP SR steps preserve the full Hermitian lambda manifold
+plain_language: >-
+  For the committed non-Gamma H2 Bloch input converted to time-reversal AGP,
+  the real MCMC optimizer on host and device exposes all n squared real
+  Hermitian lambda directions, including imaginary antisymmetric generators.
+  A closed-form orthonormal Hermitian basis defines independent physical
+  displacements, without reading the production tie or coordinate map.
+  The published lambda columns equal directional AD of phase-preserving ln Psi,
+  anchored independently by a central finite difference of an imaginary direction.
+  Holding the already-covered J1/J2 columns fixed, the dense SR solve predicts
+  the applied lambda change, including a nonzero imaginary component, and the
+  resulting lambda remains Hermitian. Full and mixed are evaluated in their
+  own precision with the existing determinant, finite-difference and fp64 budgets.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_complex_twist_update.py::test_complex_twist_agp_lambda_step_preserves_the_whole_hermitian_manifold
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {use_device_optimizer: false}
+    - {use_device_optimizer: true}
+    executable_checks:
+      applied-hermitian-update:
+        site: tests/test_jqmc_kernel/test_optimizer_complex_twist_update.py::test_complex_twist_agp_lambda_step_preserves_the_whole_hermitian_manifold#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-sampler-applied-lambda-change, expression: lam1 - lam0}
+        reference: {role: independent-Hermitian-basis-dense-SR-update, expression: expected_storage}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-FIXED-SAMPLE-FP64-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-FIXED-SAMPLE-FP64-001}
+      hermitian-coordinate-columns:
+        site: tests/test_jqmc_kernel/test_optimizer_complex_twist_update.py::test_complex_twist_agp_lambda_step_preserves_the_whole_hermitian_manifold#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: published-lambda-coordinate-columns, expression: actual_columns}
+        reference: {role: independently-displaced-phase-preserving-AD-columns, expression: reference_columns}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}

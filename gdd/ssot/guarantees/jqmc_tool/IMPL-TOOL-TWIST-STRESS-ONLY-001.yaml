@@ -1,0 +1,16 @@
+id: IMPL-TOOL-TWIST-STRESS-ONLY-001
+kind: implementation
+name: Twist compute-force reports the pressure of a stress-only run
+plain_language: >-
+  mcmc and lrdmc compute-force on a twist checkpoint directory whose twists store hydrostatic-pressure summaries but
+  no force summaries (atomic_force false, compute_stress true) print the BZ-weighted pressure and its error and no
+  force table. A directory with neither force nor pressure summaries, or with force summaries on only some twists,
+  is rejected with an explicit error.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_twist_stress_only_run_reports_pressure
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_twist_force_summary_refusals

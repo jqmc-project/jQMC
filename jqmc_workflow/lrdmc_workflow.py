@@ -30,7 +30,7 @@ Two operating modes are available:
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -50,9 +50,13 @@ Two operating modes are available:
 import asyncio
 import glob
 import os
+import math
+import shutil
 import re
 import subprocess
 import time
+import h5py
+
 from logging import getLogger
 
 from ._error_estimator import (
@@ -64,18 +68,9 @@ from ._error_estimator import (
 )
 from ._input_generator import generate_input_toml, resolve_with_defaults
 from ._job import get_num_mpi, load_queue_data
-from ._lrdmc_calibration import (
-    fit_num_projection_per_measurement,
-    get_num_electrons,
-    parse_survived_walkers_ratio,
-)
-from ._output_parser import parse_force_table, parse_lrdmc_output
-from ._setting import (
-    GFMC_MIN_BIN_BLOCKS,
-    GFMC_MIN_COLLECT_STEPS,
-    GFMC_MIN_WARMUP_STEPS,
-)
-from ._state import (
+from .forces_parser import parse_force_table, parse_pressure_table, parse_stress_table
+from .output_parser import parse_lrdmc_output
+from .state import (
     CompletionStatus,
     WorkflowStatus,
     get_estimation,
@@ -88,6 +83,148 @@ from ._state import (
 from .workflow import Workflow
 
 logger = getLogger("jqmc-workflow").getChild(__name__)
+
+# Minimal post-processing thresholds (GFMC / LRDMC), used to reject invalid
+# parameters before submitting an HPC job (lrdmc_ext_workflow imports them
+# from here).
+GFMC_MIN_WARMUP_STEPS = 25
+GFMC_MIN_BIN_BLOCKS = 10
+GFMC_MIN_COLLECT_STEPS = 5
+
+
+# -- HDF5 electron count ------------------------------------------
+
+
+def get_num_electrons(hamiltonian_file: str) -> int:
+    """Read the total number of electrons from a hamiltonian HDF5 file.
+
+    Args:
+        hamiltonian_file (str):
+            Path to ``hamiltonian_data.h5``.
+
+    Returns:
+        int:
+            Total electron count ``num_electron_up + num_electron_dn``.
+
+    Raises:
+        RuntimeError:
+            If the electron counts cannot be found in the file.
+    """
+    try:
+        with h5py.File(hamiltonian_file, "r") as f:
+            geminal = f["wavefunction_data/geminal_data"]
+            n_up = int(geminal.attrs["num_electron_up"])
+            n_dn = int(geminal.attrs["num_electron_dn"])
+        return n_up + n_dn
+    except Exception as e:
+        raise RuntimeError(f"Cannot read electron counts from {hamiltonian_file}: {e}") from e
+
+
+# -- Survived walkers ratio parsing -------------------------------
+
+_SURVIVED_PATTERN = re.compile(r"Survived walkers ratio\s*=\s*(\d+\.?\d*)\s*%")
+
+
+def parse_survived_walkers_ratio(output_file: str) -> float | None:
+    """Parse the survived walkers ratio from an LRDMC output file.
+
+    Searches for the line
+    ``Survived walkers ratio = <value> %``
+    and returns the **last** occurrence as a fraction (0.0-1.0).
+
+    Args:
+        output_file (str):
+            Path to the jqmc stdout file.
+
+    Returns:
+        float or None:
+            Survived walkers ratio as a fraction, or *None* if not found.
+    """
+    last_value = None
+    try:
+        with open(output_file) as f:
+            for line in f:
+                m = _SURVIVED_PATTERN.search(line)
+                if m:
+                    last_value = float(m.group(1)) / 100.0
+    except Exception:
+        return None
+    return last_value
+
+
+# -- Linear fitting -----------------------------------------------
+
+
+def fit_num_projection_per_measurement(
+    x_values: list[int],
+    y_values: list[float],
+    target_ratio: float,
+) -> int:
+    r"""Determine the optimal ``num_projection_per_measurement`` by linear fit.
+
+    Given two or more data points
+    ``(num_projection_per_measurement, survived_walkers_ratio)`` the function
+    fits a linear model :math:`f(x) = a x + b` via least squares and
+    solves for the *x* at which :math:`f(x) = \text{target\_ratio}`.
+
+    Args:
+        x_values (list[int]):
+            ``num_projection_per_measurement`` values used in calibration runs.
+        y_values (list[float]):
+            Corresponding survived-walkers ratios (fractions, 0.0-1.0).
+        target_ratio (float):
+            Target survived-walkers ratio (e.g. 0.97).
+
+    Returns:
+        int:
+            Optimal ``num_projection_per_measurement`` (rounded up to the nearest
+            even integer, minimum 2).
+
+    Raises:
+        RuntimeError:
+            If the linear fit cannot determine a positive root.
+    """
+    if len(x_values) < 2 or len(y_values) < 2:
+        raise ValueError(f"Need at least 2 data points, got {len(x_values)}")
+
+    # -- Fit linear y = a*x + b via least-squares (no numpy) -----
+    n = len(x_values)
+    sx = sum(x_values)
+    sx2 = sum(xi**2 for xi in x_values)
+    sy = sum(y_values)
+    sxy = sum(xi * yi for xi, yi in zip(x_values, y_values))
+
+    denom = n * sx2 - sx * sx
+    if abs(denom) < 1e-30:
+        raise RuntimeError("Degenerate fit: all x values are identical.")
+
+    a = (n * sxy - sx * sy) / denom
+    b = (sy * sx2 - sx * sxy) / denom
+
+    logger.info(f"Linear fit: f(x) = {a:.6g}*x + {b:.6g}")
+    for xi, yi in zip(x_values, y_values):
+        fitted = a * xi + b
+        logger.info(f"  nmpm={xi:>6d}: measured={yi:.4f}, fitted={fitted:.4f}")
+
+    # Solve a*x + b = target_ratio  =>  x = (target_ratio - b) / a
+    if abs(a) < 1e-15:
+        raise RuntimeError(f"Linear fit slope is ~0 (a={a:.6g}). Cannot solve for target_ratio={target_ratio:.4f}.")
+
+    x_opt = (target_ratio - b) / a
+    if x_opt <= 0:
+        raise RuntimeError(
+            f"Linear fit gives non-positive root x={x_opt:.2f} "
+            f"for target_ratio={target_ratio:.4f}. "
+            f"Coefficients: a={a:.6g}, b={b:.6g}"
+        )
+
+    # Round up to nearest even integer, minimum 2
+    result = max(2, int(math.ceil(x_opt)))
+    if result % 2 != 0:
+        result += 1
+
+    logger.info(f"Optimal num_projection_per_measurement for target ratio {target_ratio:.4f}: raw={x_opt:.2f} -> {result}")
+    return result
 
 
 class LRDMC_Workflow(Workflow):
@@ -154,8 +291,8 @@ class LRDMC_Workflow(Workflow):
         num_gfmc_collect_steps (int):
             Weight-collection steps for energy post-processing.
         time_projection_tau (float, optional):
-            Imaginary time step between projections (bohr) for GFMC_t
-            mode.  Default ``0.10``.  Ignored when
+            Imaginary time between branchings (Ha^-1) for GFMC_t mode,
+            written as ``[lrdmc-tau] tau``.  Default ``0.10``.  Ignored when
             *target_survived_walkers_ratio* or *num_projection_per_measurement*
             is set.
         target_survived_walkers_ratio (float, optional):
@@ -166,8 +303,11 @@ class LRDMC_Workflow(Workflow):
             fits a linear model to the observed survived-walkers ratio,
             and picks the value that achieves this target.
         num_projection_per_measurement (int, optional):
-            GFMC projections per measurement (GFMC_n mode).  When given
-            explicitly, the automatic calibration is skipped.
+            GFMC projections per measurement (GFMC_n mode), written as
+            ``[lrdmc-bra] num_mcmc_per_measurement``.  When given
+            explicitly, the automatic calibration is skipped.  The key has
+            no default: in GFMC_n mode it is either given here or
+            calibrated through *target_survived_walkers_ratio*.
         non_local_move (str, optional):
             Non-local move treatment (``"tmove"`` or ``"dltmove"``).  Default from ``jqmc_miscs``.
         E_scf (float, optional):
@@ -175,6 +315,12 @@ class LRDMC_Workflow(Workflow):
             Default from ``jqmc_miscs``.
         atomic_force (bool, optional):
             Compute atomic forces.  Default from ``jqmc_miscs``.
+        compute_stress (bool, optional):
+            Compute the symmetric stress tensor (Ha/bohr^3) and the
+            diagonal pressure; periodic systems only.  Supported by both
+            GFMC_n (lrdmc-bra) and GFMC_t (lrdmc-tau).  When true, the
+            ``stress`` / ``pressure`` tables are parsed from the ``jqmc``
+            output into ``output_values``.  Default from ``jqmc_miscs``.
         use_swct (bool, optional):
             Apply Space Warp Coordinate Transformation (SWCT) to atomic forces.
             Default is False for LRDMC.
@@ -187,7 +333,8 @@ class LRDMC_Workflow(Workflow):
         verbosity (str, optional):
             Verbosity level.  Default from ``jqmc_miscs``.
         poll_interval (int):
-            Seconds between job-status polls.
+            Seconds between job-status polls, and between
+            submission attempts while the queue's ``max_job_submit`` is reached.
         target_error (float):
             Target statistical error (Ha).
         pilot_steps (int):
@@ -210,6 +357,23 @@ class LRDMC_Workflow(Workflow):
             (e.g. ``["restart.h5", "hamiltonian_opt*.h5"]``).  Local files
             are always removed; remote files are removed only when the
             workflow targets a remote machine.  Default *None* (no cleanup).
+        precision_mode (str):
+            Precision mode written to the ``[precision]`` section
+            (``mode``) of the generated TOML: ``"full"`` (all float64) or
+            ``"mixed"`` (mixed precision).  Default ``"full"``.
+        mpc (bool, optional):
+            Enable the passive MPC (Model Periodic Coulomb) finite-size
+            correction (``[coulomb] mpc``).  MPC is an energy-only
+            observable: it does not enter the sampled Hamiltonian, the
+            branching weight, ``e_L``, forces or parameter gradients; only
+            the reported total energy is corrected.  ``True`` enables it,
+            ``False`` disables it, *None* (default) omits the key so the
+            jqmc default applies.
+        mpc_cutoff (float, optional):
+            Reciprocal-space kinetic-energy cutoff (Ha) for the MPC
+            reciprocal-space sum (``[coulomb] mpc_cutoff``).  A convergence
+            parameter.  *None* (default) omits the key so the driver
+            default applies.
 
     Examples:
         GFMC_t mode (default)::
@@ -296,8 +460,8 @@ class LRDMC_Workflow(Workflow):
         jobname: str = "jqmc-lrdmc",
         number_of_walkers: int = 4,
         max_time: int = 86400,
-        num_gfmc_bin_blocks: int = 5,
-        num_gfmc_warmup_steps: int = 0,
+        num_gfmc_bin_blocks: int = 10,
+        num_gfmc_warmup_steps: int = 25,
         num_gfmc_collect_steps: int = 5,
         # -- [lrdmc-bra / lrdmc-tau] section parameters --
         time_projection_tau: float | None = 0.10,
@@ -306,6 +470,7 @@ class LRDMC_Workflow(Workflow):
         non_local_move: str | None = None,
         E_scf: float | None = None,
         atomic_force: bool | None = None,
+        compute_stress: bool | None = None,
         use_swct: bool | None = None,
         epsilon_PW: float | None = None,
         # -- [control] section parameters --
@@ -321,6 +486,24 @@ class LRDMC_Workflow(Workflow):
         cleanup_patterns: list | None = None,
         # -- [precision] section --
         precision_mode: str = "full",
+        # -- [coulomb] section --
+        # MPC (Model Periodic Coulomb) finite-size correction. Under the current
+        # design MPC is PASSIVE (``physical = no``): it is an energy-only
+        # observable. It does NOT enter the Hamiltonian, the branching weight,
+        # ``e_L``, ``aF`` or ``gF`` -- forces and parameter gradients stay on the
+        # Ewald channel. Only the REPORTED total energy is corrected
+        # (``E_MPC = E_Ewald + dE_mpc``).
+        #
+        # ``mpc``: True enables the correction, False explicitly disables it,
+        # None omits the key (and, with ``mpc_cutoff`` also None, the whole
+        # ``[coulomb]`` section) from the generated TOML -- the jqmc default.
+        mpc: bool | None = None,
+        # ``mpc_cutoff``: reciprocal-space kinetic-energy cutoff in HARTREE for
+        # the MPC reciprocal-space sum; default 30.0 (matching CASINO's
+        # ``mpc_cutoff`` and QMCPACK's ``cutoff``). This is a CONVERGENCE
+        # parameter, not a physical one: DOUBLE it until the correction stops
+        # changing. None omits the key from the TOML (driver default).
+        mpc_cutoff: float | None = None,
     ):
         super().__init__(cleanup_patterns=cleanup_patterns)
         self.server_machine_name = server_machine_name
@@ -355,6 +538,9 @@ class LRDMC_Workflow(Workflow):
         self.non_local_move = non_local_move
         self.E_scf = E_scf
         self.atomic_force = atomic_force
+        self.compute_stress = compute_stress
+        # Stress is supported on both LRDMC drivers: lrdmc-tau (GFMC_t) and
+        # lrdmc-bra (GFMC_n) expose the same get_aT / get_aP estimators.
         self.use_swct = use_swct
         self.epsilon_PW = epsilon_PW
         # [control] section
@@ -369,6 +555,9 @@ class LRDMC_Workflow(Workflow):
         self.max_continuation = max_continuation
         # [precision] section
         self.precision_mode = precision_mode
+        # [coulomb] section (passive MPC energy-only observable)
+        self.mpc = mpc
+        self.mpc_cutoff = mpc_cutoff
 
     @property
     def job_type(self) -> str:
@@ -398,7 +587,9 @@ class LRDMC_Workflow(Workflow):
                 Restart checkpoint filename.
             num_projection_per_measurement (int or None):
                 Override for GFMC projections per measurement (GFMC_n only).
-                Falls back to ``self.num_projection_per_measurement``.
+                Falls back to ``self.num_projection_per_measurement``. In GFMC_n
+                mode one of the two must be set (given or calibrated): the
+                key has no default, so ``ValueError`` is raised otherwise.
         """
         jt = self.job_type
         control_ov = resolve_with_defaults(
@@ -418,6 +609,15 @@ class LRDMC_Workflow(Workflow):
         if self._use_gfmc_n:
             # GFMC_n mode: job_type="lrdmc-bra"
             nmpm = num_projection_per_measurement or self.num_projection_per_measurement
+            if nmpm is None:
+                # [lrdmc-bra] num_mcmc_per_measurement is required and has no
+                # default: it comes from the user or from the calibration.
+                raise ValueError(
+                    "GFMC_n (lrdmc-bra) input needs num_projection_per_measurement "
+                    "([lrdmc-bra] num_mcmc_per_measurement), which has no default: pass it "
+                    "explicitly, or set target_survived_walkers_ratio and let the calibration "
+                    "(_pilot_a) choose it before the input is written."
+                )
             section_ov = resolve_with_defaults(
                 "lrdmc-bra",
                 {
@@ -428,8 +628,13 @@ class LRDMC_Workflow(Workflow):
                     "num_gfmc_warmup_steps": self.num_gfmc_warmup_steps,
                     "num_gfmc_bin_blocks": self.num_gfmc_bin_blocks,
                     "num_gfmc_collect_steps": self.num_gfmc_collect_steps,
+                    # E_scf seeds the GFMC energy shift on the FIRST
+                    # submission only; on restart it is stripped from the
+                    # written TOML entirely via the omit_keys= call below
+                    # (see the comment at that call site).
                     "E_scf": self.E_scf,
                     "atomic_force": self.atomic_force,
+                    "compute_stress": self.compute_stress,
                     "use_swct": self.use_swct,
                     "epsilon_PW": self.epsilon_PW,
                 },
@@ -447,6 +652,7 @@ class LRDMC_Workflow(Workflow):
                     "num_gfmc_bin_blocks": self.num_gfmc_bin_blocks,
                     "num_gfmc_collect_steps": self.num_gfmc_collect_steps,
                     "atomic_force": self.atomic_force,
+                    "compute_stress": self.compute_stress,
                     "use_swct": self.use_swct,
                     "epsilon_PW": self.epsilon_PW,
                 },
@@ -458,14 +664,41 @@ class LRDMC_Workflow(Workflow):
         }
         # Add [precision] section
         overrides["precision"] = {"mode": self.precision_mode}
+        # Add [coulomb] keys only when explicitly set; a None value omits that
+        # key (and, when both are None, the whole section) -- bit-identical to
+        # a TOML with no MPC at all. MPC is energy-only (``physical = no``):
+        # nothing here changes e_L, the branching weight, aF or gF.
+        coulomb_ov = {}
+        if self.mpc is not None:
+            coulomb_ov["mpc"] = bool(self.mpc)
+        if self.mpc_cutoff is not None:
+            coulomb_ov["mpc_cutoff"] = float(self.mpc_cutoff)
+        if coulomb_ov:
+            overrides["coulomb"] = coulomb_ov
+
+        # E_scf ("frozen on restart") is only a valid SEED for the first
+        # submission: the GFMC_n driver self-consistently updates it via
+        # population control and freezes the drifted value into the
+        # checkpoint. A continuation TOML that re-sends the (necessarily
+        # stale) static self.E_scf trips jqmc's
+        # assert_restart_frozen_consistency -- omit the key entirely so the
+        # checkpoint's evolved value carries forward untouched (an omitted
+        # key skips that check; see jqmc._restart_policy).
+        omit_keys = {"lrdmc-bra": ["E_scf"]} if (restart and self._use_gfmc_n) else None
+
         generate_input_toml(
             job_type=jt,
             overrides=overrides,
             filename=input_file,
+            omit_keys=omit_keys,
         )
 
     # -- Submit / poll / fetch -------------------------------------
     # _submit_and_wait() and _make_job() are inherited from Workflow.
+
+    def _get_command(self, input_file: str) -> str:
+        """LRDMC reads a TOML; the script line is ``mpirun -np N jqmc <input>``."""
+        return f"jqmc {input_file}"
 
     # -- configure / run ------------------------------------------
 
@@ -624,21 +857,32 @@ class LRDMC_Workflow(Workflow):
             # Post-process energy (informational only, no convergence check)
             restart_chk = self._find_restart_chk(_wd)
             if restart_chk:
-                energy, error = self._compute_energy(restart_chk, work_dir=_wd)
+                energy, error, dE_mpc, dE_mpc_error = self._compute_energy(restart_chk, work_dir=_wd, with_mpc=True)
                 if energy is not None:
                     self.output_values["energy"] = energy
                     self.output_values["energy_error"] = error
                     self.output_values["alat"] = self.alat
                     self.output_values["restart_chk"] = restart_chk
                     logger.info(f"  LRDMC energy (a={self.alat}): {energy} +- {error} Ha")
+                    self._record_mpc_correction(dE_mpc, dE_mpc_error)
+                    if dE_mpc is not None:
+                        logger.info(f"  MPC correction: dE_MPC = {dE_mpc} +- {dE_mpc_error} Ha")
                     if self.atomic_force:
                         forces = self._compute_force(restart_chk, work_dir=_wd, output_file=output_i)
                         if forces is not None:
                             self.output_values["forces"] = forces
+                    if self.compute_stress:
+                        stress, pressure = self._compute_stress(work_dir=_wd, output_file=output_i)
+                        if stress is not None:
+                            self.output_values["stress"] = stress
+                        if pressure is not None:
+                            self.output_values["pressure"] = pressure
                     set_estimation(
                         _wd,
                         last_energy=energy,
                         last_energy_error=error,
+                        last_dE_mpc=dE_mpc,
+                        last_dE_mpc_error=dE_mpc_error,
                         last_num_gfmc_bin_blocks=self.num_gfmc_bin_blocks,
                         last_num_gfmc_warmup_steps=self.num_gfmc_warmup_steps,
                         last_num_gfmc_collect_steps=self.num_gfmc_collect_steps,
@@ -646,8 +890,9 @@ class LRDMC_Workflow(Workflow):
 
             # -- Abnormal-termination guard (single source of truth) --
             # Fixed-step mode has no convergence criterion, so only the
-            # Program-ends / non-finite-energy checks are active here.
-            vstatus, vmsg = validate_completion(_wd, self.output_values)
+            # Program-ends / non-finite-energy / missing-energy checks are
+            # active here.
+            vstatus, vmsg = validate_completion(_wd, self.output_values, require_energy=True)
             if vstatus == CompletionStatus.FAILED:
                 logger.error(vmsg)
                 self.output_values["error"] = vmsg
@@ -658,16 +903,23 @@ class LRDMC_Workflow(Workflow):
         last_output = step_files[last_run][1] if last_run in step_files else None
         restart_chk = self._find_restart_chk(_wd)
         if restart_chk:
-            energy, error = self._compute_energy(restart_chk, work_dir=_wd)
+            energy, error, dE_mpc, dE_mpc_error = self._compute_energy(restart_chk, work_dir=_wd, with_mpc=True)
             if energy is not None:
                 self.output_values["energy"] = energy
                 self.output_values["energy_error"] = error
                 self.output_values["alat"] = self.alat
                 self.output_values["restart_chk"] = restart_chk
+                self._record_mpc_correction(dE_mpc, dE_mpc_error)
                 if self.atomic_force:
                     forces = self._compute_force(restart_chk, work_dir=_wd, output_file=last_output)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress:
+                    stress, pressure = self._compute_stress(work_dir=_wd, output_file=last_output)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
                 set_estimation(
                     _wd,
                     last_energy=energy,
@@ -705,7 +957,7 @@ class LRDMC_Workflow(Workflow):
         trial_nmpm = [int(n_electrons * k * alat_scale) for k in (2, 4, 6)]
 
         logger.info("")
-        logger.info(f"-- LRDMC Phase A: Calibrate num_projection_per_measurement (a={self.alat}) " + "-" * 8)
+        logger.info(f"-- LRDMC calibration: num_projection_per_measurement (a={self.alat}) " + "-" * 8)
         logger.info(
             f"  Ne={n_electrons}, trial nmpm = {trial_nmpm}, target survived ratio = {self.target_survived_walkers_ratio:.2%}"
         )
@@ -717,7 +969,10 @@ class LRDMC_Workflow(Workflow):
             os.makedirs(calib_sub, exist_ok=True)
             h5_link = os.path.join(calib_sub, self.hamiltonian_file)
             if os.path.isfile(h5_src) and not os.path.exists(h5_link):
-                os.symlink(h5_src, h5_link)
+                try:
+                    os.symlink(h5_src, h5_link)
+                except OSError:
+                    shutil.copy(h5_src, h5_link)
 
             async def _run_calib(sub_dir, nmpm_v, _idx=idx):
                 rec = get_job_by_step(sub_dir, 0)
@@ -817,7 +1072,10 @@ class LRDMC_Workflow(Workflow):
             os.makedirs(pilot_b_dir, exist_ok=True)
             h5_link_b = os.path.join(pilot_b_dir, self.hamiltonian_file)
             if os.path.isfile(h5_src) and not os.path.exists(h5_link_b):
-                os.symlink(h5_src, h5_link_b)
+                try:
+                    os.symlink(h5_src, h5_link_b)
+                except OSError:
+                    shutil.copy(h5_src, h5_link_b)
 
             input_pb = None
             output_pb = None
@@ -840,7 +1098,7 @@ class LRDMC_Workflow(Workflow):
                 self._generate_input(self.pilot_steps, os.path.join(pilot_b_dir, input_pb))
             mode_info = f"nmpm={self.num_projection_per_measurement}" if self._use_gfmc_n else f"tau={self.time_projection_tau}"
             logger.info("")
-            logger.info(f"-- LRDMC Phase B: Error-bar Pilot (a={self.alat}) " + "-" * 12)
+            logger.info(f"-- LRDMC error-bar pilot (a={self.alat}) " + "-" * 12)
             logger.info(f"  {input_pb}: {self.pilot_steps} steps, {mode_info} (queue: {self.pilot_queue_label})")
 
             pilot_t0 = time.monotonic()
@@ -941,12 +1199,14 @@ class LRDMC_Workflow(Workflow):
             )
             restart_chk = self._find_restart_chk(_wd)
             if restart_chk:
-                energy, error = self._compute_energy(restart_chk, work_dir=_wd)
+                energy, error, dE_mpc, dE_mpc_error = self._compute_energy(restart_chk, work_dir=_wd, with_mpc=True)
                 if energy is not None:
                     set_estimation(
                         _wd,
                         last_energy=energy,
                         last_energy_error=error,
+                        last_dE_mpc=dE_mpc,
+                        last_dE_mpc_error=dE_mpc_error,
                         last_num_gfmc_bin_blocks=self.num_gfmc_bin_blocks,
                         last_num_gfmc_warmup_steps=self.num_gfmc_warmup_steps,
                         last_num_gfmc_collect_steps=self.num_gfmc_collect_steps,
@@ -979,15 +1239,24 @@ class LRDMC_Workflow(Workflow):
                     estimated_steps=estimated_steps,
                     **mode_extras,
                 )
+                # Cached correction, written by the same set_estimation
+                # call as cached_energy (absent for a non-MPC run).
+                self._record_mpc_correction(estimation.get("last_dE_mpc"), estimation.get("last_dE_mpc_error"))
                 if self.atomic_force and restart_chk:
                     forces = self._compute_force(restart_chk, work_dir=_wd)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress and restart_chk:
+                    stress, pressure = self._compute_stress(work_dir=_wd)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
                 self.output_files = sorted(os.path.basename(f) for f in glob.glob(os.path.join(_wd, "*.h5")))
                 self.status = WorkflowStatus.COMPLETED
                 return self.status, self.output_files, self.output_values
 
-        # -- Production runs (phase 1..N) --------------------------
+        # -- Production runs ---------------------------------------
         # Three phases:
         #   A. Scan existing runs -> find resume point
         #   B. Re-estimate from accumulated data (if resuming)
@@ -1021,7 +1290,7 @@ class LRDMC_Workflow(Workflow):
             _re_chk = self._find_restart_chk(_wd)
             if _re_chk is None:
                 raise RuntimeError(
-                    f"Phase B: {first_new_run - 1} prior run(s) marked fetched but no restart checkpoint found in {_wd}."
+                    f"Re-estimating from earlier runs: {first_new_run - 1} prior run(s) marked fetched but no restart checkpoint found in {_wd}."
                 )
             # mcmc_counter in restart.h5 is the only trustworthy source
             # for accumulated samples (planned step counts over-count
@@ -1032,13 +1301,15 @@ class LRDMC_Workflow(Workflow):
                 collect_steps=self.num_gfmc_collect_steps,
             )
             if actual is None:
-                raise RuntimeError(f"Phase B: cannot read mcmc_counter from {_re_chk} in {_wd}.")
+                raise RuntimeError(f"Re-estimating from earlier runs: cannot read mcmc_counter from {_re_chk} in {_wd}.")
             accumulated_measurement = actual
 
-            _re_energy, _re_error = self._compute_energy_cached(_re_chk, work_dir=_wd, accumulated=actual)
+            _re_energy, _re_error, _re_dE_mpc, _re_dE_mpc_error = self._compute_energy_cached(
+                _re_chk, work_dir=_wd, accumulated=actual, with_mpc=True
+            )
             if _re_energy is None or _re_error is None:
                 raise RuntimeError(
-                    f"Phase B: compute-energy failed for {_re_chk} in {_wd}. Cannot decide whether to resume or stop."
+                    f"Re-estimating from earlier runs: compute-energy failed for {_re_chk} in {_wd}. Cannot decide whether to resume or stop."
                 )
             if _re_error <= self.target_error * 1.20:
                 logger.info(f"  Target already met after prior runs: {_re_error:.6g} <= {self.target_error * 1.20:.6g} Ha")
@@ -1048,10 +1319,17 @@ class LRDMC_Workflow(Workflow):
                     alat=self.alat,
                     restart_chk=_re_chk,
                 )
+                self._record_mpc_correction(_re_dE_mpc, _re_dE_mpc_error)
                 if self.atomic_force:
                     forces = self._compute_force(_re_chk, work_dir=_wd)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress:
+                    stress, pressure = self._compute_stress(work_dir=_wd)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
                 first_new_run = self.max_continuation + 1  # skip loop
             else:
                 _additional = estimate_additional_steps(
@@ -1098,7 +1376,7 @@ class LRDMC_Workflow(Workflow):
                         restart_chk=restart_chk,
                     )
                 logger.info("")
-                logger.info(f"-- LRDMC Phase 1: Production run {i}/{self.max_continuation} (a={self.alat}) " + "-" * 10)
+                logger.info(f"-- LRDMC production run {i}/{self.max_continuation} (a={self.alat}) " + "-" * 15)
                 logger.info(f"  {input_i}: {estimated_steps} steps")
 
             step_files[i] = (input_i, output_i, run_id_i)
@@ -1143,7 +1421,7 @@ class LRDMC_Workflow(Workflow):
             # -- Side-effects: compute energy from checkpoint (if any) --
             restart_chk = self._find_restart_chk(_wd)
             if restart_chk is None:
-                raise RuntimeError(f"Phase C: run {i} completed but no restart checkpoint found in {_wd}.")
+                raise RuntimeError(f"Production loop: run {i} completed but no restart checkpoint found in {_wd}.")
             # mcmc_counter in restart.h5 is the only trustworthy source for
             # accumulated samples (planned step counts over-count when the
             # run was cut short by max_time).
@@ -1153,24 +1431,37 @@ class LRDMC_Workflow(Workflow):
                 collect_steps=self.num_gfmc_collect_steps,
             )
             if actual is None:
-                raise RuntimeError(f"Phase C: cannot read mcmc_counter from {restart_chk} in {_wd}.")
+                raise RuntimeError(f"Production loop: cannot read mcmc_counter from {restart_chk} in {_wd}.")
             accumulated_measurement = actual
-            energy, error = self._compute_energy_cached(restart_chk, work_dir=_wd, accumulated=actual)
+            energy, error, dE_mpc, dE_mpc_error = self._compute_energy_cached(
+                restart_chk, work_dir=_wd, accumulated=actual, with_mpc=True
+            )
             if energy is not None:
                 self.output_values["energy"] = energy
                 self.output_values["energy_error"] = error
                 self.output_values["alat"] = self.alat
                 self.output_values["restart_chk"] = restart_chk
                 logger.info(f"  LRDMC energy (a={self.alat}): {energy} +- {error} Ha")
+                self._record_mpc_correction(dE_mpc, dE_mpc_error)
+                if dE_mpc is not None:
+                    logger.info(f"  MPC correction: dE_MPC = {dE_mpc} +- {dE_mpc_error} Ha")
                 if self.atomic_force:
                     forces = self._compute_force(restart_chk, work_dir=_wd, output_file=output_i)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress:
+                    stress, pressure = self._compute_stress(work_dir=_wd, output_file=output_i)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
 
                 set_estimation(
                     _wd,
                     last_energy=energy,
                     last_energy_error=error,
+                    last_dE_mpc=dE_mpc,
+                    last_dE_mpc_error=dE_mpc_error,
                     accumulated_measurement_steps=accumulated_measurement,
                     last_num_gfmc_bin_blocks=self.num_gfmc_bin_blocks,
                     last_num_gfmc_warmup_steps=self.num_gfmc_warmup_steps,
@@ -1218,20 +1509,29 @@ class LRDMC_Workflow(Workflow):
         last_output = step_files[last_run][1] if last_run in step_files else None
         restart_chk = self._find_restart_chk(_wd)
         if restart_chk:
-            energy, error = self._compute_energy_cached(restart_chk, work_dir=_wd)
+            energy, error, dE_mpc, dE_mpc_error = self._compute_energy_cached(restart_chk, work_dir=_wd, with_mpc=True)
             if energy is not None:
                 self.output_values["energy"] = energy
                 self.output_values["energy_error"] = error
                 self.output_values["alat"] = self.alat
                 self.output_values["restart_chk"] = restart_chk
+                self._record_mpc_correction(dE_mpc, dE_mpc_error)
                 if self.atomic_force:
                     forces = self._compute_force(restart_chk, work_dir=_wd, output_file=last_output)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress:
+                    stress, pressure = self._compute_stress(work_dir=_wd, output_file=last_output)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
                 set_estimation(
                     _wd,
                     last_energy=energy,
                     last_energy_error=error,
+                    last_dE_mpc=dE_mpc,
+                    last_dE_mpc_error=dE_mpc_error,
                     accumulated_measurement_steps=accumulated_measurement,
                     last_num_gfmc_bin_blocks=self.num_gfmc_bin_blocks,
                     last_num_gfmc_warmup_steps=self.num_gfmc_warmup_steps,
@@ -1285,7 +1585,32 @@ class LRDMC_Workflow(Workflow):
                 return os.path.basename(matches[-1])
         return None
 
-    def _compute_energy_cached(self, restart_chk: str, work_dir: str, accumulated: int | None = None):
+    def _record_mpc_correction(self, dE_mpc: float | None, dE_mpc_error: float | None):
+        """Publish the MPC correction into ``output_values`` when present.
+
+        MPC is a passive, energy-only finite-size correction: ``energy``
+        stays the pure-Ewald value and the consumer forms
+        ``energy + dE_mpc`` itself, so the two error bars stay
+        separable.  The keys are left absent for a run without MPC.
+
+        Args:
+            dE_mpc (float or None):
+                ``dE_MPC`` from ``jqmc-tool lrdmc compute-energy``.
+            dE_mpc_error (float or None):
+                Statistical error on the above.
+        """
+        if dE_mpc is None:
+            return
+        self.output_values["dE_mpc"] = dE_mpc
+        self.output_values["dE_mpc_error"] = dE_mpc_error
+
+    def _compute_energy_cached(
+        self,
+        restart_chk: str,
+        work_dir: str,
+        accumulated: int | None = None,
+        with_mpc: bool = False,
+    ):
         """Return (energy, error) using ``[estimation]`` cache when fresh.
 
         The cache (``last_energy`` / ``last_energy_error`` in
@@ -1299,6 +1624,13 @@ class LRDMC_Workflow(Workflow):
         refreshed via :func:`set_estimation` so that subsequent
         invocations within the same or later workflow runs short-circuit.
 
+        The MPC correction (``last_dE_mpc`` / ``last_dE_mpc_error``) is
+        always computed and always written in the *same*
+        :func:`set_estimation` call as the energy it belongs to, so a
+        cache hit can never pair an energy from one run with a
+        correction from another.  Writing *None* removes the keys (TOML
+        has no null), which is exactly what a run without MPC needs.
+
         Args:
             restart_chk (str):
                 Checkpoint filename (basename).
@@ -1308,6 +1640,9 @@ class LRDMC_Workflow(Workflow):
                 Pre-read ``mcmc_counter`` from ``restart.h5``.  Pass when
                 the caller has already computed it (Phase B / Phase C) to
                 avoid a redundant HDF5 read.
+            with_mpc (bool, optional):
+                Also return the MPC finite-size correction.  Default
+                *False* keeps the ``(energy, error)`` shape.
         """
         if accumulated is None:
             accumulated = read_accumulated_measurement_steps(
@@ -1331,21 +1666,29 @@ class LRDMC_Workflow(Workflow):
                 f"(acc={accumulated}, b={self.num_gfmc_bin_blocks}, "
                 f"w={self.num_gfmc_warmup_steps}, c={self.num_gfmc_collect_steps})"
             )
-            return e, err
-        energy, error = self._compute_energy(restart_chk, work_dir=work_dir)
+            if not with_mpc:
+                return e, err
+            return e, err, est.get("last_dE_mpc"), est.get("last_dE_mpc_error")
+        # Always parse the correction so the cache entry is complete
+        # regardless of what this particular caller asked for.
+        energy, error, dE_mpc, dE_mpc_error = self._compute_energy(restart_chk, work_dir=work_dir, with_mpc=True)
         if energy is not None and accumulated is not None:
             set_estimation(
                 work_dir,
                 last_energy=energy,
                 last_energy_error=error,
+                last_dE_mpc=dE_mpc,
+                last_dE_mpc_error=dE_mpc_error,
                 accumulated_measurement_steps=accumulated,
                 last_num_gfmc_bin_blocks=self.num_gfmc_bin_blocks,
                 last_num_gfmc_warmup_steps=self.num_gfmc_warmup_steps,
                 last_num_gfmc_collect_steps=self.num_gfmc_collect_steps,
             )
-        return energy, error
+        if not with_mpc:
+            return energy, error
+        return energy, error, dE_mpc, dE_mpc_error
 
-    def _compute_energy(self, restart_chk: str, work_dir: str):
+    def _compute_energy(self, restart_chk: str, work_dir: str, with_mpc: bool = False):
         """Run ``jqmc-tool lrdmc compute-energy`` against *restart_chk*.
 
         Always invokes ``jqmc-tool`` so that the returned (energy, error)
@@ -1359,10 +1702,15 @@ class LRDMC_Workflow(Workflow):
                 Checkpoint filename (basename).
             work_dir (str):
                 Directory in which to run the command.
+            with_mpc (bool, optional):
+                Also return the MPC finite-size correction (*None* when
+                the run had ``mpc = false``).  Default *False* keeps the
+                ``(energy, error)`` return shape.
 
         Returns:
             tuple:
-                ``(energy, error)`` or ``(None, None)`` on failure.
+                ``(energy, error)``, or ``(energy, error, dE_mpc,
+                dE_mpc_error)`` when *with_mpc*.  All-*None* on failure.
         """
         cmd = [
             "jqmc-tool",
@@ -1387,22 +1735,55 @@ class LRDMC_Workflow(Workflow):
                 check=True,
                 cwd=work_dir,
             )
-            return self._parse_energy_output(result.stdout)
+            return self._parse_energy_output(result.stdout, with_mpc=with_mpc)
         except FileNotFoundError as e:
             logger.error(f"compute-energy: '{cmd[0]}' not found on PATH ({e})")
-            return None, None
+            return (None, None, None, None) if with_mpc else (None, None)
         except subprocess.CalledProcessError as e:
             logger.error(f"compute-energy failed: {e.stderr}")
-            return None, None
+            return (None, None, None, None) if with_mpc else (None, None)
 
     @staticmethod
-    def _parse_energy_output(text: str):
-        """Parse ``E = <value> +- <error> Ha.`` from jqmc-tool output."""
+    def _parse_energy_output(text: str, with_mpc: bool = False):
+        """Parse ``E = <value> +- <error> Ha.`` from jqmc-tool output.
+
+        When the run had ``mpc = true``, jqmc-tool prints two extra lines
+        *after* the plain energy line::
+
+            MPC correction: dE_MPC = <value> +- <error> Ha.
+            Total Energy (MPC-corrected): E_MPC = <value> +- <error> Ha.
+
+        Neither confuses the plain-energy pattern: in ``dE_MPC =`` and
+        ``E_MPC =`` the ``E`` is followed by ``_``, not by whitespace or
+        ``=``, so ``search()`` still locks onto the first (pure-Ewald)
+        ``E = ...`` line.  MPC is a passive, energy-only finite-size
+        correction, so ``energy`` stays the pure-Ewald value and the
+        consumer forms ``energy + dE_mpc`` itself -- keeping the two
+        error bars separable.
+
+        Args:
+            text (str):
+                jqmc-tool stdout.
+            with_mpc (bool, optional):
+                Also return the MPC correction.  Default *False* keeps
+                the ``(energy, error)`` return shape.
+
+        Returns:
+            tuple:
+                ``(energy, error)``, or ``(energy, error, dE_mpc,
+                dE_mpc_error)`` when *with_mpc*.  Values are *None* when
+                the corresponding line is absent -- in particular the
+                correction is *None* for a run without MPC.
+        """
         pattern = re.compile(r"E\s*=\s*([+-]?\d+\.?\d*(?:[eE][+-]?\d+)?)\s*\+\-\s*(\d+\.?\d*(?:[eE][+-]?\d+)?)")
         match = pattern.search(text)
-        if match:
-            return float(match.group(1)), float(match.group(2))
-        return None, None
+        energy, error = (float(match.group(1)), float(match.group(2))) if match else (None, None)
+        if not with_mpc:
+            return energy, error
+        mpc_pattern = re.compile(r"dE_MPC\s*=\s*([+-]?\d+\.?\d*(?:[eE][+-]?\d+)?)\s*\+\-\s*(\d+\.?\d*(?:[eE][+-]?\d+)?)")
+        mpc_match = mpc_pattern.search(text)
+        dE_mpc, dE_mpc_error = (float(mpc_match.group(1)), float(mpc_match.group(2))) if mpc_match else (None, None)
+        return energy, error, dE_mpc, dE_mpc_error
 
     def _compute_force(self, restart_chk: str, work_dir: str, output_file: str | None = None):
         """Parse forces from *output_file* or run ``jqmc-tool lrdmc compute-force``.
@@ -1488,3 +1869,61 @@ class LRDMC_Workflow(Workflow):
         except subprocess.CalledProcessError as e:
             logger.error(f"compute-force failed: {e.stderr}")
             return None
+
+    def _compute_stress(self, work_dir: str, output_file: str | None = None):
+        """Parse ``Stress Tensor`` + ``Pressure`` tables from *output_file*.
+
+        Mirror of :meth:`_compute_force` but stress-only and fast-path-only
+        -- ``jqmc-tool`` has no ``compute-stress`` subcommand yet, so we
+        return ``(None, None)`` rather than spawning a tool process when
+        the output file is missing or the tables are absent. The CLI
+        emits both tables via ``_log_stress_section`` when the run was
+        launched with ``compute_stress=True``.
+
+        Stress is available for both LRDMC drivers, lrdmc-bra (GFMC_n)
+        and lrdmc-tau (GFMC_t); the same tables are parsed in either
+        mode.
+
+        Args:
+            work_dir: Directory containing *output_file*.
+            output_file: Basename of the ``jqmc`` stdout file. If *None*,
+                the most recently modified ``*.out`` in *work_dir* is
+                used. Returns ``(None, None)`` when no output file is
+                found.
+
+        Returns:
+            ``(stress_dict, pressure_dict)`` -- either entry may be
+            *None* if the corresponding table is absent.
+        """
+        if output_file is None:
+            candidates = sorted(
+                glob.glob(os.path.join(work_dir, "*.out")),
+                key=os.path.getmtime,
+            )
+            if not candidates:
+                return None, None
+            out_path = candidates[-1]
+            output_file = os.path.basename(out_path)
+        else:
+            out_path = os.path.join(work_dir, output_file)
+        if not os.path.isfile(out_path):
+            return None, None
+        try:
+            with open(out_path) as fh:
+                text = fh.read()
+        except OSError:
+            return None, None
+        stress = parse_stress_table(text)
+        pressure = parse_pressure_table(text)
+        if stress is not None:
+            logger.info(
+                f"  Stress from {output_file}: "
+                f"sigma_xx={stress['sigma_xx']:+.6f}+-{stress['sigma_xx_err']:.6f} Ha/bohr^3, "
+                f"sigma_yy={stress['sigma_yy']:+.6f}+-{stress['sigma_yy_err']:.6f} Ha/bohr^3, "
+                f"sigma_zz={stress['sigma_zz']:+.6f}+-{stress['sigma_zz_err']:.6f} Ha/bohr^3"
+            )
+        if pressure is not None:
+            logger.info(
+                f"  Pressure from {output_file}: P_hydro={pressure['P_hydro']:+.6f}+-{pressure['P_hydro_err']:.6f} Ha/bohr^3"
+            )
+        return stress, pressure

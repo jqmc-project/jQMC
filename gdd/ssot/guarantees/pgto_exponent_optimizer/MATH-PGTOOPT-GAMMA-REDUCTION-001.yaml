@@ -1,0 +1,23 @@
+id: MATH-PGTOOPT-GAMMA-REDUCTION-001
+kind: mathematical
+name: Implicit Gamma overlap preserves the optimizer constraint and first derivative
+plain_language: >-
+  The Gamma pGTO exponent optimizer evaluates the raw full AO overlap log condition
+  and its first exponent derivative without arrays quadratic in the number of retained
+  plane waves at fixed pGTO dimension. Reduction applies when the cos/sin bulk
+  dimension exceeds the pGTO dimension. A unitary reduction of
+  the equal-norm cos/sin bulk preserves the spectrum, including its omitted V/2
+  multiplicity and the explicit constant column of norm V. For differentiable
+  extreme eigenvalues, its derivative agrees with the unreduced dense overlap,
+  including rank-deficient or zero cross blocks without a singular QR derivative.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_gamma_condition_compression_preserves_dense_value_and_gradient
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_gamma_exponent_condition_gradient_matches_dense_generated_overlap
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_gamma_condition_value_and_gradient_do_not_build_pw_squared_arrays

@@ -1,0 +1,49 @@
+id: PHY-MCMC-GAUSSIAN-ENERGY-001
+kind: physical
+name: Sampled Gaussian Coulomb energies against a closed-form reference
+plain_language: >-
+  Actual XLA MCMC measurements on synthetic open H (1 up, no down) and He
+  (1 up, 1 down), with one Cartesian s Gaussian of exponent 0.5 or 1.25,
+  SD/MO and no Jastrow/ECP, must equal sum(3a-2a^2*r^2-Z/r) plus the He
+  electron repulsion at each measured position. Three walkers use driver
+  seed 34, Dt=0.7, AS=0, two proposals per measurement and four successive
+  one-step runs, without cond(G) screening or reselection. Independently
+  reduce the actual four-step samples into two bins to check the reported
+  mean and its standard error, not a statistical acceptance band. Compare
+  only within each precision mode using existing central strict tolerances.
+  Scaling the actual fast kinetic term must fail after a passing baseline.
+  This Gaussian trial function is not an exact hydrogen 1s eigenstate;
+  ground-state energy, zero variance and sampling-distribution accuracy
+  are not asserted.
+  The reference evaluates each piece in its production zone dtype (orbital
+  values in ao_eval, orbital derivatives in ao_grad_lap, ratios in det_ratio, Coulomb in coulomb), so mixed
+  mode is never judged against an fp64 reference.
+verdict_methods: [VM-PHY-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-PHY-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_gaussian_energy_reference.py::test_sampled_local_energies_match_gaussian_coulomb_formula
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {charge: 1, exponent: 0.5}
+    - {charge: 2, exponent: 0.5}
+    - {charge: 1, exponent: 1.25}
+    - {charge: 2, exponent: 1.25}
+    executable_checks:
+      physical-energies-and-statistics: &gaussian-energy-check
+        site: tests/test_jqmc_kernel/test_mcmc_gaussian_energy_reference.py::_run_and_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-mcmc-measurements-and-estimators, expression: actual}
+        reference: {role: closed-form-gaussian-coulomb-and-pair-difference-statistics, expression: expected}
+        iterations:
+          variable: quantity
+          required_values: [local-energy, mean, mean-error]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy]}
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_gaussian_energy_reference.py::test_sampled_energy_reference_rejects_shared_kinetic_scale_fault
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kinetic_scale: 1.001}
+    executable_checks:
+      physical-energies-and-statistics: *gaussian-energy-check

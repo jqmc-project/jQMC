@@ -1,0 +1,19 @@
+id: IMPL-TOOL-INPUT-GENERATION-001
+kind: implementation
+name: Input-generation command contracts
+plain_language: The generate-input commands create MCMC, LRDMC, and VMC input files exactly when requested, with and without
+  comments, and never without the flag; and the generated file is still a valid CONTINUATION input, because the documented
+  journey edits restart = true in that same file. A key that is both frozen-on-restart and evolves during the run (E_scf)
+  must therefore not be emitted with a placeholder value, or the frozen-key guard refuses the restart the tool itself advertised.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestGenerateInput::test_mcmc_generate_input_creates_file
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestGenerateInput::test_lrdmc_generate_input_creates_file
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestGenerateInput::test_vmc_generate_input_creates_file
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestGenerateInput::test_generate_input_without_flag_does_not_create
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestGenerateInput::test_generate_input_without_comment
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestGenerateInput::test_generate_input_with_comment
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::test_generated_lrdmc_input_survives_restart_against_an_evolved_checkpoint

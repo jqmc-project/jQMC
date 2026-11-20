@@ -1,0 +1,841 @@
+"""Workflow state persistence via workflow_state.toml.
+
+Each workflow directory gets a human-and-machine-readable TOML file that
+tracks the current status, full job history, and results.
+
+Workflow-level statuses:
+    pending     -- waiting for dependencies
+    copying     -- input files being transferred
+    submitted   -- job submitted to queue
+    running     -- job confirmed running
+    completed   -- finished successfully
+    failed      -- finished with error
+    cancelled   -- manually cancelled
+
+Per-job statuses (stored in ``[[jobs]]``):
+    submitted   -- job submitted to scheduler / started locally
+    completed   -- scheduler reports job finished
+    fetched     -- results transferred back to local machine
+    failed      -- job failed
+    cancelled   -- user cancelled via CLI before completion
+"""
+
+# Copyright (C) 2024- Kosuke Nakano
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import os
+from datetime import datetime
+from enum import Enum
+from logging import getLogger
+
+import toml
+
+logger = getLogger("jqmc-workflow").getChild(__name__)
+
+
+class WorkflowStatus(str, Enum):
+    """Workflow-level status values."""
+
+    PENDING = "pending"
+    COPYING = "copying"
+    SUBMITTED = "submitted"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class JobStatus(str, Enum):
+    """Per-job status values stored in ``[[jobs]]``."""
+
+    SUBMITTED = "submitted"
+    COMPLETED = "completed"
+    FETCHED = "fetched"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class CompletionStatus(str, Enum):
+    """Return values of :func:`validate_completion`.
+
+    Single source of truth for "should the workflow terminate?".
+
+    - ``OK`` -- all checks pass (converged or post-hoc validation).
+    - ``FAILED`` -- irrecoverable: abnormal termination or non-finite energy.
+    - ``INCOMPLETE`` -- no failure signal, but the convergence criterion is
+      not yet met (only meaningful when ``target_error`` is given).
+    """
+
+    OK = "ok"
+    FAILED = "failed"
+    INCOMPLETE = "incomplete"
+
+
+# Legacy sets -- kept for backward compatibility during transition.
+# New code should use WorkflowStatus / JobStatus enums.
+VALID_STATUSES = {s.value for s in WorkflowStatus}
+VALID_JOB_STATUSES = {s.value for s in JobStatus}
+
+STATE_FILENAME = "workflow_state.toml"
+
+
+def _now_iso() -> str:
+    # Local time *with* tz suffix: stays unambiguous when state files are
+    # shared between machines in different zones or compared across DST.
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def create_state(
+    directory: str,
+    label: str,
+    workflow_type: str,
+    status: str = "pending",
+) -> dict:
+    """Create (or reset) workflow_state.toml in *directory*.
+
+    If the file already exists, ``[estimation]``, ``[[jobs]]``, and
+    ``[input_fingerprints]`` are preserved so that pilot-run results,
+    job history, and the staleness baseline survive a restart.
+    """
+    if status not in VALID_STATUSES:
+        raise ValueError(f"Invalid status '{status}'. Must be one of {VALID_STATUSES}")
+
+    # Preserve data from a previous run
+    existing = read_state(directory)
+    preserved_estimation = existing.get("estimation", {})
+    preserved_jobs = existing.get("jobs", [])
+    preserved_fingerprints = existing.get("input_fingerprints", {})
+
+    state = {
+        "workflow": {
+            "label": label,
+            "type": workflow_type,
+            "status": status,
+            "created_at": _now_iso(),
+            "updated_at": _now_iso(),
+        },
+        "jobs": preserved_jobs,
+        "result": {},
+    }
+
+    if preserved_estimation:
+        state["estimation"] = preserved_estimation
+    if preserved_fingerprints:
+        state["input_fingerprints"] = preserved_fingerprints
+
+    _write(directory, state)
+    return state
+
+
+def read_state(directory: str) -> dict:
+    """Read workflow_state.toml from *directory*. Returns empty dict if absent."""
+    path = os.path.join(directory, STATE_FILENAME)
+    if not os.path.isfile(path):
+        return {}
+    state = toml.load(path)
+    # Migrate legacy single [job] -> [[jobs]] list.  Persist the
+    # migration so subsequent reads don't repeat the conversion.
+    if "job" in state and "jobs" not in state:
+        old_job = state.pop("job")
+        state["jobs"] = [old_job] if old_job else []
+        try:
+            _write(directory, state)
+        except OSError as exc:
+            logger.warning(f"Failed to persist legacy [job] migration in {path}: {exc}")
+    return state
+
+
+_PROGRAM_ENDS_MARKER = b"Program ends"
+_PROGRAM_ENDS_TAIL_BYTES = 1 << 20  # 1 MiB; see _has_program_ends
+
+
+def _has_program_ends(filepath: str) -> bool | None:
+    """Return ``True`` if *filepath* contains ``Program ends``.
+
+    ``None`` if the file is absent or unreadable (caller decides how to
+    treat that -- :func:`_check_normal_termination` ignores absent files
+    as "nothing to assert", while :func:`reconcile_fetched_jobs` treats
+    them as "not yet finished").  The marker is jQMC's final log line, so
+    the last 1 MiB is scanned first.  When stderr is merged into the
+    output file, process shutdown can append any amount of noise after
+    it: tens of KiB of gRPC / coordination-service messages from the JAX
+    distributed shutdown on multi-node GPU runs, or tens of MB of UCX
+    ``munmap(...) failed`` warnings at MPI finalize.  So when the tail
+    has no marker, the whole file is streamed line by line before the
+    run is declared abnormal.
+    """
+    if not os.path.isfile(filepath):
+        return None
+    try:
+        with open(filepath, "rb") as f:
+            f.seek(0, 2)
+            size = f.tell()
+            f.seek(max(0, size - _PROGRAM_ENDS_TAIL_BYTES))
+            if _PROGRAM_ENDS_MARKER in f.read():
+                return True
+            if size <= _PROGRAM_ENDS_TAIL_BYTES:
+                return False
+            f.seek(0)
+            return any(_PROGRAM_ENDS_MARKER in line for line in f)
+    except OSError:
+        return None
+
+
+def _check_normal_termination(directory: str, jobs: list) -> list[str]:
+    """Return output-file names whose contents lack ``Program ends``.
+
+    Only jobs that were *meant* to complete normally are inspected --
+    namely status ``"fetched"`` or ``"completed"``.  Jobs in
+    ``"submitted"``, ``"failed"``, or ``"cancelled"`` status are skipped
+    because their output is expected to be incomplete (still running,
+    already known-failed, or intentionally aborted), and a partial file
+    left over from such a job would otherwise produce a false-positive
+    "abnormal termination" verdict that flips the whole workflow to
+    FAILED.
+
+    Files that are absent on disk are silently skipped -- they say
+    nothing about whether the remote computation ended normally.  Files
+    present without the marker are reported as abnormal terminations
+    (e.g. wall-time kill, process crash).
+    """
+    abnormal: list[str] = []
+    for job in jobs:
+        if job.get("status") not in ("fetched", "completed"):
+            continue
+        output_file = job.get("output_file", "")
+        if not output_file:
+            continue
+        result = _has_program_ends(os.path.join(directory, output_file))
+        if result is False:
+            abnormal.append(output_file)
+    return abnormal
+
+
+def reconcile_fetched_jobs_recursive(directory: str) -> int:
+    """Run :func:`reconcile_fetched_jobs` on *directory* and every nested
+    sub-directory that contains its own ``workflow_state.toml``.
+
+    LRDMC / MCMC / VMC pilots live in subdirectories (``_pilot_b/``,
+    ``_pilot_a/_pilot1/``, ``_pilot/``, ...) and each carries its own
+    state file.  Calling :func:`reconcile_fetched_jobs` only on the
+    top-level workflow directory misses those -- so a pilot job that
+    finished on the cluster but whose state record is stuck on
+    ``"submitted"`` (e.g. orchestrator died between job completion and
+    fetch-finalize) would not be picked up before the production phase
+    tries to resume it via SSH.
+
+    A malformed state.toml in any nested directory is logged and
+    skipped; the walk continues so a single corrupted pilot record
+    does not block production-level reconciliation.
+
+    Returns the total number of jobs reconciled across all directories.
+    """
+    total = 0
+    for dirpath, dirnames, filenames in os.walk(directory):
+        if STATE_FILENAME not in filenames:
+            continue
+        try:
+            total += reconcile_fetched_jobs(dirpath)
+        except Exception as exc:
+            logger.warning(
+                f"reconcile_fetched_jobs_recursive: skipping {dirpath} due to error ({exc.__class__.__name__}: {exc})"
+            )
+    return total
+
+
+def reconcile_fetched_jobs(directory: str) -> int:
+    """Promote orphaned ``[[jobs]]`` records to ``"fetched"``.
+
+    A job whose status is ``"submitted"`` or ``"completed"`` is promoted
+    to ``"fetched"`` when **both**:
+
+    * its ``output_file`` is present locally with a ``Program ends``
+      marker (the run finished normally on remote), AND
+    * at least one ``.h5`` checkpoint is present in the directory
+      (the workflow has a restart point to continue from).
+
+    The ``.h5`` precondition prevents the next phase from crashing with
+    ``"no restart checkpoint found"`` when only the ``.out`` got
+    rsync'd locally but ``restart.h5`` is still on the remote.  In
+    that case we leave the job ``"submitted"`` so the normal
+    ``_submit_and_wait`` resume path re-fetches via SSH.
+
+    Handles the case where the workflow process was killed between
+    job completion and the fetch-finalize state update, while the
+    actual output and restart files have since landed locally
+    (e.g. via rsync or a separate fetch).
+
+    Returns the number of jobs reconciled.
+    """
+    state = read_state(directory)
+    jobs = state.get("jobs", [])
+    if not jobs or not os.path.isdir(directory):
+        return 0
+    # Cheap one-shot listdir: avoids per-job globbing.  Promotion is
+    # only safe if *some* checkpoint is on disk; we don't require an
+    # exact name match because workflows accept several conventions
+    # (``restart.h5``, ``lrdmc.h5``, ``hamiltonian_data_opt_step_*.h5``).
+    has_h5 = any(fn.endswith(".h5") for fn in os.listdir(directory))
+    reconciled = 0
+    for job in jobs:
+        status = job.get("status")
+        if status not in ("submitted", "completed"):
+            continue
+        output_file = job.get("output_file", "")
+        if not output_file:
+            continue
+        if _has_program_ends(os.path.join(directory, output_file)) is not True:
+            continue
+        if not has_h5:
+            logger.warning(
+                f"reconcile_fetched_jobs: not promoting {output_file} -- "
+                f"no .h5 checkpoint in {directory}; will let normal resume "
+                f"path try to fetch the missing checkpoint via SSH."
+            )
+            continue
+        now = _now_iso()
+        job["status"] = "fetched"
+        job.setdefault("completed_at", now)
+        job["fetched_at"] = now
+        reconciled += 1
+    if reconciled:
+        state.setdefault("workflow", {})["updated_at"] = _now_iso()
+        _write(directory, state)
+    return reconciled
+
+
+def validate_completion(
+    directory: str,
+    output_values: dict | None = None,
+    *,
+    target_error: float | None = None,
+    target_tol: float = 1.0,
+    require_energy: bool = False,
+) -> tuple[CompletionStatus, str]:
+    """Single source of truth for workflow termination decisions.
+
+    Used in two modes:
+
+    * **Post-hoc validation** (``target_error=None``) -- called once by
+      :class:`Container` after a workflow reports ``COMPLETED``.  Only
+      irrecoverable failures are detected; returns ``OK`` or ``FAILED``.
+
+    * **Per-iteration check** (``target_error`` given) -- called inside
+      a production loop after each continuation run.  May additionally
+      return ``INCOMPLETE`` when no failure is detected but the
+      statistical error still exceeds ``target_error * target_tol``.
+
+    Checks (in order; short-circuits on first failure):
+
+    1. ``Program ends`` marker missing in any fetched output file
+       -> ``FAILED`` (e.g. wall-time kill, process crash).
+    2. Non-finite energy in ``output_values`` -> ``FAILED``; with
+       ``require_energy`` (post-hoc mode) a missing energy is ``FAILED`` too.
+    3. (target_error mode) ``energy`` not yet recorded -> ``INCOMPLETE``.
+    4. (target_error mode) ``energy_error > target_error * target_tol``
+       -> ``INCOMPLETE``; otherwise -> ``OK``.
+
+    Args:
+        directory (str):
+            Working directory containing ``workflow_state.toml`` and fetched
+            output files.
+        output_values (dict, optional):
+            Scalar results from the workflow (``energy``, ``energy_error``,
+            ...).
+        target_error (float, optional):
+            Target statistical error in Ha.  ``None`` disables the
+            convergence check (post-hoc mode).
+        target_tol (float, default 1.0):
+            Tolerance factor applied to ``target_error``.  The MCMC
+            workflow passes ``1.05`` and the LRDMC workflow ``1.20``.
+        require_energy (bool, default False):
+            Post-hoc mode only: treat a missing ``energy`` as ``FAILED``.
+            Energy-producing workflows (MCMC, LRDMC fixed-step mode) set
+            it so a run whose energy post-processing failed is not
+            reported as a success.  Workflows without an energy (WF, QE,
+            VMC) leave it off.
+
+    Returns:
+        tuple[CompletionStatus, str]:
+            Status (``OK`` / ``FAILED`` / ``INCOMPLETE``) and a
+            human-readable description, which is empty when ``status == OK``.
+    """
+    output_values = output_values or {}
+    state = read_state(directory)
+
+    # -- Check 1: "Program ends" marker in output files ------------
+    abnormal = _check_normal_termination(directory, state.get("jobs", []))
+    if abnormal:
+        files_str = ", ".join(abnormal)
+        return (
+            CompletionStatus.FAILED,
+            f"Abnormal termination: 'Program ends' marker missing in output file(s): {files_str}",
+        )
+
+    # -- Check 2: Non-finite energy --------------------------------
+    import math
+
+    energy = output_values.get("energy")
+    if energy is not None and not math.isfinite(energy):
+        return CompletionStatus.FAILED, f"Non-finite energy detected (E={energy})"
+    if require_energy and target_error is None and energy is None:
+        return CompletionStatus.FAILED, "No energy estimate was obtained from the completed run."
+
+    # -- Check 3/4: Convergence (only in per-iteration mode) -------
+    if target_error is not None:
+        if energy is None:
+            return (
+                CompletionStatus.INCOMPLETE,
+                "No energy estimate yet (no restart checkpoint / measurement).",
+            )
+        err = output_values.get("energy_error")
+        if err is None or not math.isfinite(err):
+            return CompletionStatus.INCOMPLETE, f"energy_error not available (={err})."
+        threshold = target_error * target_tol
+        if err <= threshold:
+            return (
+                CompletionStatus.OK,
+                f"{err:.6g} <= {threshold:.6g} Ha (target*{target_tol:g})",
+            )
+        return (
+            CompletionStatus.INCOMPLETE,
+            f"{err:.6g} > {threshold:.6g} Ha (target*{target_tol:g})",
+        )
+
+    return CompletionStatus.OK, ""
+
+
+def update_status(
+    directory: str,
+    status: str | WorkflowStatus,
+    phase: str | None = None,
+    **extra_fields,
+):
+    """Update the status field (and optional extra fields) in workflow_state.toml.
+
+    Args:
+        directory (str):
+            Working directory containing workflow_state.toml.
+        status (str or WorkflowStatus):
+            New workflow status.
+        phase (str or None):
+            Scientific phase to record.  If given, written to
+            ``[workflow] phase``.
+        **extra_fields:
+            Additional fields.  Keys starting with ``result_`` go into
+            ``[result]``; everything else goes into ``[workflow]``.
+    """
+    # Ensure we work with raw string for VALID_STATUSES check
+    status_str = status.value if isinstance(status, WorkflowStatus) else status
+    if status_str not in VALID_STATUSES:
+        raise ValueError(f"Invalid status '{status_str}'. Must be one of {VALID_STATUSES}")
+    state = read_state(directory)
+    if not state:
+        logger.warning(f"No workflow_state.toml in {directory}; creating minimal one.")
+        state = {"workflow": {}, "jobs": [], "result": {}}
+
+    wf = state.setdefault("workflow", {})
+    # Populate required identity fields if missing (e.g. when called
+    # without a prior Container.create_state).
+    wf.setdefault("label", os.path.basename(os.path.abspath(directory)) or "workflow")
+    wf.setdefault("type", "Workflow")
+    wf.setdefault("created_at", _now_iso())
+    wf["status"] = status_str
+    wf["updated_at"] = _now_iso()
+
+    if phase is not None:
+        state["workflow"]["phase"] = phase.value if hasattr(phase, "value") else phase
+
+    # Merge extra fields into appropriate sections
+    for key, value in extra_fields.items():
+        if key.startswith("result_"):
+            state.setdefault("result", {})[key[7:]] = value
+        else:
+            state["workflow"][key] = value
+
+    _write(directory, state)
+    return state
+
+
+# -- Job history ----------------------------------------------------
+
+
+def add_job(
+    directory: str,
+    input_file: str,
+    output_file: str,
+    job_id: str,
+    server_machine: str,
+    status: str = "submitted",
+    step: int = None,
+    run_id: str = "",
+    job_stdout: str = "",
+    job_stderr: str = "",
+    queue_label: str = "",
+) -> dict:
+    """Append a new job record to the ``[[jobs]]`` list.
+
+    *queue_label* is the ``queue_data.toml`` section the job was
+    submitted with; a restarted driver uses it to count the job against
+    that queue's ``max_job_submit``.
+
+    Returns the newly created job dict.
+    """
+    if status not in VALID_JOB_STATUSES:
+        raise ValueError(f"Invalid job status '{status}'. Must be one of {VALID_JOB_STATUSES}")
+
+    state = read_state(directory)
+    state.setdefault("jobs", [])
+
+    job = {
+        "input_file": input_file,
+        "output_file": output_file,
+        "job_id": str(job_id),
+        "server_machine": server_machine,
+        "status": status,
+        "submitted_at": _now_iso(),
+    }
+    if step is not None:
+        job["step"] = step
+    if run_id:
+        job["run_id"] = run_id
+    if job_stdout:
+        job["job_stdout"] = job_stdout
+    if job_stderr:
+        job["job_stderr"] = job_stderr
+    if queue_label:
+        job["queue_label"] = queue_label
+    state["jobs"].append(job)
+    state.setdefault("workflow", {})["updated_at"] = _now_iso()
+    _write(directory, state)
+    return job
+
+
+def update_job(directory: str, input_file: str, **fields):
+    """Update the latest job record matching *input_file*.
+
+    Common fields: ``status``, ``completed_at``, ``fetched_at``.
+    """
+    state = read_state(directory)
+    jobs = state.get("jobs", [])
+
+    # Find the last matching job (in case of retries)
+    target = None
+    for j in reversed(jobs):
+        if j.get("input_file") == input_file:
+            target = j
+            break
+
+    if target is None:
+        logger.warning(f"No job record for {input_file} in {directory}")
+        return
+
+    target.update(fields)
+    state.setdefault("workflow", {})["updated_at"] = _now_iso()
+    _write(directory, state)
+
+
+def get_job(directory: str, input_file: str) -> dict:
+    """Get the latest job record for *input_file*.
+
+    Returns an empty dict if no matching record is found.
+    """
+    state = read_state(directory)
+    for j in reversed(state.get("jobs", [])):
+        if j.get("input_file") == input_file:
+            return j
+    return {}
+
+
+def get_job_by_step(directory: str, step: int) -> dict:
+    """Get the latest job record for *step*, regardless of run_id.
+
+    Returns an empty dict if no matching record is found.
+    """
+    state = read_state(directory)
+    for j in reversed(state.get("jobs", [])):
+        if j.get("step") == step:
+            return j
+    return {}
+
+
+def get_jobs(directory: str) -> list:
+    """Get all job records from ``[[jobs]]``.
+
+    Returns an empty list if no records or no state file.
+    """
+    state = read_state(directory)
+    return state.get("jobs", [])
+
+
+# -- Result / estimation helpers (unchanged) -----------------------
+
+
+def set_result(directory: str, **result_fields):
+    """Write result data (energy, error, etc.) to workflow_state.toml."""
+    state = read_state(directory)
+    if not state:
+        return
+    state.setdefault("result", {}).update(result_fields)
+    state["workflow"]["updated_at"] = _now_iso()
+    _write(directory, state)
+
+
+def set_estimation(directory: str, **kwargs):
+    """Store step-estimation results in workflow_state.toml.
+
+    Example::
+
+        set_estimation(dir, pilot_steps=100, pilot_error=0.005,
+                       target_error=0.001, estimated_steps=3000)
+    """
+    state = read_state(directory)
+    state.setdefault("estimation", {}).update(kwargs)
+    state.setdefault("workflow", {})["updated_at"] = _now_iso()
+    _write(directory, state)
+
+
+def get_estimation(directory: str) -> dict:
+    """Read the ``[estimation]`` section from workflow_state.toml.
+
+    Returns an empty dict if the section or the file is absent.
+    """
+    state = read_state(directory)
+    return state.get("estimation", {})
+
+
+def get_all_workflow_statuses(base_dir: str) -> list:
+    """Recursively find all ``workflow_state.toml`` files under *base_dir*.
+
+    Returns a list of dicts, each containing:
+
+    - ``directory`` - absolute path to the workflow directory
+    - ``label``     - workflow label (from ``[workflow]``)
+    - ``type``      - workflow type (e.g. ``"vmc"``)
+    - ``status``    - current workflow status
+
+    Directories without a ``workflow_state.toml`` are silently skipped.
+    """
+    results = []
+    base_dir = os.path.abspath(base_dir)
+    for dirpath, dirnames, filenames in os.walk(base_dir):
+        # Skip pilot-run subdirectories -- they have workflow_state.toml
+        # but are internal bookkeeping, not user-facing workflows.
+        dirnames[:] = [d for d in dirnames if not d.startswith("_pilot")]
+        if STATE_FILENAME in filenames:
+            state = read_state(dirpath)
+            wf = state.get("workflow", {})
+            results.append(
+                {
+                    "directory": dirpath,
+                    "label": wf.get("label", ""),
+                    "type": wf.get("type", ""),
+                    "status": wf.get("status", "unknown"),
+                }
+            )
+    # Sort by directory for deterministic output
+    results.sort(key=lambda r: r["directory"])
+    return results
+
+
+def get_workflow_summary(directory: str) -> dict:
+    """Return a comprehensive summary of the workflow in *directory*.
+
+    The returned dict contains:
+
+    - ``workflow`` - label, type, status, timestamps
+    - ``phase``    - current scientific phase (str or ``"init"``)
+    - ``allowed_actions`` - list of permitted MCP actions
+    - ``result``   - any stored results (energy, etc.)
+    - ``estimation`` - step-estimation data (if present)
+    - ``jobs``     - list of job records (each includes accounting
+      and scheduler file info when available)
+    - ``num_jobs`` - total number of job records
+    - ``error``    - ``[error]`` section or ``None``
+    - ``artifacts`` - ``[[artifacts]]`` list
+
+    Returns an empty dict if no ``workflow_state.toml`` is found.
+    """
+    state = read_state(directory)
+    if not state:
+        return {}
+
+    jobs = state.get("jobs", [])
+    phase_str = state.get("workflow", {}).get("phase", "init")
+    status_str = state.get("workflow", {}).get("status", "pending")
+
+    # Compute allowed_actions (lazy import to avoid circular dependency)
+    try:
+        from ._phase import ScientificPhase, allowed_actions
+
+        aa = allowed_actions(ScientificPhase(phase_str), WorkflowStatus(status_str))
+    except (ValueError, ImportError):
+        aa = []
+
+    return {
+        "workflow": state.get("workflow", {}),
+        "phase": phase_str,
+        "allowed_actions": aa,
+        "result": state.get("result", {}),
+        "estimation": state.get("estimation", {}),
+        "jobs": jobs,
+        "num_jobs": len(jobs),
+        "error": state.get("error", None),
+        "artifacts": state.get("artifacts", []),
+    }
+
+
+# -- Error / accounting / artifact helpers -------------------------
+
+
+def set_error(directory: str, message: str, **context) -> None:
+    """Write error information to the ``[error]`` section.
+
+    Args:
+        directory (str):
+            Working directory containing workflow_state.toml.
+        message (str):
+            Human-readable error description (exception message, etc.).
+        **context:
+            Arbitrary extra fields (``traceback``, ``exception_type``, ...).
+    """
+    state = read_state(directory)
+    state["error"] = {"message": message, **context}
+    state.setdefault("workflow", {})["updated_at"] = _now_iso()
+    _write(directory, state)
+
+
+def save_job_accounting(
+    directory: str,
+    command: str,
+    stdout: str,
+    stderr: str = "",
+    job_id: str = "",
+) -> tuple:
+    """Write scheduler accounting to a text file.
+
+    Returns ``(acct_command, acct_filename)`` so the caller can store
+    them in the ``[[jobs]]`` record via :func:`update_job`.
+    """
+    if job_id:
+        acct_filename = f"job_accounting_{job_id}.txt"
+    else:
+        acct_filename = "job_accounting.txt"
+    acct_path = os.path.join(directory, acct_filename)
+    os.makedirs(directory, exist_ok=True)
+    with open(acct_path, "w") as f:
+        f.write(f"# command: {command}\n")
+        f.write(f"# job_id: {job_id}\n\n")
+        f.write("--- stdout ---\n")
+        f.write(stdout)
+        if stderr:
+            f.write("\n--- stderr ---\n")
+            f.write(stderr)
+    return command, acct_filename
+
+
+def register_artifact(
+    directory: str,
+    filename: str,
+    produced_by_job: str = "",
+    artifact_type: str = "file",
+    upstream: list[dict] | None = None,
+) -> None:
+    """Register (or update) a file artifact in ``[[artifacts]]``."""
+    state = read_state(directory)
+    artifacts = state.setdefault("artifacts", [])
+    # Replace existing entry for the same filename
+    artifacts[:] = [a for a in artifacts if a.get("filename") != filename]
+    entry: dict = {
+        "filename": filename,
+        "produced_by_job": produced_by_job,
+        "produced_at": _now_iso(),
+        "artifact_type": artifact_type,
+    }
+    if upstream:
+        entry["upstream"] = upstream
+    artifacts.append(entry)
+    state["artifacts"] = artifacts
+    state.setdefault("workflow", {})["updated_at"] = _now_iso()
+    _write(directory, state)
+
+
+def get_artifact_lineage(directory: str, filename: str) -> dict | None:
+    """Return the artifact record for *filename*, or ``None``."""
+    for a in read_state(directory).get("artifacts", []):
+        if a.get("filename") == filename:
+            return a
+    return None
+
+
+def get_artifact_registry(directory: str) -> list[dict]:
+    """Return all artifact records from ``[[artifacts]]``."""
+    return read_state(directory).get("artifacts", [])
+
+
+def set_input_fingerprints(directory: str, fingerprints: dict[str, dict]) -> None:
+    """Record input-file fingerprints in ``[input_fingerprints]``.
+
+    Args:
+        directory (str):
+            Working directory containing workflow_state.toml.
+        fingerprints (dict[str, dict]):
+            Mapping ``{basename: {"size": int, "mtime": float}}``.
+    """
+    state = read_state(directory)
+    state["input_fingerprints"] = fingerprints
+    state.setdefault("workflow", {})["updated_at"] = _now_iso()
+    _write(directory, state)
+
+
+def get_input_fingerprints(directory: str) -> dict[str, dict]:
+    """Return the recorded input-file fingerprints, or empty dict."""
+    return read_state(directory).get("input_fingerprints", {})
+
+
+def _write(directory: str, state: dict):
+    """Write state dict to workflow_state.toml atomically.
+
+    Writes to a sibling ``.tmp`` file, ``fsync``s it, then ``os.replace``s
+    over the destination.  This guarantees that ``workflow_state.toml``
+    either reflects the previous successful write or the new state in
+    full -- never a truncated mix -- even if the process is killed
+    mid-write (SIGKILL, power loss, ...).
+    """
+    path = os.path.join(directory, STATE_FILENAME)
+    os.makedirs(directory, exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        toml.dump(state, f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)

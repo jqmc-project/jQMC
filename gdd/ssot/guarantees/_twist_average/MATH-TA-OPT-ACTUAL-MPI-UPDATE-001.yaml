@@ -1,0 +1,31 @@
+id: MATH-TA-OPT-ACTUAL-MPI-UPDATE-001
+kind: mathematical
+name: Actual MPI twist optimizer updates against independent sampled models
+plain_language: >-
+  The actual two-rank run_twist_average_optimize driver, without replacing its communicator split or collectives,
+  applies the fixed-BZ weighted shared J1/J2 update computed independently from its two captured sampled batches.
+  Named real SR, accepted LM and uncapped aSR host/device cases and complex-Bloch representative cases compare
+  consumed energy and derivative sources to same-mode primal and forward autodiff evaluations, then compare the
+  target and applied parameters to independent dense SR, nonsymmetric LM or one-dimensional aSR models.
+  Both twists retain identical shared parameters. Replacing the production BZ normalization with uniform weights
+  must fail the same numerical reference. All verdicts are deterministic on saved samples, not statistical bands.
+  Device denotes the JAX batch implementation, not GPU coverage; complex inputs optimize real Jastrow coordinates.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_update_mpi.py::test_actual_mpi_twist_optimizer_matches_sampled_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: real-sr-host}
+    - {case: real-sr-device}
+    - {case: real-lm-host}
+    - {case: real-lm-device}
+    - {case: real-asr-host}
+    - {case: real-asr-device}
+    - {case: complex-sr-host}
+    - {case: complex-lm-device}
+    - {case: complex-asr-host}
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_update_mpi.py::test_actual_mpi_twist_optimizer_rejects_uniform_bz_weights
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

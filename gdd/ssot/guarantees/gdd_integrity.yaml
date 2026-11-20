@@ -1,0 +1,11 @@
+schema_version: 1
+document:
+  id: jqmc.gdd_integrity
+  version: 1
+  lifecycle: cutover
+  title: GDD integrity against false green and policy weakening
+  purpose: Bind the CI and GDD-machinery checks that keep a wrong jQMC result or an accepted wrong input from passing as
+    green, either because a required case did not run, failed or was never selected, or because a change weakened the
+    policy that judges it. No other CI or GDD-operations guarantee belongs in the ledger.
+guarantees:
+  layout: one-file-per-guarantee

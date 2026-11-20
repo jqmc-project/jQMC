@@ -1,0 +1,18 @@
+id: IMPL-RS-DTN-F-STRAIN-LIVE-001
+kind: implementation
+name: Native periodic DTN energy strain includes the live three-body f channel
+plain_language: >-
+  The committed pbc_gamma_sphepgto_jdtn fixture with existing DTN seed 5 and electron seed 1
+  retains use_f=True. Its standalone native DTN kinetic-strain tensor differs from the
+  f-disabled tensor beyond the existing XLA/Rust medium parity band. The complete native
+  kinetic, Ewald and ECP strain sum is finite and matches the existing same-mode direct
+  strained-energy autodiff plus comoving-cutoff policy correction. Full and mixed preserve
+  the original comparison function and central tolerance. This full-channel sibling adds
+  evidence without replacing the original u/chi-only row or altering DTN's distance law.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_stress_pbc_dtn_f.py::test_grad_eL_pbc_dtn_strain_uchif
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

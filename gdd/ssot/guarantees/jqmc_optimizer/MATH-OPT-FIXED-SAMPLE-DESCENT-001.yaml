@@ -1,0 +1,13 @@
+id: MATH-OPT-FIXED-SAMPLE-DESCENT-001
+kind: mathematical
+name: Real-sampler optimization step lowers the fixed-sample energy
+plain_language: For SR (host and device, two epsilons, J2 frozen) and full-space LM steps of MCMC.run_optimize on H2 with
+  a real sampler, the reweighted energy of the same stored walker configurations, re-evaluated independently at the applied
+  parameters, is lower than at the starting parameters, and higher at the reflected step, by more than the zone tolerance.
+  This is a deterministic statement about fixed samples, not a sampling-convergence claim.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_run_optimize_step_lowers_the_fixed_sample_energy

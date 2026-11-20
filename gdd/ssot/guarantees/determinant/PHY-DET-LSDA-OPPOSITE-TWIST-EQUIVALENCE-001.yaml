@@ -1,0 +1,26 @@
+id: PHY-DET-LSDA-OPPOSITE-TWIST-EQUIVALENCE-001
+kind: physical
+name: Conjugating the whole down determinant leaves every real fixed-phase quantity unchanged
+plain_language: >-
+  For an independent-spin (LSDA) Slater determinant with a real Jastrow factor and a real Hamiltonian (no vector
+  potential, no spin-orbit coupling), the down-spin channel built from its own +k orbitals and the down-spin channel
+  built from their complex conjugates (conjugated coefficients on the with_negated_k() AO leaf, i.e. that channel's -k
+  orbitals) give, at every electron configuration, the same ln|Psi|, the same real local energy, the same real
+  non-local ECP candidates and the same real LRDMC projection terms (discretized-kinetic hop amplitudes and their
+  fixed-node clipping signs, diagonal, off-diagonal and measurement energies for T-move and DLT-move); the down orbital
+  values, gradients and Laplacians are exact conjugates, the up-electron kinetic terms are equal and the down-electron
+  ones conjugate. Imaginary parts of down-electron terms change sign and are not compared. Evidence: the committed QE
+  O-lsda_k025 fixture (ccECP O, k=(1/4,1/4,1/4), N_up=4 > N_dn=2, distinct alpha and beta bands) converted with each
+  AO kind, J2 and a random real symmetric J3, at two configurations with one down electron in the ECP core and one
+  near a cell face, compared at the strict zone budget of the evaluated chain, on XLA and on the native Rust kernels
+  (ln|det|, real e_L, real ECP energy, real LRDMC e_L / b_L and candidate counts), full and mixed separately.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_lsda_opposite_spin_twist.py::test_down_conjugation_preserves_real_fixed_phase_terms
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{kind: pgto}, {kind: pw}, {kind: pgto+pw}, {kind: bspline}, {kind: pgto+bspline}]
+  - pytest_node: tests/test_rs_kernel/test_lsda_opposite_spin_twist_native.py::test_native_down_conjugation_preserves_real_fixed_phase_terms
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{kind: pgto}, {kind: pw}, {kind: pgto+pw}, {kind: bspline}, {kind: pgto+bspline}]

@@ -1,0 +1,24 @@
+id: OPS-DERIV-DTN-EAGER-COMPILE-STABLE-001
+kind: operational
+name: Repeated eager DTN derivative calls compile nothing new
+plain_language: >-
+  Calling the analytic derivative kernels eagerly (assemble.compute_grad_e_L with wrt="R" and wrt="r", and
+  dtn.grad_T_dtn_wrt_r, outside jax.jit) again on the same periodic DTN Hamiltonian and electron configuration
+  reuses the XLA programs of the first call. On the committed all-electron H4 periodic Gamma input and the
+  committed ccECP lithium periodic Gamma input (whose nuclear force also streams the per-config DTN Pulay force
+  over the ECP one-move mesh), each with J1, J2 and an active DTN Jastrow (u, chi and f channels), the second and third calls record no JAX lowering event and
+  no XLA backend compile, counted with jax.monitoring after the first call has compiled, and every call returns
+  the values of the first within the same-precision reduction-order pair (ATOL/RTOL_REDUCTION_ORDER): on GPU the
+  ECP nuclear force accumulates with XLA scatter-adds whose atomics add in a run-dependent order. An eager call that compiled and loaded a new executable for every DTN
+  pair-chunk lax.scan would let a test that calls these kernels many times exhaust vm.max_map_count and abort
+  the worker. Full and mixed precision are checked separately.
+verdict_methods:
+- VM-OPS-SET-CLOSURE-001
+required_evidence:
+- verdict_method: VM-OPS-SET-CLOSURE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_dtn_compile_stability.py::test_repeated_eager_dtn_derivatives_compile_nothing_new
+    required_parameter_cases:
+    - {trexio_filename: H4_pbc_ae_cart.h5}
+    - {trexio_filename: lithium.h5}
+    required_precision_modes: [full, mixed]

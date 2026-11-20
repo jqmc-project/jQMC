@@ -1,0 +1,43 @@
+id: IMPL-RS-TWIST-DTN-J3-DRIFT-001
+kind: implementation
+name: Native complex-twist DTN energy derivatives include real J3 drift
+plain_language: >-
+  With active real J3 and DTN on a non-Gamma twist, the native real-projected
+  DTN alpha, beta and gamma local-energy derivatives match independent XLA
+  autodiff on the same inputs. The committed Li ECP twist combines native
+  kinetic and nonlocal ECP sources. The committed all-electron H4 twist also
+  requires a nonzero gamma derivative, exercising the f channel.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_dtn_with_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture_path: tests/trexio_example_files/lithium_k025.h5, has_ecp: true}
+    - {fixture_path: tests/trexio_example_files/H4_pbc_ae_k025_cart.h5, has_ecp: false}
+    executable_checks:
+      dtn-gamma-energy:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_dtn_with_j3#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-real-projected-energy-source, expression: comparison_actual_1}
+        reference: {role: xla-ad-real-local-energy, expression: comparison_reference_1}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}
+      dtn-alpha-energy:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_dtn_with_j3#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-real-projected-energy-source, expression: comparison_actual_2}
+        reference: {role: xla-ad-real-local-energy, expression: comparison_reference_2}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}
+      dtn-beta-energy:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_dtn_with_j3#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-real-projected-energy-source, expression: comparison_actual_3}
+        reference: {role: xla-ad-real-local-energy, expression: comparison_reference_3}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}

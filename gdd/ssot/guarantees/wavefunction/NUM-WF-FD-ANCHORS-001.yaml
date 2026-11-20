@@ -1,0 +1,33 @@
+id: NUM-WF-FD-ANCHORS-001
+kind: numerical
+name: Finite-difference anchor of the periodic log derivative
+plain_language: The autodiff gradient of ln psi on the periodic dummy geminal agrees with an independent central finite
+  difference across every periodic leaf and composite kind.
+verdict_methods:
+- VM-NUM-FD-ANCHOR-001
+required_evidence:
+- verdict_method: VM-NUM-FD-ANCHOR-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction::test_evaluate_ln_wavefunction_periodic_log_derivative
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {kind: pw}
+    - {kind: bspline}
+    - {kind: pgto}
+    - {kind: pgto+pw}
+    - {kind: pgto+bspline}
+    executable_checks:
+      fd-up:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: autodiff-up-log-gradient, expression: grad_ln_up_np}
+        reference: {role: independent-central-fd-up-log-gradient, expression: fd_up}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, jastrow_eval, wf_kinetic]}
+      fd-down:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: autodiff-down-log-gradient, expression: grad_ln_dn_np}
+        reference: {role: independent-central-fd-down-log-gradient, expression: fd_dn}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, jastrow_eval, wf_kinetic]}

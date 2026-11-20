@@ -1,0 +1,57 @@
+id: MATH-MCMC-AS-FACTOR-ROBUST-DECISIONS-001
+kind: mathematical
+name: Metropolis decisions with a tiny current geminal row or a tiny proposed determinant ratio are exact under AS guiding
+plain_language: >-
+  The XLA MCMC kernels (two-spin and up-only), the native sweep (ObsCtx.mcmc_sweep) and the
+  native single move (jqmc_rs._single_move) evaluate the Attaccalite-Sorella factor R_AS = (S F)^(-3/8) of the current
+  and of the proposed configuration without an underflowing S, an overflowing F or a cancelled proposed row / column
+  norm, so that each single-electron Metropolis decision equals the decision of the exact AS-guided acceptance
+  min(1, |psi'/psi|^2 T'/T (g(R_AS')/g(R_AS))^2), g(R) = max(R, epsilon_AS)/R (g = 1 at epsilon_AS = 0). In particular a
+  walker whose geminal row is below sqrt(tiny) ~ 1.5e-154 is not frozen, and a move with a tiny determinant ratio is
+  never accepted with probability 1 because of the AS factor. Evidence (no Jastrow, Dt = 2, epsilon_AS 0 and 0.1, from
+  an exact numpy inverse): one electron in a normalized x^12 exp(-r^2) orbital on Z = 7, x = 1e-14 -> 0.3 (|G| ~ 4e-171,
+  exact acceptance 1) and 1.0 -> 0.05 (exact acceptance ~4e-31); committed H2 cc-pVDZ electron 0 (up and down) moved
+  +12 and +17 bohr along x (log10|R| ~ -8.6 and -16.3); committed water ccECP cc-pVQZ (PCG64 seed 2025 start) up
+  electron 0 moved +30 bohr. XLA uniform draws 0.01 / 0.5 / 0.99; native keys: the first threefry key selecting the
+  move with a draw in each third of [0, 1). Reference: rebuilt-G slogdet or the closed-form orbital, the Kato-width
+  Gaussian transition density in numpy, and R_AS from a row-rescaled log-domain evaluation with numpy's inverse
+  (exactly 1 for every 1x1 geminal). Decisions are exact. Full and mixed are judged separately (the x^12 state is
+  injected in float64 in both). This is fixed-input single-move decision accuracy, not a statistical test.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_as_factor_robust.py::test_xla_as_factor_single_move_decisions_are_exact
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {name: power-underflow, epsilon: 0.0}
+    - {name: power-underflow, epsilon: 0.1}
+    - {name: power-cancel, epsilon: 0.0}
+    - {name: power-cancel, epsilon: 0.1}
+    - {name: h2-up-12, epsilon: 0.0}
+    - {name: h2-up-12, epsilon: 0.1}
+    - {name: h2-up-17, epsilon: 0.0}
+    - {name: h2-up-17, epsilon: 0.1}
+    - {name: h2-down-12, epsilon: 0.0}
+    - {name: h2-down-12, epsilon: 0.1}
+    - {name: h2-down-17, epsilon: 0.0}
+    - {name: h2-down-17, epsilon: 0.1}
+    - {name: water-up-30, epsilon: 0.0}
+    - {name: water-up-30, epsilon: 0.1}
+  - pytest_node: tests/test_rs_kernel/test_mcmc_as_factor_robust_native.py::test_native_as_factor_single_move_decisions_are_exact
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {name: power-underflow, epsilon: 0.0}
+    - {name: power-underflow, epsilon: 0.1}
+    - {name: power-cancel, epsilon: 0.0}
+    - {name: power-cancel, epsilon: 0.1}
+    - {name: h2-up-12, epsilon: 0.0}
+    - {name: h2-up-12, epsilon: 0.1}
+    - {name: h2-up-17, epsilon: 0.0}
+    - {name: h2-up-17, epsilon: 0.1}
+    - {name: h2-down-12, epsilon: 0.0}
+    - {name: h2-down-12, epsilon: 0.1}
+    - {name: h2-down-17, epsilon: 0.0}
+    - {name: h2-down-17, epsilon: 0.1}
+    - {name: water-up-30, epsilon: 0.0}
+    - {name: water-up-30, epsilon: 0.1}

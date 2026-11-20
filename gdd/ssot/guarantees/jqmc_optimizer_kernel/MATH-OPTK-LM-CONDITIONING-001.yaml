@@ -1,0 +1,25 @@
+id: MATH-OPTK-LM-CONDITIONING-001
+kind: mathematical
+name: LM correlation conditioning keeps a maximal set with lambda_min at least lm_cond
+plain_language: >-
+  The LM conditioning keeps a coordinate set A whose correlation matrix satisfies lambda_min(C_A) >= lm_cond up to
+  the documented round-off slack 2 n eps, checked by an independent symmetric eigensolve, and the set is maximal
+  under single additions: adding any removed coordinate gives lambda_min <= lm_cond + 2 n eps. On a constructed
+  rank-deficient metric (exact duplicate, exact linear combination, one correlated pair above and one below the
+  cutoff, distinct coordinate scales) the kept set equals the analytically known survivors. Of two exactly
+  duplicated coordinates the first index is kept. On sampled rank-deficient metrics with more coordinates than
+  samples and near-collinear columns, larger than one LAPACK block, the kept set equals an independent unblocked
+  NumPy pivoted-Cholesky oracle of C - lm_cond I.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_lm_conditioning_keeps_analytic_survivors_of_rank_deficient_metric
+    required_parameter_cases: [{cutoff: 0.001}, {cutoff: 0.01}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_lm_conditioning_keeps_the_first_of_exactly_duplicated_coordinates
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_lm_conditioning_matches_pivoted_cholesky_oracle_on_sampled_rank_deficient_metric
+    required_parameter_cases: [{cutoff: 0.001, seed: 8550}, {cutoff: 0.001, seed: 8551}, {cutoff: 0.01, seed: 8550}, {cutoff: 0.01, seed: 8551}, {cutoff: 0.3, seed: 8550}, {cutoff: 0.3, seed: 8551}]
+    required_precision_modes: [full, mixed]

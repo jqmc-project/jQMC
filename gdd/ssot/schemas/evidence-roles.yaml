@@ -1,0 +1,17 @@
+schema_format: 1
+schema_id: gdd.evidence-roles.v1
+match:
+  path: gdd/ssot/evidence_roles.yaml
+document_schema_version: 1
+required_top_level:
+- schema_version
+- document
+- enforcement_map
+- nodes
+prose_keys_extra:
+- expression
+- actual
+- reference
+- atol
+- rtol
+- meaning

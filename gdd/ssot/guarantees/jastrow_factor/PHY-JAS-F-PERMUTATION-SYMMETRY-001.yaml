@@ -1,0 +1,65 @@
+id: PHY-JAS-F-PERMUTATION-SYMMETRY-001
+kind: physical
+name: Permutation symmetry of the DTN f channel
+plain_language: The DTN f channel is symmetric under the physical particle permutations.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_f_permutation_symmetry
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints.test_dtn_f_permutation_symmetry#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J_orig
+        reference:
+          role: existing-test-reference
+          expression: J_swap
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints.test_dtn_f_permutation_symmetry#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J_orig
+        reference:
+          role: existing-test-reference
+          expression: J_orig_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints.test_dtn_f_permutation_symmetry#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J_swap
+        reference:
+          role: existing-test-reference
+          expression: J_swap_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval

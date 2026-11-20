@@ -1,0 +1,36 @@
+id: MATH-PREC-NOINV-DET-TRANSLATION-INVARIANCE-001
+kind: mathematical
+name: No-inverse analytic determinant position derivatives are translation invariant in full and mixed
+plain_language: >-
+  On five committed determinant-only fixtures without a Jastrow factor (N all-electron cc-pVDZ Cartesian as SD and as
+  dense AO AGP, H2 all-electron cc-pVDZ spherical as AGPn, the periodic real-Gamma bcc Li ccECP and its complex twist
+  k=(0.25,0,0)), at the seed-0 electron configuration drawn with scale 0.7, the public analytic
+  jqmc.derivatives.compute_grad_ln_Psi is evaluated without a supplied geminal inverse for the nuclear (R) and electron
+  (r) axes. A rigid translation of all electrons and nuclei leaves the determinant unchanged, so the sum over atoms of
+  d ln|Psi|/dR plus the sum over electrons of d ln|Psi|/dr is exactly zero for any inverse that both axes share. The
+  residual is compared with zero under the strict det_grad_lap and ao_grad_lap budget (float64 in both modes), with a
+  witnessed live drift. Without a supplied inverse both axes must assemble the geminal and its fresh inverse from the
+  fused orbital value table (the fused-table rule); inverting the value-only ao_eval table (float32 in mixed) on the
+  nuclear axis breaks the cancellation in mixed. This does not claim the
+  Jastrow part (its drift is the float32 jastrow_grad_lap zone in mixed), supplied-inverse routes, or the native route.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noinv_fused_geminal_table.py::test_noinv_det_position_derivatives_are_translation_invariant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: N_ae_ccpvdz_cart.h5, geminal: SD}
+    - {trexio_file: N_ae_ccpvdz_cart.h5, geminal: AGP}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, geminal: AGPn}
+    - {trexio_file: lithium.h5, geminal: SD}
+    - {trexio_file: lithium_k025.h5, geminal: SD}
+    executable_checks:
+      noinv-det-translation-residual:
+        site: tests/test_jqmc_kernel/test_noinv_fused_geminal_table.py::test_noinv_det_position_derivatives_are_translation_invariant#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: noinv-det-translation-residual, expression: residual}
+        reference: {role: exact-translation-invariance-zero, expression: np.zeros(3)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_grad_lap, ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_grad_lap, ao_grad_lap]}

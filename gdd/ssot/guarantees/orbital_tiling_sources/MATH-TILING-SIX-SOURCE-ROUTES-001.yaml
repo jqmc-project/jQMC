@@ -1,0 +1,99 @@
+id: MATH-TILING-SIX-SOURCE-ROUTES-001
+kind: mathematical
+name: Six real-source supercell routes agree in energy force and stress
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  QE and PySCF TREXIO each support physical-supercell Gamma, one general k and
+  a nonuniform weighted twist ensemble from complete primitive k cosets. For
+  each sector and the weighted aggregate, tiled and ordinary explicit-supercell
+  orbitals agree in kinetic, potential and total local energy, every physical
+  atomic derivative and all nine raw strain derivatives. XLA autograd equals
+  analytical and Rust analytical equals XLA analytical. Finite J1/J2 and
+  independent supercell J3 with cross-cell M, and finite DTN as a separate
+  family, participate. Restricted Li and independent-spin O are actual source
+  fixtures; both precisions and every source backend are required.
+verdict_methods: [VM-MATH-REFERENCE-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_source_routes.py::test_six_source_routes_energy_force_stress
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {source: qe, backend: pw, mode: gamma, family: j123, independent: false}
+    - {source: qe, backend: pw, mode: gamma, family: j123, independent: true}
+    - {source: qe, backend: pw, mode: gamma, family: dtn, independent: false}
+    - {source: qe, backend: pw, mode: gamma, family: dtn, independent: true}
+    - {source: qe, backend: pw, mode: general, family: j123, independent: false}
+    - {source: qe, backend: pw, mode: general, family: j123, independent: true}
+    - {source: qe, backend: pw, mode: general, family: dtn, independent: false}
+    - {source: qe, backend: pw, mode: general, family: dtn, independent: true}
+    - {source: qe, backend: pw, mode: average, family: j123, independent: false}
+    - {source: qe, backend: pw, mode: average, family: j123, independent: true}
+    - {source: qe, backend: pw, mode: average, family: dtn, independent: false}
+    - {source: qe, backend: pw, mode: average, family: dtn, independent: true}
+    - {source: qe, backend: bspline, mode: gamma, family: j123, independent: false}
+    - {source: qe, backend: bspline, mode: gamma, family: j123, independent: true}
+    - {source: qe, backend: bspline, mode: gamma, family: dtn, independent: false}
+    - {source: qe, backend: bspline, mode: gamma, family: dtn, independent: true}
+    - {source: qe, backend: bspline, mode: general, family: j123, independent: false}
+    - {source: qe, backend: bspline, mode: general, family: j123, independent: true}
+    - {source: qe, backend: bspline, mode: general, family: dtn, independent: false}
+    - {source: qe, backend: bspline, mode: general, family: dtn, independent: true}
+    - {source: qe, backend: bspline, mode: average, family: j123, independent: false}
+    - {source: qe, backend: bspline, mode: average, family: j123, independent: true}
+    - {source: qe, backend: bspline, mode: average, family: dtn, independent: false}
+    - {source: qe, backend: bspline, mode: average, family: dtn, independent: true}
+    - {source: qe, backend: pgto, mode: gamma, family: j123, independent: false}
+    - {source: qe, backend: pgto, mode: gamma, family: j123, independent: true}
+    - {source: qe, backend: pgto, mode: gamma, family: dtn, independent: false}
+    - {source: qe, backend: pgto, mode: gamma, family: dtn, independent: true}
+    - {source: qe, backend: pgto, mode: general, family: j123, independent: false}
+    - {source: qe, backend: pgto, mode: general, family: j123, independent: true}
+    - {source: qe, backend: pgto, mode: general, family: dtn, independent: false}
+    - {source: qe, backend: pgto, mode: general, family: dtn, independent: true}
+    - {source: qe, backend: pgto, mode: average, family: j123, independent: false}
+    - {source: qe, backend: pgto, mode: average, family: j123, independent: true}
+    - {source: qe, backend: pgto, mode: average, family: dtn, independent: false}
+    - {source: qe, backend: pgto, mode: average, family: dtn, independent: true}
+    - {source: trexio, backend: sphe, mode: gamma, family: j123, independent: false}
+    - {source: trexio, backend: sphe, mode: gamma, family: j123, independent: true}
+    - {source: trexio, backend: sphe, mode: gamma, family: dtn, independent: false}
+    - {source: trexio, backend: sphe, mode: gamma, family: dtn, independent: true}
+    - {source: trexio, backend: sphe, mode: general, family: j123, independent: false}
+    - {source: trexio, backend: sphe, mode: general, family: j123, independent: true}
+    - {source: trexio, backend: sphe, mode: general, family: dtn, independent: false}
+    - {source: trexio, backend: sphe, mode: general, family: dtn, independent: true}
+    - {source: trexio, backend: sphe, mode: average, family: j123, independent: false}
+    - {source: trexio, backend: sphe, mode: average, family: j123, independent: true}
+    - {source: trexio, backend: sphe, mode: average, family: dtn, independent: false}
+    - {source: trexio, backend: sphe, mode: average, family: dtn, independent: true}
+    - {source: trexio, backend: cart, mode: gamma, family: j123, independent: false}
+    - {source: trexio, backend: cart, mode: gamma, family: j123, independent: true}
+    - {source: trexio, backend: cart, mode: gamma, family: dtn, independent: false}
+    - {source: trexio, backend: cart, mode: gamma, family: dtn, independent: true}
+    - {source: trexio, backend: cart, mode: general, family: j123, independent: false}
+    - {source: trexio, backend: cart, mode: general, family: j123, independent: true}
+    - {source: trexio, backend: cart, mode: general, family: dtn, independent: false}
+    - {source: trexio, backend: cart, mode: general, family: dtn, independent: true}
+    - {source: trexio, backend: cart, mode: average, family: j123, independent: false}
+    - {source: trexio, backend: cart, mode: average, family: j123, independent: true}
+    - {source: trexio, backend: cart, mode: average, family: dtn, independent: false}
+    - {source: trexio, backend: cart, mode: average, family: dtn, independent: true}
+    - {source: qe, backend: pgto+pw, mode: gamma, family: j123, independent: false}
+    - {source: qe, backend: pgto+pw, mode: gamma, family: j123, independent: true}
+    - {source: qe, backend: pgto+pw, mode: gamma, family: dtn, independent: false}
+    - {source: qe, backend: pgto+pw, mode: gamma, family: dtn, independent: true}
+    - {source: qe, backend: pgto+pw, mode: general, family: j123, independent: false}
+    - {source: qe, backend: pgto+pw, mode: general, family: j123, independent: true}
+    - {source: qe, backend: pgto+pw, mode: general, family: dtn, independent: false}
+    - {source: qe, backend: pgto+pw, mode: general, family: dtn, independent: true}
+    - {source: qe, backend: pgto+pw, mode: average, family: j123, independent: false}
+    - {source: qe, backend: pgto+pw, mode: average, family: j123, independent: true}
+    - {source: qe, backend: pgto+pw, mode: average, family: dtn, independent: false}
+    - {source: qe, backend: pgto+pw, mode: average, family: dtn, independent: true}
+  - pytest_node: tests/test_jqmc_kernel/test_streamed_ecp_mesh_ratio_table.py::test_tiled_streamed_ecp_strain_matches_supercell_rank_one_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

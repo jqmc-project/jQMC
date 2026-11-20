@@ -1,0 +1,17 @@
+schema_format: 1
+schema_id: gdd.schema.symbol-ownership.v1
+match:
+  path: gdd/ssot/symbol_ownership.yaml
+document_schema_version: 1
+required_top_level:
+  - schema_version
+  - contract_id
+  - lifecycle
+  - plain_language
+  - discovery_policy
+  - non_python_boundaries
+  - ownership
+optional_top_level:
+  - out_of_scope_packages
+document_block: null
+prose_keys_extra: []

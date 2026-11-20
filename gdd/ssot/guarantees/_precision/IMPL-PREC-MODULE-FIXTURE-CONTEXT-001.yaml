@@ -1,0 +1,21 @@
+id: IMPL-PREC-MODULE-FIXTURE-CONTEXT-001
+kind: implementation
+name: Requested precision and non-native backend guard precede module model fixtures
+plain_language: >-
+  Pytest establishes the requested Python precision and disables CPU Rust dispatch
+  for non-native suites before module-scoped model fixtures are constructed.
+  The module context lasts through those fixtures, the existing per-test resets
+  remain, and test_rs_kernel keeps its native-suite opt-out. A module-scoped
+  snapshot records construction-time context before function fixtures can mask
+  an incorrect setup. The rule concerns fixture construction, with all existing
+  scientific Full/Mixed, FD, algebra and case obligations retained.
+  The same registered detector runs in a fresh internal unsharded child with
+  startup Rust enabled and official receipt emission disabled; its outer
+  test keeps the ordinary test sharding and evidence obligations.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_module_execution_context.py::test_module_models_receive_requested_execution_context
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

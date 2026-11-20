@@ -1,0 +1,17 @@
+id: MATH-MCMC-AS-ZERO-EPSILON-UNGUIDED-001
+kind: mathematical
+name: With epsilon_AS = 0 the MCMC drivers ignore the AS factor, also for a walker with a vanishing geminal
+plain_language: >-
+  With epsilon_AS = 0 the guiding function is psi itself: the XLA and the native MCMC drivers neither
+  reject a proposal nor weight a walker through the AS factor (guiding ratio exactly 1, stored w_L exactly 1), even
+  when the factor of the current state is degenerate. Evidence: one walker of the x^12 exp(-r^2) model on Z = 7 started
+  at x = 1e-14 (|G| ~ 4e-171 in full precision, exactly 0 under the float32 ao_eval of mixed precision), mcmc_seed 34,
+  Dt 2, ten proposals per measurement, 20 measurements, JQMC_FLAG_RUST_ON_CPU 0 and 1. The walker must accept at
+  least one move and leave the start, and every stored w_L must equal 1 exactly. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_as_factor_robust.py::test_driver_walker_leaves_an_underflowing_state_at_zero_epsilon
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{rust: '0'}, {rust: '1'}]

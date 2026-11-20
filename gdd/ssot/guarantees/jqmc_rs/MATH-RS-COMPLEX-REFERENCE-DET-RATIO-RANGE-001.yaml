@@ -1,0 +1,39 @@
+id: MATH-RS-COMPLEX-REFERENCE-DET-RATIO-RANGE-001
+kind: mathematical
+name: Multielectron complex reference observables survive raw determinant underflow
+plain_language: >-
+  A common MO coefficient factor c changes an SD wavefunction only by the
+  configuration-independent amplitude c^(N_up+N_dn), so determinant ratios,
+  local energies, forces and strain fields are invariant. Paired geminal columns
+  scale by c^2 and unpaired columns by c. On the committed H4_pbc_ae_k025_cart
+  two-pair twist SD at PCG64(13) uniform positions, reference and fast LRDMC
+  kinetic outputs at c=1e-85 equal their unscaled values. On committed
+  O-lsda_k025 ccECP (four up/two down SD, no Jastrow, constant exp(i*row) MO
+  phases, PCG64(13) Gaussian(scale=0.6) positions around the nucleus), the
+  reference/fast LRDMC ECP, free ECP, reference-ECP local energy, ECP force/strain
+  and GFMC HF force-stress outputs have the same invariant. Both the unscaled
+  and scaled Hamiltonians must pass public sanity_check validation; complex MO
+  coefficients are used only with the genuine non-Gamma complex Bloch AO leaf.
+  The raw determinants
+  are below the smallest f64 subnormal, while NumPy slogdet and inverse are
+  finite. Every native output must remain finite and equal the nonzero unscaled
+  output within the central strict det_ratio tolerance in full and mixed
+  separately. The O reference local energy also agrees with unscaled XLA under
+  the existing combined-zone backend-consistency tolerance. These inputs exercise
+  multiple LU elimination steps as well as an unrepresentable pivot product.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_reference_det_ratio_range.py::test_multielectron_complex_reference_routes_keep_determinant_ratios_representable
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {witness: h4_k025_ae, route: lrdmc_kinetic_reference}
+    - {witness: h4_k025_ae, route: lrdmc_kinetic_fast}
+    - {witness: oxygen_k025_ccecp, route: lrdmc_ecp_reference}
+    - {witness: oxygen_k025_ccecp, route: lrdmc_ecp_fast}
+    - {witness: oxygen_k025_ccecp, route: free_ecp}
+    - {witness: oxygen_k025_ccecp, route: e_L_reference_ecp}
+    - {witness: oxygen_k025_ccecp, route: ecp_force}
+    - {witness: oxygen_k025_ccecp, route: ecp_strain}
+    - {witness: oxygen_k025_ccecp, route: gfmc_hf_force_stress}

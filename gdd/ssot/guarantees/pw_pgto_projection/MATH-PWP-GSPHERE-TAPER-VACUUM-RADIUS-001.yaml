@@ -1,0 +1,20 @@
+id: MATH-PWP-GSPHERE-TAPER-VACUUM-RADIUS-001
+kind: mathematical
+name: The vacuum switch uses the exact periodic covering radius, invariant under origin, basis and image choice
+plain_language: >-
+  max_empty_distance wraps the atoms into the cell and returns the largest nearest-nucleus distance over the
+  Voronoi vertices of the wrapped atoms and their periodic images inside the fundamental cell, i.e. the
+  exact covering radius of the periodic nuclei. For one atom per cubic cell of side a it equals
+  sqrt(3) a / 2 whether the atom sits at the origin, is shifted by a / 48, is expressed in the sheared
+  primitive basis [[1,0,0],[1,1,0],[0,0,1]] A or is given as the unwrapped representative 25 a1; for the
+  body-centred pair it equals a sqrt(5) / 4; a 4 bohr cube with its atom at (100, 0, 0) gives 2 sqrt(3).
+  All values agree with the closed forms to ATOL_PYTHON_FP64_LOOSE in both precision modes (fp64 host
+  geometry). Unlike a sampled-mesh estimate, the radius does not depend on the origin, the basis or
+  unwrapped coordinates.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_vacuum_detection_is_exact_and_representation_invariant
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

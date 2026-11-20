@@ -1,0 +1,118 @@
+id: MATH-DERIV-JASTROW-PARAM-SMALL-SEPARATION-CLOSED-FORM-001
+kind: mathematical
+name: J1/J2 parameter derivatives and the one-move J2 delta at a tiny separation against exact closed forms
+plain_language: >-
+  With the fixtures of MATH-JAS-SMALL-SEPARATION-CLOSED-FORM-001 (hydrogen nucleus or up electron at (5, 5, 5)
+  Bohr, partner electron at +h along x, h in 2**-16, 2**-26 and 2**-38 Bohr, molecular and cubic 10 Bohr cell,
+  Pade and exp, two dyadic parameters), the analytical Jastrow parameter derivatives grad_J1_wrt_param and
+  grad_J2_wrt_param divided by h**2 equal the exact closed form within the jastrow_eval strict zone policy; the
+  exp form is also checked at separations whose exponent straddles |x| = 1/4. The one-move mesh J2 value delta
+  (one_move_mesh.j2_mesh) for a move from +h x to +h (x + y) divided by h equals the closed form within the same
+  policy. The exp-form derivative is -q(x) / (2 a**2) with q(x) = 1 - (1 + x) exp(-x) = O(x**2); the reference
+  evaluates q in 60-digit decimal arithmetic and shares no code with jqmc. Full and mixed are judged separately.
+  Evaluating q by subtraction fails in both modes; evaluating the one-move pair term as 1 - exp(-b r) fails in
+  full.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_jastrow_param_derivative_small_separation_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, kind: J1, form: pade}
+    - {geometry: molecular, kind: J1, form: exp}
+    - {geometry: molecular, kind: J2, form: pade}
+    - {geometry: molecular, kind: J2, form: exp}
+    - {geometry: cubic_10bohr, kind: J1, form: pade}
+    - {geometry: cubic_10bohr, kind: J1, form: exp}
+    - {geometry: cubic_10bohr, kind: J2, form: pade}
+    - {geometry: cubic_10bohr, kind: J2, form: exp}
+    executable_checks:
+      closed-form:
+        site: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_jastrow_param_derivative_small_separation_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-param-derivative-quotient, expression: derivative_over_h2}
+        reference: {role: exact-closed-form-param-derivative-quotient, expression: closed_derivative_over_h2}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_jastrow_exp_param_derivative_across_branch_points_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, kind: J1}
+    - {geometry: molecular, kind: J2}
+    - {geometry: cubic_10bohr, kind: J1}
+    - {geometry: cubic_10bohr, kind: J2}
+    executable_checks:
+      closed-form:
+        site: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_jastrow_exp_param_derivative_across_branch_points_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-param-derivative-quotient, expression: derivative_over_h2}
+        reference: {role: exact-closed-form-param-derivative-quotient, expression: closed_derivative_over_h2}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_j2_mesh_value_delta_small_separation_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, form: pade}
+    - {geometry: molecular, form: exp}
+    - {geometry: cubic_10bohr, form: pade}
+    - {geometry: cubic_10bohr, form: exp}
+    executable_checks:
+      closed-form:
+        site: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_j2_mesh_value_delta_small_separation_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-one-move-delta-quotient, expression: delta_over_h}
+        reference: {role: fp64-closed-form-one-move-delta-quotient, expression: closed_delta_over_h}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_j2_mesh_difference_switch_drift_and_autodiff_match_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, form: pade, point_count: 1}
+    - {geometry: molecular, form: pade, point_count: 12}
+    - {geometry: molecular, form: exp, point_count: 1}
+    - {geometry: molecular, form: exp, point_count: 12}
+    - {geometry: cubic_10bohr, form: pade, point_count: 1}
+    - {geometry: cubic_10bohr, form: pade, point_count: 12}
+    - {geometry: cubic_10bohr, form: exp, point_count: 1}
+    - {geometry: cubic_10bohr, form: exp, point_count: 12}
+    executable_checks:
+      closed-value-difference:
+        site: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_j2_mesh_difference_switch_drift_and_autodiff_match_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-one-move-value-quotient, expression: value_quotients}
+        reference: {role: decimal-closed-form-value-quotient, expression: closed_values}
+        iterations: {variable: scenario, required_values: [tiny, switch]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+      closed-moved-drift:
+        site: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_j2_mesh_difference_switch_drift_and_autodiff_match_closed_form#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-moved-drift, expression: moved_drift}
+        reference: {role: closed-form-moved-drift, expression: closed_moved_drift}
+        iterations: {variable: scenario, required_values: [tiny, switch]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      closed-spectator-drift:
+        site: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_j2_mesh_difference_switch_drift_and_autodiff_match_closed_form#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-spectator-drift, expression: spectator_drift}
+        reference: {role: closed-form-spectator-drift, expression: closed_spectator_drift}
+        iterations: {variable: scenario, required_values: [tiny, switch]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      closed-position-jacobian:
+        site: tests/test_jqmc_kernel/test_jastrow_param_derivative_small_separation.py::test_j2_mesh_difference_switch_drift_and_autodiff_match_closed_form#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: autodiff-mesh-position-jacobian, expression: mesh_jacobian}
+        reference: {role: closed-form-mesh-position-jacobian, expression: closed_mesh_jacobian}
+        iterations: {variable: scenario, required_values: [tiny, switch]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}

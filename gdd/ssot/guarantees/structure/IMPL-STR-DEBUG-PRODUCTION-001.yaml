@@ -1,0 +1,161 @@
+id: IMPL-STR-DEBUG-PRODUCTION-001
+kind: implementation
+name: Debug/production route parity of structure utilities
+plain_language: The MIC and image-list production routes equal their debug twins, numpy and JAX paths agree, and the nearest-index
+  helper equals the minimum-distance search.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC::test_general_mic_production_vs_debug
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - cell_name: cubic_10bohr
+    - cell_name: primitive_fcc_si
+    - cell_name: triclinic_skewed
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_general_mic_production_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: production-minimum-image
+          expression: got
+        reference:
+          role: numpy-image-loop
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: probe_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+          - '30'
+          - '31'
+          - '32'
+          - '33'
+          - '34'
+          - '35'
+          - '36'
+          - '37'
+          - '38'
+          - '39'
+          - '40'
+          - '41'
+          - '42'
+          - '43'
+          - '44'
+          - '45'
+          - '46'
+          - '47'
+          - '48'
+          - '49'
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList::test_primitive_image_list_production_vs_debug
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics::test_np_jnp_consistency_non_pbc
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics.test_np_jnp_consistency_non_pbc#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: numpy-structure-position
+          expression: structure._positions_cart_np
+        reference:
+          role: jax-same-molecular-geometry
+          expression: np.asarray(structure._positions_cart_jnp)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics.test_np_jnp_consistency_non_pbc#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: numpy-structure-position
+          expression: rel_np
+        reference:
+          role: jax-same-molecular-geometry
+          expression: rel_jnp
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: atom_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics::test_find_nearest_index_matches_min_dist_jnp
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - use_pbc: false
+    - use_pbc: true
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics.test_find_nearest_index_matches_min_dist_jnp#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: distance-to-selected-nucleus
+          expression: dist_idx
+        reference:
+          role: minimum-over-all-nuclei
+          expression: np.min(dist_all)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy

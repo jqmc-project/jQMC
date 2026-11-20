@@ -1,0 +1,388 @@
+id: IMPL-RS-ECP-001
+kind: implementation
+name: Rust/XLA parity of ECP kernels
+plain_language: The Rust ECP local and non-local kernels reproduce the XLA evaluators, including high angular-momentum channels
+  (l >= 5), rotated quadrature meshes (molecular, periodic, complex twist), and the positive control that rotated and identity
+  meshes differ. The production molecular ECP chunk also covers paired and unpaired electrons together
+  (water cation, four up and three down), with active determinant/J3 w-dot routes and a full-determinant
+  XLA non-local reference.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_ecp_local_parts_all_pairs
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_local.py::test_ecp_local_parts_all_pairs#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: vr
+        reference:
+          role: existing-test-reference
+          expression: vj
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_ecp_nonlocal_parts_all_pairs
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_local.py::test_ecp_nonlocal_parts_all_pairs#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: vr
+        reference:
+          role: existing-test-reference
+          expression: float(sumV)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+            - ao_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+            - ao_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_ecp_nonlocal_parts_all_pairs_other_meshes
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_local.py::test_ecp_nonlocal_parts_all_pairs_other_meshes#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: vr
+        reference:
+          role: existing-test-reference
+          expression: float(sumV)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+            - ao_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+            - ao_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_local_energy
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_local.py::test_local_energy#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: eL_rust
+        reference:
+          role: existing-test-reference
+          expression: eL_jqmc
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - det_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - det_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_local_energy_with_j3
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_local.py::test_local_energy_with_j3#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: eL_rust
+        reference:
+          role: existing-test-reference
+          expression: eL_jqmc
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - det_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - det_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_ecp_nonlocal_angular_channel_l_ge_5
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_local.py::test_ecp_nonlocal_angular_channel_l_ge_5#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: vr
+        reference:
+          role: existing-test-reference
+          expression: float(sumV)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+            - ao_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+            - ao_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_local_energy_with_angular_channel_l_ge_5
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_local.py::test_local_energy_with_angular_channel_l_ge_5#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: eL_rust
+        reference:
+          role: existing-test-reference
+          expression: eL_jqmc
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - det_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - det_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_high_l_channels_change_the_rust_result
+  - pytest_node: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_nonlocal_rotated_mesh_molecular
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_nonlocal_rotated_mesh_molecular#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: native-existing-output
+          expression: vr
+        reference:
+          role: xla-existing-reference
+          expression: float(sumV)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+        iterations:
+          variable: rotation
+          required_values:
+          - rotation-0
+          - rotation-1
+          - rotation-2
+  - pytest_node: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_nonlocal_rotated_mesh_periodic
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_nonlocal_rotated_mesh_periodic#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: native-existing-output
+          expression: vr
+        reference:
+          role: xla-existing-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+        iterations:
+          variable: rotation
+          required_values:
+          - rotation-0
+          - rotation-1
+          - rotation-2
+  - pytest_node: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_nonlocal_rotated_mesh_twist_complex
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_nonlocal_rotated_mesh_twist_complex#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: native-existing-output
+          expression: re
+        reference:
+          role: xla-existing-reference
+          expression: ref.real
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+        iterations:
+          variable: rotation
+          required_values:
+          - rotation-0
+          - rotation-1
+          - rotation-2
+      comparison-2:
+        site: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_nonlocal_rotated_mesh_twist_complex#comparison-2
+        comparator: numpy.isclose
+        actual:
+          role: native-existing-output
+          expression: im
+        reference:
+          role: xla-existing-reference
+          expression: ref.imag
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - det_ratio
+            - jastrow_ratio
+        iterations:
+          variable: rotation
+          required_values:
+          - rotation-0
+          - rotation-1
+          - rotation-2
+  - pytest_node: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_rotated_vs_identity_mesh_differs
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{nv: 6, seed: 4}]
+    executable_checks:
+      identity-mesh:
+        site: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_rotated_vs_identity_mesh_differs#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-identity-mesh-energy, expression: v0_rust}
+        reference: {role: xla-identity-mesh-energy, expression: v0_xla}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [coulomb, det_ratio, jastrow_ratio]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [coulomb, det_ratio, jastrow_ratio]}
+      rotated-meshes:
+        site: tests/test_rs_kernel/test_ecp_rotated_mesh.py::test_ecp_rotated_vs_identity_mesh_differs#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-rotated-mesh-energies, expression: rust_values}
+        reference: {role: xla-rotated-mesh-energies, expression: xla_values}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [coulomb, det_ratio, jastrow_ratio]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [coulomb, det_ratio, jastrow_ratio]}
+  - pytest_node: tests/test_rs_kernel/test_ecp_j3_wdot_mo_parity.py::test_ecp_mesh_j3_mo_wrapped_chunk_energy_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{shape: square-orthogonal}, {shape: rectangular}, {shape: rectangular-open-shell-4up-3dn}]
+    executable_checks:
+      open-shell-full-determinant-reference:
+        site: tests/test_rs_kernel/test_ecp_j3_wdot_mo_parity.py::test_ecp_mesh_j3_mo_wrapped_chunk_energy_matches_xla#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-fast-update-open-shell-nonlocal-energy, expression: v_fast}
+        reference: {role: full-determinant-open-shell-nonlocal-energy, expression: v_debug}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, jastrow_eval, jastrow_ratio, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, jastrow_eval, jastrow_ratio, det_eval, det_ratio]}
+      mo-j3-ecp-mesh-chunk-energy:
+        site: tests/test_rs_kernel/test_chain_modes.py::_assert_value_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-real-chunk-stored-energy, expression: rust_value}
+        reference: {role: xla-from-scratch-energy-at-stored-step, expression: xla_value}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_route_parity_angular_channel_l_ge_5

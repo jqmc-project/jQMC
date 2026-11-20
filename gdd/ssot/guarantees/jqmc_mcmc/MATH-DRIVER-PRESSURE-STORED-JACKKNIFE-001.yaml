@@ -1,0 +1,17 @@
+id: MATH-DRIVER-PRESSURE-STORED-JACKKNIFE-001
+kind: mathematical
+name: Public pressure and stress estimates of periodic driver runs equal a jackknife of the stored components
+plain_language: >-
+  For one short periodic run each of MCMC, GFMC_t and GFMC_n on lithium.h5, get_aP (normal pressures and errors),
+  get_P_hydrostatic (hydrostatic pressure and its trace-first error) and get_aT (tensor and errors) equal an
+  independent delete-one (time block, walker) jackknife of the documented estimator sigma = <sigma_HF> +
+  2(<E_L sigma_PP> - <E_L><sigma_PP>), real part, symmetrized, divided by the cell volume from the lattice vectors,
+  computed only from the stored per-step weights, energies and stress components (GFMC weights rebuilt as the product
+  of the stored branching weights over the collect window). Every normal pressure and its error exceed the tolerance.
+  On the same data, a reference with Pulay factor 1, one without the (n - 1) jackknife factor and the quadrature
+  hydrostatic error must fail. Deterministic values at same-mode local_energy strict tolerances.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pressure_estimator_reference.py::test_get_aP_and_hydrostatic_pressure_match_stored_component_jackknife

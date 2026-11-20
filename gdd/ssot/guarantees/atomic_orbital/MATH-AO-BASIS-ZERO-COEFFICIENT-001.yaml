@@ -1,0 +1,50 @@
+id: MATH-AO-BASIS-ZERO-COEFFICIENT-001
+kind: mathematical
+name: A zero contraction coefficient has a finite analytic basis derivative
+plain_language: >-
+  The XLA and native Rust basis pullbacks use the unit-coefficient primitive
+  for the contraction-coefficient derivative, including exactly zero.
+  For the tested Cartesian and spherical molecular and complex periodic
+  Gaussian leaves, the geminal log-determinant, J3 value, and kinetic energy
+  remain finite at a zero coefficient. Their analytic exponent and coefficient
+  gradients agree with JAX automatic differentiation of the forward observable
+  in the active Full or Mixed precision mode, including a nonzero coefficient
+  derivative and a zero exponent derivative for the zero-coefficient primitive.
+  Other live contraction coefficients in each leaf provide nonzero controls.
+  The spherical AO directional derivative of value, gradient, and Laplacian
+  also matches forward AD for a unit tangent on a zero coefficient.
+  A single-primitive l=1 Cartesian x and spherical m=0 Gaussian with exactly
+  zero coefficient, whose radial factor is exactly zero, give zero XLA AO
+  values whose forward-mode coefficient tangent equals the closed-form
+  unit-coefficient normalized primitive within the strict ao_eval tolerance
+  in Full and Mixed separately; the zero-radial tail guard must not drop it.
+verdict_methods: [VM-MATH-AD-ORACLE-001, VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_sphe_basis_param_jvp_at_zero_coefficient
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_zero_basis_coefficient.py::test_zero_geminal_coefficient
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_j123, quantity: value}
+    - {pattern: mol_ecp_cart_j123, quantity: kinetic}
+    - {pattern: mol_sphe_sd_jnone, quantity: value}
+    - {pattern: mol_sphe_sd_jnone, quantity: kinetic}
+    - {pattern: twist_sphepgto_j123, quantity: value}
+    - {pattern: twist_sphepgto_j123, quantity: kinetic}
+  - pytest_node: tests/test_rs_kernel/test_zero_basis_coefficient.py::test_zero_j3_coefficient
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_j123, quantity: value}
+    - {pattern: mol_ecp_cart_j123, quantity: kinetic}
+    - {pattern: mol_sphe_sd_jnone, quantity: value}
+    - {pattern: mol_sphe_sd_jnone, quantity: kinetic}
+    - {pattern: twist_sphepgto_j123, quantity: value}
+    - {pattern: twist_sphepgto_j123, quantity: kinetic}
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ao_zero_radial_tails.py::test_xla_zero_coefficient_tangent_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{family: cart_l1_a1}, {family: sphe_l1_a1}]

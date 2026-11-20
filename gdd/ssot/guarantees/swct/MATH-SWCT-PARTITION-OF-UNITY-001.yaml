@@ -1,0 +1,11 @@
+id: MATH-SWCT-PARTITION-OF-UNITY-001
+kind: mathematical
+name: Partition of unity of the SWCT weights
+plain_language: For every electron the SWCT weights sum to one over the nuclei and the per-nucleus domega sums to zero, for
+  home-cell and far-unwrapped electrons under PBC.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_partition_of_unity

@@ -1,0 +1,41 @@
+id: IMPL-PGTOOPT-EXP-TAIL-INFEASIBLE-001
+kind: implementation
+name: Infeasible exponent-tail box and out-of-range bound arguments are rejected
+plain_language: optimize_pgto_exponents raises ValueError before any optimisation when exponent_floor >= alpha_max(l, exp_tail_eps)
+  (empty box, including equality), when spreading coincident clipped seeds of one shell below alpha_max at PGTO_EXP_TAIL_CLIP_SPREAD_RATIO
+  would reach exponent_floor, when exp_tail_eps is outside (0, 1), and when an explicit g_max is not finite and positive;
+  run_qe2jqmc rejects a nonzero exp_tail_eps outside (0, 1). Full and mixed are judged separately. Empty tail boxes and clipped-seed
+  spreads reaching the floor use PGTOExponentBoundsError, a ValueError subclass; invalid eps/g_max remain ordinary ValueErrors.
+  Explicit numeric converter cutoffs propagate the infeasible-bounds error. Automatic derived-floor attempts may reject this
+  specific candidate, while preserving seed candidates and the same residual/condition/tail constraints.
+verdict_methods:
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_floor_above_tail_ceiling_raises
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_run_qe2jqmc_rejects_out_of_range_exp_tail_eps
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - bad_eps: -0.01
+    - bad_eps: 1.0
+    - bad_eps: 2.0
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_spreading_into_the_exponent_floor_raises
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_manual_cutoff_propagates_infeasible_exponent_bounds
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}

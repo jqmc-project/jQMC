@@ -1,0 +1,20 @@
+id: IMPL-JAS-CONVENTIONAL-CUSP-VERDICT-001
+kind: implementation
+name: Conventional cusp-profile verdicts reject wrong forward signs and coefficients
+plain_language: >-
+  After a successful unmodified J1 exp or J2 Pade molecular baseline, multiply
+  the actual forward result by -1 or 1/2. Each modified result must fail the
+  same independent radial-slope comparison in both precisions. These controls
+  exercise the verdict, not a substitute implementation or certification of
+  the separate required J1 Pade physical-cusp contract.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_cusp_profiles.py::test_cusp_profile_verdict_rejects_wrong_forward_normalization
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {part: j1, fault: sign}
+    - {part: j2, fault: sign}
+    - {part: j1, fault: half}
+    - {part: j2, fault: half}

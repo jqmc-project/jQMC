@@ -1,0 +1,14 @@
+id: IMPL-GFMC-T-ACTUAL-CANDIDATE-CACHE-001
+kind: implementation
+name: GFMC conventional algorithm candidate caches at actual hop inputs
+plain_language: Every observed cached hop in the named conventional-algorithm runs has current kinetic candidate positions and kinetic/ECP orbital tables equal to fresh same-mode orbital evaluation at the identical inputs under the existing strict leaf tolerance. Independent full-recompute Hamiltonian leaves also check candidate weights and lattice energy. Initial and cached routes must both occur; this does not compare different precision modes or rely on matching independent trajectories.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_candidate_cache_same_input.py::test_gfmc_t_candidate_cache_at_actual_inputs
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {stem: H2_ecp_ccpvdz_cart.h5, spec: {j3: pgto}}
+    - {stem: 'QEPROJ:bspline:Li_gamma:ECP', spec: null}
+    - {stem: Li_ae_ccpvdz_cart.h5, spec: {j3: pgto}}

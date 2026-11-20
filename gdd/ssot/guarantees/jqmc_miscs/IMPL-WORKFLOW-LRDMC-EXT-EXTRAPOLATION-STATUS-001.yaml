@@ -1,0 +1,20 @@
+id: IMPL-WORKFLOW-LRDMC-EXT-EXTRAPOLATION-STATUS-001
+kind: implementation
+name: A completed LRDMC extrapolation workflow carries the continuum fit over every requested lattice spacing
+plain_language: >-
+  LRDMC_Ext_Workflow reports COMPLETED only together with extrapolated_energy and
+  extrapolated_energy_error computed by jqmc-tool lrdmc extrapolate-energy from the
+  checkpoints of every alat in alat_list. An alat_list with duplicate spacings or fewer than
+  max(polynomial_order + 1, 2) distinct spacings is rejected at construction, and the latter again
+  before any alat is launched when the order is assigned after construction. A completed
+  child without its restart checkpoint, a missing jqmc-tool, or a jqmc-tool rejection ends
+  the workflow FAILED with the cause recorded in its state, never COMPLETED without the
+  extrapolated energy or with a fit over a subset of the spacings. The control runs the real
+  jqmc-tool on checkpoints with exactly known bin means and errors and matches the
+  closed-form Lagrange intercept and propagated error at a^2 = 0. This is a
+  precision-independent Python workflow contract, owned by the full precision lane.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_lrdmc_ext_extrapolation_status.py::test_completed_lrdmc_ext_carries_extrapolation_over_every_alat

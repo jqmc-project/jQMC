@@ -1,0 +1,41 @@
+id: MATH-OPT-REAL-BATCH-UPDATE-001
+kind: mathematical
+name: Real-sampler optimization step equals an independent dense SR/LM recomputation
+plain_language: One MCMC.run_optimize step on H2 (all-electron, Pade J1+J2, fixed seed, real sampler) consumes a batch
+  whose local energies, log-derivatives and local-energy derivatives equal an independent evaluation at the stored walker
+  configurations; its SR update equals a dense solve of (S + epsilon diag S) q = f from the weighted, centred samples (host
+  and device routes, two epsilons), its full-space LM update equals a dense eigensolve of the centred non-symmetric pencil,
+  and the applied parameter change is delta times q. With J2 frozen, J2 is bit-identical and the solved system is the J1-only
+  one. Replayed negative controls (flipped force, dropped epsilon, update on the frozen block, unrestricted system) fail
+  these checks.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_real_batch_sources_match_independent_evaluation
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_run_optimize_sr_update_matches_dense_recomputation
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_run_optimize_frozen_block_restricts_the_solved_system
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_run_optimize_lm_update_matches_dense_generalized_eigenproblem
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_run_optimize_lm_update_matches_dense_generalized_eigenproblem#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: _applied_step(capture)
+        reference:
+          role: existing-test-reference
+          expression: _DELTA * reference_q
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_negative_control_flipped_force_fails_update_and_descent_checks
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_negative_control_dropped_epsilon_fails_update_check
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_negative_control_update_on_frozen_block_fails_mask_checks

@@ -1,0 +1,45 @@
+id: IMPL-CLI-DRIVER-EQUIVALENCE-001
+kind: implementation
+name: Each CLI job equals the directly constructed driver fed the same non-default TOML values
+plain_language: >-
+  The mcmc, vmc, lrdmc-bra and lrdmc-tau CLI jobs on H2 ccECP cc-pVDZ Cartesian with exp J1 + Pade J2, and the mcmc
+  and lrdmc-tau jobs on the periodic lithium.h5 cell with MPC, forces, stress, SWCT and a non-default epsilon_PW,
+  run with values that differ from the shipped defaults (Dt, epsilon_AS, moves per measurement, SR delta and epsilon,
+  alat, dltmove, E_scf, projections per measurement, tau). A direct Python-API driver with the same HDF5
+  Hamiltonian, seed and values ends with exactly the same walker positions and threefry keys; stored energies,
+  weights (periodic: force, stress and MPC buffers), the public energy (periodic: force and stress estimates) and
+  the optimized J2 agree at same-mode strict restart tolerances. A direct run with the shipped tau instead of the
+  TOML tau must fail.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_driver_equivalence.py::test_cli_job_equals_direct_driver_with_the_same_toml_values
+    executable_checks:
+      close-comparison-1:
+        site: tests/test_jqmc_kernel/test_cli_driver_equivalence.py::_close#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_cli_driver_equivalence.py::test_cli_equivalence_rejects_a_changed_driver_value

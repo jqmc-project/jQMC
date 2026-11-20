@@ -1,0 +1,24 @@
+id: MATH-JAS-DTN-MIC-PLAN-OVERFLOW-SAFE-001
+kind: mathematical
+name: Periodic DTN minimum-image plan selection is overflow safe and never expands an infeasible image shell
+plain_language: >-
+  The static DTN minimum-image plan compares the given-basis and LLL-reduced image shells by their exact integer
+  cardinality prod(2 N_k + 1), without fixed-width overflow. For the orthorhombic diag(6,7,8) Bohr lattice written
+  in the unimodular basis U @ L with U = [[1,3000000,3000000],[0,1,3000000],[0,0,1]], whose given-basis shell
+  (1, 2000000, 5999998000000) has about 1.44e20 candidates, _minimum_image_reduction_plan selects an integer
+  unimodular M whose rows M @ cell are exactly the rectangular rows with shell (0, 0, 0), Jastrow_DTN_data.build
+  stores that plan, and public compute_Jastrow_DTN (u-only, default cutoffs, the deterministic default start of
+  Jastrow_DTN_data.build) finishes and equals the monotone cusp member sum -(a L_u / C) (1 - r/L_u)^C (alpha_1 = 0;
+  a = 1/4 parallel, 1/2 antiparallel) over rectangular minimum-image distances within the jastrow_eval strict zone
+  tolerance. The previous zero-coefficient start a r (1 - r/L_u)^C, whose mid-range bump attracts electrons, fails
+  this value check. No shell larger than the 27-candidate
+  LLL bound is expanded. A shell larger than MINIMUM_IMAGE_SHELL_MAX_CANDIDATES is rejected with ValueError by the
+  shift expansion and by Jastrow_DTN_data.sanity_check instead of being allocated. Full and mixed are each required.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::test_periodic_dtn_minimum_image_plan_is_overflow_safe_on_extreme_unreduced_basis
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

@@ -1,0 +1,23 @@
+id: MATH-RS-COMPLEX-ECP-REFERENCE-NN1-MIN-IMAGE-001
+kind: mathematical
+name: The reference complex ECP fallback of the native VMC e_L selects the minimum-image nearest ECP nucleus
+plain_language: >-
+  jqmc_rs.compute_local_energy_fast_complex falls back from the fast rank-1 ECP kernel to the reference
+  complex ECP kernel (compute_ecp_nonlocal_withj_complex with nn = 1) when JQMC_RS_ECP_COMPLEX_REFERENCE is set or when
+  the fast-state coverage gate rejects a J3 j_matrix that is not in standard (C) layout. The NN = 1 filter of that
+  fallback must rank the ECP nuclei by their minimum-image distance. On the committed lithium_k025 ccECP twist cell
+  (Li bcc, two ECP nuclei, k != Gamma; without Jastrow and with J1+J2+J3), one up and one down electron, the home-cell
+  copy Xw puts each electron within about 1 bohr of a home-cell nucleus and X = Xw + lattice vectors (four shift pairs)
+  puts each electron next to an image of that nucleus; the brute-force image search of tests/_ecp_min_image_reference.py
+  shows that the minimum-image nearest nucleus at X is the one at Xw and that the raw Cartesian distance ranks the other
+  nucleus first for every electron (input validity). For both triggers (the environment variable, scoped to the test,
+  and a Fortran-ordered J3 j_matrix) the fallback e_L at X equals the fallback e_L at Xw (lattice-translation
+  invariance of E_L for a Bloch twist wavefunction, Re and Im) and equals the default fast route e_L at X. Full and mixed
+  are judged separately, each at the existing zone tolerances of its own policy (no mixed-vs-full comparison).
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_ecp_reference_nn1_min_image.py::test_native_complex_vmc_e_L_reference_ecp_fallback_selects_min_image_nearest_nucleus
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: jnone_env, shift: shift0}, {route: jnone_env, shift: shift1}, {route: jnone_env, shift: shift2}, {route: jnone_env, shift: shift3}, {route: j123_env, shift: shift0}, {route: j123_env, shift: shift1}, {route: j123_env, shift: shift2}, {route: j123_env, shift: shift3}, {route: j123_fortran_j_matrix, shift: shift0}, {route: j123_fortran_j_matrix, shift: shift1}, {route: j123_fortran_j_matrix, shift: shift2}, {route: j123_fortran_j_matrix, shift: shift3}]

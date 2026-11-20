@@ -1,0 +1,30 @@
+id: NUM-AO-ZERO-RADIAL-TAIL-001
+kind: numerical
+name: Accepted AO bases give finite negligible values when the radial factor is zero
+plain_language: >-
+  On a molecular Cartesian x^60 Gaussian at exponent 10 and a molecular spherical
+  l=6,m=0 Gaussian at exponent 1, both accepted by the mixed AO range precondition,
+  the XLA and Rust standalone AO values stay finite at the radial peak and in far
+  tails whose independently computed completed AO magnitude is below the active
+  strict ao_eval absolute tolerance. Cartesian x-axis radii are sqrt(3),4.7,20,100;
+  spherical z-axis radii are sqrt(3),1e7,1e12. The entire l=6 spherical shell must
+  stay finite, and its m=0 values and the Cartesian values agree with the closed-form
+  normalized Gaussian derived with math.lgamma within the central strict ao_eval
+  tolerance in full and mixed separately. A zero radial factor must not turn an
+  overflowed angular polynomial into a NaN AO value. This is a value-only
+  obligation; it introduces no distance rejection and preserves the existing
+  range precondition and every other supported evaluation case.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ao_zero_radial_tails.py::test_accepted_ao_zero_radial_tail_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {family: cart_l60_a10, backend: XLA}
+    - {family: cart_l60_a10, backend: Rust}
+    - {family: sphe_l6_a1, backend: XLA}
+    - {family: sphe_l6_a1, backend: Rust}
+  - pytest_node: tests/test_jqmc_kernel/test_ao_zero_radial_tails.py::test_xla_zero_radial_tail_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{family: cart_l60_a10}, {family: sphe_l6_a1}]

@@ -1,0 +1,37 @@
+id: NUM-REAL-COMPOSITE-BASIS-JASTROW-MIXED-FIDELITY-001
+kind: numerical
+name: Real composite Jastrow-coupled basis fields retain Mixed Full fidelity
+plain_language: The two original ln_Psi/e_L positive cases retain the Li Gamma ccECP pGTO+PW, J1exp/J2Pade/seeded
+  real MOJ3 model, seed0 coordinates, original basis mask and exact parameter fields. Independent analytical Full/Mixed
+  models clear the precision-blind cached composite constructor before each policy and after callbacks. Both actual
+  and reference retain finite nonempty fields and the original entry-Mixed strict4zone nonzero floor; local-energy
+  fields also retain the same with/without-Jastrow signal at that floor. Each homogeneous parameter real/imaginary
+  field is compared separately with the unchanged central parameter_derivative maximum-deviation budget and isolated
+  excess-budget rejection. The original independent AD fault-injection negative detector is retained exactly in
+  BOTH modes under MATH-DERIV-REAL-COMPOSITE-BASIS-JASTROW-LIVE-001 and is never used as NUM primary agreement credit.
+  Full independent positive AD also remains. No seed, tolerance, condition filter, skip or production route change.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_composite_basis_jastrow_liveness.py::test_real_composite_lambda_basis_is_live_and_matches_autodiff
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    executable_checks:
+      mixed-analytical-vs-full-analytical:
+        site: tests/test_jqmc_kernel/test_composite_basis_jastrow_liveness.py::_composite_jastrow_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-composite-basis-homogeneous-field
+          expression: mixed_block
+        reference:
+          role: full-XLA-composite-basis-same-physical-field
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

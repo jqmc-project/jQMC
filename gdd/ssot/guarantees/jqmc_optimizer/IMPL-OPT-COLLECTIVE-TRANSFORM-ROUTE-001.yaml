@@ -1,0 +1,28 @@
+id: IMPL-OPT-COLLECTIVE-TRANSFORM-ROUTE-001
+kind: implementation
+name: The two-rank twist-decomposed optimizer transforms on one real/complex route
+plain_language: >-
+  The real/complex optimizer transform route (_transform_derivatives_dtype) and the local-energy dtype are rank-local
+  properties, but their arrays meet in MPI buffer collectives and in sharded device kernels. A multi-rank optimizer entry
+  therefore decides once over its communicator, the world communicator for twist-decomposed optimization, and passes the
+  decided batch down: real = collective_real_route(local_all_real, comm), which is MIN-Allreduce(local_all_real);
+  local_all_real holds only when every derivative-source group (log derivatives, local-energy derivatives, the jackknife
+  source moments) and the local energies of the rank are real. When real is false, every rank solves everything as
+  complex: real-route groups and real local energies are cast to the complex dtype (a zero imaginary part), so no rank
+  mixes a real O with a complex D. A collectively real batch and every one-rank call are unchanged. The evidence covers
+  the twist-decomposed entry in an actual two-rank twist optimizer run with a Gamma and a fractional (1/4, 1/4, 1/4) H2
+  PBC AE twist and direct SR solves (cg_flag=false): the Gamma rank publishes real-typed local energies and
+  local-energy derivative sources where the twisted rank's are complex (checked live); before the production
+  collectives, the allgathered per-group route flags after the decision must be identical on both ranks, so a
+  rank-local decision fails on every rank instead of stranding one rank in a collective, and the host SR, device LM
+  and host aSR updates must still match the independent sampled references of MATH-TA-OPT-ACTUAL-MPI-UPDATE-001. The
+  single-k entries, the CG solves and the host tall Allgatherv call the same decision function but are not exercised
+  with mixed real/complex ranks by this evidence, and are not claimed here.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_update_mpi.py::test_actual_mpi_twist_optimizer_matches_sampled_reference
+    required_precision_modes: [full, mixed]
+    required_execution_profiles: [{name: mpi, world_size: 2}]
+    required_parameter_cases: [{case: complex-sr-host}, {case: complex-lm-device}, {case: complex-asr-host}]

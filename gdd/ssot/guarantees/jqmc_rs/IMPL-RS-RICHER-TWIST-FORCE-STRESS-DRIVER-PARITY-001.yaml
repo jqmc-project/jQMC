@@ -1,0 +1,22 @@
+id: IMPL-RS-RICHER-TWIST-FORCE-STRESS-DRIVER-PARITY-001
+kind: implementation
+name: Complex-twist B-spline DTN and pGTO+PW J123 production GFMC force and stress preserve same-input parity
+plain_language: >-
+  The two complex-twist cells of IMPL-RS-RICHER-TWIST-DRIVER-PARITY-001 (QE Li k=(1/4,1/4,1/4) ccECP as a
+  complex B-spline determinant with exp J1/J2 and an active DTN, or a complex pGTO plus PW composite with exp
+  J1/J2 and an identity-MO-wrapped active J3) run one-walker forty-step fixed-mesh GFMC_n and GFMC_t with seed
+  34356 and SWCT-enabled atomic force and stress through the shared force/stress driver oracle: stored
+  energies, weights, force, stress and SWCT buffers agree with XLA under the existing within-mode backend
+  policy, final coordinates and RNG keys are exact, and the native projection and carried-inverse Pulay
+  route must engage. Full and mixed are separate same-mode verdicts.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_richer_production_drivers.py::test_richer_twist_gfmc_force_stress_match_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: bspline_twist_jdtn, driver: n}
+    - {pattern: bspline_twist_jdtn, driver: t}
+    - {pattern: pgto_pw_twist_j123, driver: n}
+    - {pattern: pgto_pw_twist_j123, driver: t}

@@ -1,0 +1,62 @@
+id: MATH-TILING-EXPLICIT-SUPERCELL-001
+kind: mathematical
+name: Tiled orbitals agree with explicitly expanded physical-supercell representations
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  At fixed electron positions and the same physical Hamiltonian, primitive-block
+  storage agrees with an ordinary explicitly expanded supercell representation.
+  Cubic and quintic B-spline references allocate full supercell grids without
+  refitting; each band retains the supercell reciprocal gauge S*k, equivalent to
+  k_s modulo integers. Cartesian and spherical pGTO references place s, p and d
+  functions on every supercell atom, rebuild supercell image sums and use dense
+  translation-phase coefficients. References do not evaluate primitive tiled
+  providers. Values, gradients, Laplacians, determinants, kinetic and local energies
+  agree in Gamma and general (+k_s,-k_s) sectors, for restricted and independent
+  spin coefficients. B-spline cases use diagonal tiling on a skew primitive cell;
+  pGTO cases use non-diagonal tiling. PW is covered by explicit reciprocal-space
+  construction and real eight-k QE/Ewald/ccECP energy comparison. This requires
+  equality of the same represented orbitals, not separately optimized supercell
+  SCF solutions. Dense reference allocations are confined to tests. Native
+  determinant/sampling, arbitrary spline regridding, forces and memory scaling
+  are not certified by this contract.
+verdict_methods: [VM-MATH-REFERENCE-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_supercell.py::test_expanded_supercell_matches_tiled_vgl_determinant_and_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: bspline3, sector: gamma, restricted: true}
+    - {backend: bspline3, sector: general, restricted: true}
+    - {backend: bspline3, sector: gamma, restricted: false}
+    - {backend: bspline3, sector: general, restricted: false}
+    - {backend: bspline5, sector: gamma, restricted: true}
+    - {backend: bspline5, sector: general, restricted: true}
+    - {backend: bspline5, sector: gamma, restricted: false}
+    - {backend: bspline5, sector: general, restricted: false}
+    - {backend: pgto_cart, sector: gamma, restricted: true}
+    - {backend: pgto_cart, sector: general, restricted: true}
+    - {backend: pgto_cart, sector: gamma, restricted: false}
+    - {backend: pgto_cart, sector: general, restricted: false}
+    - {backend: pgto_sphe, sector: gamma, restricted: true}
+    - {backend: pgto_sphe, sector: general, restricted: true}
+    - {backend: pgto_sphe, sector: gamma, restricted: false}
+    - {backend: pgto_sphe, sector: general, restricted: false}
+    - {backend: composite_cart, sector: gamma, restricted: true}
+    - {backend: composite_cart, sector: general, restricted: true}
+    - {backend: composite_cart, sector: gamma, restricted: false}
+    - {backend: composite_cart, sector: general, restricted: false}
+    - {backend: composite_sphe, sector: gamma, restricted: true}
+    - {backend: composite_sphe, sector: general, restricted: true}
+    - {backend: composite_sphe, sector: gamma, restricted: false}
+    - {backend: composite_sphe, sector: general, restricted: false}
+
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling.py::test_ragged_pw_matches_explicit_supercell_vgl_determinant_and_kinetic
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_qe_orbital_tiling.py::test_real_qe_multik_pw_matches_raw_source_supercell_sum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

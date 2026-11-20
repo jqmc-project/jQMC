@@ -1,0 +1,903 @@
+id: IMPL-DET-FAST-UPDATE-EQUIVALENCE-001
+kind: implementation
+name: Fast-update equivalence of determinant evaluation
+plain_language: 'Every optimized determinant route equals the full recomputation: fast grads/Laplacian vs the fast debug
+  twin, row/column updates, rank-1 ratio updates, the fast ln(det) forward/backward path, direct AO streaming-state checks
+  without inverse amplification, and the shared production Sherman-Morrison helper over a 150-hop inverse chain against
+  a fresh SVD of the same cached AO state in the declared well-conditioned domain.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantFastUpdate::test_compute_grads_and_laplacian_ln_Det_fast_vs_fast_debug
+    required_parameter_cases:
+    - {trexio_file: H_ae_ccpvdz_cart.h5}
+    - {trexio_file: Li_ae_ccpvdz_cart.h5}
+    - {trexio_file: H2_ecp_ccpvtz.h5}
+    required_precision_modes: [full, mixed]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantFastUpdate.test_compute_grads_and_laplacian_ln_Det_fast_vs_fast_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fast-ln-det-gradient-up, expression: grad_up_fast}
+        reference: {role: debug-ln-det-gradient-up, expression: grad_up_debug}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantFastUpdate.test_compute_grads_and_laplacian_ln_Det_fast_vs_fast_debug#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fast-ln-det-gradient-down, expression: grad_dn_fast}
+        reference: {role: debug-ln-det-gradient-down, expression: grad_dn_debug}
+        empty_cases:
+        - {selector: {trexio_file: H_ae_ccpvdz_cart.h5}, shape: [0, 3]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantFastUpdate.test_compute_grads_and_laplacian_ln_Det_fast_vs_fast_debug#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fast-ln-det-laplacian-up, expression: lap_up_fast}
+        reference: {role: debug-ln-det-laplacian-up, expression: lap_up_debug}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantFastUpdate.test_compute_grads_and_laplacian_ln_Det_fast_vs_fast_debug#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fast-ln-det-laplacian-down, expression: lap_dn_fast}
+        reference: {role: debug-ln-det-laplacian-down, expression: lap_dn_debug}
+        empty_cases:
+        - {selector: {trexio_file: H_ae_ccpvdz_cart.h5}, shape: [0]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalRowColumnUpdate::test_one_row_or_one_column_update
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalRowColumnUpdate.test_one_row_or_one_column_update#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(geminal_mo_up_one_row).ravel()
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(geminal_mo[i_up, :])
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalRowColumnUpdate.test_one_row_or_one_column_update#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(geminal_mo_dn_one_column).ravel()
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(geminal_mo[:, j_dn])
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantRatio::test_ratio_determinant_rank1_update
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantRatio.test_ratio_determinant_rank1_update#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_debug)
+        reference:
+          role: existing-test-reference
+          expression: np.ones_like(np.asarray(ratio_debug))
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantRatio.test_ratio_determinant_rank1_update#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_debug)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ratio_rank1)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantLogFastPath::test_compute_ln_det_geminal_all_elements_fast_forward
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantLogFastPath.test_compute_ln_det_geminal_all_elements_fast_forward#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: val_fast
+        reference:
+          role: existing-test-reference
+          expression: val_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantLogFastPath::test_compute_ln_det_geminal_all_elements_fast_backward
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState::test_streaming_det_state_against_full
+    required_parameter_cases:
+    - trexio_file: water_ccecp_ccpvqz.h5
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    required_precision_modes:
+    - full
+    - mixed
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_streaming_det_state_against_full#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-up
+          expression: state.grad_ln_D_up
+        reference:
+          role: fresh-evaluation-same-final-geometry
+          expression: grad_up_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_streaming_det_state_against_full#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-down
+          expression: state.grad_ln_D_dn
+        reference:
+          role: fresh-evaluation-same-final-geometry
+          expression: grad_dn_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_streaming_det_state_against_full#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-up
+          expression: state.lap_ln_D_up
+        reference:
+          role: fresh-evaluation-same-final-geometry
+          expression: lap_up_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_streaming_det_state_against_full#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-down
+          expression: state.lap_ln_D_dn
+        reference:
+          role: fresh-evaluation-same-final-geometry
+          expression: lap_dn_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+      paired-up-lambda:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_streaming_det_state_against_full#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-paired-up-lambda
+          expression: state.paired_up_lambda
+        reference:
+          role: fresh-evaluation-same-final-geometry
+          expression: state_ratio_ref.paired_up_lambda
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState::test_det_ratio_streaming_state_against_full
+    required_parameter_cases:
+    - trexio_file: water_ccecp_ccpvqz.h5
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    required_precision_modes:
+    - full
+    - mixed
+    executable_checks:
+      every-hop-ao-up:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_det_ratio_streaming_state_against_full#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-every-hop-ao_up
+          expression: state.ao_up
+        reference:
+          role: fresh-evaluation-same-hop-geometry
+          expression: state_ref.ao_up
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+        iterations:
+          variable: hop_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+          - '30'
+          - '31'
+      every-hop-ao-dn:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_det_ratio_streaming_state_against_full#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-every-hop-ao_dn
+          expression: state.ao_dn
+        reference:
+          role: fresh-evaluation-same-hop-geometry
+          expression: state_ref.ao_dn
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+        iterations:
+          variable: hop_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+          - '30'
+          - '31'
+      every-hop-paired-dn:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_det_ratio_streaming_state_against_full#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-every-hop-paired_dn
+          expression: state.paired_dn
+        reference:
+          role: fresh-evaluation-same-hop-geometry
+          expression: state_ref.paired_dn
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+        iterations:
+          variable: hop_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+          - '30'
+          - '31'
+      every-hop-paired-up-lambda:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_det_ratio_streaming_state_against_full#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-every-hop-paired_up_lambda
+          expression: state.paired_up_lambda
+        reference:
+          role: fresh-evaluation-same-hop-geometry
+          expression: state_ref.paired_up_lambda
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+        iterations:
+          variable: hop_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+          - '30'
+          - '31'
+      final-ao-up:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_det_ratio_streaming_state_against_full#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-final-ao_up
+          expression: state.ao_up
+        reference:
+          role: fresh-evaluation-same-final-geometry
+          expression: state_ref.ao_up
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+      final-ao-dn:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_det_ratio_streaming_state_against_full#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-final-ao_dn
+          expression: state.ao_dn
+        reference:
+          role: fresh-evaluation-same-final-geometry
+          expression: state_ref.ao_dn
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+      final-paired-dn:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_det_ratio_streaming_state_against_full#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-final-paired_dn
+          expression: state.paired_dn
+        reference:
+          role: fresh-evaluation-same-final-geometry
+          expression: state_ref.paired_dn
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+      final-paired-up-lambda:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_det_ratio_streaming_state_against_full#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-final-paired_up_lambda
+          expression: state.paired_up_lambda
+        reference:
+          role: fresh-evaluation-same-final-geometry
+          expression: state_ref.paired_up_lambda
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState::test_split_spin_with_det_ratio_state_against_fresh
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_split_spin_with_det_ratio_state_against_fresh#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: ratios_streaming
+        reference:
+          role: existing-test-reference
+          expression: ratios_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState::test_det_winv_multi_hop_matches_full_debug_oracle
+    executable_checks:
+      d8-n-123:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_det_winv_multi_hop_matches_full_debug_oracle._assert_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: fast
+        reference:
+          role: source-reference-value
+          expression: full
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-AGGREGATOR-LOOSE-R-PYTHON-FP64-AGGREGATOR-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-AGGREGATOR-LOOSE-R-PYTHON-FP64-AGGREGATOR-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState::test_conditioned_sm_inverse_chain_matches_fresh_cached_state
+    required_parameter_cases: [{}]
+    required_precision_modes:
+    - full
+    - mixed
+    executable_checks:
+      inverse-hop:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_conditioned_sm_inverse_chain_matches_fresh_cached_state#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-sm-inverse
+          expression: A_inv
+        reference:
+          role: fresh-cached-state-svd-inverse
+          expression: A_fresh
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id001
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id001
+        iterations:
+          variable: hop_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+          - '30'
+          - '31'
+          - '32'
+          - '33'
+          - '34'
+          - '35'
+          - '36'
+          - '37'
+          - '38'
+          - '39'
+          - '40'
+          - '41'
+          - '42'
+          - '43'
+          - '44'
+          - '45'
+          - '46'
+          - '47'
+          - '48'
+          - '49'
+          - '50'
+          - '51'
+          - '52'
+          - '53'
+          - '54'
+          - '55'
+          - '56'
+          - '57'
+          - '58'
+          - '59'
+          - '60'
+          - '61'
+          - '62'
+          - '63'
+          - '64'
+          - '65'
+          - '66'
+          - '67'
+          - '68'
+          - '69'
+          - '70'
+          - '71'
+          - '72'
+          - '73'
+          - '74'
+          - '75'
+          - '76'
+          - '77'
+          - '78'
+          - '79'
+          - '80'
+          - '81'
+          - '82'
+          - '83'
+          - '84'
+          - '85'
+          - '86'
+          - '87'
+          - '88'
+          - '89'
+          - '90'
+          - '91'
+          - '92'
+          - '93'
+          - '94'
+          - '95'
+          - '96'
+          - '97'
+          - '98'
+          - '99'
+          - '100'
+          - '101'
+          - '102'
+          - '103'
+          - '104'
+          - '105'
+          - '106'
+          - '107'
+          - '108'
+          - '109'
+          - '110'
+          - '111'
+          - '112'
+          - '113'
+          - '114'
+          - '115'
+          - '116'
+          - '117'
+          - '118'
+          - '119'
+          - '120'
+          - '121'
+          - '122'
+          - '123'
+          - '124'
+          - '125'
+          - '126'
+          - '127'
+          - '128'
+          - '129'
+          - '130'
+          - '131'
+          - '132'
+          - '133'
+          - '134'
+          - '135'
+          - '136'
+          - '137'
+          - '138'
+          - '139'
+          - '140'
+          - '141'
+          - '142'
+          - '143'
+          - '144'
+          - '145'
+          - '146'
+          - '147'
+          - '148'
+          - '149'
+      final-geminal:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_conditioned_sm_inverse_chain_matches_fresh_cached_state#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: cached-final-geminal
+          expression: _cached_g(det_state)
+        reference:
+          role: fresh-final-position-geminal
+          expression: G_final
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id002
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id002
+      final-inverse:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_conditioned_sm_inverse_chain_matches_fresh_cached_state#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-final-inverse
+          expression: A_inv
+        reference:
+          role: fresh-final-position-inverse
+          expression: np.linalg.inv(G_final)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id003
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id003
+      same-zone-derivatives:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_conditioned_sm_inverse_chain_matches_fresh_cached_state#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-inverse-fast-derivatives
+          expression: actual
+        reference:
+          role: fresh-inverse-fast-derivatives
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id004
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id004
+        iterations:
+          variable: derivative_label
+          required_values:
+          - gradient-up
+          - gradient-down
+          - laplacian-up
+          - laplacian-down
+      full-recompute-derivatives:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_conditioned_sm_inverse_chain_matches_fresh_cached_state#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-inverse-fast-derivatives
+          expression: actual
+        reference:
+          role: full-recomputation-derivatives
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id005
+            - ao_eval
+            - det_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id005
+        iterations:
+          variable: derivative_label
+          required_values:
+          - gradient-up
+          - gradient-down
+          - laplacian-up
+          - laplacian-down
+    condition_check_iterations:
+      ? tests/test_jqmc_kernel/test_determinant.py::TestDeterminantStreamingState.test_conditioned_sm_inverse_chain_matches_fresh_cached_state#assert-3
+      : comparison: inverse-hop
+  - pytest_node: tests/test_jqmc_kernel/test_single_spin_determinant_ratios.py::test_single_spin_ratios_follow_explicit_moves
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H_ae_ccpvdz_cart.h5, det_kind: sd}
+    - {trexio_file: H_ecp_ccpvdz_cart.h5, det_kind: sd}
+    - {trexio_file: H_ae_ccpvdz_cart.h5, det_kind: agp}
+    - {trexio_file: H_ecp_ccpvdz_cart.h5, det_kind: agp}
+    - {trexio_file: H_ae_ccpvdz_cart.h5, det_kind: agpn}
+    - {trexio_file: H_ecp_ccpvdz_cart.h5, det_kind: agpn}
+    executable_checks:
+      rank-one:
+        iterations: {variable: hop_label, required_values: ['0', '1', '2', '3', '4', '5', '6']}
+        site: tests/test_jqmc_kernel/test_single_spin_determinant_ratios.py::test_single_spin_ratios_follow_explicit_moves#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rank-one-ratio, expression: rank1_ratios}
+        reference: {role: independent-one-electron-mo-quotient, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio]}
+      split-spin:
+        iterations: {variable: hop_label, required_values: ['0', '1', '2', '3', '4', '5', '6']}
+        site: tests/test_jqmc_kernel/test_single_spin_determinant_ratios.py::test_single_spin_ratios_follow_explicit_moves#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: split-spin-ratio, expression: split_ratios}
+        reference: {role: independent-one-electron-mo-quotient, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio]}
+      cached-candidates:
+        iterations: {variable: hop_label, required_values: ['0', '1', '2', '3', '4', '5', '6']}
+        site: tests/test_jqmc_kernel/test_single_spin_determinant_ratios.py::test_single_spin_ratios_follow_explicit_moves#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: cached-candidate-ratio, expression: cached_ratios}
+        reference: {role: independent-one-electron-mo-quotient, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio]}
+      winv:
+        iterations: {variable: hop_label, required_values: ['0', '1', '2', '3', '4', '5', '6']}
+        site: tests/test_jqmc_kernel/test_single_spin_determinant_ratios.py::test_single_spin_ratios_follow_explicit_moves#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: winv-ratio, expression: winv_ratios}
+        reference: {role: independent-one-electron-mo-quotient, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_ratio]}

@@ -1,0 +1,13 @@
+id: IMPL-MPC-KERNEL-CONTRACTS-001
+kind: implementation
+name: MPC kernel data contracts
+plain_language: The reviewed default MPC cutoff is pinned, and MPC data survives repeated jit compilation with distinct
+  instances and is a flat pytree.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestCorrection::test_default_cutoff_matches_reference_codes
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestKernelInvariants::test_mpc_data_survives_repeated_jit_with_distinct_instances
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestKernelInvariants::test_mpc_data_is_a_flat_pytree
