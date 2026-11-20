@@ -1,0 +1,39 @@
+id: MATH-AO-MOLECULAR-OVERLAP-ANALYTIC-REFERENCE-001
+kind: mathematical
+name: Vectorized molecular analytic AO overlap equals an independent Gauss-Hermite quadrature
+plain_language: >-
+  The molecular analytic Cartesian GTO overlap _compute_overlap_matrix_cart_analytic, evaluated over blocks of
+  primitive pairs within a memory budget, equals an independent per-primitive-pair Gauss-Hermite quadrature
+  (exact for the polynomial degrees involved; no binomial expansion or moment formula shared with production,
+  only the AO definition data) in the strict det_eval zone policy, for the Li all-electron cc-pVDZ, N2 and Cl2
+  ccECP cc-pVTZ Cartesian TREXIO leaves, the Cartesian twin of the spherical water ccECP cc-pVQZ leaf (up to g),
+  and the image-expanded diagnostic form (home rows times kernel columns of a multi-bucket periodic leaf). This
+  holds with the default block budget and with a budget that puts one AO in every block; for the molecular
+  leaves the public compute_overlap_matrix returns the same matrix. A wrong angular factor (ket polynomial order
+  lowered by one) and a dropped ket block must each fail the same comparison. Full and mixed are judged
+  separately (the kernel is fp64 det_eval in both). This is the overlap of the AO definition, not a basis-set
+  completeness or periodic lattice-sum claim.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_overlap_analytic.py::test_vectorized_analytic_overlap_matches_gauss_hermite_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: Li_ae_ccpvdz_cart.h5, block_budget: default}
+    - {case: Li_ae_ccpvdz_cart.h5, block_budget: one-ao-per-block}
+    - {case: N2_ecp_ccpvtz_cart.h5, block_budget: default}
+    - {case: N2_ecp_ccpvtz_cart.h5, block_budget: one-ao-per-block}
+    - {case: Cl2_ecp_ccpvtz_cart.h5, block_budget: default}
+    - {case: Cl2_ecp_ccpvtz_cart.h5, block_budget: one-ao-per-block}
+    - {case: water_ccecp_ccpvqz.h5, block_budget: default}
+    - {case: water_ccecp_ccpvqz.h5, block_budget: one-ao-per-block}
+    - {case: image-expanded, block_budget: default}
+    - {case: image-expanded, block_budget: one-ao-per-block}
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_overlap_analytic.py::test_gauss_hermite_reference_rejects_vectorized_overlap_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: N2_ecp_ccpvtz_cart.h5, fault: wrong-angular-factor}
+    - {case: N2_ecp_ccpvtz_cart.h5, fault: dropped-ket-block}
+    - {case: image-expanded, fault: wrong-angular-factor}
+    - {case: image-expanded, fault: dropped-ket-block}

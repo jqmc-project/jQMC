@@ -1,0 +1,26 @@
+id: PHY-RS-FAR-CELL-BLOCH-001
+kind: physical
+name: Bloch law of native geminal rows under far lattice translations
+plain_language: >-
+  On the Rust backend, translating one up electron by n.cell multiplies its geminal row by
+  exp(2 pi i k_frac.n) and leaves the other rows unchanged, for n = (1, 0, 0), (101, -37, 63),
+  (10001, -7003, 4005) and (1000001, -700003, 400005) (up to about 8e6 bohr). Covered leaves: complex
+  plane-wave, complex B-spline, complex pGTO + plane-wave composite and complex spherical pGTO at the
+  lithium k = (1/4, 1/4, 1/4) twist (compute_geminal_complex), and the real Gamma plane-wave and B-spline
+  leaves (compute_geminal_all_elements, phase 1). The phase is written from the integer n and the restated
+  fixture k. Each mode is judged with its own ao_eval / det_eval strict zone policy relative to max |G|; in
+  mixed precision this requires the native f32 paths to reduce the Bloch phase and to wrap the B-spline
+  coordinate in f64 before the f32 cast. Full and mixed are judged separately.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_periodic_invariants.py::test_far_lattice_translation_geminal_bloch_phase_native
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: pw_twist_jnone}
+    - {pattern: bspline_twist_jnone}
+    - {pattern: pgto_pw_twist_jnone}
+    - {pattern: twist_sphepgto_jnone}
+    - {pattern: pw_gamma_jnone}
+    - {pattern: bspline_gamma_jnone}

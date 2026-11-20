@@ -1,0 +1,60 @@
+id: IMPL-JAS-COMOVING-VALUE-001
+kind: implementation
+name: Nonzero strained DTN channels match independent NumPy transport
+plain_language: >-
+  On the cubic 10-Bohr two-H input, coefficient seed 7, explicit two-up/one-down
+  near-nuclear positions, cutoff orders 3 and 4 and scales 0.999 and 1.001, each
+  isolated u, chi and f channel contributes a nonzero value and agrees with the
+  NumPy reference under existing same-precision jastrow_eval strict bounds.
+  The seeded coefficients are drawn in the full coefficient space and
+  least-squares projected onto each inflation map's span, so the tested
+  coefficients do not depend on the LAPACK-specific null-space basis.
+  No determinant or cond(G) selection is involved. Inflation, transport,
+  distances and term sums share no production numerical helper; the stored
+  constraint maps and tangent maps remain common input data, not independently
+  derived physical constraints. Removing each active production transport
+  fails the identical verdict after a passing baseline. This supplements,
+  rather than replaces, the original seeded periodic configurations.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNValue::test_periodic_transport_channel_matches_numpy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {channel: u, C: 3, cutoff_scale: 0.999}
+    - {channel: u, C: 3, cutoff_scale: 1.001}
+    - {channel: u, C: 4, cutoff_scale: 0.999}
+    - {channel: u, C: 4, cutoff_scale: 1.001}
+    - {channel: chi, C: 3, cutoff_scale: 0.999}
+    - {channel: chi, C: 3, cutoff_scale: 1.001}
+    - {channel: chi, C: 4, cutoff_scale: 0.999}
+    - {channel: chi, C: 4, cutoff_scale: 1.001}
+    - {channel: f, C: 3, cutoff_scale: 0.999}
+    - {channel: f, C: 3, cutoff_scale: 1.001}
+    - {channel: f, C: 4, cutoff_scale: 0.999}
+    - {channel: f, C: 4, cutoff_scale: 1.001}
+    executable_checks:
+      active-channel-value:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNValue.test_periodic_transport_channel_matches_numpy#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: isolated-production-channel-value, expression: actual}
+        reference: {role: independent-NumPy-channel-value, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNValue::test_transport_verdict_rejects_missing_channel_transport
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {channel: u, C: 3, cutoff_scale: 0.999}
+    - {channel: u, C: 3, cutoff_scale: 1.001}
+    - {channel: u, C: 4, cutoff_scale: 0.999}
+    - {channel: u, C: 4, cutoff_scale: 1.001}
+    - {channel: chi, C: 3, cutoff_scale: 0.999}
+    - {channel: chi, C: 3, cutoff_scale: 1.001}
+    - {channel: chi, C: 4, cutoff_scale: 0.999}
+    - {channel: chi, C: 4, cutoff_scale: 1.001}
+    - {channel: f, C: 3, cutoff_scale: 0.999}
+    - {channel: f, C: 3, cutoff_scale: 1.001}
+    - {channel: f, C: 4, cutoff_scale: 0.999}
+    - {channel: f, C: 4, cutoff_scale: 1.001}

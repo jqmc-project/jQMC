@@ -1,0 +1,16 @@
+id: PHY-TREXIO-LSDA-SPIN-CHANNELS-001
+kind: physical
+name: LSDA spin-channel routing at complex k
+plain_language: In the spin-dependent (UHF / kUHF / LSDA) path the up determinant block is the stored alpha channel at
+  +k and the dn determinant block is the complex conjugate of the stored beta channel, conj(C_beta) on the with_negated_k
+  partner -k AO leaf -- never the unconjugated beta channel and never conj(C_alpha); the restricted path keeps
+  mo_dn = conj(mo_up) on the -k leaf byte-identically, and the combined twist writer plus load_twist round-trip stores and
+  reloads conj(C_beta) on the -k leaf.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_trexio_lsda_spin_channels.py::TestTREXIOLsdaSpinChannels::test_lsda_dn_channel_is_conjugated_beta_at_minus_k
+  - pytest_node: tests/test_jqmc_kernel/test_trexio_lsda_spin_channels.py::TestTREXIOLsdaSpinChannels::test_restricted_dn_channel_keeps_convention_b
+  - pytest_node: tests/test_jqmc_kernel/test_trexio_lsda_spin_channels.py::TestTREXIOLsdaSpinChannels::test_twist_converter_lsda_dn_payload_is_conjugated_beta

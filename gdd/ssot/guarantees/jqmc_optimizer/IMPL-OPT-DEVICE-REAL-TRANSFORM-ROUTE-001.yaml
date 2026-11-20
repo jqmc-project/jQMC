@@ -1,0 +1,61 @@
+id: IMPL-OPT-DEVICE-REAL-TRANSFORM-ROUTE-001
+kind: implementation
+name: A real wave function's device optimizer transform and SR/LM consumers are real and equal the complex route
+plain_language: >-
+  OptimizationCoordinateMap.transform_derivatives_device takes an explicit route decision all_real. The optimizer
+  entries (the single-k and twist-decomposed targets, and the device jackknife and device SR target when they are the
+  entry) decide it once over their communicator through collective_real_route
+  (IMPL-OPT-COLLECTIVE-TRANSFORM-ROUTE-001) and pass it to every device transform below them, so every rank takes one
+  route; a rank-local call without a decision takes the publication's own route (_real_transform_route, the host
+  transform's dtype-only decision, so device sources are never synchronized). On the real route (every block real
+  structure, every source real with no d_pbar) the columns are real Adj(p) and the identically zero imaginary
+  covector branch is never formed; every other input keeps the complex route unchanged. For N2 ccECP J2 (Euclidean) +
+  J3 (symmetric linear tie) + SD MO (S-Stiefel rows) the real route is float64 and equals the real part of the complex
+  route forced by the same sources cast to complex128 with a zero imaginary part, within the host coordinate-map pair,
+  both for the full columns and for the blockwise right= contraction of reduced LM. Downstream, the device SR (dense
+  direct and streaming CG, wide and tall) and the reduced and full device LM pencils run in real arithmetic and match
+  the complex route at the C9 SR-update tolerances (direct, and CG converged to an ATOL_PYTHON_FP64_LOOSE residual)
+  and the fp64 accumulator tolerances (jackknife, pencils); the device tall SR kernels omit the zero imaginary dual
+  block for real X and F (the twin of the host tall layout): every production tall route (local and sharded,
+  dense and chunked CG, local and sharded direct) hands its CG loop or direct solve an S-row dual for real samples
+  and a 2S-row dual for complex samples, witnessed by the dual RHS length recorded at trace time. The Rust/XLA transform parity
+  (IMPL-RS-OPTIMIZER-HOST-TRANSFORM-JACKKNIFE-PARITY-001) requires the same float64 dtype on both backends for real
+  wave functions. This is route parity on one realized wave function, not an independent proof of the transform (the
+  coordinate-map dense references and the Rust/XLA parity cover that); it carries no memory or timing
+  assertion beyond that dual length.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_real_wavefunction_device_transform_is_real_and_equals_complex_route_real_part
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{contraction: columns}, {contraction: right-basis}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_device_real_route.py::test_real_device_sr_direct_and_cg_match_complex_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{regime: tall}, {regime: wide}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_device_real_route.py::test_real_device_reduced_lm_pencil_matches_complex_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_device_real_route.py::test_real_wavefunction_optimizer_target_takes_real_device_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{lm_subspace_dim: 0}, {lm_subspace_dim: 4}, {lm_subspace_dim: -1}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_device_real_route.py::test_real_wavefunction_batch_selects_real_route_and_complex_batch_does_not
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_device_real_route.py::test_real_device_transform_is_float64_and_equals_complex_route_real_part
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_device_real_route.py::test_real_device_jackknife_matches_complex_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_device_real_route.py::test_real_tall_chunk_cg_kernel_omits_zero_imaginary_block
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_device_real_route.py::test_real_tall_routes_solve_the_sample_row_dual
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: solve_local_device_tall_real_cg}
+    - {route: solve_local_device_tall_real_cg_chunks}
+    - {route: solve_device_tall_real_cg_chunks_sharded}
+    - {route: solve_local_device_tall_real_direct}
+    - {route: solve_device_tall_real_direct_sharded}

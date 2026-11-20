@@ -1,11 +1,31 @@
-# JAX compatible modules
-
 (jax_compatible_modules_tags)=
 
-## Automatic Differentiations
+# Using jQMC kernels with JAX transformations
 
-All functions implemented in `jqmc` are written to be JAX compatible: they operate on `jax.numpy` arrays, avoid hidden side effects, and therefore work with `jax.grad`, `jax.hessian`, `jax.jit`, `jax.vmap`, and `jax.pmap`. This means you can take first- and second-order derivatives of any observable or loss you build from `jqmc` modules with respect to parameters (e.g., Jastrow coefficients), atomic coordinates, or other continuous inputs.
+## JAX transformations
 
-Functions that accept dataclass inputs (for example, `compute_local_energy(Hamiltonian_data, ...)`) are also differentiable. `jQMC` dataclasses use `flax.struct.dataclass`, and differentiable fields are registered as `pytree_node`, so JAX sees them as PyTrees and can propagate derivatives through them.
+The numerical kernels in `jqmc` operate on `jax.numpy` arrays and use
+`flax.struct.dataclass` containers whose differentiable fields are registered
+as PyTree leaves. Supported low-level kernels can therefore be composed with
+JAX transformations such as `jax.jit`, `jax.vmap`, `jax.grad`, and
+`jax.jacrev`. CLI, file-I/O, workflow, logging, and other host-side helpers are
+not transformation targets, and discrete control fields remain static.
 
-With the JAX automatic differentiation, `jQMC` can compute derivative quantities used in wavefunction optimization and force evaluation, such as log-derivatives of the wavefunction and derivatives of the local energy with respect to atomic positions (forces), by applying `jax.grad` to the corresponding scalar-valued functions in `jQMC`.
+Production wavefunction optimization, force, and stress calculations use the
+closed-form kernels in `jqmc.derivatives`. JAX automatic differentiation is
+used only as a test reference for these kernels; the XLA and Rust backends
+both run the analytic kernels ({doc}`analytic_derivatives`).
+
+When differentiating a low-level function directly, keep its static arguments
+fixed and use only the continuous PyTree leaves documented by that function.
+Passing a whole `Hamiltonian_data` object does not imply that every one of its
+fields is differentiable.
+
+## Complex-valued differentiation
+
+Complex inputs require an explicit distinction between Wirtinger derivatives,
+JAX's complex VJP convention, and the Euclidean descent direction.  The
+authoritative definitions, sign checks, and `holomorphic=True` contract are in
+{ref}`sec:complex_gradients`.  In particular, for a real scalar output JAX
+returns $2\,\partial f/\partial z$, and optimization takes a step along the
+conjugate of that returned value.

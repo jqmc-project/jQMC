@@ -1,0 +1,17 @@
+id: IMPL-GFMC-COMPLEX-DLTMOVE-PROPAGATION-SAME-INPUT-001
+kind: implementation
+name: Complex-twist GFMC_n dltmove propagation equals its per-hop same-input reference
+plain_language: >-
+  On the complex twist fixture twist_sphepgto_j12 (lithium_k025.h5, J1+J2), random mesh and non_local_move
+  dltmove, a short energy-only production XLA GFMC_n run (one walker, twenty intervals of three hops) is
+  observed at every real projection hop, and the candidates, CDF, diagonal, branching factor, running weight,
+  fresh inverse and selected move must equal the full-recompute dltmove leaf reference (explicit
+  exp(J(mesh) - J(r)) DLA factor) at the same inputs. The DLA-scaled non-local candidates must be strictly
+  negative at captured hops and the dltmove and tmove reference diagonals must separate by more than atol.
+  A wrong DLA Jastrow ratio in the GFMC_n body is thus visible per candidate in both precision modes. Full and
+  mixed are each judged with their own strict or medium zone tolerance.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_complex_dltmove_propagation_reference.py::test_gfmc_n_complex_twist_dltmove_propagation_matches_same_input_reference

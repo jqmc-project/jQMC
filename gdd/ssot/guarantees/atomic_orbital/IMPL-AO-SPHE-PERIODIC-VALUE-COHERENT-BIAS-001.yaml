@@ -1,0 +1,33 @@
+id: IMPL-AO-SPHE-PERIODIC-VALUE-COHERENT-BIAS-001
+kind: implementation
+name: The periodic spherical pGTO value routes carry no coherent scale bias against the fused float64-body value
+plain_language: >-
+  The standalone periodic spherical pGTO AO value routes (XLA compute_AOs through the non-guarded branch of
+  AOs_sphe_gto_data._compute_AOs, and the Rust jqmc_rs.compute_AOs_exact and jqmc_rs.compute_AOs f32 value kernel of the
+  mixed value path) keep the whole electron-independent radial factor N_n N_lm c and the exponent Z at storage precision
+  and round the primitive product N_n N_lm (c exp(-Z r^2)) once to the ao_eval zone dtype, with only r^2 and exp of the
+  once-rounded exponent in the zone. They therefore carry no coherent (per-primitive, image-independent) value-scale
+  error relative to the fused value of compute_AOs_value_grad_lap, whose body is evaluated in the float64 ao_grad_lap zone
+  and rounded once (rounding N_n, N_lm, c and Z to float32
+  separately in the mixed periodic value leaves a ~0.9 float32-eps coherent bias on the diffuse s shell; the fast-update kinetic energy pairs
+  G^-1 of these values with the float64 grad/lap, so the native e_L of pbc_gamma_sphepgto_j12_pade would then not close with
+  its components in mixed). On the committed periodic Gamma spherical-pGTO fixture pbc_gamma_sphepgto_j12_pade, at 4096
+  fixed points uniform in the cell (seed 0), for every s-type AO (S_00 is exactly one in both backends, isolating the
+  radial factor) the coherent relative scale kappa = sum v_ref (v - v_ref) / sum v_ref^2 satisfies
+  |kappa| <= AO_VALUE_COHERENT_BIAS_EPS_FRACTION * eps(ao_eval) + AO_VALUE_COHERENT_BIAS_FP64_EPS_MULTIPLE * eps(float64),
+  and the standard error relrms / sqrt(4096) of the statistic is at most a quarter of that bound. Full and mixed are judged
+  separately with the same rule; the full-precision kernels are unchanged.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001, VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_sphe_pgto_value_coherent_bias.py::test_sphe_pgto_xla_value_has_no_coherent_scale_bias
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_sphe_pgto_value_coherent_bias.py::test_sphe_pgto_rust_value_has_no_coherent_scale_bias
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: rust_compute_AOs_exact}
+    - {route: rust_compute_AOs}

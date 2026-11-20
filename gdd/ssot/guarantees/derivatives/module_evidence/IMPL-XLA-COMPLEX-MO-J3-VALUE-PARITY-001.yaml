@@ -1,0 +1,24 @@
+id: IMPL-XLA-COMPLEX-MO-J3-VALUE-PARITY-001
+kind: implementation
+name: XLA complex-MO J3 value field preserves the public real-MO value in mixed
+plain_language: >-
+  The value field returned with the J3 analytical derivative tower remains
+  equal to Re(compute_MOs) under the same mixed arithmetic policy and original
+  strict field-zone budget, on all six original complex-MO/phase cases. This
+  reference uses the plain value API, not an AD derivative or a full-policy
+  result. Finite real matching shapes and a nonzero field remain required.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_xla_complex_mo_j3_fields.py::test_xla_complex_mo_j3_basis_fields_match_autodiff_of_re_mo
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{kind: pgto, rotated: false}, {kind: pgto, rotated: true}, {kind: pgto_pw, rotated: false}, {kind: pgto_pw, rotated: true}, {kind: pgto_bspline, rotated: false}, {kind: pgto_bspline, rotated: true}]
+    executable_checks:
+      same-mode-value:
+        site: tests/test_jqmc_kernel/test_xla_complex_mo_j3_fields.py::_assert_same_mode_j3_value#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: same-mode-analytical-j3-value-field, expression: actual}
+        reference: {role: same-mode-real-public-mo-value, expression: reference}
+        precision:
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_eval, jastrow_grad_lap]}

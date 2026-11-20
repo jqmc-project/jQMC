@@ -1,0 +1,26 @@
+id: PHY-JQMCQE-PARENT-DIR-UPF-DISCOVERY-001
+kind: physical
+name: The parent-directory form of qe_save_dir converts with the same ccECP as the .save directory
+plain_language: >-
+  run_qe2jqmc (the route of jqmc-tool qe and QE_Workflow) resolves the QE *.save directory for UPF
+  auto-discovery exactly as load_qe_reference does, so giving the parent directory of prefix.save never drops the
+  pseudopotential. On the committed Li_gamma save with kind='pw', the conversions of li.save and of its parent out
+  both carry, on every atom, the Li ccECP table of Bennett et al. 2017 written out by hand (z_core 2; local terms
+  1/r exp(-15 r^2), 15 r exp(-15.047997 r^2), -1.242730 exp(-1.806054 r^2); s projector 6.752868 exp(-1.330248 r^2)),
+  not zero coefficients. At the fixed configuration R0+(0.3,0.2,-0.1), R1+(-0.25,0.4,0.15) Bohr, the ECP part of
+  the potential (V minus the bare Coulomb part of the same block) equals a hand-written reference (minimum-image
+  local terms plus the nearest-image s projector integrated with the unrotated 12-point icosahedral rule, only Psi
+  taken from jQMC), and V and E_L of the two conversions agree. The twist-average route on the parent of the
+  committed li_twist.save carries the same hand-written ccECP table in its shared Coulomb block as the li_twist.save
+  conversion. Full and mixed are each required.
+verdict_methods:
+- VM-PHY-REFERENCE-001
+required_evidence:
+- verdict_method: VM-PHY-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQENoUPFECPGuard::test_parent_dir_conversion_keeps_the_ccecp_of_the_save_dir_conversion
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQENoUPFECPGuard::test_parent_dir_twist_average_conversion_keeps_the_ccecp
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

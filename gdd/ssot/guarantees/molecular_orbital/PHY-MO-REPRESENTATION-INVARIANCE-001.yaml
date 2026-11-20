@@ -1,0 +1,396 @@
+id: PHY-MO-REPRESENTATION-INVARIANCE-001
+kind: physical
+name: Basis-representation invariance of molecular orbitals
+plain_language: 'Physics does not depend on the basis representation: spherical/cartesian round trips preserve the MOs,
+  the projection is invariant to cartesian AO normalization, and complex Bloch round trips preserve the twist.'
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions::test_periodic_lithium_spherical_cartesian_roundtrip_preserves_mos
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_periodic_lithium_spherical_cartesian_roundtrip_preserves_mos#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: values[0]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+        iterations:
+          variable: representation
+          required_values:
+          - cart
+          - roundtrip
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_periodic_lithium_spherical_cartesian_roundtrip_preserves_mos#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+        iterations:
+          variable: comparison_label
+          required_values:
+          - cart-x
+          - cart-y
+          - cart-z
+          - roundtrip-x
+          - roundtrip-y
+          - roundtrip-z
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_periodic_lithium_spherical_cartesian_roundtrip_preserves_mos#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: laplacians[0]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+        iterations:
+          variable: representation
+          required_values:
+          - cart
+          - roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions::test_cart_to_spherical_projection_is_invariant_to_cartesian_ao_normalization
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_cart_to_spherical_projection_is_invariant_to_cartesian_ao_normalization#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: values_rescaled
+        reference:
+          role: existing-test-reference
+          expression: values
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_cart_to_spherical_projection_is_invariant_to_cartesian_ao_normalization#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: laplacian_rescaled
+        reference:
+          role: existing-test-reference
+          expression: laplacian
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions::test_complex_bloch_sphe_cart_roundtrip_preserves_twist_and_mos
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_complex_bloch_sphe_cart_roundtrip_preserves_twist_and_mos#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: values[0]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+        iterations:
+          variable: representation
+          required_values:
+          - cart
+          - roundtrip
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_complex_bloch_sphe_cart_roundtrip_preserves_twist_and_mos#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+        iterations:
+          variable: comparison_label
+          required_values:
+          - cart-x
+          - cart-y
+          - cart-z
+          - roundtrip-x
+          - roundtrip-y
+          - roundtrip-z
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_complex_bloch_sphe_cart_roundtrip_preserves_twist_and_mos#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: laplacians[0]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+        iterations:
+          variable: representation
+          required_values:
+          - cart
+          - roundtrip
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_complex_bloch_sphe_cart_roundtrip_preserves_twist_and_mos#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: translated_value
+        reference:
+          role: existing-test-reference
+          expression: expected_phase * value
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+        iterations:
+          variable: representation
+          required_values:
+          - sphe
+          - cart
+          - roundtrip
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_complex_bloch_sphe_cart_roundtrip_preserves_twist_and_mos#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: expected_phase * expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+        iterations:
+          variable: comparison_label
+          required_values:
+          - sphe-x
+          - sphe-y
+          - sphe-z
+          - cart-x
+          - cart-y
+          - cart-z
+          - roundtrip-x
+          - roundtrip-y
+          - roundtrip-z
+      comparison-6:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_complex_bloch_sphe_cart_roundtrip_preserves_twist_and_mos#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: translated_laplacian
+        reference:
+          role: existing-test-reference
+          expression: expected_phase * laplacian
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_grad
+            - mo_lap
+        iterations:
+          variable: representation
+          required_values:
+          - sphe
+          - cart
+          - roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions::test_MOs_sphe_to_cart
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_MOs_sphe_to_cart#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mo_cart
+        reference:
+          role: existing-test-reference
+          expression: mo_sphe
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_MOs_sphe_to_cart#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: lap_cart
+        reference:
+          role: existing-test-reference
+          expression: lap_sphe
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_lap
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions::test_MOs_cart_to_sphe
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_MOs_cart_to_sphe#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mo_sphe
+        reference:
+          role: existing-test-reference
+          expression: mo_cart
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_MOs_cart_to_sphe#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: lap_sphe
+        reference:
+          role: existing-test-reference
+          expression: lap_cart
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_grad_lap
+            - mo_lap

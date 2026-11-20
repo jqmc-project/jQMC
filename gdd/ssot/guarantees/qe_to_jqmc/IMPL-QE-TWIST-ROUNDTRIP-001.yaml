@@ -1,0 +1,17 @@
+id: IMPL-QE-TWIST-ROUNDTRIP-001
+kind: implementation
+name: Twist-average conversion round trip
+plain_language: 'The converted Hamiltonian and twist-average inputs round-trip (route parity): HDF5, composite
+  and B-spline+DTN round trips, complete twist enumeration, and per-k agreement with the QE XML k-point list.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCHamiltonian::test_build_hamiltonian_pw_h5_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_convert_qe_to_twist_average_input_composite_round_trip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_multi_twist.py::TestQEMultiTwist::test_gamma_bspline_twist_roundtrip_with_dtn
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_multi_twist.py::TestQEMultiTwist::test_load_qe_kpoint_list_enumerates_all_twists
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_multi_twist.py::TestQEMultiTwist::test_load_qe_reference_per_k_matches_xml_kpoint_list
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_multi_twist.py::TestQEMultiTwist::test_convert_qe_to_twist_average_input_writes_combined_with_all_twists
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQELSDANonGamma::test_multi_twist_lsda_bspline_kinds_round_trip

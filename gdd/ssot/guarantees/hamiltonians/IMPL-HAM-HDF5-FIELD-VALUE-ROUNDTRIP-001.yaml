@@ -1,0 +1,45 @@
+id: IMPL-HAM-HDF5-FIELD-VALUE-ROUNDTRIP-001
+kind: implementation
+name: HDF5 save and reload restores every stored Hamiltonian field value, including the geminal time_reversal flag
+plain_language: >-
+  For every declared canonical Hamiltonian (WF-PATTERN-001 to WF-PATTERN-017), Hamiltonian_data.save_to_hdf5 followed by
+  Hamiltonian_data.load_from_hdf5 restores every dataclass field of the written in-memory object, recursively and
+  including the static (non-pytree) fields, with the stored value and component dtype; no field is replaced by its
+  dataclass default. In particular the geminal time_reversal flag of SD, AGP and AGPn is restored with the stored value.
+  For the spin-unrestricted AGP (WF-PATTERN-007) and AGPn (WF-PATTERN-003, 006, 014) patterns, written with
+  time_reversal=False, the reloaded flag equals the stored one, and ln|Psi| at seeded electron configurations of the
+  reloaded wavefunction agrees with the in-memory one before and after the same geminal optimizer step (in-memory
+  variational blocks and seeded update vector applied through Wavefunction_data.apply_block_updates, whose AGP lambda
+  symmetrization and AGPn dn-channel update depend on the flag) within the HDF5 round-trip tolerance family. The
+  reference is the in-memory object; full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hdf5_precision_alignment.py::test_hdf5_roundtrip_restores_every_stored_field_value
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern_id: WF-PATTERN-001}
+    - {pattern_id: WF-PATTERN-002}
+    - {pattern_id: WF-PATTERN-003}
+    - {pattern_id: WF-PATTERN-004}
+    - {pattern_id: WF-PATTERN-005}
+    - {pattern_id: WF-PATTERN-006}
+    - {pattern_id: WF-PATTERN-007}
+    - {pattern_id: WF-PATTERN-008}
+    - {pattern_id: WF-PATTERN-009}
+    - {pattern_id: WF-PATTERN-010}
+    - {pattern_id: WF-PATTERN-011}
+    - {pattern_id: WF-PATTERN-012}
+    - {pattern_id: WF-PATTERN-013}
+    - {pattern_id: WF-PATTERN-014}
+    - {pattern_id: WF-PATTERN-015}
+    - {pattern_id: WF-PATTERN-016}
+    - {pattern_id: WF-PATTERN-017}
+  - pytest_node: tests/test_jqmc_kernel/test_hdf5_precision_alignment.py::test_hdf5_roundtrip_unrestricted_geminal_keeps_time_reversal_through_optimizer_step
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern_id: WF-PATTERN-003}
+    - {pattern_id: WF-PATTERN-006}
+    - {pattern_id: WF-PATTERN-007}
+    - {pattern_id: WF-PATTERN-014}

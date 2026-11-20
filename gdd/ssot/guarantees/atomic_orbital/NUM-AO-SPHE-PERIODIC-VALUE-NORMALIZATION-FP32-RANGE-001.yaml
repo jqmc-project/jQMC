@@ -1,0 +1,45 @@
+id: NUM-AO-SPHE-PERIODIC-VALUE-NORMALIZATION-FP32-RANGE-001
+kind: numerical
+name: The mixed-precision periodic spherical pGTO value normalization is formed in float64 and rounded once, so it keeps the float32 range
+plain_language: >-
+  The electron-independent spherical radial normalization N_n = sqrt(2^(2l+3) (l+1)! (2a)^(l+3/2) / ((2l+2)! sqrt(pi)))
+  of the periodic and complex-Bloch spherical pGTO value kernels (XLA compute_AOs through the non-guarded branch of
+  AOs_sphe_gto_data._compute_AOs, and the Rust compute_AOs f32 kernel of the mixed value path) is formed from the
+  float64 storage values and rounded once to the ao_eval zone dtype, so that mixed precision loses only precision, not
+  range, in it (assembling it from float32 pieces returns inf although N_n and the AO value are
+  representable in float32; with that assembly the Rust window is 10-20x narrower than the XLA one). For one m = 0 spherical primitive
+  (coefficient 1) on an AOs_sphe_pgto_data leaf and on an AOs_sphe_pgto_complex_data leaf (twist (0.25, 0, 0)) in a
+  cubic 40 bohr cell, at l = 2 .. 6 with exponents between the Rust and XLA bounds of the float32 assembly (l = 2 at a = 1e10, 3 at
+  1e8, 4 at 1e6, 5 at 1e5, 6 at 1e4) and above both (l = 2 at a = 1e11, 3 at 1e9, 4 at 1e7, 5 at 1e6, 6 at 1e5), at the
+  radial maximum r^2 = l / (2a) on the z axis and in a tilted direction, the XLA and Rust values are finite and equal
+  the lattice-image sum of the closed form N_r |d|^l exp(-a d^2) P_l(cos theta) sqrt((2l+1)/(4 pi)) with
+  N_r^2 = 2 (2a)^(l+3/2) / Gamma(l+3/2) evaluated with math.lgamma (no jqmc code) within the strict ao_eval tolerance of
+  the active mode; the complex-Bloch value has a vanishing imaginary part. Full and mixed are judged separately; the
+  full-precision kernels are unchanged.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_sphe_norm_fp32_range.py::test_periodic_spherical_ao_value_normalization_keeps_fp32_range
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: l2_a1e10_rust, leaf: periodic}
+    - {case: l2_a1e10_rust, leaf: complex}
+    - {case: l3_a1e8_rust, leaf: periodic}
+    - {case: l3_a1e8_rust, leaf: complex}
+    - {case: l4_a1e6_rust, leaf: periodic}
+    - {case: l4_a1e6_rust, leaf: complex}
+    - {case: l5_a1e5_rust, leaf: periodic}
+    - {case: l5_a1e5_rust, leaf: complex}
+    - {case: l6_a1e4_rust, leaf: periodic}
+    - {case: l6_a1e4_rust, leaf: complex}
+    - {case: l2_a1e11_both, leaf: periodic}
+    - {case: l2_a1e11_both, leaf: complex}
+    - {case: l3_a1e9_both, leaf: periodic}
+    - {case: l3_a1e9_both, leaf: complex}
+    - {case: l4_a1e7_both, leaf: periodic}
+    - {case: l4_a1e7_both, leaf: complex}
+    - {case: l5_a1e6_both, leaf: periodic}
+    - {case: l5_a1e6_both, leaf: complex}
+    - {case: l6_a1e5_both, leaf: periodic}
+    - {case: l6_a1e5_both, leaf: complex}

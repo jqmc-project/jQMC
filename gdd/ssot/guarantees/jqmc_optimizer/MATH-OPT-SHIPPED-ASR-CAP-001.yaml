@@ -1,0 +1,16 @@
+id: MATH-OPT-SHIPPED-ASR-CAP-001
+kind: mathematical
+name: Shipped aSR cap selects the signed fallback for an outlier root
+plain_language: >-
+  The shipped VMC accelerated-SR configuration resolves an absolute root cap of 0.5 and a fallback magnitude of 0.1.
+  Replaying its fixed-seed all-electron H2 optimization batch with SR epsilon 10 exercises the cap. The independent
+  dense model must find a reference-connected stationary root of magnitude greater than 0.5. The production scale
+  equals 0.1 with that root's sign, and the update direction and predicted energy agree with the dense model evaluated
+  at the fallback scale. The reference uses the reviewed values independently of the runtime defaults.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_shipped_default_asr_update_matches_dense_recomputation
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

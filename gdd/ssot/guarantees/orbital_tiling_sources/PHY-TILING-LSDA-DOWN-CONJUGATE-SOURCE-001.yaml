@@ -1,0 +1,24 @@
+id: PHY-TILING-LSDA-DOWN-CONJUGATE-SOURCE-001
+kind: physical
+name: Tiled independent-spin down channels are the conjugate of their own beta sources
+plain_language: >-
+  Both tiled independent-spin (LSDA / UHF) inputs put the down channel at the opposite twists as the complex conjugate
+  of beta's own orbitals. Tiled QE B-splines (build_tiled_bspline_wavefunction): the down leaf is the with_negated_k()
+  partner of the tiled leaf built from the occupied beta splines at +k -- negated primitive k, conjugated control
+  points, beta's and not alpha's payload, values equal to the conjugated beta values -- and the SD passes the
+  opposite-twist sanity check. Tiled TREXIO UHF (read_tiled_trexio_sector): the positive-sector down source rows are the
+  +k beta rows, i.e. the conjugate of the reader's conj(C_beta) rows and not those rows themselves, and the -k_s down
+  orbitals equal the reader's conj(beta) orbitals with the 1/sqrt(N) tiling normalization. Evidence: the committed QE
+  O_tiling_sectors LSDA save at k = (0,0,0), (1/2,0,0) on the Gamma 2x1x1 supercell, and the committed KUHF oxygen
+  TREXIO files (Cartesian and spherical) in the general 2x1x1 sector, at fixed points, strict zone budgets, full and
+  mixed separately.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_build_tiled_bspline_lsda_down_leaf_is_conjugated_beta_partner
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_sectors.py::test_trexio_uhf_tiled_down_channel_is_conjugated_beta
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{basis: cart}, {basis: sphe}]

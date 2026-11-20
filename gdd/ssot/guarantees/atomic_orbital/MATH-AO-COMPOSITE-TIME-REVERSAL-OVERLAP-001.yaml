@@ -1,0 +1,39 @@
+id: MATH-AO-COMPOSITE-TIME-REVERSAL-OVERLAP-001
+kind: mathematical
+name: Composite overlap respects lazily conjugated time-reversed spline tables
+plain_language: >-
+  Time-reversed H2 periodic Cartesian pGTO plus complex B-spline composites at
+  k = (-1/4, -1/4, -1/4) retain the cell metric S = integral conj(chi_mu) chi_nu
+  when the spline stores its conjugation lazily. The pGTO/spline cross block
+  equals the independent axis-factorised integral within strict det_eval
+  tolerance and the fine knot Gauss-Legendre quadrature of actual AO values
+  within strict ao_eval/det_eval tolerance in units of the block's largest
+  element. The diagonal blocks equal the children's own overlaps, the lower
+  cross block is the conjugate transpose of the upper one, and the matrix is
+  positive semidefinite within the S-Stiefel backward-error bound. Duplicated
+  time-reversed spline children give the child's own exact overlap; the
+  time-reversed plane-wave/spline block agrees with fine cell quadrature.
+  Full and mixed are judged separately, with quadrature AO samples evaluated
+  at fp64 in both modes to match the fp64 overlap blocks.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_composite_cross_block_matches_analytic_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: time-reversed, kind: bspline}
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_composite_cross_block_matches_fine_cell_quadrature
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: time-reversed, kind: bspline}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_composite_overlap_diagonal_blocks_are_the_children_overlaps
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: time-reversed, kind: bspline}
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_composite_same_family_and_plane_wave_bspline_pairs_are_exact
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: time-reversed}

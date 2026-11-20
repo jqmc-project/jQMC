@@ -1,0 +1,22 @@
+id: MATH-OPT-SR-RECOMPUTE-FAULT-DETECTION-001
+kind: mathematical
+name: The real-batch dense SR recompute detects a dropped O centring and a leaking Jastrow stop_gradient
+plain_language: >-
+  The dense NumPy SR recompute of the H2 J1+J2 real-sampler step (batch equal to an independent evaluation, then
+  target q equal to the dense (S + epsilon diag S) q = f solve) rejects a production SR sample builder that does not
+  centre O. With the masked-autograd c-axis provider and J2 frozen, the same chain holds (J2 bit-identical) and
+  rejects a stop_gradient leaking from the frozen J2 block onto the shared Jastrow container, which removes the J1
+  derivative. Both verdicts are deterministic and run in each precision mode.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_mask_and_floor.py::test_negative_control_dropped_centring_fails_real_batch_sr_recompute
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_mask_and_floor.py::test_masked_autograd_j2_frozen_step_matches_sr_recompute
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_mask_and_floor.py::test_negative_control_leaking_jastrow_stop_gradient_fails_sr_recompute
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

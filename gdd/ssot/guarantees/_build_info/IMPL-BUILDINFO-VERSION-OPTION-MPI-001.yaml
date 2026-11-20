@@ -1,0 +1,14 @@
+id: IMPL-BUILDINFO-VERSION-OPTION-MPI-001
+kind: implementation
+name: The in-process jqmc --version check leaves MPI initialized and usable
+plain_language: >-
+  jqmc --version is checked through the in-process _cli boundary, which prints exactly the two
+  lines and exits 0; afterwards MPI is still initialized, not finalized, and a collective on COMM_WORLD succeeds.
+  jqmc_cli.main, which owns the process-global MPI/JAX teardown, is not called inside the pytest worker.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_routes.py::test_jqmc_version_option_in_process_keeps_mpi_running
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

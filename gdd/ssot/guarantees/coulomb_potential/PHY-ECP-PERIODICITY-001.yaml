@@ -1,0 +1,35 @@
+id: PHY-ECP-PERIODICITY-001
+kind: physical
+name: Periodicity of the non-local ECP
+plain_language: The non-local ECP is invariant under lattice translations and its projector on the unwrapped configuration
+  equals the molecular-image evaluation; the all-pairs variant refuses to run under PBC.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpPhysical::test_ecp_non_local_pbc_lattice_translation_invariance
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpPhysical.test_ecp_non_local_pbc_lattice_translation_invariance#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sum_tr
+        reference:
+          role: existing-test-reference
+          expression: sum_base
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpPhysical::test_ecp_non_local_pbc_projector_unwrapped_vs_molecular_image
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpError::test_compute_ecp_non_local_parts_all_pairs_raises_in_pbc

@@ -1,0 +1,101 @@
+id: MATH-DET-DERIVATIVE-CONSISTENCY-001
+kind: mathematical
+name: Derivative consistency of ln(det) evaluation
+plain_language: Analytical gradients and Laplacians of ln(det) equal the autodiff oracle across the determinant
+  variants.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantGradientVariants::test_analytic_and_auto_grads_and_laplacians_ln_Det
+    required_parameter_cases:
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: H_ae_ccpvdz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    required_precision_modes:
+    - full
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantGradientVariants.test_analytic_and_auto_grads_and_laplacians_ln_Det#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-ln-det-gradient-up
+          expression: np.asarray(grad_ln_D_up_analytic)
+        reference:
+          role: autodiff-ln-det-gradient-up
+          expression: np.asarray(grad_ln_D_up_auto)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_grad_lap
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantGradientVariants.test_analytic_and_auto_grads_and_laplacians_ln_Det#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-ln-det-gradient-down
+          expression: np.asarray(grad_ln_D_dn_analytic)
+        reference:
+          role: autodiff-ln-det-gradient-down
+          expression: np.asarray(grad_ln_D_dn_auto)
+        empty_cases:
+        - selector:
+            trexio_file: H_ae_ccpvdz_cart.h5
+          shape:
+          - 0
+          - 3
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_grad_lap
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantGradientVariants.test_analytic_and_auto_grads_and_laplacians_ln_Det#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-ln-det-laplacian-up
+          expression: np.asarray(lap_ln_D_up_analytic)
+        reference:
+          role: autodiff-ln-det-laplacian-up
+          expression: np.asarray(lap_ln_D_up_auto)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_grad_lap
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantGradientVariants.test_analytic_and_auto_grads_and_laplacians_ln_Det#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-ln-det-laplacian-down
+          expression: np.asarray(lap_ln_D_dn_analytic)
+        reference:
+          role: autodiff-ln-det-laplacian-down
+          expression: np.asarray(lap_ln_D_dn_auto)
+        empty_cases:
+        - selector:
+            trexio_file: H_ae_ccpvdz_cart.h5
+          shape:
+          - 0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_open_shell_mo_scale.py::test_scaled_open_shell_derivatives_have_full_oracles_or_mixed_fidelity
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save
+      scale: 1.0e-85
+    - fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save
+      scale: 1.0e+85
+    - fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      scale: 1.0e-85
+    - fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save
+      scale: 1.0e+85

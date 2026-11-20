@@ -1,0 +1,68 @@
+id: IMPL-PREC-REAL-FIXTURE-ZONES-001
+kind: implementation
+name: Executed molecular ECP and complex periodic precision-zone boundaries
+plain_language: >-
+  On committed molecular H2 ECP and non-Gamma Li ECP wavefunctions, every one
+  of 26 named kernel outputs must have its declared dtype kind and byte width
+  and be nonempty and finite. Compare the four metadata fields exactly in
+  full and mixed separately, with seed 2025, a single configuration and no
+  condition-number screening. Complex periodic GTO AO values use the dedicated
+  ao_bloch_eval zone (float64 in full and mixed); real molecular values retain
+  ao_eval. Actual non-Gamma AO and geminal checks must
+  reject a component-width change and loss of complex kind after a passing
+  unmodified baseline. This is a dtype and safety contract, not physical
+  value accuracy, completeness of all kernels, or cross-precision comparison.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_precision_fixture_dtypes.py::test_real_ecp_and_complex_periodic_kernel_zone_dtypes
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {filename: H2_ecp_ccpvtz.h5}
+    - {filename: lithium_k025.h5}
+    executable_checks:
+      each-executed-kernel-zone:
+        site: tests/test_jqmc_kernel/test_precision_fixture_dtypes.py::test_real_ecp_and_complex_periodic_kernel_zone_dtypes#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: executed-dtype-kind-width-nonempty-finite, expression: actual_descriptor}
+        reference: {role: zone-policy-dtype-and-required-safety, expression: expected_descriptor}
+        iterations:
+          variable: label
+          required_values:
+          - ao-value
+          - ao-laplacian
+          - mo-value
+          - mo-laplacian
+          - geminal
+          - row-update
+          - column-update
+          - log-det
+          - jastrow
+          - bare-coulomb
+          - local-ecp
+          - nonlocal-ecp-grid
+          - nonlocal-ecp-total
+          - kinetic
+          - log-wavefunction
+          - local-energy
+          - ao-gradient-0
+          - ao-gradient-1
+          - ao-gradient-2
+          - mo-gradient-0
+          - mo-gradient-1
+          - mo-gradient-2
+          - det-derivative-0
+          - det-derivative-1
+          - det-derivative-2
+          - det-derivative-3
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_precision_fixture_dtypes.py::test_zone_dtype_verdict_rejects_complex_kernel_drift
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kernel: ao, fault: component-width}
+    - {kernel: ao, fault: complex-kind}
+    - {kernel: geminal, fault: component-width}
+    - {kernel: geminal, fault: complex-kind}

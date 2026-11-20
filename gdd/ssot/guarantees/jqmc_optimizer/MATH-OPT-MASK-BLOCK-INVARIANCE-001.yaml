@@ -1,0 +1,25 @@
+id: MATH-OPT-MASK-BLOCK-INVARIANCE-001
+kind: mathematical
+name: Real-wavefunction block log-derivative is independent of which other blocks are active
+plain_language: >-
+  For H2 all-electron J1+J2+J3 wavefunctions with a dense AGP lambda block or a time-reversal SD MO block, the
+  production MCMC sampler run from one seed with every block active and with exactly one block active walks
+  bit-identically, and the derivative source it publishes for that block (J1, J2, J3 matrix, lambda or MO) is
+  exactly the one published under the all-active mask. This holds for the analytic c-axis kernels and for the
+  masked-autograd provider, where with_param_grad_mask applies stop_gradient inside the differentiated function.
+  With every block active each published block equals an independent per-coordinate derivative of ln Psi at the
+  sampled configurations and is non-zero. A stop_gradient leaking from a frozen Jastrow block onto the shared
+  Jastrow container fails the invariance verdict.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_mask_and_floor.py::test_all_active_block_derivatives_match_independent_coordinate_derivatives
+    required_parameter_cases: [{"wavefunction":"agp_lambda","path":"analytic"},{"wavefunction":"agp_lambda","path":"autograd"},{"wavefunction":"sd_mo","path":"analytic"},{"wavefunction":"sd_mo","path":"autograd"}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_mask_and_floor.py::test_block_log_derivative_is_mask_invariant
+    required_parameter_cases: [{"wavefunction":"agp_lambda","path":"analytic","flag":"opt_J1_param"},{"wavefunction":"agp_lambda","path":"analytic","flag":"opt_J2_param"},{"wavefunction":"agp_lambda","path":"analytic","flag":"opt_J3_param"},{"wavefunction":"agp_lambda","path":"analytic","flag":"opt_geminal"},{"wavefunction":"agp_lambda","path":"autograd","flag":"opt_J1_param"},{"wavefunction":"agp_lambda","path":"autograd","flag":"opt_J2_param"},{"wavefunction":"agp_lambda","path":"autograd","flag":"opt_J3_param"},{"wavefunction":"agp_lambda","path":"autograd","flag":"opt_geminal"},{"wavefunction":"sd_mo","path":"analytic","flag":"opt_J1_param"},{"wavefunction":"sd_mo","path":"analytic","flag":"opt_J2_param"},{"wavefunction":"sd_mo","path":"analytic","flag":"opt_J3_param"},{"wavefunction":"sd_mo","path":"analytic","flag":"opt_geminal"},{"wavefunction":"sd_mo","path":"autograd","flag":"opt_J1_param"},{"wavefunction":"sd_mo","path":"autograd","flag":"opt_J2_param"},{"wavefunction":"sd_mo","path":"autograd","flag":"opt_J3_param"},{"wavefunction":"sd_mo","path":"autograd","flag":"opt_geminal"}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_mask_and_floor.py::test_negative_control_leaking_jastrow_stop_gradient_breaks_mask_invariance
+    required_parameter_cases: [{"flag":"opt_J1_param"},{"flag":"opt_J2_param"},{"flag":"opt_J3_param"}]
+    required_precision_modes: [full, mixed]

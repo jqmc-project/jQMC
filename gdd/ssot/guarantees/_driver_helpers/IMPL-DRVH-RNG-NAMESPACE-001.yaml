@@ -1,0 +1,12 @@
+id: IMPL-DRVH-RNG-NAMESPACE-001
+kind: implementation
+name: Rank and twist RNG namespace compatibility
+plain_language: The per-rank RNG helper returns the declared uint32[8] seed words and nonnegative 63-bit JAX seed for five fixed compatibility vectors. The selected 20 scalar/rank and twist/rank keys have distinct seed arrays and JAX seeds, including trailing-zero namespace extensions. A single-twist wrapper and tuple/list/array checkpoint seed forms preserve the corresponding streams exactly. This finite deterministic check does not claim universal collision freedom or statistical independence.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_rank_rng_streams.py::test_rank_rng_derivation_matches_fixed_vectors
+  - pytest_node: tests/test_jqmc_kernel/test_rank_rng_streams.py::test_rank_twist_rng_namespaces_do_not_alias_on_selected_keys
+  - pytest_node: tests/test_jqmc_kernel/test_rank_rng_streams.py::test_rank_rng_checkpoint_seed_forms_and_single_twist_preserve_stream

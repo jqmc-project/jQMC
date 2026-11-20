@@ -1,0 +1,42 @@
+id: NUM-DERIV-MIXED-001
+verdict_methods:
+- VM-NUM-SMOKE-001
+name: Mixed-precision derivative route execution
+kind: numerical
+plain_language: Every reviewed derivative route must run in mixed precision and return finite outputs with the expected
+  shape and public dtype.
+statement: Every reviewed continuous and GFMC analytical public route executes in mixed precision and returns a nonempty,
+  shape-valid, finite floating-point pytree. This smoke guarantee is additional route/shape/dtype evidence and does not
+  replace the analytical-versus-AD correctness evidence required separately in both precision modes.
+scope:
+  universe: derivatives.mixed_route_cases.v1
+  fixture_set: DERIV-FIX-MIXED-SMOKE-001
+  expected_route_classes: 10
+  continuous:
+    quantities:
+    - ln-Psi
+    - local-energy
+    routes:
+    - c
+    - r-plus-R
+    - eps
+  gfmc:
+    algorithms:
+    - conventional
+    - load-balanced
+    routes:
+    - positions
+    - strain
+required_evidence:
+  proof: production-smoke
+  precision:
+  - mixed
+  assertions:
+  - floating-leaf-present
+  - expected-shape
+  - finite
+  pytest:
+    path: tests/test_jqmc_kernel/test_mixed_precision.py
+    symbols:
+    - test_mixed_production_continuous_analytical_smoke
+    - test_mixed_production_gfmc_analytical_smoke

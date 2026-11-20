@@ -1,0 +1,64 @@
+id: IMPL-GFMC-T-FORCE-SAME-INPUT-001
+kind: implementation
+name: GFMC_t measurement-step force equals its same-input public-entry reassembly, with and without SWCT
+plain_language: At every measurement step of short one-walker production GFMC_t runs (seed 3446, three steps; H2
+  all-electron and N2 ccECP molecules, periodic bcc Li ccECP; J1+J2+J3; tmove, and dltmove for N2), a non-altering spy on the branching
+  draw records the positions, mesh rotation and raw force leaves the driver holds. At those inputs the raw
+  Hellmann-Feynman and Pulay leaves are recomputed with fresh inverses by the public entry points
+  jqmc.derivatives.gfmc.grad_e_L_t_wrt_positions and jqmc.derivatives.compute_grad_ln_Psi, and the stored no-SWCT
+  and SWCT force_HF, force_PP and E_L*force_PP are rebuilt from them with the SWCT weights and weight gradients of
+  jqmc.swct contracted explicitly. The stored SWCT correction, the difference of two runs that differ only in
+  use_swct, equals the recomputed correction and is non-zero. The observed run is bit-identical to an unobserved
+  run except its force accumulators, which agree within the same-precision reduction-order pair (on GPU the ECP
+  force adds with XLA scatter-add atomics in a run-dependent order), and the two use_swct runs have
+  bit-identical trajectories except their force leaves, which agree at the reduction-order tolerance. Full and mixed are each judged with their own
+  strict policy. This is a same-backend route check of driver inputs, cached inverses, SWCT contraction and
+  storage; it certifies neither the derivative formulas (their own guarantees do), multi-walker weighting and
+  reconfiguration, nor the native Rust chunk.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_t_force_same_input.py::test_gfmc_t_measurement_force_matches_public_entry_points
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+      non_local_move: tmove
+    - trexio_file: N2_ecp_ccpvtz_cart.h5
+      non_local_move: tmove
+    - trexio_file: N2_ecp_ccpvtz_cart.h5
+      non_local_move: dltmove
+    - trexio_file: lithium.h5
+      non_local_move: tmove
+    executable_checks:
+      w11-strict-force-helper:
+        site: tests/test_jqmc_kernel/test_gfmc_t_force_same_input.py::_assert_close#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic

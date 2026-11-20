@@ -1,0 +1,74 @@
+id: IMPL-CLI-LOGGING-001
+kind: implementation
+name: TOML verbosity selects exact log levels and output destinations
+plain_language: >-
+  Actual CLI TOML parsing and logging setup honor low, high, devel, mpi-low,
+  mpi-high and mpi-devel, and the omitted default. On explicitly supplied ranks
+  zero and one, ordinary logging suppresses non-root messages below ERROR while
+  MPI logging writes the declared level to the correct rank-specific file.
+  Logger and handler levels, emitted message sequences and destinations match
+  exact expectations. Unknown strings and non-string values are rejected, not
+  silently converted to INFO. Each wrong-level or wrong-rank-file control follows
+  a successful baseline. These are logging unit contracts with a supplied MPI
+  communicator, stopped before JAX initialization; they do not certify MPI
+  collectives, wavefunction evaluation, optimizer options or the max_time exit.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_logging_contract.py::test_toml_verbosity_controls_levels_and_output
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {verbosity: default, base_level: 20, allowed_messages: [info, error], rank: 0}
+    - {verbosity: default, base_level: 20, allowed_messages: [info, error], rank: 1}
+    - {verbosity: low, base_level: 20, allowed_messages: [info, error], rank: 0}
+    - {verbosity: low, base_level: 20, allowed_messages: [info, error], rank: 1}
+    - {verbosity: high, base_level: 10, allowed_messages: [debug, info, error], rank: 0}
+    - {verbosity: high, base_level: 10, allowed_messages: [debug, info, error], rank: 1}
+    - {verbosity: devel, base_level: 5, allowed_messages: [detail, debug, info, error], rank: 0}
+    - {verbosity: devel, base_level: 5, allowed_messages: [detail, debug, info, error], rank: 1}
+    - {verbosity: mpi-low, base_level: 20, allowed_messages: [info, error], rank: 0}
+    - {verbosity: mpi-low, base_level: 20, allowed_messages: [info, error], rank: 1}
+    - {verbosity: mpi-high, base_level: 10, allowed_messages: [debug, info, error], rank: 0}
+    - {verbosity: mpi-high, base_level: 10, allowed_messages: [debug, info, error], rank: 1}
+    - {verbosity: mpi-devel, base_level: 5, allowed_messages: [detail, debug, info, error], rank: 0}
+    - {verbosity: mpi-devel, base_level: 5, allowed_messages: [detail, debug, info, error], rank: 1}
+    executable_checks:
+      logger-and-handler-level:
+        site: tests/test_jqmc_kernel/test_cli_logging_contract.py::test_toml_verbosity_controls_levels_and_output#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-logger-and-handler-levels, expression: levels}
+        reference: {role: declared-levels-for-verbosity-and-rank, expression: '[expected_level, expected_level]'}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      emitted-messages:
+        site: tests/test_jqmc_kernel/test_cli_logging_contract.py::test_toml_verbosity_controls_levels_and_output#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actually-emitted-message-sequence-as-UTF8-bytes, expression: message_bytes}
+        reference: {role: permitted-message-sequence-as-UTF8-bytes, expression: expected_message_bytes}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      destination:
+        site: tests/test_jqmc_kernel/test_cli_logging_contract.py::test_toml_verbosity_controls_levels_and_output#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-handler-destination-as-UTF8-bytes, expression: destination_bytes}
+        reference: {role: stdout-or-declared-rank-file-as-UTF8-bytes, expression: expected_destination_bytes}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_cli_logging_contract.py::test_logging_verdict_rejects_wrong_configuration
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{fault: logger-level}, {fault: handler-level}, {fault: wrong-rank-file}]
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_logging_contract.py::test_unknown_toml_verbosity_is_rejected
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {verbosity: hgih}
+    - {verbosity: ''}
+    - {verbosity: INFO}
+    - {verbosity: MPI-low}
+    - {verbosity: 3}
+    - {verbosity: true}

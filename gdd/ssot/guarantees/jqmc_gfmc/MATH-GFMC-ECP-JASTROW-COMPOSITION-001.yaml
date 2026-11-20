@@ -1,0 +1,57 @@
+id: MATH-GFMC-ECP-JASTROW-COMPOSITION-001
+kind: mathematical
+name: Independent Gaussian J2 reference for tmove and dltmove
+plain_language: >-
+  For a synthetic molecular He restricted SD with a centred s Gaussian (exponent 0.5),
+  active opposite-spin J2 Pade (b=0.4/1.2), and positive/negative s-channel ECP,
+  conventional GFMC propagation diagonal, off-diagonal and measurement energy
+  agree with independent Gaussian/J2 kinetic, Coulomb and discrete projector formulas.
+  The zero-core ECP has local 2*exp(-0.4*r^2)/r and nonlocal +/-1.3*exp(-0.7*r^2).
+  One up and one down electron occupy (0.4,0.7,-0.2) and (-0.6,-0.3,0.8),
+  with no conditioning screen or RNG selection. Identity kinetic mesh alat=0.3
+  and default 12-point icosahedron ECP mesh are independently constructed.
+  Both spins have angle-dependent Jastrow ratios. Negative ECP terms carry
+  those ratios for both tmove/dltmove; positive diagonal terms carry them for
+  tmove only. Both modes use the existing strict policy, and actual localization,
+  ratio omission and clipping faults must fail after a passing baseline.
+  This is discrete-operator composition, not a ground-state or continuous
+  quadrature accuracy claim. No production physics helper supplies the reference.
+  The reference evaluates each piece in its production zone dtype (orbital
+  values in ao_eval, orbital derivatives in ao_grad_lap, J2 values in jastrow_eval and J2 gradient/Laplacian
+  in jastrow_grad_lap, ratios in det_ratio/jastrow_ratio, Coulomb/ECP in coulomb), so mixed mode is never
+  judged against an fp64 reference.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_ecp_gaussian_reference.py::test_ecp_jastrow_propagation_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {sign: -1, b: 0.4, move: tmove}
+    - {sign: 1, b: 0.4, move: tmove}
+    - {sign: -1, b: 1.2, move: tmove}
+    - {sign: 1, b: 1.2, move: tmove}
+    - {sign: -1, b: 0.4, move: dltmove}
+    - {sign: 1, b: 0.4, move: dltmove}
+    - {sign: -1, b: 1.2, move: dltmove}
+    - {sign: 1, b: 1.2, move: dltmove}
+    executable_checks:
+      ecp-composition: &ecp-composition-check
+        site: tests/test_jqmc_kernel/test_gfmc_ecp_gaussian_reference.py::_compare_ecp#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-gfmc-ecp-closure, expression: actual}
+        reference: {role: independent-gaussian-j2-discrete-projector, expression: reference}
+        iterations:
+          variable: quantity
+          required_values: [propagation-diagonal, propagation-off-diagonal, measurement-energy]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_ecp_gaussian_reference.py::test_ecp_reference_rejects_actual_localization_fault
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: dlt-positive-localization}
+    - {fault: negative-jastrow-factor}
+    - {fault: negative-channel-clipping}
+    executable_checks:
+      ecp-composition: *ecp-composition-check

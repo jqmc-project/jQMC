@@ -1,0 +1,41 @@
+id: IMPL-RS-GFMC-INTERVAL-STATE-LONG-CHAIN-001
+kind: implementation
+name: Carried Rust LRDMC interval G^-1, winv rows and mesh elements equal a fresh state over a 1000-hop chain
+plain_language: >-
+  Production chain: NativeObsCtx.debug_mesh_chain builds the projection-scoped
+  interval state (real MeshFastState, complex MeshFastStateC) with one fixed non-identity kinetic rotation and one
+  fixed ECP rotation and runs 1000 production sub-steps: interval_eval (kinetic mesh, ECP mesh, e_L), the
+  categorical FN hop with a seeded uniform (policy=categorical), and advance_after_hop, which includes the
+  per-hop refresh rule: after every hop the carried G^-1 is screened by the probe residual max|G (G^-1 P) - P|
+  against the geminal the post-hop caches imply (factored form, O(N^2)), and when it exceeds the internal constant
+  SM_INVERSE_REFRESH_RESIDUAL_THRESHOLD the determinant base, G^-1 and the winv tables (complex: also the
+  derivative cache with its own inverse copy) are rebuilt from scratch at the post-hop positions with the interval
+  seed itself. The policy=adversarial cases of the same nodes replace the categorical hop by the 1/rho protocol of
+  the XLA sibling (smallest finite kinetic element above its rho floor, electron different from the previous hop;
+  cond(G) 1e7 to 1e10) and are run in full precision only (the mixed independent oracle carries fp32
+  error above the mixed tolerance there; the precision-independent refresh logic keeps its mixed coverage through
+  the required categorical cases). Every electron starts one lattice vector outside
+  the home cell. Cases: committed Si diamond cell (8 atoms, 16 up / 16 dn, ccECP, real Gamma pGTO, J1+J2+DTN), the
+  committed 8-atom H cell (4 up / 4 dn, all-electron) as real Gamma and complex k=1/4 B-spline with J1+J2+DTN, and
+  the O-lsda k=1/4 save as a complex B-spline (4 up / 2 dn, ccECP) with J2+DTN; the DTN f cutoff is the production
+  default (0.95 of half the inscribed radius), far below the multi-atom cells. Every 100 hops the carried state equals a state
+  built from scratch at the same configuration: G^-1, the carried determinant contraction rows winv (up / dn rows
+  and bases), the kinetic mesh elements, the fixed-node ECP mesh values, e_L, the measurement e_L and b_L, maximum-
+  normalised within get_tolerance_min(zones, strict) (the periodic fast-interval floor get_tolerance_gfmc_fast_pbc on
+  the real periodic pGTO case, whose carried moved-electron value column comes from the screened fast-cut kernel);
+  the carried winv rows also equal the rows rebuilt from the carried det state and carried G^-1 within the same
+  pair, and the ECP candidate positions are bitwise equal. The Rust constant equals the drivers'
+  SM_INVERSE_REFRESH_RESIDUAL_THRESHOLD; the route-predicate counters 10 (carry kept) and 11 (refresh) record exactly
+  one screen decision per hop; the categorical chain keeps the Sherman-Morrison carry on most hops and every
+  adversarial chain refreshes at least once. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_lrdmc_mesh_chain_rust.py::test_rust_lrdmc_chain_inverse_winv_and_mesh_match_fresh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: h8_bspline_real_jdtn, policy: categorical}
+    - {case: h8_bspline_twist_jdtn, policy: categorical}
+    - {case: o_bspline_twist_jdtn, policy: categorical}
+    - {case: si_pgto_real_jdtn, policy: categorical}

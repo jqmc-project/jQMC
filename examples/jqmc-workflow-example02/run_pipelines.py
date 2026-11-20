@@ -8,24 +8,54 @@ Pipeline
 --------
   1. Run pySCF locally -> TREXIO file.
   2. Convert to ``hamiltonian_data.h5`` with JSD Jastrow (WF_Workflow).
-  3. Optimize J1/J2/J3 via VMC_Workflow.
+  3. Optimize J2/J3 via VMC_Workflow (no J1; determinant fixed).
   4. For **each walker count**, launch:
-     - MCMC with explicit ``num_mcmc_steps``
-     - LRDMC (GFMC_n, nmpm=40, a=0.30) with explicit ``num_mcmc_steps``
+     - MCMC with explicit ``num_mcmc_steps=NUM_MCMC_STEPS_MCMC``
+     - LRDMC (GFMC_n / lrdmc-bra, selected because
+       ``num_projection_per_measurement=40`` is set; a=0.30) with explicit
+       ``num_gfmc_projections=NUM_MCMC_STEPS_LRDMC``
   5. Print a summary table with energies and wall times.
 
 Step-count control
 ------------------
 MCMC and LRDMC use an **explicit** number of measurement steps
-rather than target-error-based automatic convergence.  Internally
-we set ``pilot_steps = NUM_MCMC_STEPS`` and a large ``target_error``
-(999 Ha) so that (a) the pilot phase runs with NUM_MCMC_STEPS and
-(b) the production run uses the same step count (since
-``estimate_required_steps`` clamps to ``max(computed, pilot_steps)``).
-After one production run the error is trivially below 999 Ha and
-the workflow exits.  The energy reported from ``output_values``
-comes from the production run with exactly NUM_MCMC_STEPS steps.
+(``num_mcmc_steps`` / ``num_gfmc_projections``) rather than
+target-error-based automatic convergence, so every walker count runs the
+same number of measurements and the timings are comparable. No pilot run
+and no ``target_error`` are used for the sampling stages.
 """
+
+# Copyright (C) 2024- Kosuke Nakano
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 
 import math
 import os
@@ -51,12 +81,13 @@ from jqmc_workflow import (
 )
 
 # -- Configuration -------------------------------------------------
+# docs: configuration-begin
 SERVER = "cluster"
 QUEUE_LABEL_s = "cores-4-mpi-4-gpu-4-omp-1-30m"
 QUEUE_LABEL_l = "cores-4-mpi-4-gpu-4-omp-1-3h"
 
 NUM_OPT_STEPS = 50  # VMC optimization steps
-WF_DUMP_FREQ = 10  # WF dumping freq
+WF_DUMP_FREQ = 1  # dump every step: VMC_Workflow hands on the average of the last 20 steps
 Dt = 2.0  # MCMC hopping distance (bohr)
 TARGET_VMC_ERROR = 1.0e-3  # Target VMC optimization error (Ha)
 ALAT = 0.30  # LRDMC lattice spacing
@@ -74,7 +105,9 @@ WALKER_COUNTS = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]
 TREXIO_FILE = "water_trexio.hdf5"
 PYSCF_OUTPUT = "water.out"
 
-# pySCF script (embedded from local_pyscf.py)
+# docs: configuration-end
+
+# PySCF script, written to _local_pyscf.py and run by the PySCF stage
 PYSCF_SCRIPT = '''\
 from pyscf import gto, scf
 from pyscf.tools import trexio
@@ -134,7 +167,7 @@ def format_energy(energy: float | None, error: float | None) -> str:
 
 # -- Step 1: Run pySCF locally ------------------------------------
 def run_pyscf(base_dir: str) -> float | None:
-    """Run pySCF for water and return HF energy."""
+    """Run pySCF (DFT-LDA) for water and return the SCF energy."""
     print("=" * 60)
     print("  Step 1: Run pySCF calculation (local)")
     print("=" * 60)
@@ -167,9 +200,9 @@ def run_pyscf(base_dir: str) -> float | None:
     pyscf_out = os.path.join(base_dir, PYSCF_OUTPUT)
     hf_energy = extract_hf_energy(pyscf_out)
     if hf_energy is not None:
-        print(f"         HF energy = {hf_energy:.6f} Ha")
+        print(f"         SCF (LDA) energy = {hf_energy:.6f} Ha")
     else:
-        print("         [warn] Could not extract HF energy")
+        print("         [warn] Could not extract the SCF (LDA) energy")
     return hf_energy
 
 
@@ -189,7 +222,7 @@ def build_pipeline() -> tuple[
     lrdmc_containers: dict[int, Container] = {}
 
     # -- Common stages (run once) ----------------------------------
-    # WF: TREXIO -> hamiltonian_data.h5 (JSD: J1 + J2 + J3-ao-small)
+    # WF: TREXIO -> hamiltonian_data.h5 (JSD: J2 + J3-ao-small, no J1)
     wf = Container(
         label="wf",
         dirname="01_wf",
@@ -216,14 +249,15 @@ def build_pipeline() -> tuple[
             number_of_walkers=256,
             num_opt_steps=NUM_OPT_STEPS,
             wf_dump_freq=WF_DUMP_FREQ,
+            # Code minimums: 30 warmup measurements and 10 bins.
+            num_mcmc_warmup_steps=30,
             num_mcmc_bin_blocks=10,
             pilot_mcmc_steps=50,
             pilot_vmc_steps=20,
             opt_J1_param=False,
             opt_J2_param=True,
             opt_J3_param=True,
-            opt_lambda_param=False,
-            opt_with_projected_MOs=False,
+            opt_geminal=False,
             target_error=TARGET_VMC_ERROR,
             optimizer_kwargs={
                 "method": "sr",
@@ -249,7 +283,7 @@ def build_pipeline() -> tuple[
             label=label_mcmc,
             dirname=f"03_mcmc/w{nw:05d}",
             input_files=[
-                FileFrom("vmc", f"hamiltonian_data_opt_step_{NUM_OPT_STEPS}.h5"),
+                FileFrom("vmc", ValueFrom("vmc", "optimized_hamiltonian")),
             ],
             rename_input_files=["hamiltonian_data.h5"],
             workflow=MCMC_Workflow(
@@ -258,10 +292,9 @@ def build_pipeline() -> tuple[
                 jobname=f"mcmc-w{nw}",
                 Dt=Dt,
                 number_of_walkers=nw,
-                num_mcmc_warmup_steps=25,
+                num_mcmc_warmup_steps=30,
                 num_mcmc_bin_blocks=10,
-                # Explicit step count: pilot_steps = desired steps,
-                # target_error = huge -> production uses same count.
+                # Explicit production measurement count; no target-error pilot.
                 num_mcmc_steps=NUM_MCMC_STEPS_MCMC,
                 max_time=3000,
                 poll_interval=300,
@@ -275,7 +308,7 @@ def build_pipeline() -> tuple[
             label=label_lrdmc,
             dirname=f"04_lrdmc/w{nw:05d}",
             input_files=[
-                FileFrom("vmc", f"hamiltonian_data_opt_step_{NUM_OPT_STEPS}.h5"),
+                FileFrom("vmc", ValueFrom("vmc", "optimized_hamiltonian")),
             ],
             rename_input_files=["hamiltonian_data.h5"],
             workflow=LRDMC_Workflow(
@@ -284,7 +317,7 @@ def build_pipeline() -> tuple[
                 jobname=f"lrdmc-w{nw}",
                 alat=ALAT,
                 number_of_walkers=nw,
-                num_mcmc_per_measurement=NUM_MCMC_PER_MEASUREMENT,
+                num_projection_per_measurement=NUM_MCMC_PER_MEASUREMENT,
                 E_scf=ValueFrom(label_mcmc, "energy"),
                 num_gfmc_warmup_steps=25,
                 num_gfmc_bin_blocks=10,
@@ -318,7 +351,7 @@ def print_summary_table(
         f"  MCMC: {NUM_MCMC_STEPS_MCMC} steps,  LRDMC: {NUM_MCMC_STEPS_LRDMC} steps (nmpm={NUM_MCMC_PER_MEASUREMENT}, a={ALAT})"
     )
     if hf_energy is not None:
-        print(f"  HF energy = {hf_energy:.6f} Ha")
+        print(f"  SCF (LDA) energy = {hf_energy:.6f} Ha")
     print("=" * 120)
     print()
 

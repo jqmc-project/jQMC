@@ -1,0 +1,30 @@
+id: MATH-MPC-VLR-INTERPOLATION-001
+kind: mathematical
+name: Tabulated V_LR interpolation accuracy
+plain_language: The tabulated long-range MPC potential is band-limited to the cutoff sphere, the periodic tricubic B-spline
+  built by build_mpc_data reproduces its node values, and its mean signed error against the exact trigonometric reconstruction
+  of the same field is below the per-electron bias bound both around the nuclei and uniformly -- the property a
+  Nyquist-grid trilinear table violates, which can flip the sign of the MPC correction.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestInterpolation::test_v_lr_spectrum_is_confined_to_the_cutoff_sphere
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestInterpolation::test_evaluate_v_lr_reproduces_the_node_values
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestInterpolation::test_v_lr_interpolation_bias_near_nuclei_is_negligible
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_independent_reference.py::test_periodic_cubic_lookup_matches_independent_spline
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: orthorhombic}
+    - {cell_name: sheared-basis}
+    - {cell_name: triclinic}
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_independent_reference.py::test_periodic_cubic_refinement_reduces_fixed_point_error
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_independent_reference.py::test_box_kernel_independent_quadrature_converges
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

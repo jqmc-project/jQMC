@@ -1,0 +1,16 @@
+id: NUM-MCMC-E2E-SMOKE-001
+kind: numerical
+name: End-to-end MCMC smoke runs
+plain_language: Complete optimize and force runs finish with finite results on the reviewed fixtures (SR, LM, forces with
+  and without SWCT, open shell, pGTO with DTN); this is a smoke check, never a correctness oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCOptimize::test_optimize_e2e_smoke
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCOptimize::test_optimize_lm_e2e_smoke
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_force.py::TestMCMCForce::test_mcmc_force_with_SWCT
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_force.py::TestMCMCForce::test_mcmc_force_without_SWCT
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_force.py::TestMCMCForce::test_mcmc_force_open_shell_finite
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_force.py::TestMCMCForceRegression::test_force_kernels_pgto_with_DTN_finite

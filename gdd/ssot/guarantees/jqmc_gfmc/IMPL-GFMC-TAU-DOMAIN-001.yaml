@@ -1,0 +1,34 @@
+id: IMPL-GFMC-TAU-DOMAIN-001
+kind: implementation
+name: Fixed-time LRDMC rejects invalid projection intervals
+plain_language: >-
+  The lrdmc-tau console entry and the GFMC_t driver require a finite, strictly
+  positive imaginary-time interval between branchings. Zero, negative, infinite
+  and NaN intervals raise a ValueError naming tau before sampling can start.
+  The same requirement applies to checkpoint continuation. A single invalid
+  stored value causes all sampling ranks to raise the same error, identifying
+  the affected rank. A valid positive interval still permits the console entry
+  to run real projections and save a checkpoint.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_gfmc_t_rejects_invalid_tau
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {boundary: constructor, tau: 0.0}
+    - {boundary: constructor, tau: -0.1}
+    - {boundary: constructor, tau: {source_expression: numpy.inf}}
+    - {boundary: constructor, tau: {source_expression: numpy.nan}}
+    - {boundary: checkpoint, tau: 0.0}
+    - {boundary: checkpoint, tau: -0.1}
+    - {boundary: checkpoint, tau: {source_expression: numpy.inf}}
+    - {boundary: checkpoint, tau: {source_expression: numpy.nan}}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_lrdmc_tau_cli_domain
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {tau: 0.0}
+    - {tau: 0.1}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_nonfinite_mpi.py::test_rank_local_invalid_tau_fails_collectively
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

@@ -1,0 +1,29 @@
+id: MATH-TOOL-LRDMC-WEIGHT-SCALE-001
+kind: mathematical
+name: LRDMC compute-energy and compute-force stay exact when the collect-window weight products exceed the float64 range
+plain_language: >-
+  jqmc-tool lrdmc compute-energy and compute-force (and the twist force estimator that shares the -b/-w/-c analysis)
+  form the accumulated weights of every rank from unshifted per-step weights. On a two-rank, two-walker merged
+  checkpoint of a molecule near -100 Ha (weights exp(-0.1 e), about e^10 per step) analysed with -c 100 and -c 200,
+  25 warmup windows and 10 bins (the command-line minima), where the unscaled window products are about e^1000 and e^2000 (stated by an
+  input check), the printed energy and error and the twist force mean and error arrays must equal an independent
+  reference that sums each window's log-weights with math.fsum, subtracts the largest over all ranks and walkers and
+  evaluates the delete-one-replica definitions; the single-file force table must print the reference rows in its
+  two-significant-digit format; both commands must exit 0. With -c 5 and -c 10, whose products are ordinary float64 numbers, the
+  same outputs must equal the reference built on the explicit unscaled products. Comparisons use the current
+  precision mode's local_energy strict policy. No statistical band.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::test_lrdmc_tool_matches_log_space_reference_beyond_float64_products
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {collect: 100}
+    - {collect: 200}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::test_lrdmc_tool_equals_unscaled_products_for_short_windows
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {collect: 5}
+    - {collect: 10}

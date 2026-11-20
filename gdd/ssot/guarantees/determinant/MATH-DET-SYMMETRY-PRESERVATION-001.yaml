@@ -1,0 +1,73 @@
+id: MATH-DET-SYMMETRY-PRESERVATION-001
+kind: mathematical
+name: Symmetry preservation of lambda updates
+plain_language: Lambda symmetrization and block updates preserve the declared symmetry structure exactly, for square symmetric,
+  rectangular paired, and open-shell shapes.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_symmetrize_lambda_is_hermitian_when_complex
+    executable_checks:
+      d8-n-135:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_symmetrize_lambda_is_hermitian_when_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out
+        reference:
+          role: source-reference-value
+          expression: out.conj().T
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      d8-n-136:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_symmetrize_lambda_is_hermitian_when_complex#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalSymmetrization::test_symmetrize_lambda_square_symmetric
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalSymmetrization::test_symmetrize_lambda_square_nonsymmetric
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalSymmetrization::test_symmetrize_lambda_rect_paired_symmetric
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalSymmetrization::test_symmetrize_lambda_rect_paired_nonsymmetric
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalSymmetrization::test_symmetrize_lambda_none
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalSymmetrization::test_symmetrize_lambda_1d
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalBlockUpdateSymmetry::test_apply_block_update_square_symmetric_preserved
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalBlockUpdateSymmetry::test_apply_block_update_square_nonsymmetric_free
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalBlockUpdateSymmetry::test_apply_block_update_rect_open_shell_no_symmetrization
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalBlockUpdateSymmetry::test_apply_block_update_rect_time_reversal_projects_only_paired_columns
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{field: real}, {field: complex}]
+    executable_checks:
+      rectangular-time-reversal-projection:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalBlockUpdateSymmetry.test_apply_block_update_rect_time_reversal_projects_only_paired_columns#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: projected-rectangular-time-reversal-lambda, expression: projected}
+        reference: {role: hand-calculated-paired-projection-with-unchanged-unpaired-column, expression: expected}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      rectangular-time-reversal-update:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalBlockUpdateSymmetry.test_apply_block_update_rect_time_reversal_projects_only_paired_columns#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: stored-rectangular-time-reversal-lambda, expression: stored}
+        reference: {role: hand-calculated-paired-projection-with-unchanged-unpaired-column, expression: expected}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

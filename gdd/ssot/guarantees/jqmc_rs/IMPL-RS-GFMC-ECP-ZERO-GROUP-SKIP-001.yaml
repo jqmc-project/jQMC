@@ -1,0 +1,38 @@
+id: IMPL-RS-GFMC-ECP-ZERO-GROUP-SKIP-001
+kind: implementation
+name: The real FAST GFMC ECP mesh skips electrons whose quadrature amplitudes are exactly zero without changing any output bit
+plain_language: >-
+  On the real FAST projection mesh (gfmc::compute_ecp_nonlocal_mesh_fast, the GFMC_t / GFMC_n interval chains) every
+  electron gets nv quadrature candidates around its nearest ECP nucleus with amplitudes ang[v] = sum_t v_t(r) (2l+1)
+  P_l(cos) w_v. When every ang[v] of an electron is exactly 0.0 -- its nearest nucleus carries only zero-coefficient
+  non-local channels (the ccECP hydrogen placeholder, about a third of all electrons in water clusters), or the
+  channel underflows -- each candidate contributes a_m = 0 * ratio * jas = +0 or -0 to the FN sum, the SP sum and
+  the hop cdf, and adding a signed zero to an accumulator that starts at +0.0 changes no bit. Such an electron's
+  determinant and Jastrow ratios are therefore not evaluated, its candidates are emitted with a_m = +0.0, and its ECP
+  candidate-table rows are neither built (molecular GTO kernels, whose rows are independent of the other rows of a
+  batch) nor advanced after hops (determinant MO rows, J3 rows and the J3 log-ratio advance, the J1/J2 log-ratio
+  advance). An electron's amplitudes change only when it moves, and its rows are rebuilt exactly at that hop if it
+  becomes live (or at the next mesh-rotation rebuild of every table). Live electrons see the identical arithmetic.
+  The only possible difference is a NaN or infinite ratio of a zero-amplitude candidate, which the full evaluation
+  turns into NaN and which cannot arise from finite determinant and Jastrow states. The test-only hook
+  JQMC_RS_GFMC_ECP_KEEP_ZERO_GROUPS restores the evaluation of every group. On GFMC_t and GFMC_n intervals (random
+  mesh, tmove and dltmove) of the water ccECP fixture with J1/J2 (oxygen groups live, hydrogen groups zero) and the
+  H2 ccECP fixture with J3 (every group zero), the skip and the hook give byte-identical e_L, w_L, final walkers,
+  sub-step counts and keys; the skip counts zero groups, the live plus zero groups of the skip equal the live
+  groups of the hook, and the hook counts no zero group (jqmc_rs.gfmc_route_counters indices 68 live, 69 zero).
+  Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_ecp_zero_group_skip.py::test_gfmc_ecp_zero_group_skip_is_bitwise
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_sphe_j12, mode: t, dltmove: false}
+    - {pattern: mol_ecp_sphe_j12, mode: t, dltmove: true}
+    - {pattern: mol_ecp_sphe_j12, mode: n, dltmove: false}
+    - {pattern: mol_ecp_sphe_j12, mode: n, dltmove: true}
+    - {pattern: mol_ecp_cart_j123, mode: t, dltmove: false}
+    - {pattern: mol_ecp_cart_j123, mode: t, dltmove: true}
+    - {pattern: mol_ecp_cart_j123, mode: n, dltmove: false}
+    - {pattern: mol_ecp_cart_j123, mode: n, dltmove: true}

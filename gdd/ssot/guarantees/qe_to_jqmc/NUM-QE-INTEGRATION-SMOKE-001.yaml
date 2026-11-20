@@ -1,0 +1,27 @@
+id: NUM-QE-INTEGRATION-SMOKE-001
+kind: numerical
+name: Converted-system integration smoke and FD anchors
+plain_language: Every driver completes on QE-converted systems (MCMC, GFMC, LRDMC, optimize, non-Gamma and multi-twist smokes,
+  all-8 composite build), and the Hellmann-Feynman stress and force agree with per-walker finite differences.
+verdict_methods:
+- VM-NUM-SMOKE-001
+- VM-NUM-FD-ANCHOR-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicIntegration::test_mcmc_runs
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicIntegration::test_gfmc_t_runs
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicIntegration::test_gfmc_n_runs
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicIntegration::test_lrdmc_runs
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicIntegration::test_lrdmc_force_runs
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicIntegration::test_mcmc_runs_from_h5_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicIntegration::test_mcmc_optimize_runs
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_qe_non_gamma_mcmc_smoke_no_complex_contamination
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_qe_non_gamma_pgto_plus_bspline_mcmc_smoke
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_qe_non_gamma_pgto_plus_pw_mcmc_smoke
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_multi_twist.py::TestQEMultiTwist::test_loaded_twist_runs_mcmc_smoke
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_grid_composite.py::test_twist_grid_all_8_composite_build
+- verdict_method: VM-NUM-FD-ANCHOR-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicStressFDvsAD::test_stress_HF_fd_vs_ad_per_walker
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_periodic.py::TestQEPeriodicForceFDvsAD::test_force_HF_fd_vs_ad_per_walker

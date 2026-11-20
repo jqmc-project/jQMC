@@ -1,0 +1,22 @@
+id: IMPL-BUILDINFO-VERSION-COMMIT-OUTPUT-001
+kind: implementation
+name: jqmc-tool --version, the once-only banner helper and hamiltonian_data.h5 report the version and git commit
+plain_language: >-
+  Every run reports two fixed-format lines, parsed by downstream tools: "version = <version>" and
+  "git commit = <40-digit hash | unknown>". jqmc-tool --version prints exactly these two lines on
+  stdout; log_build_info_once emits them once per process through a logger that emits INFO.
+  Hamiltonian_data.save_to_hdf5 stores jqmc_version and jqmc_git_commit as root attributes and the file still
+  loads. The "version = ..." line has no trailing period. The production callers
+  (run and workflow headers, jqmc-tool subcommands, Python API construction and restart, merged checkpoints,
+  jqmc --version) are guaranteed by IMPL-BUILDINFO-API-BANNER-001, IMPL-BUILDINFO-PRODUCTION-ROUTES-001 and
+  IMPL-BUILDINFO-VERSION-OPTION-MPI-001.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_build_info.py::test_version_options_and_banner_print_the_fixed_lines
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_build_info.py::test_hamiltonian_files_record_the_code_version
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

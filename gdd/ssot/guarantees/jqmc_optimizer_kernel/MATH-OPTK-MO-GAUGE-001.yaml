@@ -1,0 +1,83 @@
+id: MATH-OPTK-MO-GAUGE-001
+kind: mathematical
+name: MO gauge and lambda symmetrization identities
+plain_language: The MO phase gauge makes the first non-negligible coefficient real positive, preserves the outer product,
+  and is idempotent; complex lambda symmetrization is Hermitian and the real path is byte identical.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_opt_gt_gauge.py::TestT5GaugeConstraints::test_gauge_rotation_exact_invariance_and_null_force
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestMOGaugeAndLambda::test_mo_gauge_first_nonzero_is_real_positive
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestMOGaugeAndLambda.test_mo_gauge_first_nonzero_is_real_positive#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: gauge-pivot-imaginary-part
+          expression: np.imag(pivot_c)
+        reference:
+          role: known-zero-imaginary-part
+          expression: np.zeros(n_bands, dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestMOGaugeAndLambda.test_mo_gauge_first_nonzero_is_real_positive#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: gauged-MO-magnitudes
+          expression: np.abs(C_gauged)
+        reference:
+          role: original-MO-magnitudes
+          expression: np.abs(C)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestMOGaugeAndLambda::test_mo_gauge_preserves_outer_product
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestMOGaugeAndLambda::test_mo_gauge_idempotent
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestMOGaugeAndLambda.test_mo_gauge_idempotent#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: C1
+        reference:
+          role: reference
+          expression: C2
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestMOGaugeAndLambda::test_symmetrize_lambda_complex_hermitian
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestMOGaugeAndLambda.test_symmetrize_lambda_complex_hermitian#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: mat_out
+        reference:
+          role: reference
+          expression: mat_out.conj().T
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestMOGaugeAndLambda::test_symmetrize_lambda_real_path_byte_identical

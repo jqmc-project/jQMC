@@ -1,0 +1,19 @@
+id: MATH-RS-INACTIVE-REPRESENTABLE-J3-FREE-JMATRIX-DERIV-XLA-001
+kind: mathematical
+name: The free real J3 j_matrix derivative of an all-zero-j_matrix representable J3 equals XLA AD
+plain_language: >-
+  Control of the refusal in IMPL-RS-COMPLEX-CHILD-J3-FREE-REAL-WRAPPERS-REFUSED-001. The j_matrix
+  derivative of an all-zero j_matrix is not zero, so the free real J3 j_matrix-derivative wrappers must keep an
+  inactive J3 whose orbital the real parser represents. On the fixture of MATH-RS-INACTIVE-COMPLEX-CHILD-J3-FREE-
+  REAL-WRAPPERS-001 with the real constant plane-wave child, grad_ln_Psi_jastrow_3b_jmatrix equals the XLA
+  jax.grad of compute_Jastrow_three_body with respect to j_matrix (nonzero) within the jastrow_eval XLA-Rust
+  consistency tolerance, and grad_eL_wrt_jastrow_3b_jmatrix and grad_eL_ecp_wrt_jastrow_3b_jmatrix return finite
+  arrays of the j_matrix shape. Full precision only; the mixed route is judged against the full route by NUM-RS-
+  INACTIVE-REPRESENTABLE-J3-FREE-JMATRIX-DERIV-MIXED-FIDELITY-001.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_inactive_complex_j3_free_wrappers.py::test_free_real_j3_jmatrix_derivative_inactive_representable_j3_matches_xla
+    required_precision_modes: [full]
+    required_parameter_cases: [{}]

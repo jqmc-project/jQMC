@@ -1,0 +1,22 @@
+id: MATH-AO-BSPLINE-REAL-OVERLAP-EXACT-001
+kind: mathematical
+name: Real B-spline AO overlap is the exact cell integral
+plain_language: >-
+  For the real (Gamma) B-spline AO leaf, compute_overlap_matrix returns the exact cell Gram matrix of the
+  periodic spline bands as float64 (no quadrature error), equal to the leaf's own AO values (compute_AOs, and
+  for the cubic spline also the plain-numpy debug evaluator) integrated over a lattice-translated copy of the
+  skewed triclinic cell by order + 1 Gauss-Legendre nodes on every knot interval of every fractional axis,
+  which is exact for the piecewise-polynomial integrand, for three random real bands on a (6, 7, 8) cubic or
+  quintic grid, within the strict ao_eval/det_eval policy. The previous two-points-per-knot midpoint rule
+  differs from the same reference beyond that tolerance. Full and mixed are judged separately.
+  Because the overlap is fp64 in both modes, the reference AO values are evaluated with every precision zone
+  at fp64 in both modes.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_complex_overlap.py::test_real_bspline_overlap_matches_exact_cell_quadrature
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {order: 3}
+    - {order: 5}

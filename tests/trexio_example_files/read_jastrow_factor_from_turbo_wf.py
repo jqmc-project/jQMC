@@ -1,10 +1,42 @@
-# read turborvb WF and PPs and generate jQMC WF and PP instances.
-import pickle
+# Copyright (C) 2024- Kosuke Nakano
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 
+# read turborvb WF and PPs and generate jQMC WF and PP instances.
+import h5py
 import numpy as np
 from turbogenius.pyturbo.io_fort10 import IO_fort10
 
-from jqmc.atomic_orbital import AOs_sphe_data
+from jqmc.atomic_orbital import AOs_sphe_gto_data
+from jqmc.hamiltonians import _save_dataclass_to_hdf5
 from jqmc.jastrow_factor import Jastrow_data, Jastrow_one_body_data, Jastrow_three_body_data, Jastrow_two_body_data
 from jqmc.structure import Structure_data
 
@@ -32,7 +64,6 @@ for suffix in suffix_list:
         onebody_parameter = f10jastwobody.onebody_list[0]
     else:
         raise NotImplementedError
-    # print(twobody_parameter)
 
     # structure
     f10structure = io_fort10.f10structure
@@ -137,7 +168,7 @@ for suffix in suffix_list:
     exponents = tuple(exponents)
     coefficients = tuple(coefficients)
 
-    jas_aos_data = AOs_sphe_data(
+    jas_aos_data = AOs_sphe_gto_data._from_full_basis(
         structure_data=structure_data,
         nucleus_index=nucleus_index,
         num_ao=ao_num_count,
@@ -164,9 +195,6 @@ for suffix in suffix_list:
         if col == const_jas_orb_index and row != const_jas_orb_index:
             j1_matrix[row - 1] = f10jasmatrix.coeff[i] * (num_ele - 1)
 
-    # print(j1_matrix_up.T)
-    # print(j1_matrix_dn.T)
-
     j3_matrix = np.zeros((jas_aos_data.num_ao, jas_aos_data.num_ao))
 
     for i, (row, col) in enumerate(zip(f10jasmatrix.row, f10jasmatrix.col)):
@@ -176,10 +204,6 @@ for suffix in suffix_list:
 
             # lower diagonal
             j3_matrix[col - 1, row - 1] = f10jasmatrix.coeff[i]
-
-    # print(j3_matrix_up_up)
-    # print(j3_matrix_dn_dn)
-    # print(j3_matrix_up_dn)
 
     j_matrix = np.column_stack((j3_matrix, j1_matrix))
 
@@ -210,5 +234,5 @@ for suffix in suffix_list:
     else:
         raise NotImplementedError
 
-    with open(f"jastrow_data_{suffix}.pkl", "wb") as f:
-        pickle.dump(jastrow_data, f)
+    with h5py.File(f"jastrow_data_{suffix}.h5", "w") as f:
+        _save_dataclass_to_hdf5(f.create_group("jastrow_data"), jastrow_data)

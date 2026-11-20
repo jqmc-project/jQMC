@@ -1,0 +1,44 @@
+id: MATH-HAM-MO-ORTHONORMALITY-METRICS-001
+kind: mathematical
+name: MO Gram matrix of the orthonormality check equals the cell integral and its metrics obey the scaling identities
+plain_language: >-
+  The Gram matrix M = conj(C) S C^T used by the MO orthonormality check equals an independent 40^3
+  fractional-midpoint cell integral of conj(phi_i) phi_j from production MO values, for three generic MOs on a
+  two-atom Cartesian or spherical pGTO leaf in a triclinic cell, at Gamma (real) and at the general twist
+  k = (0.27, -0.1, 0.13) (complex), within the medium ao_eval/mo_eval zone policy; at the twist the
+  ket-conjugated Gram matrix and the conj(S) Gram matrix are both rejected by the same comparison, so the
+  check cannot report false non-orthogonality at general k. On the committed TREXIO fixtures, rescaling every
+  up-spin MO by s (2 molecular, sqrt(Omega) periodic, down channel re-derived by time reversal) gives a
+  normalization deviation of exactly s^2 - 1 with the non-orthogonality unchanged within the threshold, and
+  replacing phi_0 by (phi_0 + w phi_1)/sqrt(2) (w = 1 real, w = i twist) gives a non-orthogonality of exactly
+  1/sqrt(2), also after an additional common rescaling, with the normalization deviation within the
+  threshold; each case emits one warning per spin channel. The identities use the strict det_eval zone
+  policy. Full and mixed are judged separately. This concerns the diagnostic's metric, not the
+  orthonormalization of projected MOs.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_check.py::test_mo_gram_convention_matches_cell_grid_integral
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: gamma, ao_kind: cart}
+    - {twist: gamma, ao_kind: sphe}
+    - {twist: general-k, ao_kind: cart}
+    - {twist: general-k, ao_kind: sphe}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_check.py::test_uniformly_scaled_mos_warn_on_normalization
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5}
+    - {trexio_file: N2_ecp_ccpvtz_cart.h5}
+    - {trexio_file: H4_pbc_ae_cart.h5}
+    - {trexio_file: H4_pbc_ae_k025_cart.h5}
+    - {trexio_file: lithium_k025.h5}
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_check.py::test_mixed_mos_warn_on_orthogonality
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: N2_ecp_ccpvtz_cart.h5}
+    - {trexio_file: H4_pbc_ae_cart.h5}
+    - {trexio_file: H4_pbc_ae_k025_cart.h5}

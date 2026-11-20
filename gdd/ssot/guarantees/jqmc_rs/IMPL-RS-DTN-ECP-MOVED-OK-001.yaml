@@ -1,0 +1,31 @@
+id: IMPL-RS-DTN-ECP-MOVED-OK-001
+kind: implementation
+name: The DTN ECP dE_L/dc term updates only the moved electron's terms at each mesh point
+plain_language: >-
+  The non-local ECP part of the DTN dE_L/dc (param_grad_ecp::grad_ecp_dtn, real, and
+  param_grad_twist::grad_ecp_dtn_twist, complex twist) needs the DTN O_k at every quadrature point, each a
+  configuration with one electron moved. DtnMovedOk builds the DTN channel feature sums of the base configuration
+  once, keeps each electron's own terms, and forms a moved O_k by swapping only the moved electron's terms
+  (O(N_e N_atom) per mesh point) instead of recomputing all pair and electron-pair-nucleus terms
+  (O(N_e^2 N_atom)); the inflation projection is unchanged. A native test
+  compares the moved O_k with compute_dtn_param_grads on the moved configuration for every electron of both spins,
+  two moves each, molecular and periodic, all three channels, within the reduction-order tolerances; the end-to-end
+  dE_L/dc ECP term stays checked against XLA autodiff by test_grad_ecp_dtn and test_grad_el_twist_ecp_dtn.
+  Full and mixed are judged separately.
+native_evidence:
+- jqmc_rs::param_grad_dtn::tests::moved_ok_matches_full_recompute
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_sphe_jdtn}
+    - {pattern: mol_ecp_sphe_j3dtn}
+    - {pattern: pbc_gamma_sphepgto_j3dtn}
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_dtn
+  - pytest_node: tests/test_rs_kernel/test_open_shell_ecp_dtn_parity.py::test_ecp_dtn_param_grads_open_shell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 1}

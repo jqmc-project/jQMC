@@ -1,0 +1,27 @@
+id: MATH-AO-SPHE-GUARDED-PREFACTOR-ROUNDING-001
+kind: mathematical
+name: Mixed guarded spherical AO normalization constants are the rounded exact constants
+plain_language: >-
+  The per-primitive factor N_n(l, Z) * N_lm(l) * c used by the molecular
+  mixed spherical AO route is formed in the fp64 storage precision and
+  rounded once to the AO zone. For every primitive of the water ccECP
+  cc-pVQZ TREXIO basis and a synthetic l = 0..6 set (PCG64 seed 20260930),
+  the helper with an explicit float32 output equals, bit for bit, the float32
+  rounding of an independent fp64 formula with integer factorials, in both
+  precision modes. It does not assert that full-precision production evaluates
+  AOs in float32, and no outputs of different modes are compared. Electron
+  coordinates, AO values of other routes and cond(G) are not involved.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_sphe_guarded_geometry.py::test_sphe_guarded_prefactors_are_the_rounded_exact_constants
+    executable_checks:
+      prefactor-bits:
+        site: tests/test_jqmc_kernel/test_sphe_guarded_geometry.py::test_sphe_guarded_prefactors_are_the_rounded_exact_constants#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: production-float32-prefactors, expression: actual}
+        reference: {role: rounded-independent-exact-factorial-prefactors, expression: reference}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

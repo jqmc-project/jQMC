@@ -1,0 +1,37 @@
+id: NUM-PWP-PROJECTION-QUALITY-REGRESSION-001
+kind: numerical
+name: Projection quality and refinement regressions
+plain_language: On the reviewed Li and spline fixtures, projection residuals remain within pinned quality thresholds, additive
+  mixed bases beat their individual parts, and the declared refinement and alpha_min sweeps remain monotone. These are deterministic
+  numerical quality regressions; empirical thresholds and optimizer monotonicity are not labeled as physical-reference proof.
+verdict_methods:
+- VM-NUM-REVIEWED-REGRESSION-001
+required_evidence:
+- verdict_method: VM-NUM-REVIEWED-REGRESSION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_project_pw_to_pgto_li_fidelity
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_projection_coefficients_reproduce_residual
+    executable_checks:
+      d8-n-453:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_projection_coefficients_reproduce_residual#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: err2 / psi_norm2
+        reference:
+          role: source-reference-value
+          expression: res.residuals
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-SPLINE-RESIDUAL-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-SPLINE-RESIDUAL-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_project_pw_to_spline_fidelity_and_mesh
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_project_pw_to_pgto_spline_additive_beats_parts
+- verdict_method: VM-NUM-REVIEWED-REGRESSION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_optimize_mixed_basis_reduces_pw_and_residual
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_optimize_mixed_basis_fixed_alpha_min_monotone
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_alpha_min_from_gcut_monotone_and_floor

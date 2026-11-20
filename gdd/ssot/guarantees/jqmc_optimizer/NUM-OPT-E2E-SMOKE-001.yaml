@@ -1,0 +1,13 @@
+id: NUM-OPT-E2E-SMOKE-001
+kind: numerical
+name: Full-loop optimization smoke runs
+plain_language: One full optimization step completes on the reviewed wavefunction variants (Gamma AGP with time-reversal
+  AGPn retraction, non-Gamma mixed and rank-manifold, open shell); this is a smoke check, never a correctness oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_full_loop_real.py::test_non_gamma_mixed_jastrow_complex_mo_and_real_lambda_full_step
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_full_loop_real.py::test_non_gamma_rank_manifold_full_step
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_full_loop_real.py::test_open_shell_independent_spin_full_step

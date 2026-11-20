@@ -1,0 +1,88 @@
+id: IMPL-PWP-CHUNKING-PARITY-001
+kind: implementation
+name: Chunked-route parity of projection evaluation
+plain_language: Band-chunked fidelity, fitting, and Fourier evaluation are bit-exact against the single-shot dense routes,
+  and spline coefficients are unchanged by the fit budget.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestSplineFidelityBandChunking::test_band_subset_reconstruction_is_bit_exact
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestSplineFidelityBandChunking::test_evaluate_spline_orbitals_chunking_is_bit_exact
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestSplineFidelityBandChunking::test_fidelity_residuals_chunked_vs_single_shot
+    executable_checks:
+      d8-n-454:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestSplineFidelityBandChunking.test_fidelity_residuals_chunked_vs_single_shot#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: r_chunked
+        reference:
+          role: source-reference-value
+          expression: r_single
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestSplineFitBandChunking::test_fit_chunked_and_subset_is_bit_exact
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestSplineFitBandChunking::test_spline_coefficients_unchanged_by_the_fit_budget
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_chunked_fourier_blocks_match_dense
+    executable_checks:
+      d8-n-455:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_chunked_fourier_blocks_match_dense#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: gram
+        reference:
+          role: source-reference-value
+          expression: dense.conj().T @ dense
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+      d8-n-456:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_chunked_fourier_blocks_match_dense#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: rhs
+        reference:
+          role: source-reference-value
+          expression: dense.conj().T @ psi
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_pgto_converters_use_bounded_fourier_blocks
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {with_spline: false}
+    - {with_spline: true}
+    executable_checks:
+      pw-pgto-bounded-fourier-fit:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_pgto_converters_use_bounded_fourier_blocks#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.coefficients
+        reference:
+          role: source-reference-value
+          expression: expected_coeffs.T
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001

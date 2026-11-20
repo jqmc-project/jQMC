@@ -1,0 +1,37 @@
+id: IMPL-CLIENTRY-NO-MPI-001
+kind: implementation
+name: jqmc --version / -V / --help / -h / no arguments, the argument errors and jqmc-tool --version need no MPI, JAX or jqmc_rs
+plain_language: >-
+  Importing mpi4py.MPI initializes MPI, and some MPI stacks (Intel MPI on a login node) abort when that
+  happens outside srun. In a fresh interpreter, the light console entries handle the following invocations without
+  importing mpi4py, jax, jqmc_rs, jqmc.jqmc_cli or jqmc.jqmc_tool:
+  jqmc --version, -V, --help, -h, no arguments, two input files, a missing input file, and jqmc-tool --version.
+  The output and exit status are those of the previous CLI: the two version lines (version = ..., git commit =
+  ...) with exit 0; the usage text with exit 0, or 2 without arguments; the usage on stderr followed by the error
+  message with exit 1. The result is the same when an import hook makes mpi4py, jax and jqmc_rs unimportable.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_entry.py::test_light_invocations_import_no_mpi_jax_or_rust
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: version}
+    - {case: V}
+    - {case: help}
+    - {case: h}
+    - {case: no-arguments}
+    - {case: two-inputs}
+    - {case: missing-input}
+    - {case: tool-version}
+  - pytest_node: tests/test_jqmc_kernel/test_cli_entry.py::test_light_invocations_succeed_when_mpi_jax_and_rust_cannot_be_imported
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: version}
+    - {case: V}
+    - {case: help}
+    - {case: h}
+    - {case: no-arguments}
+    - {case: two-inputs}
+    - {case: missing-input}
+    - {case: tool-version}

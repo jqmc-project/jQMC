@@ -1,0 +1,40 @@
+id: NUM-DERIV-COMPLEX-ECP-FD-001
+kind: numerical
+name: Full-precision complex ECP sources and finite-sample energy chain rule
+plain_language: >-
+  On the same eight fixed Gamma/twist lithium configurations as
+  MATH-DERIV-COMPLEX-ECP-AD-001, analytic J2 and first up/down MO x/y sources
+  match central Richardson differences of production energy and separately
+  assembled complex energy/wavefunction. The fixed reweighted sample obeys
+  mean(D)+2 cov(Re(O),E), including mean(D); this is not an assertion that the
+  covariance-only optimizer force equals a finite-sample energy derivative.
+  The established 1e-4 displacement and central tight FD tolerance are fixed.
+  FD is full-only; the blocking same-precision AD guarantee covers mixed.
+  No stochastic convergence, statistical error band or high-cond(G) coverage
+  is inferred from these selected configurations.
+verdict_methods: [VM-NUM-COMPLEX-ECP-FD-001]
+required_evidence:
+- verdict_method: VM-NUM-COMPLEX-ECP-FD-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_pointwise_sources_match_independent_finite_difference
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_fd#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+    required_precision_modes: [full]
+    required_parameter_cases: [{point_case: gamma}, {point_case: twist}]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_finite_sample_complex_energy_chain_rule
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_fd#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+    required_precision_modes: [full]
+    required_parameter_cases: [{point_case: gamma}, {point_case: twist}]

@@ -1,0 +1,15 @@
+id: IMPL-JAS-DTN-CUSP-VALIDATION-001
+kind: implementation
+name: Unconstrained DTN inputs are rejected for AE and ECP
+plain_language: >-
+  The electron-nucleus cusp constraint is mandatory for both AE and ECP inputs.
+  A zero ECP cusp is a constrained zero slope, not permission to disable the constraint.
+  DTN validation rejects apply_en_cusp=False for AE, ECP and zero-core ECP
+  species. These rejection checks do not replace the separate per-species
+  numerical cusp guarantee.
+verdict_methods:
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies::test_cusp_constraints_cannot_be_disabled

@@ -1,0 +1,42 @@
+id: IMPL-PREC-NOINV-FUSED-GEMINAL-TABLE-001
+kind: implementation
+name: No-inverse analytic determinant derivatives do not read the value-only orbital table
+plain_language: >-
+  On the committed N all-electron cc-pVDZ Cartesian fixture (SD and dense AO AGP), the periodic real-Gamma bcc Li ccECP
+  and its complex twist k=(0.25,0,0), determinant only, at the seed-0 configuration drawn with scale 0.7, the analytic
+  determinant kernels assemble.grad_lndet_wrt_R (nuclear force), kinetic._det_grad_field (drift), pbc_stress
+  .grad_lndet_wrt_strain (periodic strain) and basis._det_value_cotangents (radial-basis value cotangents) are run
+  eagerly without a supplied geminal inverse, once unpatched and once with the geminal class's value-only
+  compute_orb_api evaluator replaced by one returning NaN. The no-inverse results must be identical, so the geminal
+  and its fresh inverse come from the fused orbital value table only (the fused-table rule, the table the drift,
+  the kinetic reverse pass and the rank-one ECP mesh base invert). The table follows the consumer's ratio: the streamed
+  ECP mesh, whose weights carry the value-only ratio det(G'_g)/det(G), owns the value-only table instead
+  (IMPL-PREC-STREAMED-ECP-MESH-RATIO-TABLE-001). As a liveness control, the same kernel with a supplied
+  value-table inverse must read the patched table. This does not claim supplied-inverse routes, the native route or
+  the forward ln|det| and ratio evaluators, which own the value-only table.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noinv_fused_geminal_table.py::test_noinv_det_derivatives_do_not_read_the_value_only_table
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: N_ae_ccpvdz_cart.h5, geminal: SD, axis: R}
+    - {trexio_file: N_ae_ccpvdz_cart.h5, geminal: SD, axis: r}
+    - {trexio_file: N_ae_ccpvdz_cart.h5, geminal: SD, axis: basis}
+    - {trexio_file: N_ae_ccpvdz_cart.h5, geminal: AGP, axis: R}
+    - {trexio_file: N_ae_ccpvdz_cart.h5, geminal: AGP, axis: basis}
+    - {trexio_file: lithium.h5, geminal: SD, axis: R}
+    - {trexio_file: lithium.h5, geminal: SD, axis: eps}
+    - {trexio_file: lithium.h5, geminal: SD, axis: basis}
+    - {trexio_file: lithium_k025.h5, geminal: SD, axis: R}
+    - {trexio_file: lithium_k025.h5, geminal: SD, axis: eps}
+    executable_checks:
+      noinv-derivative-independent-of-value-only-table:
+        site: tests/test_jqmc_kernel/test_noinv_fused_geminal_table.py::test_noinv_det_derivatives_do_not_read_the_value_only_table#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: noinv-derivative-with-poisoned-value-only-table, expression: probed_values}
+        reference: {role: noinv-derivative-unpatched, expression: reference_values}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

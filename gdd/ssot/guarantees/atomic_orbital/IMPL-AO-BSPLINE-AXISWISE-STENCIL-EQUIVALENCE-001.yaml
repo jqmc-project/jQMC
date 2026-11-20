@@ -1,0 +1,16 @@
+id: IMPL-AO-BSPLINE-AXISWISE-STENCIL-EQUIVALENCE-001
+kind: implementation
+name: Axis-wise B-spline stencil contraction equals the einsum contraction
+plain_language: >-
+  Off the CPU backend the real B-spline kernel (AOs_bspline_data._eval_core) and the complex B-spline kernel
+  (AOs_bspline_complex_data._eval_u_core) contract the gathered control-point stencil over z, then y, then x
+  instead of with one einsum("bpqr,p,q,r->b") per output. With that route selected, the value of
+  the ao_eval kernel and the value, gradient and Laplacian of the ao_grad_lap kernel equal those of the einsum
+  route at the ao_eval and ao_grad_lap strict zone policies. The checked cases are cubic and quintic leaves,
+  real and complex at Gamma and a general twist, on a skewed cell, at points inside and outside the home cell.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_axiswise_stencil.py::test_axiswise_stencil_matches_einsum_contractions

@@ -1,0 +1,58 @@
+id: IMPL-DERIVAPI-INTERFACE-CONTRACTS-001
+kind: implementation
+name: Flags-interface contracts
+plain_language: The opt_flags vocabulary splits into exactly the declared whitelist mask and axes with stable bundling order,
+  the bundled autodiff path equals the live per-axis _auto path bit for bit, the ragged-permuted layout equals the reference,
+  masks are honored, defaults are single source, and unknown keys, unsupported analytic requests, missing flags, and the
+  removed wrt form are hard errors.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-IMPL-ROUTE-PARITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_split_flags_param_block_requests_c
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_split_flags_all_false_param_no_c
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_split_flags_no_opt_c_key
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_split_flags_physical_axes_only
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_split_flags_combined_order
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_curated_flag_split_selects_requested_axis
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{axis: c}, {axis: r}, {axis: R}, {axis: eps}]
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_bundled_mask_is_honored
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_analytic_true_routes_to_assemble
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_param_grad_mask_defaults_single_source
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_geminal.py::test_closed_shell_unpaired_empty
+  - pytest_node: tests/test_jqmc_kernel/test_complex_twist_dtn_caxis.py::test_twist_dtn_ecp_fixture_is_the_intended_cell
+  - pytest_node: tests/test_jqmc_kernel/test_complex_twist_dtn_caxis.py::test_twist_dtn_o_k_c_lowers_zero_svd
+  - pytest_node: tests/test_jqmc_kernel/test_complex_twist_dtn_caxis.py::test_twist_dtn_e_L_c_lowers
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_bundled_auto_matches_per_axis_ln_psi
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_bundled_auto_matches_per_axis_e_l
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ragged_basis.py::test_jax_permuted_equals_reference
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_derivatives_ragged_basis.py::test_jax_permuted_equals_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: b
+        reference:
+          role: existing-test-reference
+          expression: a
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-DEBUG-VS-PRODUCTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-DEBUG-VS-PRODUCTION-FP64-001
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_split_flags_unknown_key_raises
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_analytic_true_raises_when_unsupported
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_missing_flags_and_wrt_raises
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_interface.py::test_legacy_wrt_form_removed
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_fast.py::test_resolve_requires_an_argument

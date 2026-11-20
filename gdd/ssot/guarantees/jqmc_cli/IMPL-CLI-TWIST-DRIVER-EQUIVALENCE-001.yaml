@@ -1,0 +1,16 @@
+id: IMPL-CLI-TWIST-DRIVER-EQUIVALENCE-001
+kind: implementation
+name: Two-rank CLI twist jobs match direct orchestrators with the requested non-default values
+plain_language: >-
+  The mcmc, vmc, lrdmc-bra and lrdmc-tau jobs run through actual two-rank CLI twist dispatch
+  and the direct public twist orchestrator using the first two lithium_twist_222.h5 twists, Pade J2,
+  weights 1/4 and 3/4, seed 24680, two walkers and non-default options. Per-twist walkers, RNG,
+  input orbital/k identity, weight and requested measurement count are exact; histories, energy tuples
+  and optimized J2 use the existing strict same-mode restart policy. VMC must make a nonzero J2 update.
+  MCMC and VMC must honor the requested proposals per measurement instead of using the sampler default.
+  The comparisons do not use statistical error bars as acceptance tolerances.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_driver_equivalence_mpi.py::test_cli_twist_job_equals_direct_orchestrator

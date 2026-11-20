@@ -1,0 +1,14 @@
+schema_version: 1
+document:
+  id: jqmc.qe_orbital_tiling
+  version: 1
+  lifecycle: cutover
+  title: QE primitive k-block adapter
+  purpose: Preserve local coefficients and occupied source-band identities in the common tiled model.
+symbol_contract:
+  status: governed
+  default_guarantee_refs: [IMPL-QE-TILING-BLOCK-ADAPTER-001]
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

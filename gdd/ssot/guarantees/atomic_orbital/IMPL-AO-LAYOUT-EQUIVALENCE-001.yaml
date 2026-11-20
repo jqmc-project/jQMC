@@ -1,0 +1,213 @@
+id: IMPL-AO-LAYOUT-EQUIVALENCE-001
+kind: implementation
+name: Layout and assembly-route equivalence of atomic-orbital evaluation
+plain_language: 'Optimized layouts and assembly routes change nothing: ragged/bucketed per-atom folds equal the direct sum,
+  periodic reshape order is value-preserving, composite dispatch flattens correctly, and one-shot builders equal their staged
+  twins bit-for-bit where declared.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout::test_bucketed_fold_matches_direct_sum
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout::test_ragged_fold_matches_direct_sum_jax
+    executable_checks:
+      d8-n-093:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout.test_ragged_fold_matches_direct_sum_jax#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out
+        reference:
+          role: source-reference-value
+          expression: direct
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      d8-n-094:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout.test_ragged_fold_matches_direct_sum_jax#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(folded)
+        reference:
+          role: source-reference-value
+          expression: direct
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_fold_precision.py::test_ragged_fold_odd_images_and_logical_width
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_fold_precision.py::test_ragged_fold_float32_single_column_bitwise_equals_full_width
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout::test_ragged_fold_reduces_to_uniform_single_bucket
+    executable_checks:
+      d8-n-095:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout.test_ragged_fold_reduces_to_uniform_single_bucket#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: ragged
+        reference:
+          role: source-reference-value
+          expression: uniform
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout::test_ragged_compute_matches_uniform_A
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs::test_compute_AOs_periodic_reshape_sum_order
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs.test_compute_AOs_periodic_reshape_sum_order#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: prod
+        reference:
+          role: existing-test-reference
+          expression: manual_fold
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComposite::test_composite_add_operator_flattens_and_dispatches
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComposite.test_composite_add_operator_flattens_and_dispatches#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: c
+        reference:
+          role: existing-test-reference
+          expression: np.concatenate([a, b], axis=0)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComposite.test_composite_add_operator_flattens_and_dispatches#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(gxc)
+        reference:
+          role: existing-test-reference
+          expression: np.concatenate([np.asarray(gxa), np.asarray(gxb)], axis=0)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComposite.test_composite_add_operator_flattens_and_dispatches#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(gyc)
+        reference:
+          role: existing-test-reference
+          expression: np.concatenate([np.asarray(gya), np.asarray(gyb)], axis=0)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComposite.test_composite_add_operator_flattens_and_dispatches#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(gzc)
+        reference:
+          role: existing-test-reference
+          expression: np.concatenate([np.asarray(gza), np.asarray(gzb)], axis=0)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComposite.test_composite_add_operator_flattens_and_dispatches#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: lap_c
+        reference:
+          role: existing-test-reference
+          expression: np.concatenate([lap_a, lap_b], axis=0)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-6:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComposite.test_composite_add_operator_flattens_and_dispatches#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(val_c)
+        reference:
+          role: existing-test-reference
+          expression: val_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_ecp_outer_re_wrap_gamma_bit_identical
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {ao_kind: cart}
+    - {ao_kind: sphe}
+    executable_checks:
+      real-gamma-ecp-projection:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_ecp_outer_re_wrap_gamma_bit_identical#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: forward-ecp-output-bytes, expression: actual_bytes}
+        reference: {role: holomorphic-real-gamma-ecp-output-bytes, expression: reference_bytes}
+        iterations: {variable: quantity, required_values: [coordinates, mesh-weights, total]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_builder_one_shot_matches_promote

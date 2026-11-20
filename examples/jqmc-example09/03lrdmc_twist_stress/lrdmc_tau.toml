@@ -1,0 +1,30 @@
+[control]
+job_type = "lrdmc-tau"
+mcmc_seed = 34467
+number_of_walkers = 8
+max_time = 86400
+restart = false
+# A directory, not one HDF5 file, on the twist-averaged route.
+restart_chk = "restart_twists"
+hamiltonian_h5 = "hamiltonian_twists.h5"
+# The /twists schema in hamiltonian_h5 selects twist averaging.
+verbosity = "high"
+[lrdmc-tau]
+num_mcmc_steps = 2000
+tau = 0.10
+alat = 0.30
+non_local_move = "tmove"
+num_gfmc_warmup_steps = 50
+num_gfmc_bin_blocks = 50
+num_gfmc_collect_steps = 20
+atomic_force = false
+compute_stress = true
+use_swct = false
+epsilon_PW = 0.0
+
+[coulomb]
+mpc = true
+mpc_cutoff = 30.0
+
+[precision]
+mode = "mixed"

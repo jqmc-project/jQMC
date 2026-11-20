@@ -1,0 +1,23 @@
+id: IMPL-GFMC-RESTART-VERDICT-001
+kind: implementation
+name: Force restart comparisons reject corrupted checkpoint histories
+plain_language: >-
+  After a successful force-enabled continuation baseline, changing the saved
+  HF, Pulay or energy-times-Pulay history makes the same numerical comparison
+  fail for conventional and load-balanced GFMC. The fixture is committed
+  molecular H2 AE Cartesian GTO/MO without Jastrow, one up and one down
+  electron, four walkers, seed 12345 and a fixed mesh. This validates the
+  restart test's detector; it is not an independent physical force oracle.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_gfmc_force_restart_verdict_rejects_corrupt_history
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, force_field: force_HF}
+    - {driver_kind: load-balanced, force_field: force_HF}
+    - {driver_kind: conventional, force_field: force_PP}
+    - {driver_kind: load-balanced, force_field: force_PP}
+    - {driver_kind: conventional, force_field: E_L_force_PP}
+    - {driver_kind: load-balanced, force_field: E_L_force_PP}

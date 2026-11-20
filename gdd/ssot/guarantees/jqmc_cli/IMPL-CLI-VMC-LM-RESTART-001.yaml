@@ -1,0 +1,22 @@
+id: IMPL-CLI-VMC-LM-RESTART-001
+kind: implementation
+name: Single-twist VMC restart can enable the linear method after an SR update
+plain_language: >-
+  Single-twist VMC reads the mutable optimizer_kwargs.use_lm setting on
+  restart. When the checkpoint has no retained samples, the continuation may
+  enable local-energy parameter derivatives and run the linear method while
+  preserving the optimizer lineage and continuing its update count. If any
+  rank retained samples without those derivatives, all ranks reject the
+  restart before sampling and the checkpoint remains intact.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_restart_values.py::test_vmc_restart_can_enable_lm_at_an_accepted_update
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_restart_values.py::test_vmc_restart_rejects_lm_with_retained_sr_samples
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

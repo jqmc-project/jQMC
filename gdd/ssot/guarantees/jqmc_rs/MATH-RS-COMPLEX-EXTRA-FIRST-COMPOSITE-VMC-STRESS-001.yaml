@@ -1,0 +1,46 @@
+id: MATH-RS-COMPLEX-EXTRA-FIRST-COMPOSITE-VMC-STRESS-001
+kind: mathematical
+name: Rust complex-twist VMC Pulay and HF stress of an extra-first composite equal the strain derivatives of ln|Psi|
+  and e_L
+plain_language: 'The native complex-twist VMC Pulay stress (vmc_grad_ln_psi_eps_pbc_complex) and Hellmann-Feynman
+  stress (vmc_grad_e_L_eps_pbc_complex) of a complex pGTO(+)plane-wave or pGTO(+)B-spline composite basis are the
+  strain derivatives of Re ln Psi and of the continuum local energy whichever child comes first in the AO order:
+  the determinant Pulay-stress kernel must take the GTO rows of the AO cotangent at the offset of the GTO child,
+  also when the plane-wave or B-spline child precedes it. On the committed pgto_pw_twist_jnone and pgto_bspline_twist_jnone
+  cells (QE-projected Li ccECP at k = 0.25, single determinant, no Jastrow) in their built (pGTO, extra) order and
+  in the (extra, pGTO) order with the MO coefficient columns permuted to match, at one seeded electron configuration
+  and the MCMC driver''s default non-local mesh with the identity rotation, all nine entries of both stresses equal
+  reverse-mode strain AD of Re ln Psi and of Re e_L with the cell, nuclei and electrons strained together, in the
+  same precision. Every reference entry must be finite and distinguishable from zero. Full is judged against the
+  independent AD reference. This mathematical guarantee applies only to full precision at strict; paired mixed
+  numerical coverage is owned by NUM-RS-COMPLEX-EXTRA-FIRST-COMPOSITE-DERIVATIVE-MIXED-FIDELITY-001.'
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_vmc_complex_extra_first_stress.py::test_vmc_complex_composite_stress_matches_strain_ad_in_both_child_orders
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {pattern: pgto_pw_twist_jnone, order: gto_first}
+    - {pattern: pgto_pw_twist_jnone, order: extra_first}
+    - {pattern: pgto_bspline_twist_jnone, order: gto_first}
+    - {pattern: pgto_bspline_twist_jnone, order: extra_first}
+    executable_checks:
+      pulay-stress-vs-strain-ad:
+        site: tests/test_rs_kernel/test_vmc_complex_extra_first_stress.py::test_vmc_complex_composite_stress_matches_strain_ad_in_both_child_orders#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-vmc-pulay-stress, expression: pulay}
+        reference: {role: same-precision-strain-autodiff-of-re-ln-psi, expression: pulay_reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, det_eval]
+      hf-stress-vs-strain-ad:
+        site: tests/test_rs_kernel/test_vmc_complex_extra_first_stress.py::test_vmc_complex_composite_stress_matches_strain_ad_in_both_child_orders#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-vmc-hf-stress, expression: hf}
+        reference: {role: same-precision-strain-autodiff-of-re-local-energy, expression: hf_reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, ewald, coulomb]

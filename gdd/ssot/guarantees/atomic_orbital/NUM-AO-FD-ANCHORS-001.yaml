@@ -1,0 +1,18 @@
+id: NUM-AO-FD-ANCHORS-001
+kind: numerical
+name: Module-level finite-difference anchors for atomic orbitals
+plain_language: Analytical atomic-orbital derivatives (positions, cell, basis parameters) agree with independent finite
+  differences on reviewed module-level sentinel cases, complementing the wavefunction-level FD sentinels owned by the derivative
+  ledger.
+verdict_methods:
+- VM-NUM-FD-ANCHOR-001
+required_evidence:
+- verdict_method: VM-NUM-FD-ANCHOR-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_grad_analytic_vs_numerical_molecular
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_grad_analytic_vs_numerical_periodic
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_laplacian_analytic_vs_numerical_molecular
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOsGradLaplacian::test_AOs_laplacian_analytic_vs_numerical_periodic
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_pw_dcell_matches_fd
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_bspline_dcell_lap_matches_fd
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_ao.py::test_sphe_basis_param_matches_fd

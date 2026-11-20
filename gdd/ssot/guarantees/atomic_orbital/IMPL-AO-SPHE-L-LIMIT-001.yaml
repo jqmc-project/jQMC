@@ -1,0 +1,12 @@
+id: IMPL-AO-SPHE-L-LIMIT-001
+kind: implementation
+name: Spherical GTO angular-momentum limit is enforced
+plain_language: The XLA real-solid-harmonic tables cover l <= 6 only. A spherical GTO basis with a shell above l = 6 is
+  rejected with an error by sanity_check and by every XLA value, gradient, Laplacian and fused entry point, instead of
+  returning silently wrong l = 7 AOs and, through a per-nucleus stride mismatch, wrong AOs on later nuclei.
+verdict_methods:
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs::test_sphe_l_above_6_is_rejected

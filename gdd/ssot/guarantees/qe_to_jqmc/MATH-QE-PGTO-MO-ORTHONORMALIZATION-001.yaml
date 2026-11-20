@@ -1,0 +1,59 @@
+id: MATH-QE-PGTO-MO-ORTHONORMALIZATION-001
+kind: mathematical
+name: Pure pGTO QE conversion orthonormalizes each (k, spin) MO block by band-order Cholesky in the periodic AO metric
+plain_language: >-
+  For kind pgto (on by default, orthonormalize=False disables it) the converter
+  orthonormalizes each (k, spin) block of MO rows C with S = compute_overlap_matrix of the emitted
+  pGTO leaf: conj(C) S C^T = L L^H, C' = conj(L)^(-1) C, after the per-AO normalization and the Gamma
+  real-part step and before MOs_data is built. The metric has the projection's phase and
+  normalization convention: for a two-centre triclinic s/p/d leaf the converter builds, at Gamma and
+  at k_frac = (0.27, -0.1, 0.13), the overlap equals N G^H G N from the projection's analytic design
+  matrix on every reciprocal vector with |G + k| <= sqrt(160 alpha_max) and an independent
+  Gamma-function normalization N, within the fp64 projection pair tolerance, and the conjugated
+  overlap is rejected at the twist. On the committed Li (8 bands, Gamma and k = 1/4) and O LSDA
+  (6 + 6 bands, Gamma and k = 1/4) saves the converted full blocks and both determinant spin channels
+  (including the time-reversed channel) satisfy conj(C) S C^T = I within the fp64 projection pair
+  tolerance, Gamma MOs stay float64, and the unorthonormalized blocks exceed the warning threshold.
+  For every N the projector X^T (conj(X) S X^T)^(-1) conj(X) of the lowest N rows is unchanged
+  (relative to its maximum entry, same tolerance), while a Loewdin transform changes it for some N.
+  On the O LSDA triplet at 24 seeded ion-centred configurations the determinant ratio with and without
+  orthonormalization has constant modulus and phase equal to det(conj(L_up)^(-1)) det(conj(L_dn)^(-1))
+  from an independent NumPy Cholesky factor, within the active-mode strict ao/mo/det tolerance.
+  Replacing conj(L)^(-1) by L^(-1) breaks orthonormality at k = 1/4 but not at Gamma. Full and mixed
+  are judged separately; the conversion is an fp64 preprocessing step and no mixed result is compared
+  with fp64. The wiring (LSDA sharing, kind restriction, twist writer and CLI) is
+  IMPL-QE-PGTO-MO-ORTHONORMALIZATION-WIRING-001.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_periodic_pgto_overlap_equals_converged_fourier_gram
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: gamma}
+    - {twist: general-k}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_orthonormalization_changes_the_determinant_by_a_constant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: o-lsda-gamma}
+    - {fixture: o-lsda-k025}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_converted_pgto_mos_are_orthonormal_in_the_periodic_ao_metric
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: li-gamma}
+    - {fixture: li-k025}
+    - {fixture: o-lsda-gamma}
+    - {fixture: o-lsda-k025}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_orthonormalization_preserves_every_lowest_band_subspace
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: li-k025}
+    - {fixture: o-lsda-gamma}
+    - {fixture: o-lsda-k025}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_inverse_cholesky_without_conjugate_breaks_orthonormality_only_at_general_k
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: li-gamma}
+    - {fixture: li-k025}

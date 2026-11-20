@@ -1,0 +1,41 @@
+id: IMPL-GFMC-INCREMENTAL-POT-AE-PBC-001
+kind: implementation
+name: Carried interval potential equals a same-configuration full recompute after every move (XLA, periodic all-electron)
+plain_language: 'On a periodic all-electron fixture (H4_pbc_ae_cart.h5, so the discretized electron-ion row channel ei_disc
+  is the live one), the XLA GFMC interval potential state built by _gfmc_build_interval_pot_state and advanced by
+  _gfmc_advance_interval_pot_state through a fixed schedule of single-electron moves of both spins (alat hops, hops across
+  cell faces, lattice-translated unwrapped jumps, and moves inside the alat floor of a proton) agrees after EVERY move with
+  the from-scratch dispatch kernels of the full-recompute route at the same configuration: the ee Ewald energy composed
+  from the carried structure factor, the per-electron bare ei rows, the per-electron ei_disc rows and the total diagonal
+  Coulomb term, at the tight absolute twin pin. The carried update counter equals the number of moves, both spins move,
+  face crossings occur and the alat floor is active on some moved rows; a control that leaves the moved electron''s ei_disc
+  row stale fails the ei_disc comparison at the first move.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_incremental_pot_state_ae_pbc.py::test_ae_pbc_interval_pot_state_matches_full_recompute_after_every_move
+    executable_checks:
+      incremental-components:
+        site: tests/test_jqmc_kernel/test_gfmc_incremental_pot_state_ae_pbc.py::_assert_state_matches_full#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: carried[component]
+        reference:
+          role: existing-test-reference
+          expression: full[component]
+        precision:
+          full:
+            policy: CMP-GFMC-INCREMENTAL-TWIN-001
+          mixed:
+            policy: CMP-GFMC-INCREMENTAL-TWIN-001
+        iterations:
+          variable: component
+          required_values:
+          - ee
+          - ei_bare
+          - ei_disc
+          - total
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_incremental_pot_state_ae_pbc.py::test_ae_pbc_interval_pot_state_twin_detects_a_stale_ei_disc_row

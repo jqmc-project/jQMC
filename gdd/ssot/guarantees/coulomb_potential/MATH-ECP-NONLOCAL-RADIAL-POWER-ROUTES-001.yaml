@@ -1,0 +1,54 @@
+id: MATH-ECP-NONLOCAL-RADIAL-POWER-ROUTES-001
+kind: mathematical
+name: Every XLA non-local ECP route uses the term's own radial power
+plain_language: >-
+  For a non-local ECP term (l, c, a, n) the projector radial factor is c r^(n-2) exp(-a r^2). On an explicit
+  one-centre molecular input (nodeless s Gaussian SD, one up and one down electron, no Jastrow, a single
+  non-local l=0 term) the s-orbital ratio is 1 at every quadrature point, so the non-local energy is the sum
+  over electrons of c r^(n-2) exp(-a r^2). The nearest-neighbour evaluator and the fast-update kernel (real
+  and holomorphic public wrappers, the kernel behind compute_ecp_coulomb_potential and the MCMC/GFMC fast
+  paths) reproduce that closed form for n in 0, 1, 2 and 3 (n = 2 is the ccECP control), Nv=18, identity
+  and tilted rotations, in full and mixed separately. The reference carries the per-zone s-projection
+  shift, which is exactly zero in full. At n != 2 the closed form differs from its n = 2 value beyond the
+  tolerance, so a route that ignores the stored power fails. This does not cover the all-pairs grid-point
+  route, periodic inputs, or non-local channels l >= 1 at n != 2.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_reference.py::test_nonlocal_radial_power_matches_closed_form_on_every_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {power: 0, route: nearest, rotation: identity}
+    - {power: 0, route: nearest, rotation: tilted}
+    - {power: 0, route: fast_update, rotation: identity}
+    - {power: 0, route: fast_update, rotation: tilted}
+    - {power: 0, route: fast_update_holomorphic, rotation: identity}
+    - {power: 0, route: fast_update_holomorphic, rotation: tilted}
+    - {power: 1, route: nearest, rotation: identity}
+    - {power: 1, route: nearest, rotation: tilted}
+    - {power: 1, route: fast_update, rotation: identity}
+    - {power: 1, route: fast_update, rotation: tilted}
+    - {power: 1, route: fast_update_holomorphic, rotation: identity}
+    - {power: 1, route: fast_update_holomorphic, rotation: tilted}
+    - {power: 2, route: nearest, rotation: identity}
+    - {power: 2, route: nearest, rotation: tilted}
+    - {power: 2, route: fast_update, rotation: identity}
+    - {power: 2, route: fast_update, rotation: tilted}
+    - {power: 2, route: fast_update_holomorphic, rotation: identity}
+    - {power: 2, route: fast_update_holomorphic, rotation: tilted}
+    - {power: 3, route: nearest, rotation: identity}
+    - {power: 3, route: nearest, rotation: tilted}
+    - {power: 3, route: fast_update, rotation: identity}
+    - {power: 3, route: fast_update, rotation: tilted}
+    - {power: 3, route: fast_update_holomorphic, rotation: identity}
+    - {power: 3, route: fast_update_holomorphic, rotation: tilted}
+    executable_checks:
+      radial-power-closed-form:
+        site: tests/test_jqmc_kernel/test_ecp_projector_reference.py::test_nonlocal_radial_power_matches_closed_form_on_every_route#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-nonlocal-ecp, expression: actual}
+        reference: {role: closed-form-nonlocal-radial-factor, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}

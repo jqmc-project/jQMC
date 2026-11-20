@@ -1,0 +1,55 @@
+id: MATH-ECP-PROJECTOR-REAL-FIXTURE-001
+kind: mathematical
+name: Real ccECP tables on silicon and CuBr match an independent 12-point projector
+plain_language: >-
+  On the committed periodic silicon and molecular CuBr TREXIO artifacts, one seeded electronic
+  configuration, NN=2 and the production default Nv=12 rule, every proposed configuration, every
+  per-grid nonlocal ECP value and their sum agree with a reference built from raw TREXIO ECP tables
+  and geometry, authored icosahedron points, numpy Legendre values, brute-force nearest periodic
+  images and dense many-electron wavefunction ratios. The Br d nonlocal channel and a Si p channel
+  contribute measurably, and silicon selects translated images. Full and mixed are each required.
+  This does not certify continuous angular accuracy, Jastrow ratios or other fixtures.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_reference_nv12.py::test_real_trexio_nonlocal_ecp_matches_independent_icosahedral_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: silicon.h5, rotation: identity}
+    - {trexio_file: silicon.h5, rotation: tilted}
+    - {trexio_file: CuBr_ecp_ccpvtz_cart.h5, rotation: identity}
+    - {trexio_file: CuBr_ecp_ccpvtz_cart.h5, rotation: tilted}
+    executable_checks:
+      up-configurations:
+        site: tests/test_jqmc_kernel/test_ecp_projector_reference_nv12.py::test_real_trexio_nonlocal_ecp_matches_independent_icosahedral_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-nonlocal-ecp-up-configurations, expression: actual_up}
+        reference: {role: independent-icosahedral-up-configurations, expression: reference_up}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+      down-configurations:
+        site: tests/test_jqmc_kernel/test_ecp_projector_reference_nv12.py::test_real_trexio_nonlocal_ecp_matches_independent_icosahedral_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-nonlocal-ecp-down-configurations, expression: actual_dn}
+        reference: {role: independent-icosahedral-down-configurations, expression: reference_dn}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+      per-grid-projection:
+        site: tests/test_jqmc_kernel/test_ecp_projector_reference_nv12.py::test_real_trexio_nonlocal_ecp_matches_independent_icosahedral_reference#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-nonlocal-ecp-grid, expression: actual_grid}
+        reference: {role: raw-trexio-dense-ratio-grid, expression: reference_grid}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+      projection-sum:
+        site: tests/test_jqmc_kernel/test_ecp_projector_reference_nv12.py::test_real_trexio_nonlocal_ecp_matches_independent_icosahedral_reference#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-nonlocal-ecp-sum, expression: actual_sum}
+        reference: {role: raw-trexio-dense-ratio-sum, expression: reference_sum}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}

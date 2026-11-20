@@ -1,0 +1,66 @@
+id: MATH-RS-SWCT-GEOMETRY-REFERENCE-001
+native_evidence:
+- jqmc_rs::gfmc_forces::swct_tests::swct_periodic_images_preserve_ties_and_lattice_shifts
+- jqmc_rs::gfmc_forces::swct_tests::swct_streaming_matches_dense_molecular_contraction
+- jqmc_rs::gfmc_forces::swct_tests::swct_streaming_retains_complex_fields_and_empty_spin
+kind: mathematical
+name: Native SWCT contraction and weight derivative match explicit geometry
+plain_language: >-
+  On three explicitly positioned synthetic nuclei and two explicit
+  three-electron configurations, the native fused SWCT contraction and
+  summed weight gradient equal a NumPy inverse-fourth-distance reference.
+  Molecular and triclinic periodic geometry, real and complex six-channel
+  fields, and empty electron groups are covered, with nuclear geometry stored
+  as either NumPy or concrete JAX arrays. Periodic images are selected
+  by explicit nearest-image enumeration, and separate integer lattice
+  translations of each electron preserve the reference values. Empty groups
+  return exact zero. The SWCT zone is float64 in both precision modes;
+  each mode uses its existing strict zone budget. These are geometric
+  component inputs, not a many-body wavefunction or a cond(G) claim.
+  This does not claim that the Rust backend never calls JAX.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_swct_native_routing.py::test_native_swct_geometry_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {boundary: molecular, empty: false, complex_field: false, structure_storage: numpy}
+    - {boundary: molecular, empty: false, complex_field: false, structure_storage: jax}
+    - {boundary: molecular, empty: false, complex_field: true, structure_storage: numpy}
+    - {boundary: molecular, empty: false, complex_field: true, structure_storage: jax}
+    - {boundary: molecular, empty: true, complex_field: false, structure_storage: numpy}
+    - {boundary: molecular, empty: true, complex_field: false, structure_storage: jax}
+    - {boundary: molecular, empty: true, complex_field: true, structure_storage: numpy}
+    - {boundary: molecular, empty: true, complex_field: true, structure_storage: jax}
+    - {boundary: skew-pbc, empty: false, complex_field: false, structure_storage: numpy}
+    - {boundary: skew-pbc, empty: false, complex_field: false, structure_storage: jax}
+    - {boundary: skew-pbc, empty: false, complex_field: true, structure_storage: numpy}
+    - {boundary: skew-pbc, empty: false, complex_field: true, structure_storage: jax}
+    - {boundary: skew-pbc, empty: true, complex_field: false, structure_storage: numpy}
+    - {boundary: skew-pbc, empty: true, complex_field: false, structure_storage: jax}
+    - {boundary: skew-pbc, empty: true, complex_field: true, structure_storage: numpy}
+    - {boundary: skew-pbc, empty: true, complex_field: true, structure_storage: jax}
+    executable_checks:
+      native-geometric-reference:
+        site: tests/test_rs_kernel/test_swct_native_routing.py::test_native_swct_geometry_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-swct-component, expression: observed}
+        reference: {role: independent-numpy-geometric-component, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [swct]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [swct]}
+        iterations: {variable: quantity, required_values: [contracted, domega]}
+  - pytest_node: tests/test_rs_kernel/test_swct_native_routing.py::test_native_swct_lattice_translation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{complex_field: false}, {complex_field: true}]
+    executable_checks:
+      native-translated-reference:
+        site: tests/test_rs_kernel/test_swct_native_routing.py::test_native_swct_lattice_translation#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-lattice-translated-swct-component, expression: observed}
+        reference: {role: untranslated-numpy-geometric-component, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [swct]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [swct]}
+        iterations: {variable: quantity, required_values: [contracted, domega]}

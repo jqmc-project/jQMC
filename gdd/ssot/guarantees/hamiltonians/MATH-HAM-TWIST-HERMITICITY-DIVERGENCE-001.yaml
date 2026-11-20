@@ -1,0 +1,36 @@
+id: MATH-HAM-TWIST-HERMITICITY-DIVERGENCE-001
+kind: mathematical
+name: Anti-Hermitian part of the twist local-energy matrix is the integral of a periodic divergence, with J2 and pGTO
+plain_language: >-
+  At k != Gamma with a Jastrow and with pGTO orbitals, where no finite grid integrates the kinetic integrand
+  exactly, Hermiticity of the local-energy matrix is shown by two exact pointwise identities on two states that
+  share each spin channel's k. First, production e_L of each state equals the forward-mode AD kinetic energy
+  -(1/2) lap Psi / Psi of production evaluate_wavefunction plus one real potential that is the same for both
+  states. Second, conj(Psi_a) Psi_b and grad ln Psi_b - conj(grad ln Psi_a) are unchanged when one up or one
+  down electron moves by a lattice vector. Then conj(Psi_a) Psi_b (e_L[b] - conj(e_L[a])) is minus one half the
+  divergence of a lattice-periodic current, whose cell integral is zero, so H_ab = conj(H_ba). Cases: the
+  triclinic plane-wave system of MATH-HAM-TWIST-HERMITICITY-001 with a Pade J2, the all-electron
+  H4_pbc_ae_k025_cart.h5 (Cartesian pGTO, J1 + J2) and canonical WF-PATTERN-016 (triclinic spherical pGTO AGP,
+  J1 + J2), three seeded configurations each with electrons outside the home cell. Im(e_L) and the imaginary
+  current exceed the tolerance and removing J2 changes e_L. A real-projected kinetic energy and a modulus-square
+  drift term conj(v).v in place of v.v must each fail the first identity. Strict zone policy; full and mixed are
+  judged separately. The non-local ECP and J3 on complex Bloch orbitals are not claimed.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bloch_phase_hermiticity.py::test_local_energy_antihermitian_part_is_a_periodic_divergence
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: plane-wave-triclinic-j2}
+    - {case: pgto-cart-h4-twist-j12}
+    - {case: pgto-sphe-triclinic-agp-j12}
+  - pytest_node: tests/test_jqmc_kernel/test_bloch_phase_hermiticity.py::test_antihermitian_divergence_rejects_a_real_projection_or_conjugation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: plane-wave-triclinic-j2, fault: re-projected-kinetic}
+    - {case: plane-wave-triclinic-j2, fault: conjugated-drift-square}
+    - {case: pgto-cart-h4-twist-j12, fault: re-projected-kinetic}
+    - {case: pgto-cart-h4-twist-j12, fault: conjugated-drift-square}
+    - {case: pgto-sphe-triclinic-agp-j12, fault: re-projected-kinetic}
+    - {case: pgto-sphe-triclinic-agp-j12, fault: conjugated-drift-square}

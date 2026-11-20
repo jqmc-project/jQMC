@@ -1,0 +1,72 @@
+id: MATH-AO-COMPOSITE-OVERLAP-BLOCKS-001
+kind: mathematical
+name: Periodic composite AO overlap is assembled from exact child and cross blocks
+plain_language: >-
+  For a periodic AO composite, compute_overlap_matrix returns S = integral over one cell of conj(chi_mu)
+  chi_nu with every diagonal block equal to the child's own overlap and every cross block from an exact
+  formula with the bra conjugated: the closed-form Gaussian Fourier transform for pGTO x plane wave (real
+  cos/sin at Gamma, complex at the twist), an exact reciprocal-space sum with the spline Fourier
+  coefficients for pGTO x B-spline (terms dropped only below a stated fp64-level criterion), the exact spline
+  Fourier coefficient for plane wave x B-spline, and the children's own exact kernels for two children of
+  one family. On committed H2 periodic Cartesian pGTO leaves (cubic cell, Gamma and k = (1/4, 1/4, 1/4)) with a
+  plane-wave or a cubic B-spline partner, the diagonal blocks equal the children's overlaps and the lower
+  block is the conjugate transpose of the upper one within the strict det_eval policy, the matrix is
+  positive semidefinite within the S-Stiefel backward-error bound, the cross block equals an independently
+  written closed-form Fourier transform or axis-factorised one-dimensional integral (strict det_eval) and a
+  fine cell quadrature of the children's own AO values (strict ao_eval/det_eval, in units of the block's
+  largest element). Duplicated children give cross blocks equal to the child's overlap, the plane-wave x
+  B-spline block equals the fine quadrature, children at different twists raise ValueError and B-spline
+  children on different knot grids raise NotImplementedError. A ket-conjugated cross block, a cross block
+  without the Bloch twist, a dropped diagonal block and the previous single-grid quadrature are rejected. On
+  the QE Li ccECP pgto+pw and pgto+bspline conversions (exponent up to 190, Gamma and k025) the cross block
+  equals the analytic reference, the overlap is positive semidefinite, the S-Stiefel metric factors build and
+  the MO orthonormality metrics are finite, while the previous quadrature misses the cross block. Full and
+  mixed are judged separately.
+  The fine cell quadrature samples the children's AO values with every precision zone at fp64 in both modes,
+  matching the fp64 overlap blocks.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_composite_cross_block_matches_analytic_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: gamma, kind: plane-wave}
+    - {twist: gamma, kind: bspline}
+    - {twist: twist, kind: plane-wave}
+    - {twist: twist, kind: bspline}
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_composite_cross_block_matches_fine_cell_quadrature
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: gamma, kind: plane-wave}
+    - {twist: gamma, kind: bspline}
+    - {twist: twist, kind: plane-wave}
+    - {twist: twist, kind: bspline}
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_composite_overlap_rejects_convention_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: ket-conjugated-cross}
+    - {fault: dropped-twist-phase}
+    - {fault: dropped-diagonal-block}
+    - {fault: old-quadrature-grid}
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_qe_li_composite_overlap_is_exact_psd_and_feeds_the_s_metric
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: gamma, kind: plane-wave}
+    - {twist: gamma, kind: bspline}
+    - {twist: twist, kind: plane-wave}
+    - {twist: twist, kind: bspline}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_composite_overlap_diagonal_blocks_are_the_children_overlaps
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: gamma, kind: plane-wave}
+    - {twist: gamma, kind: bspline}
+    - {twist: twist, kind: plane-wave}
+    - {twist: twist, kind: bspline}
+  - pytest_node: tests/test_jqmc_kernel/test_composite_overlap_blocks.py::test_composite_same_family_and_plane_wave_bspline_pairs_are_exact
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {twist: gamma}
+    - {twist: twist}

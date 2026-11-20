@@ -1,0 +1,69 @@
+id: NUM-RS-COMPLEX-J3-CHILD-ORDER-SQUARE-MO-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: Native complex J3 child orders and square MO derivatives retain mixed/full fidelity
+plain_language: Native complex VMC free/driver-context and GFMC T-move HF nuclear/electron forces and stress, and
+  the square nonidentity J3 MO Pulay forces/stress, obey the central parameter-derivative mixed/full block infinity-norm
+  budget. The two PW J3 child orders and the square-MO composite/bare-pGTO cases retain all eight parameter rows.
+  Each policy independently reloads a fresh Hamiltonian from identical serialized full physical input; coordinates,
+  seeded J matrix/Q, identity quadrature, mesh, alat and native arguments are unchanged. Every expected native field
+  has its physical nuclear/electron/3x3 shape and finite values. The original active-mixed-policy medium tuple is
+  captured before either callback and preserves each block nonzero predicate in both results. Each mixed case rejects
+  an out-of-budget isolated perturbation with the full reference fixed. Full independent AD formulas remain at strict
+  in the mathematical guarantees. All scientific modes/cases and ordinary public-driver parity remain; no production
+  zone is promoted.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_vmc_complex_j3_pw_first_force.py::test_complex_j3_composite_hf_forces_match_ad_in_both_child_orders
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {order: gto_first}
+    - {order: pw_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_vmc_complex_j3_pw_first_force.py::test_complex_j3_composite_hf_forces_match_ad_in_both_child_orders#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_rs_kernel/test_vmc_complex_j3_pw_first_stress.py::test_complex_j3_composite_hf_stress_matches_strain_ad_in_both_child_orders
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {order: gto_first}
+    - {order: pw_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_vmc_complex_j3_pw_first_stress.py::test_complex_j3_composite_hf_stress_matches_strain_ad_in_both_child_orders#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_rs_kernel/test_complex_j3_square_mo_force_stress.py::test_complex_j3_square_nonidentity_mo_forces_match_ad
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {basis: pgto_pw}
+    - {basis: pgto}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_complex_j3_square_mo_force_stress.py::test_complex_j3_square_nonidentity_mo_forces_match_ad#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_rs_kernel/test_complex_j3_square_mo_force_stress.py::test_complex_j3_square_nonidentity_mo_stress_matches_strain_ad
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {basis: pgto_pw}
+    - {basis: pgto}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_complex_j3_square_mo_force_stress.py::test_complex_j3_square_nonidentity_mo_stress_matches_strain_ad#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}

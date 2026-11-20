@@ -1,0 +1,25 @@
+id: MATH-HAM-HDF5-RESTORE-MIC-BOX-001
+kind: mathematical
+name: HDF5 and checkpoint restore recompute a sufficient minimum-image box
+plain_language: >-
+  A periodic Structure_data restored from HDF5 does not keep a persisted minimum-image box (_n_max) that is too small:
+  every restored structure carries the value Structure_data.build computes from its lattice vectors, so minimum images
+  obtained with it are the shortest lattice-equivalent vectors even when the file was written with the
+  old a+b+c-only box. For a charge-neutral 4-H plane-wave dummy Hamiltonian on the lattice diag(6,7,8) Bohr written in the
+  non-reduced basis U @ diag(6,7,8) with U = [[6,1,-1],[-2,1,0],[-3,-2,1]], saved both as a Hamiltonian_data.save_to_hdf5
+  file and as a merged-checkpoint hamiltonian_data group with the stale box 5 written into every Structure_data group,
+  Hamiltonian_data.load_from_hdf5 and load_hamiltonian_from_checkpoint return Structure_data leaves (top level, Coulomb,
+  Ewald, Jastrow, AO) whose _n_max is the Python int built for the same lattice, and the XLA _minimum_image_displacement
+  and nearest-nucleus distance _get_min_dist_rel_R_cart_jnp evaluated with the restored structure return vectors whose
+  length equals a brute-force 27-image search in the rectangular basis after the per-axis wrap and which are
+  lattice-equivalent to the input, within ATOL_PYTHON_FP64_LOOSE / RTOL_PYTHON_FP64_LOOSE, for the reported displacement
+  and 400 seeded displacements. The fixture is non-vacuous: the stale box returns a non-minimal image for some of them.
+  Full and mixed are each required.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::test_hdf5_restore_recomputes_stale_minimum_image_box_on_non_reduced_basis
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

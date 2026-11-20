@@ -1,0 +1,17 @@
+id: IMPL-RS-RNG-PARITY-001
+native_evidence:
+- jqmc_rs::threefry::tests::split_known_vector
+- jqmc_rs::threefry::tests::threefry_known_vectors
+kind: implementation
+name: Rust/JAX RNG parity
+plain_language: The Rust threefry core, split, randint, and uniform sampling match JAX bit for bit.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_threefry.py::test_threefry_core_matches_jax
+  - pytest_node: tests/test_rs_kernel/test_threefry.py::test_split_matches_jax
+  - pytest_node: tests/test_rs_kernel/test_threefry.py::test_randint_i32_matches_jax
+  - pytest_node: tests/test_rs_kernel/test_threefry.py::test_randint_i64_default_matches_jax
+  - pytest_node: tests/test_rs_kernel/test_threefry.py::test_uniform_f64_matches_jax

@@ -1,0 +1,43 @@
+id: PHY-HAM-UNIMODULAR-CELL-BASIS-INVARIANCE-001
+kind: physical
+name: Local energy invariance under a unimodular change of cell basis and across a skewed face
+plain_language: >-
+  Committed periodic TREXIO systems (H4 all-electron at Gamma, Li ccECP at Gamma and at the k = 0.25 twist,
+  and H4 moved onto a triclinic lattice at Gamma and at the twist, there in a mildly and in a strongly skewed
+  basis) are rewritten through the production loader
+  in their own basis L and in a skewed basis U @ L with integer U of determinant one, with the fractional k
+  mapped to U k and the nuclei rigidly placed inside both home cells. Without a Jastrow, the complex local
+  energy at seeded configurations with electrons outside the home cell must be the same in both bases. In
+  the skewed Li basis, the non-local ECP energy and the local energy of an electron just across the face
+  nearest to a nucleus must equal those of its wrapped image, with a live projector. The strict zone policy
+  applies. An orthogonal-only minimum image, a home-cell wrap with inv(cell).T and an ECP projector without
+  the minimum image must each fail. Full and mixed are judged separately. Jastrow factors (their sin(pi s)
+  distance depends on the basis) and nuclei outside the home cell are not claimed.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_local_energy_invariant_under_unimodular_change_of_cell_basis
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: h4_gamma_cubic_lattice}
+    - {case: li_gamma_ccecp}
+    - {case: li_twist_ccecp}
+    - {case: h4_gamma_triclinic_lattice}
+    - {case: h4_twist_triclinic_lattice}
+    - {case: h4_gamma_triclinic_lattice_strong_skew}
+    - {case: h4_twist_triclinic_lattice_strong_skew}
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_ecp_nonlocal_electron_across_skewed_face_equals_wrapped
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: li_gamma_ccecp}
+    - {case: li_twist_ccecp}
+  # Forwarding entry that calls the same checker
+  # implementation as test_noncubic_cell_oracles.py::test_noncubic_oracles_reject_metric_and_truncation_faults (AO-owned)
+  # with the same cases, modes, markers and fixtures; it is not an independent oracle.
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_hamiltonian_faults.py::test_hamiltonian_noncubic_oracles_reject_metric_and_truncation_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: orthogonal-only-minimum-image}
+    - {fault: transpose-home-cell-wrap}
+    - {fault: drop-ecp-minimum-image}

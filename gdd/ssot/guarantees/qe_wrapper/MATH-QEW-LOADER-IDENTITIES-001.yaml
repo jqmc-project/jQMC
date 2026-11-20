@@ -1,0 +1,13 @@
+id: MATH-QEW-LOADER-IDENTITIES-001
+kind: mathematical
+name: QE loader mathematical identities
+plain_language: The loaded reciprocal cell is the exact dual of the direct cell, Gamma half-sphere expansion produces conjugate
+  pairs, and real Gamma orbitals satisfy the Hermitian condition.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestQEWrapper::test_qe_cell_reciprocal_is_dual
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestQEWrapper::test_expand_gamma_half_conjugate_pairs
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestQEWrapper::test_load_qe_wfc_real_orbitals_hermitian

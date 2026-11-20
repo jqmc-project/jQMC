@@ -1,0 +1,14 @@
+id: MATH-RS-ECP-LOCAL-PBC-MIN-IMAGE-001
+kind: mathematical
+name: Periodic local ECP energy uses the minimum image on both backends
+plain_language: For a periodic cell (orthogonal, skewed or oblique) and electrons several cells away from the home cell,
+  the local ECP energy returned by jqmc_rs.compute_ecp_local_parts_all_pairs and by the XLA
+  compute_ecp_local_parts_all_pairs equals the sum of c d^(p-2) exp(-a d^2) over local-channel terms and electrons, where
+  d is the shortest nucleus-electron distance over all lattice translations, found by brute-force image search. The Rust
+  binding must read the cell from structure_data instead of using the raw distance.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_ecp_local_parts_all_pairs_pbc_brute_force_images

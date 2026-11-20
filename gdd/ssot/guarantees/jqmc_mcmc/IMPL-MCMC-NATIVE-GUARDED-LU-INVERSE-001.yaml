@@ -1,0 +1,29 @@
+id: IMPL-MCMC-NATIVE-GUARDED-LU-INVERSE-001
+native_evidence:
+- jqmc_rs::complex_det::geminal_guarded_inverse_tests::guarded_inverse_over_pathological_table
+kind: implementation
+name: The native carried-inverse refresh keeps the equilibrated LU inverse of a healthy geminal and takes the finite equilibrated pseudo-inverse otherwise
+plain_language: >-
+  The native real and complex carried-inverse refreshes (determinant::refresh_running_inverse_if_needed
+  and complex_det::refresh_running_inverse_if_needed_complex, run at the native energy-chunk refresh boundaries)
+  replace a drifted carried inverse by C inv(A) R, the Gauss-Jordan inverse of the power-of-two equilibrated
+  A = R G C, and keep it only if it is finite and its scale-free probe residual max|A (inv(A) P) - P| (the two
+  probe columns) is at most GEMINAL_LU_GUARD_RESIDUAL_THRESHOLD; any other geminal takes the equilibrated SVD
+  pseudo-inverse. The pseudo-inverse equilibration exponents are clipped at |e| <= GEMINAL_EQUILIBRATION_MAX_EXPONENT,
+  so the pseudo-inverse of every finite geminal is finite; the LU equilibration keeps the full exponent range, so an
+  invertible geminal graded below 2**-478 keeps its exact LU inverse. Evidence: the Rust unit test runs the production refresh
+  functions from a zero carried inverse over the issue's pathological table (real N = 16 and 80, complex N = 16 and
+  64): a well-conditioned control and a 1e-200 graded row must equal the equilibrated LU inverse bit for bit; a zero
+  row, a zero column, duplicate rows and columns, a row that is a linear combination, a rank N-2 product, a 1e-13
+  near-duplicate row, a subnormal (1e-310) row, a row and a column both graded by 1e-200 (an up and a down electron
+  both far out, exact inverse beyond float64), NaN and inf entries and the zero matrix must equal the equilibrated
+  pseudo-inverse bit for bit; the 1e-9 near-duplicate row, whose residual lies within a decade of the guard, may
+  take either; every finite geminal gives a finite inverse. The Python test pins both Rust constants equal to the
+  jqmc._setting values the XLA route uses. The native refresh is float64 in both precision modes.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_large_ratio_carried_inverse_native.py::test_native_geminal_inverse_guard_constants_match_python
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

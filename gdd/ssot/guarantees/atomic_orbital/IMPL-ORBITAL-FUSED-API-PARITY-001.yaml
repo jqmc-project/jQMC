@@ -1,0 +1,93 @@
+id: IMPL-ORBITAL-FUSED-API-PARITY-001
+kind: implementation
+name: Complex orbital fused outputs preserve standalone API parity in mixed
+plain_language: The original complex/high-l AO fixtures retain the strict same-mode fused-value versus standalone-value
+  check in mixed. The original complex MO fixtures retain strict same-mode fused versus standalone value, gradient
+  and Laplacian checks. These alternate APIs share their model and backend, so this is route parity rather than
+  an AD or cross-precision fidelity claim. The corresponding full comparisons remain in the existing mathematical
+  AD nodes unchanged.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_complex_and_high_l_ao_derivatives_match_autodiff
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - case: pgto_cart_l4_real
+    - case: pgto_sphe_l4_real
+    - case: pgto_cart_l4_complex
+    - case: pgto_sphe_l4_complex
+    - case: pw_complex
+    - case: bspline_complex
+    - case: composite_complex
+    executable_checks:
+      same-mode-fused-value:
+        site: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::_compare_ao_fidelity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: mixed-fused-ao-value
+          expression: np.asarray(mixed['fused'][0])
+        reference:
+          role: mixed-standalone-ao-value
+          expression: np.asarray(mixed['value'])
+        precision:
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::test_complex_periodic_MOs_fused_matches_standalone_and_autodiff
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - trexio_file: lithium_k025.h5
+    - trexio_file: H2_pbc_ae_k025_cart.h5
+    executable_checks:
+      value:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_value#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: same-mode-fused-output
+          expression: actual
+        reference:
+          role: same-mode-standalone-output
+          expression: reference
+        precision:
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+      gradient:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_grad#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: same-mode-fused-output
+          expression: actual
+        reference:
+          role: same-mode-standalone-output
+          expression: reference
+        precision:
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_grad
+      laplacian:
+        site: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::_compare_lap#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: same-mode-fused-output
+          expression: actual
+        reference:
+          role: same-mode-standalone-output
+          expression: reference
+        precision:
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_lap

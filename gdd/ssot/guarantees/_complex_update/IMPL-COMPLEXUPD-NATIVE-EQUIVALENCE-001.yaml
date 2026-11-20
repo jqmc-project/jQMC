@@ -1,0 +1,14 @@
+id: IMPL-COMPLEXUPD-NATIVE-EQUIVALENCE-001
+kind: implementation
+name: Complex-safe indexed updates equal the native update bit for bit
+plain_language: >-
+  Under a walker vmap with a per-walker index, jqmc._complex_update.at_set and
+  jqmc._complex_update.dynamic_update_slice return exactly the bits of the native x.at[index].set(value) and
+  lax.dynamic_update_slice for complex128 (updated through its float64 real and imaginary parts), complex64 and float64
+  (both on the native path), for column, row, plane and block updates, including written values -0.0, inf and nan.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_update.py::test_complex_update_is_bit_identical_to_native_under_vmap

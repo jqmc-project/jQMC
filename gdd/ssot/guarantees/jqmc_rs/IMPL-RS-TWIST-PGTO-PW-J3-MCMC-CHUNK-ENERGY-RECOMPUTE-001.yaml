@@ -1,0 +1,18 @@
+id: IMPL-RS-TWIST-PGTO-PW-J3-MCMC-CHUNK-ENERGY-RECOMPUTE-001
+kind: implementation
+name: Production complex-twist pGTO+PW J123 MCMC chunk energies equal an XLA from-scratch local energy at the returned walkers
+plain_language: >-
+  The committed QE Li k=(1/4,1/4,1/4) ccECP input realized as a complex pGTO plus PW composite determinant
+  with exp J1/J2 and an identity-MO-wrapped active J3 (the phase-free shared J3 convention) runs production
+  energy-only MCMC (two walkers, seed 34356, fixed quadrature mesh) through the native complex energy chunk on
+  its native random stream, in three production calls of six steps. After each call the last stored complex
+  e_L of every walker equals compute_local_energy of the same Hamiltonian evaluated from scratch by XLA at the
+  returned walker, Re and Im, within the MCMC Rust/XLA driver policy; the walkers move between calls. Full and
+  mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_richer_production_drivers.py::test_pgto_pw_j3_twist_mcmc_chunk_energies_match_xla_recompute
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

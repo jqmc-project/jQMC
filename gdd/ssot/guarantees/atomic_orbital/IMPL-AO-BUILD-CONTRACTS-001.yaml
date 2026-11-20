@@ -1,0 +1,132 @@
+id: IMPL-AO-BUILD-CONTRACTS-001
+kind: implementation
+name: AO builder and layout contracts
+plain_language: Overlap matrices honor bucket and composite layouts with a converged primitive-pair cutoff, composite/pGTO/PW
+  views expose the declared molecular counts, B-spline identity MOs return the bands, per-atom image kernels keep exactly
+  the per-atom image sets, the complex AO leaf keeps its MRO predicate, phase promotion, image-expansion dispatch, schema
+  version, and k-point field, and dtype mismatches are hard errors.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix::test_overlap_matrix_multi_bucket_periodic
+    executable_checks:
+      d8-n-096:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_multi_bucket_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: S
+        reference:
+          role: source-reference-value
+          expression: S.conj().T
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - 'False'
+          - 'True'
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix::test_periodic_lattice_overlap_has_its_own_converged_primitive_pair_cutoff
+    executable_checks:
+      d8-n-097:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_periodic_lattice_overlap_has_its_own_converged_primitive_pair_cutoff#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: overlap
+        reference:
+          role: source-reference-value
+          expression: overlap.conj().T
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix::test_overlap_matrix_composite_periodic_and_molecular
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComposite::test_composite_structure_data_molecular_gto_plus_pgto
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPGTOSemantics::test_pgto_num_ao_is_molecular_view
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPGTOSemantics::test_pgto_j_matrix_size_uses_molecular_view
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPGTOSemantics::test_build_uncontracted_aos_preserves_pgto_fields
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_num_ao_inferred
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_compute_MOs_identity_returns_bands
+    executable_checks:
+      d8-n-098:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf.test_bspline_compute_MOs_identity_returns_bands#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-PAIR-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-PAIR-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_cubic_order_also_works
+    executable_checks:
+      d8-n-099:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf.test_bspline_cubic_order_also_works#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-INTERPOLATION-RELAXED-R-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-INTERPOLATION-RELAXED-R-BIT-EXACT-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout::test_per_atom_counts_and_kernel_saving
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout::test_kernel_images_are_each_atoms_own_set
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPGTODistinctCentreTable::test_distinct_centre_table_preserves_every_centre
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_mro_and_is_complex_aos_predicate
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_promote_phase_unit_modulus_and_alignment
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{ao_kind: cart}, {ao_kind: sphe}]
+    executable_checks:
+      phase-unit-modulus:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_promote_phase_unit_modulus_and_alignment#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: Bloch-image-phase-modulus, expression: np.abs(phase)}
+        reference: {role: fixture-kernel-sized-unit-array, expression: 'np.ones(int(real_leaf._num_ao_kernel), dtype=np.float64)'}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-LOOSE-BITZERO-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-LOOSE-BITZERO-001}
+      phase-image-alignment:
+        site: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO.test_promote_phase_unit_modulus_and_alignment#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: Bloch-image-phase-factors, expression: phase}
+        reference: {role: positive-sign-image-index-Bloch-phase, expression: expected}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-MEDIUM-BITZERO-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-MEDIUM-BITZERO-001}
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_promote_phase_alignment_rejects_conjugated_phase
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{ao_kind: cart}, {ao_kind: sphe}]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_apply_image_expansion_complex_dispatch
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_AO_leaf_k_point_field_and_property
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital_permutation.py::test_traced_c2s_reconstruction
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_mos_sanity_check_rejects_dtype_mismatch
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_geminal_sanity_check_rejects_dtype_mismatch

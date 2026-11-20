@@ -1,0 +1,32 @@
+id: IMPL-COUL-EWALD-REAL-IMAGE-BOUND-001
+kind: implementation
+name: Complete bounded real-space Ewald images for wrapped pairs
+plain_language: >-
+  Real-space tables include every translation inside the requested pair-distance
+  cutoff for centred-cell and nearest-image displacements in the cubic, fcc,
+  skew and slab fixtures, including corner and half-cell ties. An independent
+  wide integer box with a singular-value completeness certificate supplies the
+  reference. The 24.4-Bohr cubic cell at cutoff 10.4 uses at most seven images,
+  bounding the pair-by-image work without a timing threshold. Opposite-corner
+  electron-electron, electron-ion and discretized electron-ion energies and
+  their independent NumPy debug formulas agree with an over-wide table at the
+  unchanged strict Ewald tolerance. Undersized custom cutoffs retain the legacy
+  finite sum; replay of saved eta and cutoffs reproduces the tables exactly even
+  when the call tolerance changes. This does not promise bitwise replay across
+  different enumeration algorithms or completeness under arbitrary finite strain.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ewald_real_images.py::test_real_images_are_complete_and_bounded
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_ewald_real_images.py::test_ewald_opposite_corner_oracles_match_wide_table
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_ewald_real_images.py::test_ewald_custom_cutoff_and_saved_scalars_preserve_tables
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_ewald_real_images.py::test_ewald_hdf5_preserves_legacy_real_indices
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

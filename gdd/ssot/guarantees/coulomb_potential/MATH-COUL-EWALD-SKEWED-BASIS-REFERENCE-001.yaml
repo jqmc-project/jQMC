@@ -1,0 +1,28 @@
+id: MATH-COUL-EWALD-SKEWED-BASIS-REFERENCE-001
+kind: mathematical
+name: Complete reciprocal enumeration and reference Ewald energy on a strongly skewed cell basis
+plain_language: >-
+  A triclinic lattice is written in its own basis L and in the strongly skewed basis U @ L with
+  b1 = a1, b2 = a1 + a2, b3 = a1 + a2 + a3. For a neutral set of four protons and four electrons the Ewald
+  tables are built with tol 1e-12, and the number of enumerated reciprocal vectors must equal an independent
+  brute-force count of the non-zero G with |G| <= g_max. The sum of the production ion-ion, electron-ion and
+  electron-electron Ewald energies must equal an independent NumPy Ewald sum on the physical lattice within
+  the external-reference Ewald tolerance. A reciprocal index box bounded by g_max / min|b_i| (valid only for
+  an orthogonal reciprocal basis) must fail. Full and mixed are judged separately.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_ewald_energy_on_strongly_skewed_basis_matches_numpy_ewald
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {basis_name: triclinic_L}
+    - {basis_name: triclinic_strong_skew_UL}
+  # Forwarding entry that calls the same checker
+  # implementation as test_noncubic_cell_oracles.py::test_noncubic_oracles_reject_metric_and_truncation_faults (AO-owned)
+  # with the same cases, modes, markers and fixtures; it is not an independent oracle.
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_coulomb_faults.py::test_coulomb_noncubic_oracles_reject_metric_and_truncation_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: orthogonal-only-g-index-box}

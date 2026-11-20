@@ -1,0 +1,22 @@
+id: MATH-PWP-GSPHERE-TAPER-VACUUM-KINETIC-001
+kind: mathematical
+name: The tapered plane-wave sum restores the exactly known vacuum local kinetic energy of a smooth tail where the sharp sphere rings
+plain_language: >-
+  The periodized Gaussian-smoothed exp(-|z|) (length 48 bohr, sigma 0.15 bohr) has the closed-form Fourier
+  series 2 exp(-sigma^2 G^2 / 2) / (L (1 + G^2)) and, away from the source, the exactly known local kinetic
+  energy -1/2 lap(f)/f = -1/2 Ha. Its sharp-sphere plane-wave sum at G_max = 20 bohr^-1 (ecutwfc 200 Ha)
+  carries a truncation-ringing floor of ~1e-6 of the maximum, so at z = 8, 10, 12 bohr (tail 3e-4 ... 6e-6
+  of the maximum) its local kinetic energy is wrong by more than the value itself, while the same sum tapered
+  by pw_taper_window with PW_TAPER_START_FRACTION stays within RTOL_PW_TAPER_VACUUM_KINETIC of -1/2 Ha over
+  the whole continuous range z in [1, 8.5] bohr (1501 points, tail down to 2e-4 of the maximum) and at the
+  three sampled points, and closer than the sharp sum at those points. Long-double direct sums; both
+  precision modes exercise fp64 host arithmetic. Not asserted and stated as the limit of the claim: between
+  2e-5 and 6e-6 of the maximum the tapered deviation reaches 26-28 %, and beyond ~1e-7 the windowed
+  remainder dominates and neither sum bounds the local energy.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_taper_restores_the_vacuum_local_kinetic_energy_of_a_known_tail
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

@@ -1,0 +1,33 @@
+id: MATH-AO-STANDALONE-RADIAL-JVP-001
+kind: mathematical
+name: Standalone spherical AO radial sensitivities match analytic derivatives
+plain_language: >-
+  For molecular H2 all-electron cc-pVDZ and water ccECP cc-pVQZ spherical
+  TREXIO bases, analytical radial-parameter directional derivatives equal
+  autodiff through the actual standalone AO value evaluator, not only the
+  fused VGL route. PCG64 seed 2025 supplies five points and nonzero directions
+  for exponents or coefficients, with the other block fixed. Both parameter
+  blocks and both fixtures retain the existing strict analytical-versus-AD
+  comparison in full precision. Mixed execution instead belongs to
+  NUM-AO-DERIVATIVE-MIXED-FIDELITY-001, comparing independently rebuilt
+  analytical production routes. These are AO evaluation points, not many-body
+  spin configurations; cond(G) and FD do not apply.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_sphe_guarded_geometry.py::test_standalone_sphe_value_radial_jvp_matches_analytic
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, parameter_kind: exponents}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, parameter_kind: coefficients}
+    - {trexio_file: water_ccecp_ccpvqz.h5, parameter_kind: exponents}
+    - {trexio_file: water_ccecp_ccpvqz.h5, parameter_kind: coefficients}
+    executable_checks:
+      radial-direction:
+        site: tests/test_jqmc_kernel/test_sphe_guarded_geometry.py::test_standalone_sphe_value_radial_jvp_matches_analytic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-radial-ao-jvp, expression: analytical}
+        reference: {role: same-mode-standalone-value-autodiff-jvp, expression: autodiff}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}

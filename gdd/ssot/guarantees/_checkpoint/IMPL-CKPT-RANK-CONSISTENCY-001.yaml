@@ -1,0 +1,32 @@
+id: IMPL-CKPT-RANK-CONSISTENCY-001
+kind: implementation
+name: Restart state is required, agreed across ranks and decided collectively
+plain_language: >-
+  A driver restart (MCMC, GFMC_t, GFMC_n) requires every restart key the current writer always writes in each rank
+  group: driver configuration including the frozen keys (e.g. non_local_move), counters (e.g. mcmc_counter), RNG and
+  walker state, and the optimizer lineage id and revision when optimizer_state is present. No key is defaulted and
+  legacy checkpoints lacking one are rejected. Each counter must match the stored history length, and every restored
+  value that is not a per-rank statistic must agree across ranks. One allgather on every rank gives one verdict, so a
+  damaged rank group fails with the same error, naming the rank and the key, on every rank before any restored value
+  gates a collective, and the checkpoint is left untouched. The only collective fallback is a fresh optimizer lineage
+  when every rank lacks optimizer_state. The CLI frozen-key guard rejects an explicit TOML key the checkpoint lacks,
+  and the final-output sample decision is taken from a counter all ranks agree on. Exercised with two real MPI ranks
+  through the CLI in full and mixed precision.
+verdict_methods: [VM-ERROR-DISPOSITION-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_nonfinite_mpi.py::test_restart_optimizer_state_presence_is_decided_collectively
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{missing_on: rank_1}, {missing_on: all}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_nonfinite_mpi.py::test_lrdmc_restart_without_rank_counter_fails_on_every_rank
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_nonfinite_mpi.py::test_ecp_lrdmc_restart_without_rank_non_local_move_fails_on_every_rank
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::test_restart_state_problems_agree_disagree_missing
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{case: agree}, {case: disagree}, {case: missing}]

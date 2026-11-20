@@ -1,0 +1,35 @@
+id: IMPL-TOOL-MPI-SUMMARIES-001
+kind: implementation
+name: Actual MPI twist checkpoints and tool summaries agree
+plain_language: >-
+  The actual single-process compute-energy/compute-force CLI consumes checkpoints
+  produced by a real two-rank MCMC twist driver and reproduces energy/error,
+  force/error and hydrostatic pressure/error under the existing same-mode strict
+  policy. Fixed Gamma/k025 H2 Cartesian pGTO/MO inputs use unequal weights,
+  nonzero measured energy errors, two walkers per twist and seed 12345.
+  Capture unrounded values at the real formatter boundary while still executing
+  the formatter. This is driver/checkpoint/tool route parity, not independent
+  force/stress physics or an error-bar acceptance band. Reversed energy weights,
+  doubled forces and shifted pressure must fail the actual numerical oracle.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_tool_values_mpi.py::test_tool_values_match_actual_twist_driver
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{mcmc_seed: 12345}]
+    executable_checks:
+      actual-driver-tool-summaries:
+        site: tests/test_jqmc_kernel/test_twist_tool_values_mpi.py::test_tool_values_match_actual_twist_driver#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-tool-unrounded-summary, expression: actual}
+        reference: {role: actual-mpi-driver-summary, expression: reference}
+        iterations: {variable: field, required_values: [energy, force, force_std, pressure]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy, det_grad_lap, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy, det_grad_lap, coulomb]}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_tool_values_mpi.py::test_tool_twist_verdict_rejects_reduction_corruption
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{fault: reversed-energy-weights}, {fault: doubled-force}, {fault: shifted-pressure}]

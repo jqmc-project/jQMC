@@ -1,0 +1,43 @@
+id: NUM-GFMC-T-PUBLIC-FORCE-MIXED-FIDELITY-001
+kind: numerical
+name: Public GFMC_t ECP force at a real measurement input retains Mixed Full fidelity
+plain_language: At the first measurement step of a full-precision one-walker GFMC_t run on the N2 ccECP cc-pVTZ
+  Cartesian molecule (J1+J2+J3, seed 3446, tau 0.1, alat 0.30, random mesh), with both tmove and dltmove, the public
+  entry jqmc.derivatives.gfmc.grad_e_L_t_wrt_positions is called without a supplied inverse on the recorded positions
+  and mesh rotation. The physical input is serialized once in Full and reloaded under each policy. The nuclear,
+  electron-up and electron-down Hellmann-Feynman force arrays are separate homogeneous geometric-parameter derivative
+  blocks and obey the existing central parameter_derivative block budget, with an isolated excessive-error control.
+  Without a supplied inverse, the ECP non-local base fields assemble the geminal from the same fused orbital value
+  table as the kinetic reverse pass, whose fp64 gradients they contract with its inverse. No production
+  precision zone, budget, seed or skip changes.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_t_force_same_input.py::test_gfmc_t_public_force_keeps_mixed_fidelity_at_measurement_input
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - non_local_move: tmove
+    - non_local_move: dltmove
+    executable_checks:
+      mixed-public-force-vs-full-public-force:
+        site: tests/test_jqmc_kernel/test_gfmc_t_force_same_input.py::test_gfmc_t_public_force_keeps_mixed_fidelity_at_measurement_input#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-public-gfmc-t-hf-force
+          expression: mixed_block
+        reference:
+          role: independent-full-public-gfmc-t-hf-force-same-physical-input-and-positions
+          expression: full_block
+        iterations:
+          variable: field
+          required_values:
+          - nuclear
+          - electron-up
+          - electron-down
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

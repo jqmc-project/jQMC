@@ -1,0 +1,103 @@
+id: MATH-MO-BASIS-PROJECTION-001
+kind: mathematical
+name: Global S-metric basis projection
+plain_language: The cartesian-to-spherical projection uses the global overlap metric and converts native high-l cartesian
+  shells correctly. Implicit-identity MO wrappers convert in both angular directions by using the transform itself,
+  without materializing an identity, and give the same coefficients and VGL as the equivalent dense-identity wrapper.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions::test_implicit_identity_angular_conversion
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, conversion: to_cartesian}
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, conversion: to_spherical}
+    - {trexio_file: lithium_k025.h5, conversion: to_cartesian}
+    - {trexio_file: lithium_k025_cart.h5, conversion: to_spherical}
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions::test_periodic_lithium_cartesian_to_spherical_uses_global_s_metric
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: lithium_cart.h5}
+    - {trexio_file: lithium_k025_cart.h5}
+    executable_checks:
+      reverse-map:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_periodic_lithium_cartesian_to_spherical_uses_global_s_metric#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-periodic-reverse-map, expression: actual_reverse}
+        reference: {role: independent-global-overlap-normal-equation, expression: expected_reverse}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+      residual-orthogonality:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_periodic_lithium_cartesian_to_spherical_uses_global_s_metric#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: discarded-space-global-overlap-residual, expression: residual_orthogonality}
+        reference: {role: exact-zero-residual, expression: np.zeros_like(residual_orthogonality)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions::test_cart_to_spherical_projector_is_global_s_metric
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: N2_ecp_ccpvtz_cart.h5}
+    - {trexio_file: CuBr_ecp_ccpvtz_cart.h5}
+    executable_checks:
+      reverse-map:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_cart_to_spherical_projector_is_global_s_metric#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-molecular-reverse-map, expression: cart_to_sphe}
+        reference: {role: independent-global-overlap-normal-equation, expression: expected_reverse}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+      spherical-identity:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_cart_to_spherical_projector_is_global_s_metric#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: spherical-embedding-followed-by-reverse-map, expression: embedding @ cart_to_sphe}
+        reference: {role: spherical-space-identity, expression: identity_sphe}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+      projector-idempotence:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_cart_to_spherical_projector_is_global_s_metric#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: twice-applied-cartesian-projector, expression: projector @ projector}
+        reference: {role: once-applied-cartesian-projector, expression: projector}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+      residual-orthogonality:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_cart_to_spherical_projector_is_global_s_metric#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: discarded-space-global-overlap-residual, expression: residual_orthogonality}
+        reference: {role: exact-zero-residual, expression: np.zeros_like(residual_orthogonality)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions::test_cartesian_native_high_l_shells_convert_to_spherical
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: N2_ecp_ccpvtz_cart.h5, highest_l: 3, r_carts: [[0.27, 0.41, 0.63], [0.91, -0.38, 1.29], [-0.43, 0.67, -0.91]]}
+    - {trexio_file: CuBr_ecp_ccpvtz_cart.h5, highest_l: 4, r_carts: [[0.27, 0.41, 0.63], [0.91, -0.38, 1.29], [-0.43, 0.67, -0.91]]}
+    executable_checks:
+      projected-coefficients:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_cartesian_native_high_l_shells_convert_to_spherical#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-spherical-mo-coefficients, expression: mos_sphe.mo_coefficients}
+        reference: {role: independent-global-overlap-projected-coefficients, expression: expected_coefficients}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+      projected-values:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsConversions.test_cartesian_native_high_l_shells_convert_to_spherical#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-spherical-mo-values, expression: actual_values}
+        reference: {role: independent-projection-applied-to-cartesian-ao-values, expression: expected_values}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval]}

@@ -1,0 +1,29 @@
+[control]
+job_type = "mcmc" # Specify the job type. "mcmc", "vmc", "lrdmc-bra", or "lrdmc-tau".
+mcmc_seed = 34456 # Random seed for MCMC
+number_of_walkers = 1 # Number of walkers per MPI process; add MPI ranks for more samples.
+max_time = 86400 # Maximum time in sec.
+restart = false
+restart_chk = "restart.h5" # Restart checkpoint file. If restart is True, this file is used.
+hamiltonian_h5 = "hamiltonian_data.h5" # Hamiltonian checkpoint file. If restart is False, this file is used.
+verbosity = "high" # Verbosity level. "low", "high", "devel", "mpi-low", "mpi-high", "mpi-devel"
+
+[mcmc]
+num_mcmc_steps = 20000 # Number of observable measurement steps per MPI and Walker.
+num_mcmc_per_measurement = 40 # Number of MCMC updates per measurement.
+num_mcmc_warmup_steps = 30 # Number of initial observable measurements discarded as warmup.
+num_mcmc_bin_blocks = 10 # Number of blocks for binning per MPI and Walker.
+Dt = 1.0 # Step size for the MCMC update (bohr).
+epsilon_AS = 0.0 # Epsilon parameter for Attaccalite-Sorella regularization.
+
+# --- Atomic forces: this is the point of jqmc-example08. ---
+atomic_force = true       # compute atomic forces in addition to e_L.
+use_swct = true           # Space Warp Coordinate Transformation -- noise reduction for VMC forces.
+compute_stress = false    # Stress is NOT computed in this example (see README for the one-liner).
+parameter_derivatives = false
+
+[coulomb]
+mpc = false
+
+# [precision]
+# mode = "full"  # "full" (default, all float64; reference setting) or "mixed" (opt-in speed setting; see doc/notes/mixed_precision.md).

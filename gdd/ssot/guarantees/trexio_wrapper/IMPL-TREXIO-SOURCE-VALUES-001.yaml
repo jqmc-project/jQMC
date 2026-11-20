@@ -1,0 +1,95 @@
+id: IMPL-TREXIO-SOURCE-VALUES-001
+kind: implementation
+name: Raw TREXIO input values survive conversion on the declared fixture matrix
+plain_language: >-
+  The declared 17 file/twist cases, each through tuple and list loading in both
+  precision modes, preserve raw electron counts, nuclear positions and charges,
+  AO angular/nuclear/primitive mappings, exponents, ECP tables and periodic cell
+  and signed spin k-points. Every kernel primitive and every home AO is checked,
+  including periodic image copies. Gaussian contraction normalization is verified
+  against independently read raw factors with the existing central fp64 Python
+  pair. Storage is fp64 in both modes; this never compares full and mixed evaluated
+  observables. There are no electronic coordinates, seed or cond(G) filter.
+  A successful baseline precedes each of nine loader-output corruption controls,
+  including forbidden fp32 ECP storage. Source expectations are never rounded to
+  accept a lower-precision loaded floating payload.
+  Missing source files, missing matrix cases and missing comparisons fail closed.
+  MO amplitude fidelity and physical energies remain separate existing guarantees.
+verdict_methods: [VM-IMPL-TREXIO-STORAGE-001]
+required_evidence:
+- verdict_method: VM-IMPL-TREXIO-STORAGE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_trexio_source_values.py::test_trexio_storage_matches_raw_source
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: H2_ecp_ccpvtz.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: H2_ecp_ccpvtz.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: water_ccecp_ccpvqz.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: water_ccecp_ccpvqz.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: N_ae_ccpvdz_cart.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: N_ae_ccpvdz_cart.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: Li_ecp_ccpvdz_cart.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: Li_ecp_ccpvdz_cart.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: H2_pbc_ae_cart.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: H2_pbc_ae_cart.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: H2_pbc_ae_sphe.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: H2_pbc_ae_sphe.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: H2_pbc_ae_k025_cart.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: H2_pbc_ae_k025_cart.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: H2_pbc_ae_k025_sphe.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: H2_pbc_ae_k025_sphe.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: lithium_cart.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: lithium_cart.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: lithium.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: lithium.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: lithium_k025.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: lithium_k025.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: lithium_twist_222.h5, twist_ik: 0, store_tuple: true}
+    - {trexio_file: lithium_twist_222.h5, twist_ik: 0, store_tuple: false}
+    - {trexio_file: lithium_twist_222.h5, twist_ik: 3, store_tuple: true}
+    - {trexio_file: lithium_twist_222.h5, twist_ik: 3, store_tuple: false}
+    executable_checks:
+      normalized-contractions:
+        site: tests/test_jqmc_kernel/test_trexio_source_values.py::test_trexio_storage_matches_raw_source#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: reconstructed-unnormalized-Gaussian-contractions, expression: actual_contractions}
+        reference: {role: raw-TREXIO-coefficient-and-normalization-product, expression: expected_contractions}
+        precision:
+          full: {policy: CMP-TREXIO-STORAGE-FP64-001}
+          mixed: {policy: CMP-TREXIO-STORAGE-FP64-001}
+      every-primitive-exponent:
+        site: tests/test_jqmc_kernel/test_trexio_source_values.py::_basis_reference#exact-comparison-5
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: loaded-kernel-primitive-exponents, expression: exponents}
+        reference: {role: raw-source-exponents-indexed-by-AO-shell, expression: reference_exponents}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      every-primitive-visited:
+        site: tests/test_jqmc_kernel/test_trexio_source_values.py::_basis_reference#exact-comparison-4
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: kernel-primitive-visit-counts, expression: visited}
+        reference: {role: one-visit-per-primitive, expression: np.ones_like(visited)}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_trexio_source_values.py::test_raw_source_verdict_rejects_loader_corruption
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true, fault: positions}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true, fault: electrons}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true, fault: exponents}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true, fault: coefficients}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true, fault: ecp}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true, fault: cell}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true, fault: k}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true, fault: primitive-map}
+    - {trexio_file: lithium_k025_cart.h5, twist_ik: 0, store_tuple: true, fault: storage-dtype}

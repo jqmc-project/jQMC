@@ -1,0 +1,47 @@
+id: IMPL-RS-PRECISION-POLICY-001
+kind: implementation
+name: Precision-policy contracts of the Rust bridge
+plain_language: The precision-zone schema matches Rust, the native context owns an exact immutable snapshot of the Python
+  policy, zone and route dispatch match the Python policy, the route manifest covers all zones, and malformed policies are
+  rejected. The ao_bloch_eval zone retains cancellation-sensitive complex periodic GTO values in float64 in both modes.
+  The jastrow_grad_lap_carry zone keeps the carried DTN grad/lap state of the GFMC projection in float64 in both modes.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_precision_zone_schema_matches_rust
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_force_medium_tolerance_only_widens_mixed
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_native_context_owns_exact_python_snapshot
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_native_context_policy_is_immutable_and_context_local
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_native_zone_dispatch_matches_python_policy
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_native_production_route_dispatch_matches_python_policy
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_route_manifest_covers_all_precision_zones
+  - pytest_node: tests/test_rs_kernel/test_jastrow_dtn.py::TestDTNZoneDtypeConformance::test_dtn_entry_computes_in_declared_zone_dtype
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, entry: grad_lap}
+    - {geometry: molecular, entry: ratio}
+    - {geometry: molecular, entry: value}
+    - {geometry: periodic, entry: grad_lap}
+    - {geometry: periodic, entry: ratio}
+    - {geometry: periodic, entry: value}
+  - pytest_node: tests/test_rs_kernel/test_jastrow_dtn.py::TestDTNZoneDtypeConformance::test_dtype_verdict_rejects_rust_forced_to_the_other_dtype
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {entry: value}
+    - {entry: grad_lap}
+  - pytest_node: tests/test_rs_kernel/test_jastrow_dtn.py::TestDTNZoneDtypeConformance::test_dtype_verdict_rejects_xla_forced_to_the_other_dtype
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {entry: value}
+    - {entry: grad_lap}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_native_context_rejects_malformed_policy
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_native_context_rejects_missing_policy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {omission: omitted}
+    - {omission: explicit_none}

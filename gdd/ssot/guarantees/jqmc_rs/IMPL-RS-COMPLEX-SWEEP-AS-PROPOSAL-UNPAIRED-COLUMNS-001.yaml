@@ -1,0 +1,34 @@
+id: IMPL-RS-COMPLEX-SWEEP-AS-PROPOSAL-UNPAIRED-COLUMNS-001
+kind: implementation
+name: Rust complex MCMC sweep with the AS guide on uses the unpaired columns of the proposed geminal row in its acceptance ratio
+plain_language: >-
+  For a complex Bloch-twist open-shell geminal with live unpaired up-spin columns, the native complex MCMC sweep
+  (_mcmc_sweep_complex, the core of the production complex per-step sweep and energy chunk) with the
+  Attaccalite-Sorella guide on (epsilon_AS > 0) rebuilds the moved row of the proposed geminal, including its unpaired
+  entries sum_a ao_new[a] * lambda[a, orb_num_dn + j], and accepts an up move iff the Metropolis draw b is below
+  min(1, |g * J_ratio * det_ratio|^2 * T_ratio) with g = (max(R_AS_p, eps) / R_AS_p) / (max(R_AS_o, eps) / R_AS_o).
+  On the committed all-electron twist H4_pbc_ae_k025_cart.h5 (k_frac = (0.25, 0, 0), complex Cartesian pGTO) with the
+  reviewed open-shell AGP and AGPn (three up, one down, two complex unpaired columns, J1+J2) and epsilon_AS = 1e30
+  (guide fully active), one-proposal native sweeps from seeded configurations near the nuclei are bisected over the
+  injected step length to the native accept / reject threshold; there the acceptance ratio rebuilt from dense
+  quantities (geminal from its defining formula over the production AO values, R_AS from row / column norms and
+  singular values, numpy determinant ratio, XLA Jastrow ratio, explicit lattice-image Kato ratio, same Threefry
+  draws) equals the native Metropolis draw. At least four thresholds per geminal are measured, at least one with a
+  guide factor beyond 1.5 and at least one whose proposed-geminal minimum row / column norm is the moved row or an
+  unpaired column. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_sweep_as_unpaired_columns.py::test_complex_sweep_as_acceptance_threshold_unpaired_columns_matches_dense_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{case: agp_open}, {case: agpn_open}]
+    executable_checks:
+      dense-acceptance-ratio-at-native-threshold-vs-draw:
+        site: tests/test_rs_kernel/test_complex_sweep_as_unpaired_columns.py::test_complex_sweep_as_acceptance_threshold_unpaired_columns_matches_dense_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: dense-acceptance-ratio-at-native-accept-reject-threshold, expression: np.asarray(reference_ratios)}
+        reference: {role: native-metropolis-draw-at-that-threshold, expression: np.asarray(draws)}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, det_eval, det_ratio, jastrow_ratio]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, det_eval, det_ratio, jastrow_ratio]}

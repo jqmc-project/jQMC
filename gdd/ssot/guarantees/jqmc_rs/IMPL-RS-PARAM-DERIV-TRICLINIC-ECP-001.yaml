@@ -1,0 +1,43 @@
+id: IMPL-RS-PARAM-DERIV-TRICLINIC-ECP-001
+kind: implementation
+name: Native periodic ECP parameter derivatives O_k and dE_L/dc equal XLA on a triclinic cell
+plain_language: >-
+  The production native c-axis assembler jqmc_mcmc._rs_native_c_param_grads (real-Gamma periodic ECP
+  route, param_grad_ecp.rs collect_mesh for the non-local mesh) reproduces the production XLA derivatives
+  (assemble.compute_grad_ln_Psi / compute_grad_e_L with wrt=c, reduced by _reduce_c_param_grads) block by block and
+  walker by walker on a non-orthogonal cell, where inv(cell) differs from inv(cell.T) and the orientation of the cell
+  inverse in the periodic minimum-image fold is observable. Input: the Li ccECP J1+J2 Gamma Hamiltonian rebuilt on the
+  mild and skew triclinic cells of tests/_triclinic_li_ecp.py; three conditioned walkers, two of them translated by
+  whole lattice vectors; the J1, J2 and MO-coefficient blocks are all present and nonzero, and the native non-local ECP
+  contribution to dE_L/dJ2 is nonzero for every walker. Both dln|Psi|/dc and dE_L/dc are compared. Full and mixed are
+  judged separately at the existing backend-consistency policy of the cubic periodic rows.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_param_deriv_triclinic_ecp
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{cell: mild, quantity: ln_Psi}, {cell: mild, quantity: e_L}, {cell: skew, quantity: ln_Psi}, {cell: skew, quantity: e_L}]
+    executable_checks:
+      triclinic-param-deriv-real:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_param_deriv_triclinic_ecp#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-production-c-param-assembler, expression: np.real(got)}
+        reference: {role: xla-production-c-param-reducer, expression: np.real(ref)}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, det_eval, jastrow_eval, wf_kinetic, ao_grad_lap, det_grad_lap, jastrow_grad_lap, coulomb, ewald, jastrow_ratio, mo_grad]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, det_eval, jastrow_eval, wf_kinetic, ao_grad_lap, det_grad_lap, jastrow_grad_lap, coulomb, ewald, jastrow_ratio, mo_grad]}
+        iterations:
+          variable: block
+          required_values: [j1_param, j2_param, mo_coefficients_up]
+      triclinic-param-deriv-imag:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_param_deriv_triclinic_ecp#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-production-c-param-assembler, expression: np.imag(got)}
+        reference: {role: xla-production-c-param-reducer, expression: np.imag(ref)}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, det_eval, jastrow_eval, wf_kinetic, ao_grad_lap, det_grad_lap, jastrow_grad_lap, coulomb, ewald, jastrow_ratio, mo_grad]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, det_eval, jastrow_eval, wf_kinetic, ao_grad_lap, det_grad_lap, jastrow_grad_lap, coulomb, ewald, jastrow_ratio, mo_grad]}
+        iterations:
+          variable: block
+          required_values: [j1_param, j2_param, mo_coefficients_up]

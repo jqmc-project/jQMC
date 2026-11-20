@@ -1,0 +1,51 @@
+id: MATH-AO-SPHERICAL-ORIGIN-REGULARITY-001
+kind: mathematical
+name: Spherical AO values and derivatives remain regular at nuclei
+plain_language: >-
+  Synthetic multi-contraction spherical AOs agree with the independent debug
+  values, and their analytical gradients and Laplacians agree with finite
+  standalone-value autodiff at and near a nucleus. Molecular l=0..6 (49
+  harmonics) and Gamma-periodic l=0..2 (9 harmonics, cubic 10-Bohr cell)
+  include contraction depths 3, 2 and 1. Explicit nucleus-relative points
+  are (0,0,0), (1,-2,3)*1e-12 and (0.31,-0.27,0.49) Bohr.
+  Value/debug checks retain their existing AO strict tolerances in both modes.
+  Derivative/AD checks retain the existing strict tolerance in full precision;
+  mixed analytical derivatives instead belong to NUM-AO-DERIVATIVE-MIXED-FIDELITY-001.
+  There is no many-body spin state, determinant conditioning or finite difference. This specifically detects spurious singular
+  derivatives from representing polynomial solid harmonics through sqrt(r^2).
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_sphe_guarded_geometry.py::test_sphe_multi_contraction_origin_values_match_debug
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{boundary: molecular}, {boundary: periodic}]
+    executable_checks:
+      values:
+        site: tests/test_jqmc_kernel/test_sphe_guarded_geometry.py::test_sphe_multi_contraction_origin_values_match_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-spherical-ao-values, expression: actual}
+        reference: {role: independent-debug-spherical-ao-values, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_sphe_guarded_geometry.py::test_sphe_multi_contraction_origin_derivatives_match_autodiff
+    required_precision_modes: [full]
+    required_parameter_cases: [{boundary: molecular}, {boundary: periodic}]
+    executable_checks:
+      gradient:
+        site: tests/test_jqmc_kernel/test_sphe_guarded_geometry.py::test_sphe_multi_contraction_origin_derivatives_match_autodiff#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-ao-gradient, expression: analytical_gradient}
+        reference: {role: same-mode-autodiff-ao-gradient, expression: autodiff_gradient}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}
+      laplacian:
+        site: tests/test_jqmc_kernel/test_sphe_guarded_geometry.py::test_sphe_multi_contraction_origin_derivatives_match_autodiff#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-ao-laplacian, expression: analytical_laplacian}
+        reference: {role: same-mode-autodiff-ao-laplacian, expression: autodiff_laplacian}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap]}

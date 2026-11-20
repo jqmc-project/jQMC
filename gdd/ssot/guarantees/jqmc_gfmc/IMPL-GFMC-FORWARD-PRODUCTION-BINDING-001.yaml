@@ -1,0 +1,85 @@
+id: IMPL-GFMC-FORWARD-PRODUCTION-BINDING-001
+kind: implementation
+name: Derivative-test GFMC forwards equal actual production measurement energy
+plain_language: >-
+  The standalone e_L_t/e_L_n forwards used by the analytic derivative matrix
+  equal the real scalar measurement returned by the actual production GFMC_t
+  function and GFMC_n.run closure on identical Hamiltonians, positions and
+  mesh orientations, with fresh inverse recomputation and no fast update.
+  Eight required fixture/move rows cover H2 molecular AE jnone and composed
+  J3/DTN, N2 molecular ECP J1/J2 tmove and dltmove, Li Gamma ECP AO J3 tmove
+  and dltmove, Li k025 ECP AO J3 tmove and DTN dltmove. Each row requires both
+  algorithms and zero/nonzero explicit affine strain, for 32 cases in each
+  precision mode. A fixed common origin translation and seed-2026 shell
+  positions are declared in the test; both spins share a home nucleus in the
+  twist DTN row to keep its pair terms inside cutoff. There is no configuration screening.
+  ECP candidates must be nonzero and dltmove must have a finite nonzero
+  positive-candidate localization correction. The comparison is central strict over the
+  active energy zones in each mode, with no tolerance changes. This certifies
+  selected forward-family binding, not derivative correctness, all derivative
+  matrix fixtures, sampled trajectories, carried-inverse accuracy, or the
+  separate question of twist-J3 periodicity.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_forward_production_binding.py::test_derivative_forward_matches_production_measurement
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: h2-ae-jnone, algorithm: t, strain: unstrained}
+    - {case: h2-ae-j3-dtn, algorithm: t, strain: unstrained}
+    - {case: n2-ecp-j12-tmove, algorithm: t, strain: unstrained}
+    - {case: n2-ecp-j12-dltmove, algorithm: t, strain: unstrained}
+    - {case: li-gamma-j3-tmove, algorithm: t, strain: unstrained}
+    - {case: li-gamma-j3-dltmove, algorithm: t, strain: unstrained}
+    - {case: li-twist-j3-tmove, algorithm: t, strain: unstrained}
+    - {case: li-twist-dtn-dltmove, algorithm: t, strain: unstrained}
+    - {case: h2-ae-jnone, algorithm: n, strain: unstrained}
+    - {case: h2-ae-j3-dtn, algorithm: n, strain: unstrained}
+    - {case: n2-ecp-j12-tmove, algorithm: n, strain: unstrained}
+    - {case: n2-ecp-j12-dltmove, algorithm: n, strain: unstrained}
+    - {case: li-gamma-j3-tmove, algorithm: n, strain: unstrained}
+    - {case: li-gamma-j3-dltmove, algorithm: n, strain: unstrained}
+    - {case: li-twist-j3-tmove, algorithm: n, strain: unstrained}
+    - {case: li-twist-dtn-dltmove, algorithm: n, strain: unstrained}
+    - {case: h2-ae-jnone, algorithm: t, strain: affine}
+    - {case: h2-ae-j3-dtn, algorithm: t, strain: affine}
+    - {case: n2-ecp-j12-tmove, algorithm: t, strain: affine}
+    - {case: n2-ecp-j12-dltmove, algorithm: t, strain: affine}
+    - {case: li-gamma-j3-tmove, algorithm: t, strain: affine}
+    - {case: li-gamma-j3-dltmove, algorithm: t, strain: affine}
+    - {case: li-twist-j3-tmove, algorithm: t, strain: affine}
+    - {case: li-twist-dtn-dltmove, algorithm: t, strain: affine}
+    - {case: h2-ae-jnone, algorithm: n, strain: affine}
+    - {case: h2-ae-j3-dtn, algorithm: n, strain: affine}
+    - {case: n2-ecp-j12-tmove, algorithm: n, strain: affine}
+    - {case: n2-ecp-j12-dltmove, algorithm: n, strain: affine}
+    - {case: li-gamma-j3-tmove, algorithm: n, strain: affine}
+    - {case: li-gamma-j3-dltmove, algorithm: n, strain: affine}
+    - {case: li-twist-j3-tmove, algorithm: n, strain: affine}
+    - {case: li-twist-dtn-dltmove, algorithm: n, strain: affine}
+    executable_checks:
+      forward-measurement-base-strict:
+        site: tests/test_jqmc_kernel/test_gfmc_forward_production_binding.py::test_derivative_forward_matches_production_measurement#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-production-measurement, expression: actual}
+        reference: {role: derivative-test-forward-identical-inputs, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, det_ratio, wf_kinetic, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, det_ratio, wf_kinetic, coulomb, local_energy]}
+      forward-measurement-periodic-strict:
+        site: tests/test_jqmc_kernel/test_gfmc_forward_production_binding.py::test_derivative_forward_matches_production_measurement#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-production-measurement, expression: actual}
+        reference: {role: derivative-test-forward-identical-inputs, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, det_ratio, wf_kinetic, coulomb, local_energy, jastrow_eval, jastrow_grad_lap, ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, det_ratio, wf_kinetic, coulomb, local_energy, jastrow_eval, jastrow_grad_lap, ewald]}
+      forward-measurement-jastrow-strict:
+        site: tests/test_jqmc_kernel/test_gfmc_forward_production_binding.py::test_derivative_forward_matches_production_measurement#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-production-measurement, expression: actual}
+        reference: {role: derivative-test-forward-identical-inputs, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, det_ratio, wf_kinetic, coulomb, local_energy, jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, det_ratio, wf_kinetic, coulomb, local_energy, jastrow_eval, jastrow_grad_lap]}

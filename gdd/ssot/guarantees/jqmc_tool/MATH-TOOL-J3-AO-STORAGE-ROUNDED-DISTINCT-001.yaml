@@ -1,0 +1,24 @@
+id: MATH-TOOL-J3-AO-STORAGE-ROUNDED-DISTINCT-001
+kind: mathematical
+name: J3 ao-full stores distinct fp64 input functions in every precision mode
+plain_language: >-
+  jqmc-tool trexio convert-to with -j3 ao-full stores each distinct physical primitive once,
+  using fp64 basis parameters in both precision modes. Evaluation in mixed precision may round
+  exponents to the ao_eval dtype, but this must neither round stored parameters nor merge
+  fp64-distinct functions. The boundary inputs are temporary copies of the committed all-electron
+  cc-pVDZ N (Cartesian) and Ar (spherical) TREXIO files in which only basis_exponent is rewritten:
+  one s shell gets exponent 1 and the general-contraction s primitive shared by the other s shells
+  gets 1 + 2^-25 (indices 16 and 7, 15 for N; 33 and 10, 21, 32 for Ar). The final fp64 stored
+  signatures (center coordinates, angular momentum, Cartesian or real-spherical component,
+  exponent, coefficient) must be pairwise distinct and equal the set counted from the raw TREXIO
+  tables read with trexio. Both exponents remain distinct in full and mixed, while exact repeated
+  primitives are deduplicated.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertTo::test_j3_ao_full_basis_functions_distinct_in_fp64_storage
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_filename: N_ae_ccpvdz_cart.h5, merged_indices: [7, 15], lowest_index: 16}
+    - {trexio_filename: Ar_ae_ccpvdz_sphe.h5, merged_indices: [10, 21, 32], lowest_index: 33}

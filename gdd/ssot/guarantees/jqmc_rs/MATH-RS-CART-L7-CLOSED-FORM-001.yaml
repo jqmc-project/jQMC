@@ -1,0 +1,13 @@
+id: MATH-RS-CART-L7-CLOSED-FORM-001
+kind: mathematical
+name: Cartesian l=7 local energy against its closed form in the production MCMC chunk
+plain_language: For one electron bound to a bare proton in the single Cartesian l=7 primitive x^7 exp(-a r^2), the
+  production MCMC driver returns, on both the Rust and the XLA backend, the closed-form local energy
+  -(1/2)(42/x^2 + 4a^2 r^2 - 34a) - 1/r at every walker. This is the only evidence that reaches the x^7 entry of the
+  Rust cutoff-kernel Cartesian power tables.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_cart_gto_high_angular_momentum.py::test_mcmc_local_energy_cart_l7_closed_form

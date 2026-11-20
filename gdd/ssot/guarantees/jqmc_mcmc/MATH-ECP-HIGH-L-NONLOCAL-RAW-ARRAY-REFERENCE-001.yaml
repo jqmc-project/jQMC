@@ -1,0 +1,21 @@
+id: MATH-ECP-HIGH-L-NONLOCAL-RAW-ARRAY-REFERENCE-001
+kind: mathematical
+name: Production molecular non-local ECP kernels equal the raw-array eager reference on a live l >= 1 channel
+plain_language: >-
+  On the committed Cl2 ccECP with J1+J2 (non-local s and p coefficients non-zero on both atoms, checked
+  from the raw ECP arrays), at three seeded configurations around the nuclei with the identity quadrature
+  rotation, the summed non-local ECP energy of the production nearest-neighbour kernel (NN equal to the
+  number of nuclei) and of the production all-pairs kernel each equals the eager all-pairs reference
+  kernel, which selects the non-local terms from the raw ang_moms and max_ang_mom_plus_1 arrays and uses
+  scipy Legendre polynomials, at the strict zone policy of the current mode. At each configuration the
+  l >= 1 contribution (reference with and without the l >= 1 coefficients) exceeds the comparison envelope.
+  The production/_debug driver twins share the non-local term selection and, for MCMC, the Legendre
+  table, so this is the check that sees a production-only dropped p term or p projector. Full and mixed
+  are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_driver_ecp_high_l.py::test_high_l_nonlocal_production_kernels_match_raw_array_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

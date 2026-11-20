@@ -1,0 +1,14 @@
+id: MATH-AO-RUST-SPHE-L6-REFERENCE-001
+kind: mathematical
+name: Rust spherical l = 6 angular factors match an independent reference
+plain_language: The native spherical GTO angular factor for l = 6, including the m = 0 terms built from the k >= 3
+  Legendre lambda coefficients, has the shape of the associated Legendre function P6 from an independent reference, and
+  the native MCMC local energy of one electron in an l = 6, m = 0 orbital on a proton matches the closed form
+  Lap(psi)/psi = 4 a^2 r^2 - 30 a from harmonic homogeneity, in full and in mixed precision, with the native route asserted.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_sphe_l6_angular_matches_scipy_legendre
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_mcmc_l6_m0_local_energy_matches_harmonic_closed_form

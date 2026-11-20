@@ -1,0 +1,48 @@
+id: NUM-MCMC-STRESS-FD-001
+kind: numerical
+name: Sampled stress moments agree with independently rebuilt finite differences
+plain_language: >-
+  Every stored stress_HF, stress_PP and E_L_stress_PP tensor in two successive MCMC measurements
+  agrees in all nine entries with independently rebuilt affine-strain finite differences at the
+  same sampled coordinates, the ECP quadrature directions held fixed under the strain. Committed lithium.h5 provides ccECP spherical pGTO Gamma SD with
+  one up/down electron, mapped into a triclinic cell with exponential J1/J2. Seed 34 gives two
+  walkers, two moves per measurement, Dt=1, AS=0 and identity quadrature. Both XLA and Rust are
+  required. The central first derivative uses step 1e-5 and the existing central tight FD tolerance;
+  every reference entry is finite and distinguishable from zero. A separate seed-7 control first
+  accepts the unmodified derivative and then rejects a frozen Jastrow strain map for both HF and
+  Pulay tensors. Full only: mixed ECP derivative-family AD is supplied by MATH-DERIV-LOCAL-ENERGY-001,
+  and separate AE/J2 buffer evidence by MATH-MCMC-SAMPLER-STRESS-AD-REFERENCE-001; neither is
+  claimed to exercise these identical ccECP sampler inputs. No stochastic convergence or cond(G)
+  range is certified.
+verdict_methods: [VM-NUM-FIXED-INPUT-FD-001]
+required_evidence:
+- verdict_method: VM-NUM-FIXED-INPUT-FD-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_sampler_stress_reference.py::test_mcmc_stress_buffers_match_independent_strain_fd
+    required_precision_modes: [full]
+    required_parameter_cases: [{backend: xla}, {backend: rust}]
+    executable_checks:
+      stress-moments:
+        site: tests/test_jqmc_kernel/test_mcmc_sampler_stress_reference.py::test_mcmc_stress_buffers_match_independent_strain_fd#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: stored-sampled-stress-moment, expression: actual}
+        reference: {role: independently-rebuilt-affine-strain-finite-difference, expression: reference}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+        iterations:
+          variable: label
+          required_values: [0/0/stress_HF, 0/0/stress_PP, 0/0/E_L_stress_PP, 0/1/stress_HF, 0/1/stress_PP, 0/1/E_L_stress_PP, 1/0/stress_HF, 1/0/stress_PP, 1/0/E_L_stress_PP, 1/1/stress_HF, 1/1/stress_PP, 1/1/E_L_stress_PP]
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_sampler_stress_reference.py::test_independent_strain_fd_rejects_unstrained_jastrow_cell
+    required_precision_modes: [full]
+    required_parameter_cases: [{}]
+    executable_checks:
+      unmodified-derivative:
+        site: tests/test_jqmc_kernel/test_mcmc_sampler_stress_reference.py::test_independent_strain_fd_rejects_unstrained_jastrow_cell#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: unmodified-strain-autodiff-control, expression: actual}
+        reference: {role: independently-rebuilt-affine-strain-finite-difference, expression: reference}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+        iterations:
+          variable: label
+          required_values: [unmutated/stress_HF, unmutated/stress_PP]

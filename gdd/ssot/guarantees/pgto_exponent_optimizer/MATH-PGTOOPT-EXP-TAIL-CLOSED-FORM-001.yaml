@@ -1,0 +1,60 @@
+id: MATH-PGTOOPT-EXP-TAIL-CLOSED-FORM-001
+kind: mathematical
+name: Exponent-tail weight and its closed-form inverse
+plain_language: >-
+  pw_tail_weight(l, alpha, g_max) = Q(l + 3/2, g_max^2 / (2 alpha)), the fraction of the momentum-space norm of a
+  primitive r^l Y_lm exp(-alpha r^2) beyond |q| > g_max, equals an independent scipy quad ratio of the radial density
+  q^(2l+2) exp(-q^2 / (2 alpha)) over [g_max, inf) and [0, inf) for l = 0..4, alpha in {0.5, 2, 10}, g_max = 10,
+  within RTOL_PYTHON_FP64_LOOSE. alpha_max_for_tail(l, g_max, eps) is
+  its inverse: the weight at alpha_max is eps within RTOL_PYTHON_FP64_LOOSE and at
+  alpha_max / 2 it is below eps (l = 0..4, eps in {1e-1, 1e-2, 1e-4}, g_max = sqrt(60)), and alpha_max(0, 10, 1e-2)
+  and alpha_max(0, sqrt(60), 1e-2) rounded to four decimals equal 8.8146 and 5.2887 exactly (trexio-tools Si 50 Ha
+  and Li 30 Ha values). The functions are fp64 scipy in both precision modes; full and
+  mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_pw_tail_weight_matches_momentum_space_quadrature
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {angular_l: 0, alpha: 0.5}
+    - {angular_l: 0, alpha: 2.0}
+    - {angular_l: 0, alpha: 10.0}
+    - {angular_l: 1, alpha: 0.5}
+    - {angular_l: 1, alpha: 2.0}
+    - {angular_l: 1, alpha: 10.0}
+    - {angular_l: 2, alpha: 0.5}
+    - {angular_l: 2, alpha: 2.0}
+    - {angular_l: 2, alpha: 10.0}
+    - {angular_l: 3, alpha: 0.5}
+    - {angular_l: 3, alpha: 2.0}
+    - {angular_l: 3, alpha: 10.0}
+    - {angular_l: 4, alpha: 0.5}
+    - {angular_l: 4, alpha: 2.0}
+    - {angular_l: 4, alpha: 10.0}
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_alpha_max_for_tail_reference_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: si_ecut50Ha}
+    - {case: li_ecut30Ha}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_alpha_max_for_tail_is_closed_form_inverse
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {angular_l: 0, eps: 0.1}
+    - {angular_l: 0, eps: 0.01}
+    - {angular_l: 0, eps: 0.0001}
+    - {angular_l: 1, eps: 0.1}
+    - {angular_l: 1, eps: 0.01}
+    - {angular_l: 1, eps: 0.0001}
+    - {angular_l: 2, eps: 0.1}
+    - {angular_l: 2, eps: 0.01}
+    - {angular_l: 2, eps: 0.0001}
+    - {angular_l: 3, eps: 0.1}
+    - {angular_l: 3, eps: 0.01}
+    - {angular_l: 3, eps: 0.0001}
+    - {angular_l: 4, eps: 0.1}
+    - {angular_l: 4, eps: 0.01}
+    - {angular_l: 4, eps: 0.0001}

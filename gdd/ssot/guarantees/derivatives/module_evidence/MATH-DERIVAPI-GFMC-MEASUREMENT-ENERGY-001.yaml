@@ -1,0 +1,34 @@
+id: MATH-DERIVAPI-GFMC-MEASUREMENT-ENERGY-001
+kind: mathematical
+name: GFMC measurement energy determines position and strain derivatives
+plain_language: Nuclear and electron gradients and all nine strain derivatives of the GFMC measurement energy agree
+  with autodiff of the independently composed same-input measurement energy. The selected committed QE Li Gamma
+  configurations use PW or B-spline SD with active conventional J1/J2 and MO J3, for tmove and dltmove. Fixed seed-0
+  positions and the same Nv12 quadrature are used without condition-number screening. Full uses the existing central
+  strict final-derivative zone budget. Rust correctness additionally requires the corresponding same-input backend
+  comparisons; backend agreement alone is not this mathematical reference. This mathematical guarantee owns
+  full AD only at strict; paired mixed numerical receipts belong to NUM-GFMC-GRID-J3-MEASUREMENT-DERIVATIVE-MIXED-FIDELITY-001.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_grid_j3_derivatives.py::test_gfmc_grid_j3_derivatives_match_energy_ad
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {basis: bspline, dltmove: false}
+    - {basis: bspline, dltmove: true}
+    - {basis: pw, dltmove: false}
+    - {basis: pw, dltmove: true}
+    executable_checks:
+      derivative-leaves:
+        site: tests/test_rs_kernel/test_gfmc_grid_j3_derivatives.py::test_gfmc_grid_j3_derivatives_match_energy_ad#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-derivative, expression: actual}
+        reference: {role: same-input-reference, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, ewald, coulomb, jastrow_eval, jastrow_grad_lap]
+        iterations:
+          variable: quantity
+          required_values: [nuclear, electron-up, electron-down, strain]

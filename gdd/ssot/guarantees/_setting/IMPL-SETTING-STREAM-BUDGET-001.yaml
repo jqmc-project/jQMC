@@ -1,0 +1,25 @@
+id: IMPL-SETTING-STREAM-BUDGET-001
+kind: implementation
+name: Stream-budget helper contracts
+plain_language: The verified stream batch halves until the compiled total fits and keeps a fitting tentative and degenerate
+  batch; there is no fallback width, so a failed measurement or verification probe raises a RuntimeError naming the kernel
+  instead of silently streaming at the minimum batch; a budget that holds every element returns
+  n + 1 (plain vmap, no scan-of-one); closure-converted kernels are memoised by their jaxpr, so two closures with equal
+  shapes but different math are measured separately; the budget map returns f of every element in order with or without
+  chunking, bit for bit for a kernel of single correctly rounded operations (contractions agree only to round-off, since
+  XLA may pick another dot kernel per batch shape), including the padded tail and zero-size output leaves; and the DTN pair chunks never pad the pair list beyond one chunk, and every pair chunk made while the production
+  grad_dtn_wrt_R, grad_dtn_wrt_strain and grad_dtn_wrt_param run is no wider than its pair list.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_stream_budget_helpers.py::test_verified_stream_batch_halves_until_the_compiled_total_fits
+  - pytest_node: tests/test_jqmc_kernel/test_stream_budget_helpers.py::test_verified_stream_batch_keeps_a_fitting_tentative_and_degenerate
+  - pytest_node: tests/test_jqmc_kernel/test_stream_budget_helpers.py::test_verified_stream_batch_raises_when_probing_fails
+  - pytest_node: tests/test_jqmc_kernel/test_stream_budget_helpers.py::test_measured_bytes_per_config_raises_when_probing_fails
+  - pytest_node: tests/test_jqmc_kernel/test_stream_budget_helpers.py::test_measured_stream_batch_degenerates_to_n_plus_one_when_everything_fits
+  - pytest_node: tests/test_jqmc_kernel/test_stream_budget_helpers.py::test_measured_closure_stream_batch_keys_by_jaxpr_not_qualname
+  - pytest_node: tests/test_jqmc_kernel/test_stream_budget_helpers.py::test_budget_map_matches_vmap_bitwise_including_zero_size_leaves
+  - pytest_node: tests/test_jqmc_kernel/test_stream_budget_helpers.py::test_dtn_pair_chunks_never_pad_beyond_one_chunk
+  - pytest_node: tests/test_jqmc_kernel/test_dtn_pair_chunk_width.py::test_production_dtn_derivatives_never_pad_pairs_beyond_the_pair_count

@@ -1,0 +1,14 @@
+id: IMPL-DERIVAPI-RESOURCE-CONTRACTS-001
+kind: implementation
+name: Bridge tracing and shared-inverse resource contracts
+plain_language: The spherical production bridge traces as declared, and the ECP and DTN kinetic paths share one inverse
+  without an SVD, as the reviewed resource contract requires.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_sphe_production_bridge_traces
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_eps_shared_inverse_no_svd
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_kinetic_shared_inverse_no_svd
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives_dtn_svd.py::test_dtn_kinetic_shared_inverse_no_svd

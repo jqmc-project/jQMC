@@ -1,0 +1,53 @@
+[package]
+name = "jqmc_rs"
+version = "0.0.1"
+edition = "2021"
+description = "Native CPU kernels of jQMC (sampling, local energy, forces, stress and parameter derivatives), built as the jqmc_rs Python extension module."
+authors = ["Kosuke Nakano"]
+license = "BSD-3-Clause"
+repository = "https://github.com/jqmc-project/jQMC"
+publish = false
+
+[lib]
+name = "jqmc_rs"
+# cdylib for the Python extension module; rlib so `cargo test` can link the crate.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# abi3-py310: one wheel covers CPython 3.10+.
+pyo3 = { version = "0.23", features = ["abi3-py310", "extension-module"] }
+# rust-numpy: zero-copy PyReadonlyArray views over numpy f64 arrays.
+numpy = "0.23"
+# Dense linear algebra: cache-blocked GEMM (large determinant / J3 MO projections,
+# optimizer transforms) and the LU solves and symmetric eigen-decomposition of the
+# optimizer.
+faer = "0.22"
+# erfc for the Ewald real-space sum (not in Rust std).
+libm = "0.2"
+# Pure-Rust mixed-radix FFT for the MPC density-grid-response VJP (the 3-D FFT
+# convolution `v_xc = IFFT[FFT(rho) u_G]` and its reverse-mode adjoint). rustfft is pure Rust
+# (deps: num-complex/num-traits/num-integer, all already vendored transitively) --
+# no C/FFTW download. Only the MPC param-deriv / HF-force density response uses it;
+# it is off every hot MCMC path.
+rustfft = "6"
+# Global allocator: thread-local heaps cut multi-process malloc contention in the
+# e_L GEMM/Vec churn (with glibc malloc, the arena lock is a bottleneck when
+# many MPI ranks run on one node).
+mimalloc = { version = "0.1", default-features = false }
+# walker-axis thread parallelism: replaces the Python `for _w` walker loops with a
+# rayon global pool, the CPU-side analogue of XLA's vmap(walker).
+# Already in the tree transitively (faer); a direct dep pulls no new download.
+rayon = "1"
+# (No BLAS/LAPACK library is linked: the AO evaluation and the small GEMV / GEMM
+# kernels are hand-rolled -- shell-reuse AO eval + 8-accumulator GEMV + scratch
+# buffers + target-cpu=native SIMD.)
+
+[build-dependencies]
+# PyO3 extension modules intentionally do not link libpython. On macOS the resulting
+# cdylib therefore needs `-undefined dynamic_lookup`; setuptools-rust supplies it for
+# wheel builds, while this build script also makes direct cargo builds/tests portable.
+pyo3-build-config = "0.23"
+
+[profile.release]
+opt-level = 3
+lto = "thin"

@@ -1,0 +1,53 @@
+id: MATH-DERIV-PERIODIC-PGTO-BASIS-JASTROW-001
+kind: mathematical
+name: Periodic real pGTO radial-basis derivatives with a Jastrow equal autodiff
+plain_language: >-
+  On the committed ccECP Li Gamma fixture (real periodic sphe-pGTO leaf) with J1 + J2, and with J1 + J2 + J3,
+  the analytical geminal radial-basis derivatives (lambda_basis_exp and lambda_basis_coeff) of ln|Psi| and of
+  the local energy equal the same-mode autodiff oracle within the strict zone policy, and every compared block
+  is nonzero above the comparison atol. For the local energy the autodiff block with the Jastrow differs from
+  the block of the same wavefunction without the Jastrow by more than atol, so the Jastrow-coupled kinetic term
+  is part of what is compared. Multiplying only the Jastrow-coupled part of the analytical kinetic basis
+  derivative by 1.05 must fail the comparison. This mathematical-oracle guarantee is full-precision only; the mixed
+  production route has a separate numerical-fidelity guarantee against the same production route rebuilt in full.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_pgto_basis_grads_with_jastrow_vs_auto
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - jastrow: J1J2
+      quantity: ln_Psi
+    - jastrow: J1J2
+      quantity: e_L
+    - jastrow: J1J2J3
+      quantity: ln_Psi
+    - jastrow: J1J2J3
+      quantity: e_L
+    executable_checks:
+      strict-basis-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_assert_pbc_basis_blocks_match#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+        iterations:
+          variable: name
+          required_values:
+          - lambda_basis_exp
+          - lambda_basis_coeff
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_pgto_basis_grads_reject_scaled_jastrow_kinetic_term
+    required_precision_modes: [full]
+    required_parameter_cases: [{jastrow: J1J2}, {jastrow: J1J2J3}]

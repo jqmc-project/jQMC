@@ -1,0 +1,18 @@
+id: IMPL-TOOL-ANALYSIS-CONTRACTS-001
+kind: implementation
+name: Inspection and analysis contracts
+plain_language: Warmup discards the declared steps, the Hamiltonian and TREXIO inspection commands print the reviewed information
+  and geometry export, and the output analyzer handles tables, graphs, and multiple files.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_mcmc_warmup_discards_steps
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestHamiltonianCommands::test_hamiltonian_show_info
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestHamiltonianCommands::test_hamiltonian_to_xyz
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioShowCommands::test_trexio_show_info
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioShowCommands::test_trexio_show_detail
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestVmcAnalyzeOutput::test_analyze_output_table
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestVmcAnalyzeOutput::test_analyze_output_save_graph
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestVmcAnalyzeOutput::test_analyze_output_multiple_files

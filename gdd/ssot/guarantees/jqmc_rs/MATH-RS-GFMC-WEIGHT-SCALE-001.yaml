@@ -1,0 +1,21 @@
+id: MATH-RS-GFMC-WEIGHT-SCALE-001
+kind: mathematical
+name: Native GFMC_t chain estimate stays exact when its collect-window weight products exceed the float64 range
+plain_language: >-
+  The native single-walker GFMC_t chain (_gfmc_run_ae) returns the mixed estimate sum(e G) / sum(G) over its
+  collect-window weights. For committed H2_ae_ccpvdz_sphe.h5 (AE, spherical GTO SD, no Jastrow), electron seeds 0/1,
+  runner seed 42, tau 150, alat 0.3, collect 5, no warmup and 12 measured intervals, every unshifted branching weight
+  is about e^170 and a window product about e^865, beyond float64 (stated by an input check). The returned estimate
+  must equal an independent log-space reference on the returned histories (window log-weights summed with math.fsum,
+  largest subtracted before exponentiating) within the local_energy strict policy of the current mode, and the XLA
+  retained-weight route jqmc_gfmc._compute_retained_G_L applied to the same histories within
+  get_tolerance_xla_rust_consistency(local_energy, strict) (Rust == XLA), in both precision modes. The histories are
+  not compared with an XLA chain by this guarantee; no statistical band.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc.py::test_gfmc_run_ae_estimate_beyond_float64_window_products
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

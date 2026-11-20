@@ -1,0 +1,38 @@
+id: IMPL-DOC-WORKFLOW-AVERAGED-HANDOFF-001
+kind: implementation
+name: VMC_Workflow hands the average of the last 20 optimization steps to the next stage by default
+plain_language: >-
+  jqmc_workflow.VMC_Workflow publishes as optimized_hamiltonian, by default (handoff_mode="average",
+  handoff_average_steps=20, handoff_allow_fewer=False), hamiltonian_data_opt_averaged.h5 written by a real
+  jqmc-tool vmc average-wf subprocess from the dumps with the largest step numbers. On real converted H2 J1/J2/J3
+  Hamiltonians with seeded per-step J2/J3 perturbations, the published J2 and J3 leaves equal the NumPy mean of exactly the
+  last 20 of 25 dumps (and differ from the mean of all 25), an explicit handoff_average_steps=5 averages the last 5 steps
+  across a continuation's numbering, handoff_allow_fewer=True averages all 12 of 12 dumps, and the averaged file is staged
+  byte-identically under hamiltonian_data.h5 by a downstream Container through FileFrom(ValueFrom(..., "optimized_hamiltonian")).
+  The generated VMC input dumps every step. output_values record the hand-off mode, the source dumps and their steps, and
+  the file records its sources and steps. handoff_mode="last" publishes the newest dump itself, at any dump frequency, and
+  writes no average. Fewer dumps than requested and dumps that skip steps are refused with RuntimeError and nothing is
+  published; a refusal of the tool (non-finite parameter, structure mismatch) is raised with the tool's Error message and
+  removes a stale average. A run that failed validation publishes no average. In automatic mode an early convergence stop is
+  deferred until enough dumps exist (the single-step hand-off stops at once). wf_dump_freq other than 1, a step budget
+  num_opt_steps x max_continuation below handoff_average_steps (without an opt-out or a staged checkpoint), an unknown
+  handoff_mode and a non-positive or non-integer handoff_average_steps raise ValueError at construction. The published
+  workflow examples keep the averaged hand-off, dump every step and run at least 20 steps, and the static gate rejects each
+  of those three deviations. The quoted energies of the workflow examples are not covered: they come from reference runs
+  with the single-step hand-off.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_averaged_handoff.py::test_default_handoff_averages_the_last_20_dumps_and_reaches_the_sampler
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_averaged_handoff.py::test_explicit_handoff_average_steps_selects_that_window
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_averaged_handoff.py::test_single_step_handoff_publishes_the_last_dump
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_averaged_handoff.py::test_too_few_dumps_are_refused_unless_explicitly_allowed
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_averaged_handoff.py::test_dumps_that_skip_steps_are_refused
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_averaged_handoff.py::test_average_wf_refusal_is_raised_with_the_tool_message
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_averaged_handoff.py::test_failed_run_publishes_no_average
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_averaged_handoff.py::test_auto_mode_defers_early_stop_until_the_average_has_its_dumps
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_averaged_handoff.py::test_handoff_settings_are_checked_before_any_job
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_workflow_examples_hand_on_the_average_of_every_dumped_last_step
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{name: '01'}, {name: '02'}, {name: '03'}, {name: '04'}, {name: '05'}, {name: '06'}]

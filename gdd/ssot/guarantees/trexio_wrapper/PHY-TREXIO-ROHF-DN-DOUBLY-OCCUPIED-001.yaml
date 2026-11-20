@@ -1,0 +1,23 @@
+id: PHY-TREXIO-ROHF-DN-DOUBLY-OCCUPIED-001
+kind: physical
+name: Restricted open-shell dn determinant uses the doubly occupied MOs
+plain_language: >-
+  For a restricted TREXIO file (one MO set) with N_up > N_dn, the dn
+  determinant is built from exactly the MOs whose mo_occupation is 2
+  (alpha + beta), whatever their storage order, and the up determinant from
+  all occupied MOs. The reference rows are read straight from HDF5 by the
+  TREXIO occupation semantics; ln|det G| through the public geminal API
+  equals ln|det Phi_up| + ln|det Phi_dn| evaluated by numpy on those rows,
+  and the leading-N_dn-rows selection is shown to be a different
+  determinant. Cases: a non-aufbau layout (singly occupied MO stored before
+  doubly occupied ones) and the aufbau control.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_trexio.py::TestTREXIO::test_restricted_open_shell_sd_dn_uses_doubly_occupied_rows
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {layout: somo_before_docc}
+    - {layout: aufbau}

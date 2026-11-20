@@ -1,0 +1,29 @@
+id: IMPL-MCMC-CARRIED-INVERSE-REFRESH-001
+kind: implementation
+name: Carried Sherman-Morrison inverse equals the same-G inverse for every fast consumer after many MCMC updates
+plain_language: >-
+  Walkers start with one same-spin pair 1e-14 to 1e-13 Bohr apart (H4 periodic AE and water ccECP,
+  exponential J2), so the seed geminal is near-singular. After 40 measurement steps of 16 single-electron updates
+  the inverse that the production MCMC driver hands to its consumers (XLA per-step route, native per-step route
+  and native energy chunk) gives the same fast local energy, fast kinetic energy, fast Coulomb energy including the
+  ECP non-local fast ratio, fused HF force/drift, Pulay force/drift and (periodic) HF and Pulay stress as the
+  seed's SVD pseudo-inverse of the same carried geminal, at the strict det/wf/kinetic/coulomb zone policy of the
+  current mode; the XLA stored local energy of the last step equals the same-G route as well. The carried geminal
+  itself equals the geminal rebuilt from the final positions at the strict ao_eval/det_eval policy. The driver must
+  actually refresh at least one walker. Without the O(N^2) probe-residual refresh every consumer differs by budget
+  ratios of 1e2 to 1e7 in both modes. The refresh helper keeps untriggered walkers bit-identical and returns the
+  pseudo-inverse for triggered ones. Full and mixed are judged separately; the refresh threshold default is a
+  recorded speed/accuracy choice, not a physical claim.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_sm_inverse_refresh.py::test_mcmc_carried_inverse_matches_same_g_inverse_after_many_updates
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{case: h4_pbc_ae}, {case: water_ecp}]
+  - pytest_node: tests/test_jqmc_kernel/test_sm_inverse_refresh.py::test_refresh_helper_is_selective_and_exact
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_sm_inverse_refresh_native.py::test_native_mcmc_carried_inverse_matches_same_g_inverse_after_many_updates
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{case: h4_pbc_ae, route: chunk}, {case: h4_pbc_ae, route: per_step}, {case: water_ecp, route: chunk}, {case: water_ecp, route: per_step}]

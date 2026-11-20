@@ -1,0 +1,49 @@
+id: MATH-OPTK-LM-GENERALIZED-REFERENCE-001
+kind: mathematical
+name: Host linear-method solution against an independent generalized eigensolve
+plain_language: The complete real and complex LM parameter updates, selected energies and reference weights agree with an independent original-basis generalized Hermitian eigensolve. The returned solutions satisfy the original matrix residual. Reversed force conjugation is rejected.
+verdict_methods: [VM-MATH-LM-GENERALIZED-EIGEN-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-MATH-LM-GENERALIZED-EIGEN-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod::test_linear_method_independent_reference
+    required_parameter_cases: [{kind: real, seed: 30}, {kind: complex, seed: 40}]
+    required_precision_modes: [full, mixed]
+    executable_checks:
+      real-solution:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod.test_solve_linear_method_real_path_unchanged#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: host-LM-solution, expression: actual}
+        reference: {role: independent-generalized-eigenproblem, expression: reference}
+        precision:
+          full: {policy: CMP-LM-HOST-FP64-001}
+          mixed: {policy: CMP-LM-HOST-FP64-001}
+      real-residual:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod.test_solve_linear_method_real_path_unchanged#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: host-LM-solution, expression: residual_actual}
+        reference: {role: independent-generalized-eigenproblem, expression: residual_reference}
+        precision:
+          full: {policy: CMP-LM-HOST-FP64-001}
+          mixed: {policy: CMP-LM-HOST-FP64-001}
+      complex-solution:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod.test_solve_linear_method_complex_hermitian_LM#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: host-LM-solution, expression: actual}
+        reference: {role: independent-generalized-eigenproblem, expression: reference}
+        precision:
+          full: {policy: CMP-LM-HOST-FP64-001}
+          mixed: {policy: CMP-LM-HOST-FP64-001}
+      complex-residual:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod.test_solve_linear_method_complex_hermitian_LM#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: host-LM-solution, expression: residual_actual}
+        reference: {role: independent-generalized-eigenproblem, expression: residual_reference}
+        precision:
+          full: {policy: CMP-LM-HOST-FP64-001}
+          mixed: {policy: CMP-LM-HOST-FP64-001}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod::test_complex_lm_reference_rejects_reversed_force_conjugation
+    required_parameter_cases: [{seed: 40}]
+    required_precision_modes: [full, mixed]

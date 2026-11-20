@@ -1,0 +1,26 @@
+id: MATH-STR-NON-REDUCED-BASIS-MIC-001
+kind: mathematical
+name: Minimum image is the shortest lattice vector for any cell basis
+plain_language: >-
+  The minimum-image displacement returned for a periodic structure is a shortest lattice-equivalent vector for any cell
+  basis of the lattice, including non-reduced bases, because Structure_data._n_max provably encloses every minimum image
+  (Babai covering-radius bound on the LLL-reduced basis plus the reciprocal-column norms of the given basis). For the
+  lattice diag(6,7,8) Bohr written in the basis U @ diag(6,7,8) with U = [[6,1,-1],[-2,1,0],[-3,-2,1]] (det U = 1;
+  the a+b+c diagonal is 6 Bohr, the other body diagonals 33-69 Bohr) and the reported displacement plus 3000 seeded
+  displacements spanning several cells, the XLA _minimum_image_displacement, its _debug sibling, the XLA nearest-nucleus
+  distance _get_min_dist_rel_R_cart_jnp and the Rust ewald::min_image (through jqmc_rs._nearest_atom_periodic) return
+  vectors whose length equals the exact per-axis wrap in the rectangular basis of the same lattice, and the XLA vectors
+  are lattice-equivalent to the input, within ATOL_PYTHON_FP64_LOOSE / RTOL_PYTHON_FP64_LOOSE. The fixture is non-vacuous:
+  some minimum image needs an integer coefficient beyond the box ceil(|a+b+c| / (2 r_in)) + 1 that the a+b+c
+  diagonal alone gives (r_in the cell inradius). Full and mixed are each required.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::test_minimum_image_in_non_reduced_basis_matches_orthorhombic_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_nearest_atom_pbc.py::test_nearest_atom_periodic_in_non_reduced_basis_matches_orthorhombic_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

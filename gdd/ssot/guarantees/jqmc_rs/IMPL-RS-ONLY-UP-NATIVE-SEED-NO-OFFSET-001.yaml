@@ -1,0 +1,29 @@
+id: IMPL-RS-ONLY-UP-NATIVE-SEED-NO-OFFSET-001
+kind: implementation
+name: The only-up native sweep chain starts from the production seed and carries no seed-versus-cache offset in G
+plain_language: >-
+  The native MCMC sweep advances its carried geminal G by rank-1 deltas
+  against its own cached orbital columns, so a difference between the seed G and those caches stays in G for the
+  whole chain; a JAX-built seed differs from them by 3.4e-8 under the mixed fp32 ao_eval zone. For the
+  only-up chain (committed all-electron N atom, cc-pVDZ Cartesian, no Jastrow, n_dn = 0, n_up in (2, 3, 4), SD
+  and the same SD converted to AGP, four native sweeps of 25 proposals, Dt 1.2, PRNGKey(5), injected normals,
+  start at 0.7 times PCG64 seed-3 normals), the seed that the carried-state test uses
+  (NativeObsCtx.sweep_seed_geminal_batch with the active precision policy, the call MCMC.run makes on the real
+  native routes) equals the fresh native geminal jqmc_rs.compute_geminal_all_elements at the start positions, and
+  after every sweep the carried G equals the fresh native geminal at the returned positions. Both are the same
+  fp64 arithmetic on the same AO values, so the comparison uses the same-arithmetic reduction-order pair
+  (ATOL_REDUCTION_ORDER, RTOL_REDUCTION_ORDER), not a zone budget, which would hide the 3.4e-8 offset. Every up
+  electron must have moved by the end of the chain. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_open_shell_single_spin.py::test_only_up_native_sweep_carried_geminal_has_no_seed_offset
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {num_up: 2, kind: sd}
+    - {num_up: 3, kind: sd}
+    - {num_up: 4, kind: sd}
+    - {num_up: 2, kind: agp}
+    - {num_up: 3, kind: agp}
+    - {num_up: 4, kind: agp}

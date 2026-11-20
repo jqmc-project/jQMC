@@ -1,0 +1,28 @@
+id: IMPL-DET-STREAMING-GRADLAP-NEAR-SINGULAR-001
+kind: implementation
+name: Streamed determinant grad/lap state equals a fresh build through near-singular same-spin excursions
+plain_language: >-
+  Along the deterministic LRDMC-like walk of IMPL-DET-STREAMING-GRADLAP-LONG-CHAIN-001 (300 hops) with
+  near-coincident same-spin excursions inserted every 50 hops (up electron 1 is moved to 1e-5 bohr of up electron 0
+  and back, so the visited geminal has cond(G) >= 1e6, asserted per case), the XLA streaming state advanced by
+  _advance_grads_laplacian_ln_Det_streaming_state equals _init_grads_laplacian_ln_Det_streaming_state built at the
+  same configuration with the same exact inverse after EVERY hop, field by field. Cases: every case of
+  IMPL-DET-STREAMING-GRADLAP-LONG-CHAIN-001 with two or more up electrons. The comparison pairs of
+  IMPL-DET-STREAMING-GRADLAP-LONG-CHAIN-001; full and
+  mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_det_gradlap_long_chain.py::test_det_gradlap_streaming_near_singular_excursions_match_fresh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp_complex_twist_open}
+    - {case: agp_mo_real_mol_open}
+    - {case: agp_real_mol_open}
+    - {case: agp_real_pbc_open}
+    - {case: sd_complex_twist_open}
+    - {case: sd_real_mol_open}
+    - {case: sd_real_pbc_open}
+    - {case: sd_complex_bspline_open}
+    - {case: sd_real_bspline_open}

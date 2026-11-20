@@ -1,0 +1,677 @@
+id: IMPL-TA-DISTRIBUTION-001
+kind: implementation
+name: Twist distribution and reduction contracts
+plain_language: Weight normalization, world splitting, two-communicator column classification and plan-B routing, deterministic
+  twist-scoped RNG namespaces, per-twist chain decomposition for MCMC and GFMC, root aggregation with broadcast, complete
+  per-twist k-point metadata on every rank, and derivative-cache defaults follow the reviewed contract; invalid weights,
+  non-divisor splits, and cache-disable requests are hard errors.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestNormalizeWeights::test_normalize_weights_sum_is_one
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestSplitWorldForTwists::test_split_world_for_twists_single_process_n_twist_1
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestColumnClassifier::test_classify_block_columns_marks_jastrow_shared_det_per_twist
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestColumnClassifier::test_classify_block_columns_respects_chosen_param_index
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestColumnClassifier::test_classify_block_columns_marks_new_direct_mo_opt_blocks_per_twist
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestColumnClassifier::test_classify_block_columns_subset_size_matches_chosen_param_index
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting::test_planb_reduce_matrix_two_comm_uses_block_specific_normalisers
+    executable_checks:
+      d8-n-034:
+        site: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting.test_planb_reduce_matrix_two_comm_uses_block_specific_normalisers#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: M_global[np.ix_([2, 3, 4], [2, 3, 4])]
+        reference:
+          role: source-reference-value
+          expression: M_DD_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-035:
+        site: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting.test_planb_reduce_matrix_two_comm_uses_block_specific_normalisers#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: M_global[np.ix_([0, 1], [0, 1])]
+        reference:
+          role: source-reference-value
+          expression: M_JJ_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting::test_planb_reduce_vector_two_comm_uses_block_specific_normalisers
+    executable_checks:
+      d8-n-036:
+        site: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting.test_planb_reduce_vector_two_comm_uses_block_specific_normalisers#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: v_global[J_idx]
+        reference:
+          role: source-reference-value
+          expression: v_local[J_idx] / total_w_world
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-037:
+        site: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting.test_planb_reduce_vector_two_comm_uses_block_specific_normalisers#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: v_global[D_idx]
+        reference:
+          role: source-reference-value
+          expression: v_local[D_idx] / total_w_intra
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting::test_planb_reduce_matrix_handles_all_det_no_jastrow
+    executable_checks:
+      d8-n-038:
+        site: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting.test_planb_reduce_matrix_handles_all_det_no_jastrow#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: M_global
+        reference:
+          role: source-reference-value
+          expression: M_local / total_w_intra
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting::test_planb_reduce_matrix_handles_all_jastrow_no_det
+    executable_checks:
+      d8-n-039:
+        site: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestTwoCommPlanBRouting.test_planb_reduce_matrix_handles_all_jastrow_no_det#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: M_global
+        reference:
+          role: source-reference-value
+          expression: M_local / total_w_world
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_optimization_step_energy_is_broadcast_after_twist_root_gather
+    executable_checks:
+      d8-n-040:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_optimization_step_energy_is_broadcast_after_twist_root_gather#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.mean
+        reference:
+          role: source-reference-value
+          expression: '-1.5'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-041:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_optimization_step_energy_is_broadcast_after_twist_root_gather#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.standard_error
+        reference:
+          role: source-reference-value
+          expression: np.sqrt((0.75 * 0.2) ** 2 + (0.25 * 0.4) ** 2)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-042:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_optimization_step_energy_is_broadcast_after_twist_root_gather#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.variance
+        reference:
+          role: source-reference-value
+          expression: 0.75 * 2.0 + 0.25 * 6.0
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-043:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_optimization_step_energy_is_broadcast_after_twist_root_gather#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.variance_standard_error
+        reference:
+          role: source-reference-value
+          expression: np.sqrt((0.75 * 0.3) ** 2 + (0.25 * 0.5) ** 2)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_twist_result_keeps_all_k_points_on_every_rank
+  - pytest_node: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_planb_lm_coordinate_selection_has_world_and_per_twist_consensus
+  - pytest_node: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC::test_twist_optimizer_shared_jastrow_one_multi_and_resume
+    executable_checks:
+      d8-n-044:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_twist_optimizer_shared_jastrow_one_multi_and_resume#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: resumed_world
+        reference:
+          role: source-reference-value
+          expression: fresh_world
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC::test_mcmc_driver_decomposes_into_per_twist_chains
+    executable_checks:
+      d8-n-045:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_E
+        reference:
+          role: source-reference-value
+          expression: E_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-046:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_E_std
+        reference:
+          role: source-reference-value
+          expression: sigma_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-047:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_F
+        reference:
+          role: source-reference-value
+          expression: F_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-048:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_F_std
+        reference:
+          role: source-reference-value
+          expression: F_std_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-049:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_T
+        reference:
+          role: source-reference-value
+          expression: T_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-050:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_T_std
+        reference:
+          role: source-reference-value
+          expression: T_std_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-051:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_gF
+        reference:
+          role: source-reference-value
+          expression: gF_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-052:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_gF_std
+        reference:
+          role: source-reference-value
+          expression: gF_std_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-053:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-12
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.force.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.einsum('k,kad->ad', W, F_manual)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-054:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-13
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.force.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: np.sqrt(np.einsum('k,kad->ad', W ** 2, F_std_manual ** 2))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-055:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-14
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.stress.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.einsum('k,kab->ab', W, T_manual)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-056:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-15
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.stress.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: np.sqrt(np.einsum('k,kab->ab', W ** 2, T_std_manual ** 2))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-057:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-16
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.param_grad.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.einsum('k,kp->p', W, gF_manual)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-058:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionMCMC.test_mcmc_driver_decomposes_into_per_twist_chains#comparison-17
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.param_grad.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: np.sqrt(np.einsum('k,kp->p', W ** 2, gF_std_manual ** 2))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionGFMC::test_gfmc_driver_decomposes_into_per_twist_chains
+    executable_checks:
+      d8-n-059:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionGFMC.test_gfmc_driver_decomposes_into_per_twist_chains#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_E
+        reference:
+          role: source-reference-value
+          expression: E_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-060:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionGFMC.test_gfmc_driver_decomposes_into_per_twist_chains#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_E_std
+        reference:
+          role: source-reference-value
+          expression: sigma_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-061:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionGFMC.test_gfmc_driver_decomposes_into_per_twist_chains#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_F
+        reference:
+          role: source-reference-value
+          expression: F_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-062:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionGFMC.test_gfmc_driver_decomposes_into_per_twist_chains#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_F_std
+        reference:
+          role: source-reference-value
+          expression: F_std_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-063:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionGFMC.test_gfmc_driver_decomposes_into_per_twist_chains#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_T
+        reference:
+          role: source-reference-value
+          expression: T_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-064:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionGFMC.test_gfmc_driver_decomposes_into_per_twist_chains#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_T_std
+        reference:
+          role: source-reference-value
+          expression: T_std_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-065:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionGFMC.test_gfmc_driver_decomposes_into_per_twist_chains#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.force.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.einsum('k,kad->ad', W, F_manual)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-066:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::TestTwistDecompositionGFMC.test_gfmc_driver_decomposes_into_per_twist_chains#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.stress.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.einsum('k,kab->ab', W, T_manual)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_step_energy_is_aggregated_on_twist_roots_then_broadcast
+    executable_checks:
+      d8-n-067:
+        site: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize.test_step_energy_is_aggregated_on_twist_roots_then_broadcast#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.variance
+        reference:
+          role: source-reference-value
+          expression: 0.25 * 2.0 + 0.75 * 6.0
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-068:
+        site: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize.test_step_energy_is_aggregated_on_twist_roots_then_broadcast#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.variance_standard_error
+        reference:
+          role: source-reference-value
+          expression: np.sqrt((0.25 * 0.3) ** 2 + (0.75 * 0.5) ** 2)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-069:
+        site: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize.test_step_energy_is_aggregated_on_twist_roots_then_broadcast#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.mean
+        reference:
+          role: source-reference-value
+          expression: '-2.5'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-070:
+        site: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize.test_step_energy_is_aggregated_on_twist_roots_then_broadcast#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.standard_error
+        reference:
+          role: source-reference-value
+          expression: np.sqrt((0.25 * 0.2) ** 2 + (0.75 * 0.4) ** 2)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_driver_wires_step_energy_aggregation_into_mcmc_optimizer
+    executable_checks:
+      d8-n-071:
+        site: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize.test_driver_wires_step_energy_aggregation_into_mcmc_optimizer#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: instances[0].aggregated.mean
+        reference:
+          role: source-reference-value
+          expression: '-2.5'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-072:
+        site: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize.test_driver_wires_step_energy_aggregation_into_mcmc_optimizer#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: instances[0].aggregated.standard_error
+        reference:
+          role: source-reference-value
+          expression: np.sqrt((0.25 * 0.2) ** 2 + (0.75 * 0.4) ** 2)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_driver_enables_deriv_caches_by_default
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestNormalizeWeights::test_normalize_weights_rejects_empty
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestNormalizeWeights::test_normalize_weights_rejects_negative
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestNormalizeWeights::test_normalize_weights_rejects_all_zero
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestNormalizeWeights::test_normalize_weights_rejects_nonfinite
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestSplitWorldForTwists::test_split_world_for_twists_rejects_negative_n_twist
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestSplitWorldForTwists::test_split_world_for_twists_rejects_non_divisor
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_driver_refuses_explicit_disable_of_deriv_caches
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_driver_rejects_empty_hamiltonian_list
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_driver_rejects_weights_length_mismatch

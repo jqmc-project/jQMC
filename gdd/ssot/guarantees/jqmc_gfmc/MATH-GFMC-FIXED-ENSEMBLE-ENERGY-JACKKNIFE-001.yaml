@@ -1,0 +1,78 @@
+id: MATH-GFMC-FIXED-ENSEMBLE-ENERGY-JACKKNIFE-001
+kind: mathematical
+name: Fixed-ensemble GFMC energy, MPC energy and MPC correction against a weighted delete-one-block jackknife
+plain_language: >-
+  On ten explicit time slices with three unequally weighted walkers each, real local energies
+  and real per-walker MPC-minus-Ewald differences, the conventional and load-balanced GFMC
+  get_E energy mean and jackknife error, get_E_mpc mean and error and get_dE_mpc mean and
+  error must equal an independent numpy reference. The reference forms every
+  leave-one-block-out ensemble over individual walkers with explicit products of the
+  preceding bare weights, takes the normalized weighted mean (real part) of each replicate,
+  and returns the replicate mean and sqrt((B-1)/B sum (r_b - r)^2); it uses no production
+  binning, window-product or statistics helper. A zero-width history without warmup over four
+  unequal blocks and a nonuniform two-step history with one warmup slice over three unequal
+  blocks (seven retained slices) are required. All six comparisons use the current precision
+  mode's local_energy strict policy (float64 storage in both modes). This is deterministic
+  stored-buffer postprocessing on COMM_SELF: the energy variance, complex local energies,
+  the debug twins, distributed reduction, sampling and any statistical confidence band are
+  not certified here.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_and_mpc_match_fixed_ensemble_weighted_jackknife
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, history: uniform}
+    - {driver_kind: load-balanced, history: uniform}
+    - {driver_kind: conventional, history: history-warmup}
+    - {driver_kind: load-balanced, history: history-warmup}
+    executable_checks:
+      energy-mean:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_and_mpc_match_fixed_ensemble_weighted_jackknife#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-energy-mean, expression: energy_mean}
+        reference: {role: independent-weighted-jackknife-energy-mean, expression: expected_energy}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      energy-error:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_and_mpc_match_fixed_ensemble_weighted_jackknife#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-energy-jackknife-error, expression: energy_error}
+        reference: {role: independent-weighted-jackknife-energy-error, expression: expected_energy_error}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      mpc-energy-mean:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_and_mpc_match_fixed_ensemble_weighted_jackknife#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-mpc-energy-mean, expression: mpc_energy_mean}
+        reference: {role: independent-weighted-jackknife-mpc-energy-mean, expression: expected_mpc_energy}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      mpc-energy-error:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_and_mpc_match_fixed_ensemble_weighted_jackknife#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-mpc-energy-jackknife-error, expression: mpc_energy_error}
+        reference: {role: independent-weighted-jackknife-mpc-energy-error, expression: expected_mpc_energy_error}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      mpc-correction-mean:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_and_mpc_match_fixed_ensemble_weighted_jackknife#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-mpc-correction-mean, expression: correction_mean}
+        reference: {role: independent-weighted-jackknife-mpc-correction-mean, expression: expected_correction}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      mpc-correction-error:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_and_mpc_match_fixed_ensemble_weighted_jackknife#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-mpc-correction-jackknife-error, expression: correction_error}
+        reference: {role: independent-weighted-jackknife-mpc-correction-error, expression: expected_correction_error}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}

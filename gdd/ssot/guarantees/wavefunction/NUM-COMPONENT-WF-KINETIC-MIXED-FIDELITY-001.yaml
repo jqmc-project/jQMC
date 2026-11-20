@@ -1,0 +1,154 @@
+id: NUM-COMPONENT-WF-KINETIC-MIXED-FIDELITY-001
+kind: numerical
+name: Analytical kinetic components retain full-production fidelity in mixed precision
+plain_language: 'Mixed scalar and per-electron analytical kinetic outputs on the same molecular, five periodic-basis and canonical
+  source cases are finite and agree with independently rebuilt full analytical production. Each scalar or homogeneous per-electron
+  block uses the unchanged central orbital_derivative budget by its infinity norm: T_i = -(1/2) Delta_i Psi/Psi is a normalized
+  spatial second-derivative output, not a parameter derivative. Original full analytical-versus-AD formulas and strict budgets
+  remain separate. Every mixed case rejects an injected out-of-budget change without altering full reference. Scalar=sum(per-electron)
+  is also checked in the original entry-policy pair. Molecular J3 initialization is fixed at source seeds42/43. The entry-mode
+  node-far coordinates are frozen for fresh policy-specific model rebuilds; each callback retains the original |Psi|>1e-8
+  precondition. Canonical finite-condition, shape, finite-value, Jastrow/DTN activation and orbital-ablation predicates run
+  with the original entry-mode threshold in both callbacks; no condition-number bound or new node screen is added to canonical
+  cases.'
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_canonical_wavefunction.py::test_canonical_kinetic_matches_wavefunction_ad
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - pattern_id: WF-PATTERN-001
+    - pattern_id: WF-PATTERN-002
+    - pattern_id: WF-PATTERN-003
+    - pattern_id: WF-PATTERN-004
+    - pattern_id: WF-PATTERN-005
+    - pattern_id: WF-PATTERN-006
+    - pattern_id: WF-PATTERN-007
+    - pattern_id: WF-PATTERN-008
+    - pattern_id: WF-PATTERN-009
+    - pattern_id: WF-PATTERN-010
+    - pattern_id: WF-PATTERN-011
+    - pattern_id: WF-PATTERN-012
+    - pattern_id: WF-PATTERN-013
+    - pattern_id: WF-PATTERN-014
+    - pattern_id: WF-PATTERN-015
+    - pattern_id: WF-PATTERN-016
+    - pattern_id: WF-PATTERN-017
+    canonical_fixture:
+      suite: WF-SUITE-CORE-001
+      selector: pattern_id
+      operation: jqmc.wavefunction.compute_kinetic_energy_all_elements
+      comparison: per-electron-kinetic
+      activation: kinetic-jastrow-component-ablation
+      orbital_activation: kinetic-composite-coefficient-ablation
+      electron_configuration:
+        algorithm: numpy.random.PCG64.normal
+        seed: 864
+        scale: 0.6
+        configurations: 1
+        cond_G: finite-not-limited
+    executable_checks:
+      per-electron-kinetic:
+        site: tests/test_jqmc_kernel/test_canonical_wavefunction.py::test_canonical_kinetic_matches_wavefunction_ad#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-orbital-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-orbital-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyConsistency::test_kinetic_energy_analytic_and_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - trexio_file: water_ccecp_ccpvqz.h5
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    executable_checks:
+      production-fidelity-orbital_derivative:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyConsistency.test_kinetic_energy_analytic_and_auto#helper-inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-orbital-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-orbital-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyConsistency::test_auto_and_analytic_kinetic_energy_all_elements
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - trexio_file: water_ccecp_ccpvqz.h5
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    executable_checks:
+      production-fidelity-orbital_derivative:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyConsistency.test_auto_and_analytic_kinetic_energy_all_elements#helper-inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-orbital-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-orbital-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction::test_kinetic_energy_periodic_analytic_and_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - kind: pw
+    - kind: bspline
+    - kind: pgto
+    - kind: pgto+pw
+    - kind: pgto+bspline
+    executable_checks:
+      production-fidelity-orbital_derivative:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_kinetic_energy_periodic_analytic_and_auto#helper-inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-orbital-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-orbital-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction::test_kinetic_energy_all_elements_periodic_analytic_and_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - kind: pw
+    - kind: bspline
+    - kind: pgto
+    - kind: pgto+pw
+    - kind: pgto+bspline
+    executable_checks:
+      production-fidelity-orbital_derivative:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_kinetic_energy_all_elements_periodic_analytic_and_auto#helper-inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-orbital-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-orbital-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative

@@ -1,0 +1,37 @@
+id: MATH-ECP-LEGENDRE-REFERENCE-001
+kind: mathematical
+name: Tabulated Legendre degrees agree with an independent polynomial construction
+plain_language: >-
+  Every supported XLA Legendre arm l=0..6 matches Rodrigues' formula constructed through polynomial
+  differentiation, at fixed scalar endpoints and interior cosine arguments in each Coulomb precision.
+  This scalar-component reference neither substitutes for ECP projection with a wavefunction nor
+  certifies the integration accuracy of a quadrature mesh.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_domain.py::test_tabulated_legendre_matches_independent_rodrigues_formula
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {ell: 0, cosine: 0.75}
+    - {ell: 1, cosine: 0.75}
+    - {ell: 2, cosine: 0.75}
+    - {ell: 3, cosine: 0.75}
+    - {ell: 4, cosine: 0.75}
+    - {ell: 5, cosine: 0.75}
+    - {ell: 6, cosine: 0.75}
+    - {ell: 6, cosine: -1.0}
+    - {ell: 6, cosine: -0.75}
+    - {ell: 6, cosine: -0.25}
+    - {ell: 6, cosine: 0.0}
+    - {ell: 6, cosine: 0.25}
+    - {ell: 6, cosine: 1.0}
+    executable_checks:
+      legendre-value:
+        site: tests/test_jqmc_kernel/test_ecp_projector_domain.py::test_tabulated_legendre_matches_independent_rodrigues_formula#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-tabulated-legendre-value, expression: actual}
+        reference: {role: independent-rodrigues-polynomial-value, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}

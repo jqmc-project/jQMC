@@ -1,0 +1,26 @@
+id: IMPL-OPT-TWIST-STEP-DIAGNOSTICS-001
+kind: implementation
+name: Twist-averaged step diagnostics range over the shared coordinates and every twist's local coordinates
+plain_language: >-
+  In a twist-decomposed optimization step the world root logs the maximum generalized force (value +- error) and the
+  maximum signal-to-noise over all optimized variables: the shared coordinates once and each twist's own local
+  coordinates, never a twist average. Each twist's sampler leader sends its local maxima and its local top-N rows in one
+  world gather, entered by every rank once per step right after the world-collective target. The verbosity-high top-N
+  block merges the shared top-N with every twist's local top-N, re-sorted by signal-to-noise; a twist-local row is
+  labelled block[tK:qJ] with K the twist index of twist_K.h5. One line per twist gives that twist's local maximum
+  signal-to-noise, and the totals N_shared + sum over twists of N_local are logged next to the per-rank counts of
+  variational parameters and real optimization coordinates. At verbosity high the per-block force, metric and update
+  lines give a shared block once and a twist-local block once per twist, labelled block[tK] with that twist's own
+  values, and an all-twists coordinates line gives the shared plus every twist's real, storage, active and frozen
+  counts from the frozen sets each twist used. The same world gather carries these, after the collective-free local
+  finalize whose failure is re-raised only after the gather. Single-twist output is unchanged. jqmc.output_parser
+  reads all of them. Evidence: the actual two-rank driver with shared J1/J2 and twist-local geminal coordinates,
+  twist 1's local forces scaled by a fixed factor so that its local maximum is not on world rank 0; every logged
+  value equals the one computed independently from both ranks' targets, step results and coordinate maps.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_update_mpi.py::test_actual_mpi_twist_step_diagnostics_cover_every_twist
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

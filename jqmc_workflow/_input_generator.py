@@ -19,7 +19,7 @@ merges user-supplied overrides before writing a TOML file.
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -91,7 +91,7 @@ def get_default_parameters(job_type: str) -> dict:
     """
     if job_type not in cli_parameters:
         raise ValueError(
-            f"Unknown job_type '{job_type}'. Must be one of: {[k for k in cli_parameters if not k.endswith('_comments')]}"
+            f"Unknown job_type '{job_type}'. Must be one of: {[k for k in cli_parameters if not k.endswith(('_comments', '_restart_policy'))]}"
         )
     params = {
         "control": copy.deepcopy(cli_parameters["control"]),
@@ -106,6 +106,7 @@ def generate_input_toml(
     overrides: dict = None,
     filename: str = "input.toml",
     with_comments: bool = False,
+    omit_keys: dict[str, list[str]] = None,
 ) -> str:
     """Generate a jqmc TOML input file.
 
@@ -119,6 +120,15 @@ def generate_input_toml(
             Output filename.
         with_comments (bool):
             If True, insert inline comments from ``cli_parameters["*_comments"]``.
+        omit_keys (dict[str, list[str]], optional):
+            ``{section: [key, ...]}`` keys to DELETE from the merged params
+            after ``overrides`` is applied, so they are absent from the
+            written TOML entirely -- unlike ``overrides``, which can only
+            change a key's value, never remove a key that
+            ``get_default_parameters`` already seeded (e.g. a
+            "frozen on restart" key like ``[lrdmc-bra].E_scf`` whose
+            checkpoint-frozen value must not be re-asserted on continuation;
+            see ``jqmc._restart_policy``).
 
     Returns:
         str:
@@ -143,6 +153,12 @@ def generate_input_toml(
         else:
             # allow top-level scalar override (unusual but defensive)
             params[section] = kvs
+
+    for section, keys in (omit_keys or {}).items():
+        section_dict = params.get(section)
+        if isinstance(section_dict, dict):
+            for k in keys:
+                section_dict.pop(k, None)
 
     # Validate: required fields (those set to None) must be overridden
     for section, section_dict in params.items():
@@ -180,6 +196,9 @@ def _dump_with_comments(params: dict, job_type: str) -> str:
         lines.append(f"[{section}]")
         comment_key = f"{section}_comments"
         comments = cli_parameters.get(comment_key, {})
+        # Make the restart-inheritance contract visible in
+        # the generated TOML so users can tell which keys a continuation honours.
+        restart_policy = cli_parameters.get(f"{section}_restart_policy", {})
 
         if not isinstance(section_dict, dict):
             lines.append(f"{section} = {_toml_value(section_dict)}")
@@ -188,10 +207,14 @@ def _dump_with_comments(params: dict, job_type: str) -> str:
 
         for k, v in section_dict.items():
             comment = comments.get(k, "")
+            # Truncate the base comment only; the restart label is appended
+            # afterwards so it is never truncated away.
+            if len(comment) > 120:
+                comment = comment[:117] + "..."
+            policy = restart_policy.get(k)
+            if policy in ("frozen", "mutable"):
+                comment = f"{comment} [{policy} on restart]".strip()
             if comment:
-                # Truncate long comments
-                if len(comment) > 120:
-                    comment = comment[:117] + "..."
                 lines.append(f"# {comment}")
             lines.append(f"{k} = {_toml_value(v)}")
         lines.append("")

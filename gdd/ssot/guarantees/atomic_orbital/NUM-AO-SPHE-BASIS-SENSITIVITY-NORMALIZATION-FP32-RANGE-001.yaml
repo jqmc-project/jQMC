@@ -1,0 +1,54 @@
+id: NUM-AO-SPHE-BASIS-SENSITIVITY-NORMALIZATION-FP32-RANGE-001
+kind: numerical
+name: The mixed-precision spherical basis-parameter sensitivities form the radial normalization in float64, so they keep the float32 range
+plain_language: >-
+  The value-block spherical basis-parameter sensitivities d AO/d a and d AO/d c (derivatives.basis._value_general_leaf,
+  which in mixed precision uses _sphe_value_adjoint_fields; the determinant and J3 O_k basis exponent and coefficient
+  leaf) form the electron-independent radial normalization N_n from the float64 storage values and round it once to the
+  ao_eval zone dtype, so that they are finite wherever the forward AO value is (assembling N_n from float32
+  pieces returned inf d AO/d a and d AO/d c while the forward value was correct). For one m = 0 spherical primitive
+  (coefficient 1) on a molecular AOs_sphe_gto_data leaf, an AOs_sphe_pgto_data leaf and an AOs_sphe_pgto_complex_data
+  leaf (twist (0.25, 0, 0)) in a cubic 40 bohr cell, at l = 2 .. 6 with a = 1e10, 1e8, 1e6, 1e5, 1e4 and
+  a = 1e11, 1e9, 1e7, 1e6, 1e5, with a unit AO cotangent at the radial maximum r^2 = l / (2a) on the z axis and in a
+  tilted direction, d AO/d a equals the central finite difference in a (relative step 1e-6) of the closed form
+  N_r |d|^l exp(-a d^2) P_l(cos theta) sqrt((2l+1)/(4 pi)), N_r^2 = 2 (2a)^(l+3/2) / Gamma(l+3/2), evaluated with
+  math.lgamma (no jqmc code; lattice-image sum for the periodic leaves), and d AO/d c equals the closed form itself,
+  within the strict ao_eval tolerance of the active mode. Full and mixed are judged separately; the full-precision path
+  is unchanged.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_sphe_norm_fp32_range.py::test_spherical_basis_parameter_sensitivity_keeps_fp32_range
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: l2_a1e10_rust, leaf: molecular}
+    - {case: l2_a1e10_rust, leaf: periodic}
+    - {case: l2_a1e10_rust, leaf: complex}
+    - {case: l3_a1e8_rust, leaf: molecular}
+    - {case: l3_a1e8_rust, leaf: periodic}
+    - {case: l3_a1e8_rust, leaf: complex}
+    - {case: l4_a1e6_rust, leaf: molecular}
+    - {case: l4_a1e6_rust, leaf: periodic}
+    - {case: l4_a1e6_rust, leaf: complex}
+    - {case: l5_a1e5_rust, leaf: molecular}
+    - {case: l5_a1e5_rust, leaf: periodic}
+    - {case: l5_a1e5_rust, leaf: complex}
+    - {case: l6_a1e4_rust, leaf: molecular}
+    - {case: l6_a1e4_rust, leaf: periodic}
+    - {case: l6_a1e4_rust, leaf: complex}
+    - {case: l2_a1e11_both, leaf: molecular}
+    - {case: l2_a1e11_both, leaf: periodic}
+    - {case: l2_a1e11_both, leaf: complex}
+    - {case: l3_a1e9_both, leaf: molecular}
+    - {case: l3_a1e9_both, leaf: periodic}
+    - {case: l3_a1e9_both, leaf: complex}
+    - {case: l4_a1e7_both, leaf: molecular}
+    - {case: l4_a1e7_both, leaf: periodic}
+    - {case: l4_a1e7_both, leaf: complex}
+    - {case: l5_a1e6_both, leaf: molecular}
+    - {case: l5_a1e6_both, leaf: periodic}
+    - {case: l5_a1e6_both, leaf: complex}
+    - {case: l6_a1e5_both, leaf: molecular}
+    - {case: l6_a1e5_both, leaf: periodic}
+    - {case: l6_a1e5_both, leaf: complex}

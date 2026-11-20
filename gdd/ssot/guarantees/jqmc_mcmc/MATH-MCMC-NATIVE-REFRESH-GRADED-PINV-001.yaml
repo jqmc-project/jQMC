@@ -1,0 +1,29 @@
+id: MATH-MCMC-NATIVE-REFRESH-GRADED-PINV-001
+kind: mathematical
+name: The native carried-inverse refresh returns the exact inverse of a row- and column-graded geminal whose equilibration scales multiply beyond the float64 range
+plain_language: >-
+  The native real and complex carried-inverse refreshes
+  (determinant::refresh_running_inverse_if_needed and complex_det::refresh_running_inverse_if_needed_complex,
+  run at the native energy-chunk refresh boundaries) unscale the equilibrated inverse (the guarded
+  equilibrated LU inverse, or the pseudo-inverse it falls back to) so that every
+  intermediate stays finite whenever the inverse is finite: a row scale and a column scale whose product exceeds
+  the float64 range do not turn a structural zero into NaN (inf * 0). Evidence: the closed-form geminal
+  G = [[a, 0, 0], [0, 1, a], [0, 1, -a]] with exact inverse [[1/a, 0, 0], [0, 1/2, 1/2], [0, 1/(2a), -1/(2a)]],
+  real and multiplied by the phase exp(0.7 i) (inverse exp(-0.7 i) G^-1), for a = 1e-160 and 1e-200 (scale
+  product beyond float64) and the in-range control a = 1e-140. Each refresh starts from a zero carried inverse
+  with the production threshold SM_INVERSE_REFRESH_RESIDUAL_THRESHOLD, must report a refresh, return a finite
+  inverse whose structural zeros are exactly zero, and equal the closed-form inverse row-scaled at the det_eval
+  strict pair. Full and mixed are judged separately (the native refresh is float64 in both).
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_large_ratio_carried_inverse_native.py::test_native_refresh_of_row_and_column_graded_geminal_is_the_exact_inverse
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: real, a: 1.0e-140}
+    - {kind: real, a: 1.0e-160}
+    - {kind: real, a: 1.0e-200}
+    - {kind: complex, a: 1.0e-140}
+    - {kind: complex, a: 1.0e-160}
+    - {kind: complex, a: 1.0e-200}

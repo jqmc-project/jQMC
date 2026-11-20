@@ -1,0 +1,18 @@
+id: MATH-PWP-GSPHERE-TAPER-BAND-LOSS-001
+kind: mathematical
+name: The reported per-band spectral loss equals the removed share of each band's power exactly
+plain_language: >-
+  Two synthetic Gamma bands on the plane waves G = 0, +-b1 in a 30 bohr cube (a vacuum cell) with |c|^2 =
+  (16, 1, 1) and (1, 4, 4) and the sphere edge at |b1| lose exactly 2/18 = 1/9 and 8/9 of their power:
+  taper_qe_reference zeroes the two edge columns, keeps the constant column bit for bit, returns
+  pw_taper_spectral_loss_per_band = [1/9, 8/9] exactly and the occupied maximum 8/9, the occupied mean
+  1/2 to ATOL_PYTHON_FP64_LOOSE, and with the second band unoccupied the occupied maximum becomes 1/9.
+  A reported loss scaled by any factor fails (numeric reporting). Both modes exercise
+  fp64 host arithmetic.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_taper_reports_the_exact_removed_power_of_every_band
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

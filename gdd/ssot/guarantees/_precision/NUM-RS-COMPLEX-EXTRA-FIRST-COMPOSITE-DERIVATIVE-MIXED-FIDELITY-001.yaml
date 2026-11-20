@@ -1,0 +1,66 @@
+id: NUM-RS-COMPLEX-EXTRA-FIRST-COMPOSITE-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: Native complex extra-first composite derivatives retain mixed/full analytical fidelity
+plain_language: 'On both committed pgto_pw_twist_jnone and pgto_bspline_twist_jnone cells and both composite child
+  orders, the native complex kinetic MO-coefficient derivative (both spins, free kernel and driver adapter), VMC
+  Pulay/HF nuclear and electron forces (free kernel and observation context), and VMC Pulay/HF stresses retain the
+  central parameter-derivative mixed/full fidelity. Full physical Hamiltonians are serialized once and each policy
+  independently reloads fresh model leaves from the identical FP64 physical source. Both policies use the identical
+  original deterministic electron coordinates and analytical kernel arguments. Each homogeneous derivative block
+  is finite and obeys its infinity-norm budget; every case rejects an out-of-budget mixed perturbation with a fixed
+  full reference. Full AD correctness remains separately required at strict in the original mathematical guarantees.
+  No case or mixed execution is removed and no mixed production zone is promoted. The original liveness thresholds
+  are captured under the mixed entry policy before either callback runs, then applied to both native results: each
+  kinetic MO or force block has a component distinguishable from zero; every Pulay/HF stress entry remains distinguishable
+  from zero at its original respective medium threshold. Each field also retains its physical shape (MO parameter
+  block, nuclear/electron coordinates, or 3x3 strain), and the original complete field set is required. These are
+  non-AD controls; the full AD formulas and their controls are unchanged.'
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_extra_first_mo_param_deriv.py::test_complex_composite_kinetic_mo_derivative_matches_ad_in_both_child_orders
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {pattern: pgto_pw_twist_jnone, order: gto_first}
+    - {pattern: pgto_pw_twist_jnone, order: extra_first}
+    - {pattern: pgto_bspline_twist_jnone, order: gto_first}
+    - {pattern: pgto_bspline_twist_jnone, order: extra_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_complex_extra_first_mo_param_deriv.py::test_complex_composite_kinetic_mo_derivative_matches_ad_in_both_child_orders#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_rs_kernel/test_vmc_complex_extra_first_force.py::test_vmc_complex_composite_forces_match_ad_in_both_child_orders
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {pattern: pgto_pw_twist_jnone, order: gto_first}
+    - {pattern: pgto_pw_twist_jnone, order: extra_first}
+    - {pattern: pgto_bspline_twist_jnone, order: gto_first}
+    - {pattern: pgto_bspline_twist_jnone, order: extra_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_vmc_complex_extra_first_force.py::test_vmc_complex_composite_forces_match_ad_in_both_child_orders#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_rs_kernel/test_vmc_complex_extra_first_stress.py::test_vmc_complex_composite_stress_matches_strain_ad_in_both_child_orders
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {pattern: pgto_pw_twist_jnone, order: gto_first}
+    - {pattern: pgto_pw_twist_jnone, order: extra_first}
+    - {pattern: pgto_bspline_twist_jnone, order: gto_first}
+    - {pattern: pgto_bspline_twist_jnone, order: extra_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_vmc_complex_extra_first_stress.py::test_vmc_complex_composite_stress_matches_strain_ad_in_both_child_orders#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}

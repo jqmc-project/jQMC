@@ -1,0 +1,15 @@
+id: MATH-TOOL-PADE-J2-CONVERSION-001
+kind: mathematical
+name: TREXIO conversion with a Pade two-body Jastrow adds the analytic Pade term to ln|Psi|
+plain_language: >-
+  jqmc-tool trexio convert-to -j2 1.0 on the committed H2 all-electron cc-pVDZ Cartesian TREXIO file converts, and the
+  reloaded file's ln|Psi| at a fixed configuration equals ln|Psi| of the Jastrow-free conversion of the same file plus
+  the analytic antiparallel Pade term r / (2 (1 + b r)) with b = 1, at the strict tolerance of the evaluation zones in
+  the active precision mode. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertTo::test_trexio_convert_to_valid_pade_j2_matches_analytic_term
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

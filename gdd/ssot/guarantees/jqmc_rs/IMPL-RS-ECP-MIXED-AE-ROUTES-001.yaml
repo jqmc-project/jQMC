@@ -1,0 +1,39 @@
+id: IMPL-RS-ECP-MIXED-AE-ROUTES-001
+kind: implementation
+name: Native derivative, force and GFMC routes select non-local ECP centres among mixed nuclei
+plain_language: >-
+  On the authored two-nucleus mixed ECP/all-electron molecule, with the ECP
+  either before or after the bare nucleus, NN=1 selects the ECP centre even
+  for the electron nearer the bare nucleus. Four s AOs and two occupied MOs
+  keep MO derivatives live, and Pade J2 distinguishes the T-move conventions.
+  Native MO ECP derivatives, molecular GFMC nuclear/electron gradients and
+  rebuild/fast-mesh GFMC e_L/b_L agree with the existing XLA references in
+  Full and Mixed under their unchanged route-specific tolerances. The existing
+  independent octahedral standalone-energy reference anchors the mixed-potential
+  fixture. This does not certify every periodic/complex/stress copy or a full
+  MCMC/GFMC trajectory; it targets three distinct molecular nearest-set sites.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mixed_ecp_ae_routes.py::test_mixed_ecp_ae_parameter_derivative_selects_ecp_centres
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{ecp_atom: 0}, {ecp_atom: 1}]
+  - pytest_node: tests/test_rs_kernel/test_mixed_ecp_ae_routes.py::test_mixed_ecp_ae_gfmc_force_selects_ecp_centres
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {ecp_atom: 0, dltmove: false}
+    - {ecp_atom: 1, dltmove: false}
+    - {ecp_atom: 0, dltmove: true}
+    - {ecp_atom: 1, dltmove: true}
+  - pytest_node: tests/test_rs_kernel/test_mixed_ecp_ae_routes.py::test_mixed_ecp_ae_gfmc_projection_selects_ecp_centres
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {ecp_atom: 0, non_local_move: tmove, fast: false}
+    - {ecp_atom: 1, non_local_move: tmove, fast: false}
+    - {ecp_atom: 0, non_local_move: dltmove, fast: false}
+    - {ecp_atom: 1, non_local_move: dltmove, fast: false}
+    - {ecp_atom: 0, non_local_move: tmove, fast: true}
+    - {ecp_atom: 1, non_local_move: tmove, fast: true}
+    - {ecp_atom: 0, non_local_move: dltmove, fast: true}
+    - {ecp_atom: 1, non_local_move: dltmove, fast: true}

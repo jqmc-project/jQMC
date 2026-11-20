@@ -1,0 +1,120 @@
+id: NUM-PUBLIC-PBC-FORCE-STRESS-MIXED-FIDELITY-001
+kind: numerical
+name: Periodic force and stress APIs retain Mixed Full-production fidelity
+plain_language: All original ten real-Gamma/complex-twist, J1-off/on kinetic-force, kinetic/Jastrow stress, orbital-only
+  stress and real dispatched energy/log-wavefunction strain cases retain their original configurations, seeds and
+  fields. Mixed uses two independent XLA analytical model reloads from one Full-constructed serialized physical
+  source and identical fixed coordinates. Periodicity, ECP activation and requested Jastrow presence/absence are
+  checked. Corresponding derivative arrays preserve nonempty equal shapes, finite values and the unchanged central
+  parameter_derivative infinity-norm budget, with isolated excess-budget rejection. Full strict mathematical AD
+  remains in MATH-DERIVAPI-CONSISTENCY-001. No production algorithm, precision zone, conditioning exclusion, central
+  budget, input, seed or skip change.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_force_vs_grad
+    required_parameter_cases:
+    - with_j1: false
+      stem: lithium.h5
+    - with_j1: false
+      stem: lithium_k025.h5
+    - with_j1: true
+      stem: lithium.h5
+    - with_j1: true
+      stem: lithium_k025.h5
+    required_precision_modes:
+    - mixed
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_pbc_fidelity#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-periodic-derivative
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-physical-input-and-fixed-positions
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_vs_grad
+    required_parameter_cases:
+    - stem: lithium.h5
+    - stem: lithium_k025.h5
+    required_precision_modes:
+    - mixed
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_pbc_fidelity#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-periodic-derivative
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-physical-input-and-fixed-positions
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_kinetic_stress_orbital_jnone_vs_grad
+    required_parameter_cases:
+    - stem: lithium.h5
+    - stem: lithium_k025.h5
+    required_precision_modes:
+    - mixed
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_pbc_fidelity#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-periodic-derivative
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-physical-input-and-fixed-positions
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_eL_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+    required_precision_modes:
+    - mixed
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_pbc_fidelity#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-periodic-derivative
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-physical-input-and-fixed-positions
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_stress_lnpsi_vs_auto
+    required_parameter_cases:
+    - stem: lithium.h5
+    required_precision_modes:
+    - mixed
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_pbc_fidelity#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-periodic-derivative
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-physical-input-and-fixed-positions
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

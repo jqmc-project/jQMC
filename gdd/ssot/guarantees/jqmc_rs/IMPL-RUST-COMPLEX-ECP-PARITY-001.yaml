@@ -1,0 +1,26 @@
+id: IMPL-RUST-COMPLEX-ECP-PARITY-001
+kind: implementation
+name: Native and XLA VMC consumers agree on complex ECP energy
+plain_language: >-
+  With the same Li twist DTN input and configuration as
+  MATH-RUST-COMPLEX-ECP-ABSOLUTE-001, the actual native and XLA fast VMC energy
+  consumers agree in full and mixed separately, including Im(Vnl), at the
+  existing strict zone budget. This is backend parity, not an independent
+  proof of the ECP definition; the separate absolute guarantee supplies that
+  reference and the LRDMC guarantees retain per-candidate real projection.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_vmc_complex_ecp_policy.py::test_native_xla_vmc_complex_ecp_consumers_agree
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+    executable_checks:
+      native-xla-complex-energy:
+        site: tests/test_rs_kernel/test_vmc_complex_ecp_policy.py::test_native_xla_vmc_complex_ecp_consumers_agree#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-complex-local-energy, expression: actual}
+        reference: {role: xla-complex-local-energy, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}

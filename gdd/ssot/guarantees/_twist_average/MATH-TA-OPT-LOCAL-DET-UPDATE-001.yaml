@@ -1,0 +1,40 @@
+id: MATH-TA-OPT-LOCAL-DET-UPDATE-001
+kind: mathematical
+name: A two-twist optimization step updates the twist-local determinant block from each twist's own batch
+plain_language: >-
+  run_twist_average_optimize with opt_geminal=True on two distinct real Hamiltonians (H2 all-electron Cartesian and
+  spherical cc-pVDZ, closed-shell single determinant, Pade J1 + J2), raw weights 1:3, one step, with the two twists
+  running as two ranks of an in-process world communicator whose collectives reduce both ranks' operands as MPI does.
+  The shared J1/J2 coordinates (sync_scope world) and the twist-local occupied-MO coordinates (sync_scope sampler,
+  S-Stiefel tangent coordinates of the occupied row) form a block-diagonal problem. Each twist's consumed local
+  energies and log derivatives (and, for aSR/LM, local-energy derivatives) over both blocks equal an independent
+  autodiff evaluation at its stored configurations through the tangent map built from the analytic AO overlap. For
+  each twist k the local force equals f_k of twist k's own batch, the local SR direction equals the dense solve of
+  (S_k + epsilon diag S_k) q = f_k over the local sub-block of twist k alone, and the local target equals that
+  direction (SR), gamma_k times it from twist k's own one-dimensional model (aSR), or the nonsymmetric LM solve in
+  the basis of that direction and the coordinates selected by twist k's own force signal-to-noise (LM, budget 3);
+  the shared block equals the fixed-BZ weighted reference and is applied identically on both twists. Host and device
+  (JAX batch, not GPU) optimizer batches are covered. A cross-twist (pooled) local solve and the other twist's LM
+  selection must fail the same verdicts.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_local_determinant.py::test_twist_local_determinant_sources_match_independent_evaluation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: sr-host}
+    - {case: sr-device}
+    - {case: asr-host}
+    - {case: asr-device}
+    - {case: lm-host}
+    - {case: lm-device}
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_local_determinant.py::test_twist_local_determinant_update_equals_per_twist_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: sr-host}
+    - {case: sr-device}
+    - {case: asr-host}
+    - {case: asr-device}
+    - {case: lm-host}
+    - {case: lm-device}

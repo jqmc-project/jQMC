@@ -1,0 +1,41 @@
+id: NUM-WF-POLARIZED-SD-MO-MIXED-FIDELITY-001
+kind: numerical
+name: Fully polarized SD mixed MO parameter gradients retain same-backend full-production fidelity
+plain_language: The validated WF-PATTERN-008 mixed driver contributes its actual last measured coordinates, frozen as identical
+  host arrays for fresh mixed/full model rebuilds. XLA uses the public c-axis production bridge and reducer; Rust uses the
+  exact production complex param-derivative adapter and native MO assembler, including the driver float64 transport and captured
+  arithmetic policy. Native and Python policies are coupled and restored. Both the stored driver block and direct mixed point
+  reevaluation must obey the unchanged central parameter_derivative homogeneous-block infinity-norm bound relative to the
+  independently rebuilt full SAME backend production map. Both labelled derivative sources are required and every case rejects
+  an injected out-of-budget mixed change. No mixed AD/FD mathematical oracle or cross-backend parity verdict is claimed. Independent
+  raw-primal coefficient FD remains in the separate full-only numerical guarantee.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_polarized_sd_mcmc_parameters_match_raw_full_fd_or_mixed_fidelity
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - rust_on: false
+    - rust_on: true
+    executable_checks:
+      same-route-mo-parameter-fidelity:
+        site: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_polarized_sd_mcmc_parameters_match_raw_full_fd_or_mixed_fidelity#helper-inequality-5
+        comparator: python.inequality
+        actual:
+          role: mixed-stored-or-direct-production-mo-gradient-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-same-backend-production-mo-gradient-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+        iterations:
+          variable: derivative_source
+          required_values:
+          - stored-driver
+          - mixed-production

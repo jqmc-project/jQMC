@@ -1,0 +1,38 @@
+id: IMPL-CKPT-TWO-RANK-RESTORE-001
+kind: implementation
+name: Actual two-rank sampler checkpoint restores state and reduced energy
+plain_language: >-
+  MCMC and both GFMC algorithms run six fixed-seed measurements on two actual
+  MPI ranks, save and reload a merged checkpoint on the same communicator.
+  Rank-specific walkers and JAX keys, three stored histories and the four-value
+  reduced energy-estimator tuple are finite and exactly preserved. GFMC histories
+  are root-owned, whereas MCMC histories are rank-local. The input is committed
+  molecular H2 AE Cartesian GTO/MO with one up and one down electron and no Jastrow.
+  This is a same-data roundtrip, not statistical agreement or a future-trajectory claim.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_restart_mpi.py::test_two_rank_restart_preserves_state_and_reduced_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver_name: MCMC}, {driver_name: GFMC_n}, {driver_name: GFMC_t}]
+    executable_checks:
+      reduced-energy:
+        site: tests/test_jqmc_kernel/test_checkpoint_restart_mpi.py::test_two_rank_restart_preserves_state_and_reduced_energy#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: restored-two-rank-energy-estimator, expression: energy_after}
+        reference: {role: pre-checkpoint-two-rank-energy-estimator, expression: energy_before}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      rank-state:
+        site: tests/test_jqmc_kernel/test_checkpoint_restart_mpi.py::test_two_rank_restart_preserves_state_and_reduced_energy#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: restored-rank-state, expression: after}
+        reference: {role: pre-checkpoint-rank-state, expression: before}
+        iterations:
+          variable: name
+          required_values: [latest_r_up_carts, latest_r_dn_carts, jax_PRNG_key_list, stored_e_L, stored_e_L2, stored_w_L]
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

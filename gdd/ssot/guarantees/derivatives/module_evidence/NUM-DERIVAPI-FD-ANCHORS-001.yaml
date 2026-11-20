@@ -1,0 +1,10 @@
+id: NUM-DERIVAPI-FD-ANCHORS-001
+kind: numerical
+name: Finite-difference anchor of lambda-diagonal derivatives
+plain_language: The ln(det) lambda-diagonal derivative agrees with an independent finite difference.
+verdict_methods:
+- VM-NUM-FD-ANCHOR-001
+required_evidence:
+- verdict_method: VM-NUM-FD-ANCHOR-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_geminal.py::test_dln_det_dlambda_diag_vs_fd

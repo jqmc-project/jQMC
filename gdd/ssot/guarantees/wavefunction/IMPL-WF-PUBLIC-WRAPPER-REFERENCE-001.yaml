@@ -1,0 +1,24 @@
+id: IMPL-WF-PUBLIC-WRAPPER-REFERENCE-001
+kind: implementation
+name: Public evaluate_jastrow and evaluate_determinant against NumPy references
+plain_language: >-
+  On the committed molecular H2 all-electron Cartesian fixture with J2 and J3 and on the committed Li ccECP k = 0.25
+  twist fixture with a periodic J2, at three seeded well-conditioned configurations, evaluate_jastrow equals exp of
+  the NumPy _compute_Jastrow_part_debug, evaluate_determinant equals the NumPy _compute_det_geminal_all_elements_debug
+  (complex at the twist), and their product equals evaluate_wavefunction, each within its strict zone policy. A
+  determinant scaled by ten times the mode tolerance must fail at every configuration. Full and mixed are judged
+  separately.
+  The evaluate_jastrow reference is the NumPy Jastrow evaluated in the
+  jastrow_eval zone dtype (J2 transcribed from its debug twin with fp64 geometry, J3 from
+  _compute_Jastrow_three_body_debug in the jastrow_eval zone), whose fp64 evaluation reproduces
+  _compute_Jastrow_part_debug bit for bit, so mixed output is never judged against an fp64 reference.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_declared_debug_oracles.py::test_evaluate_jastrow_and_determinant_match_numpy_references
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H2_ae_ccpvdz_cart.h5}
+    - {trexio_file: lithium_k025.h5}
+  - pytest_node: tests/test_jqmc_kernel/test_declared_debug_oracles.py::test_evaluate_determinant_oracle_rejects_a_scaled_determinant

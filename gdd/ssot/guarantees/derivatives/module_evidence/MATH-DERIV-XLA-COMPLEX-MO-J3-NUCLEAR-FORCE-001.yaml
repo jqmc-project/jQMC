@@ -1,0 +1,35 @@
+id: MATH-DERIV-XLA-COMPLEX-MO-J3-NUCLEAR-FORCE-001
+kind: mathematical
+name: XLA analytic nuclear gradient of e_L with a complex-MO three-body Jastrow on a twist equals autodiff
+plain_language: >-
+  When the three-body Jastrow orbital is an MO with complex coefficients on a twist (the J3 field is
+  Re(C @ AO), as the QE converter writes for -j3 mo at k != 0), the XLA analytic nuclear gradient of the
+  local energy (compute_grad_e_L with wrt="R") equals reverse-mode autodiff of Re e_L with respect to the
+  positions of every Structure_data leaf. The complex drift cotangent of the real J3 field enters only
+  through its real part, so no Im(cotangent) x Im(C dAO) term may appear. On the committed Li ccECP k = 0.25
+  sphe-pGTO SD with J1/J2 and on the QE-projected pGTO(+)plane-wave and pGTO(+)B-spline composite SDs, each
+  with a J3 on its phase-free complex occupied MO and a seeded random j_matrix of scale 0.3, at one seeded
+  well-conditioned electron configuration and the identity quadrature rotation, every component agrees.
+  The J3 share of the reference must itself exceed the comparison tolerance. Full retains the original mathematical AD comparison and budget. Mixed analytical
+  nuclear derivatives are governed by NUM-COMPLEX-MO-J3-DERIVATIVE-MIXED-FIDELITY-001,
+  retaining the original real/finite/nonzero J3-share controls.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_xla_complex_mo_j3_nuclear_force.py::test_xla_complex_mo_j3_nuclear_force_matches_local_energy_ad
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {kind: pgto}
+    - {kind: pgto_pw}
+    - {kind: pgto_bspline}
+    executable_checks:
+      nuclear-gradient-vs-autodiff:
+        site: tests/test_jqmc_kernel/test_xla_complex_mo_j3_nuclear_force.py::test_xla_complex_mo_j3_nuclear_force_matches_local_energy_ad#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-analytic-nuclear-gradient-of-local-energy, expression: actual}
+        reference: {role: same-precision-autodiff-of-re-local-energy, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, ewald, coulomb, jastrow_eval, jastrow_grad_lap]

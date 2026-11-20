@@ -1,0 +1,19 @@
+id: IMPL-OPTK-CG-WARM-START-001
+kind: implementation
+name: CG warm-start route behavior
+plain_language: >-
+  The SR CG warm start is a real primal vector of the wide system, persisted with a structural fingerprint of the
+  coordinate layout, the active (unfrozen) coordinate set, the right-hand-side dtype, epsilon, cg_max_iter and
+  cg_tol. The host wide target reuses it only when the fingerprint and the shape match: a warm start from the same
+  system is reused, so the next CG starts at its solution and stops after zero iterations with the same update; an
+  incompatible fingerprint resets to a cold zero start (with cg_max_iter=0 the update is exactly zero) and the new
+  warm start carries the new fingerprint. The returned warm start is real. The tall route never accepts or returns
+  a warm start, since its sample-indexed dual is batch scoped.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_matching_wide_warm_start_is_real_and_reused_at_the_same_fingerprint
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_incompatible_wide_warm_start_resets_before_real_cg
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_internal_tall_target_decodes_once_and_never_persists_sample_dual

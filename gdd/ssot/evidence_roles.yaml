@@ -1,0 +1,1303 @@
+schema_version: 1
+document:
+  id: GDD-EVIDENCE-ROLES-001
+  title: Finite intra-node evidence roles
+  version: 1
+  lifecycle: pre-cutover
+  purpose: Classify every assertion in finite reviewed nodes without changing their ownership, source comparisons or budgets.
+enforcement_map:
+  nodes: not-yet-enforced
+nodes:
+  ? tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction::test_evaluate_ln_wavefunction_periodic_log_derivative
+  : guarantee: NUM-WF-FD-ANCHORS-001
+    registration_method: VM-NUM-FD-ANCHOR-001
+    observations:
+      ? tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#assert-1
+      : kind: shape-or-dtype
+        expression: grad_ln_up_np.shape == (n_up, 3)
+      ? tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#assert-2
+      : kind: shape-or-dtype
+        expression: grad_ln_dn_np.shape == (n_dn, 3)
+      ? tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#assert-3
+      : kind: finiteness
+        expression: np.all(np.isfinite(grad_ln_up_np))
+        actual: np.isfinite(grad_ln_up_np)
+      ? tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#assert-4
+      : kind: finiteness
+        expression: np.all(np.isfinite(grad_ln_dn_np))
+        actual: np.isfinite(grad_ln_dn_np)
+      ? tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#call-39
+      : kind: tolerance-comparison
+        expression: np.testing.assert_allclose(grad_ln_up_np, fd_up, atol=atol, rtol=rtol)
+        actual: grad_ln_up_np
+        reference: fd_up
+        tolerance_arguments:
+          atol: atol
+          rtol: rtol
+      ? tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#call-40
+      : kind: tolerance-comparison
+        expression: np.testing.assert_allclose(grad_ln_dn_np, fd_dn, atol=atol, rtol=rtol)
+        actual: grad_ln_dn_np
+        reference: fd_dn
+        tolerance_arguments:
+          atol: atol
+          rtol: rtol
+    roles:
+      log-gradient-central-fd:
+        method: VM-NUM-FD-SOURCE-ZONE-FULL-001
+        meaning: Up/down autodiff gradients agree with the existing independent central FD at step 1e-4 Bohr on each of five periodic basis kinds,
+          under the unchanged three-zone medium budget in full precision only.
+        observations:
+        - tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#call-39
+        - tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#call-40
+        checks:
+        - fd-up
+        - fd-down
+        source_only: {}
+      gradient-shape-and-finiteness:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Both spin blocks have the required coordinate shape and finite values; these assertions alone are not FD agreement.
+        observations:
+        - tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#assert-1
+        - tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#assert-2
+        - tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#assert-3
+        - tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_ln_wavefunction_periodic_log_derivative#assert-4
+        checks: []
+        source_only: {}
+  tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking:
+    guarantee: IMPL-RS-MPC-001
+    registration_method: VM-ERROR-DISPOSITION-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#assert-1:
+        kind: exact-comparison
+        expression: got.keys() == expected.keys()
+        actual: got.keys()
+        reference: expected.keys()
+      tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#assert-2:
+        kind: cardinality-comparison
+        expression: len(got) == len(expected)
+      tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#assert-3:
+        kind: exact-comparison
+        expression: got == expected
+        actual: got
+        reference: expected
+      tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-12:
+        kind: assertion-helper
+        expression: _assert_state_tree_equal(got_item, expected_item, f'{path}[{index}]')
+        actual: got_item
+        reference: expected_item
+      tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-12-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_state_tree_equal(got_item, expected_item, f'{path}[{index}]')
+      tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-14:
+        kind: exact-comparison
+        expression: 'np.testing.assert_array_equal(got, expected, err_msg=f''{path}: MPC changed passive Ewald state'')'
+        actual: got
+        reference: expected
+      tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-6:
+        kind: assertion-helper
+        expression: _assert_state_tree_equal(got[key], expected[key], f'{path}.{key}')
+        actual: got[key]
+        reference: expected[key]
+      tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-6-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_state_tree_equal(got[key], expected[key], f'{path}.{key}')
+      tests/test_rs_kernel/test_mpc_observable.py::_independent_dE_mpc#assert-1:
+        kind: shape-or-dtype
+        expression: weights.shape == values.shape and values.ndim == 2
+      tests/test_rs_kernel/test_mpc_observable.py::_new_mpc_module#assert-1:
+        kind: unclassified-predicate
+        expression: not missing
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-1:
+        kind: unclassified-predicate
+        expression: bool(ham.structure_data.pbc_flag)
+        actual: ham.structure_data.pbc_flag
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-2:
+        kind: cardinality-comparison
+        expression: len(calls) == expected_calls
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-3:
+        kind: existence
+        expression: call['mpc_data'] is not None and call['ewald_data'] is not None
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-4:
+        kind: exact-comparison
+        expression: len(call['shape_up']) == 2 and call['shape_up'][1] == 3
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-5:
+        kind: exact-comparison
+        expression: len(call['shape_dn']) == 2 and call['shape_dn'][1] == 3
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-6:
+        kind: finiteness
+        expression: np.isfinite(call['native']) and np.isfinite(call['xla'])
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-7:
+        kind: numerical-bound
+        expression: max((abs(call['xla']) for call in calls)) > 10.0 * max(comparison_bands)
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-8:
+        kind: numerical-distinction
+        expression: got_estimator != (0.0, 0.0)
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-16:
+        kind: tolerance-comparison
+        expression: 'np.testing.assert_allclose(call[''native''], call[''xla''], atol=atol, rtol=rtol, err_msg=f''{driver} native call {index}:
+          dV XLA != Rust'')'
+        actual: call['native']
+        reference: call['xla']
+        tolerance_arguments:
+          atol: atol
+          rtol: rtol
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-23:
+        kind: tolerance-comparison
+        expression: 'np.testing.assert_allclose(np.asarray(d_on.mpc_dV), _expected_sentinel_history(driver, d_on), atol=MAXULP_MPC_SENTINEL_HISTORY
+          * np.spacing(_SENTINEL_BASE + _DRIVER_STEPS[driver]), rtol=RTOL_PYTHON_FP64_ZERO, err_msg=f''{driver}: native return values did not
+          reach every saved MPC row'')'
+        actual: np.asarray(d_on.mpc_dV)
+        reference: _expected_sentinel_history(driver, d_on)
+        tolerance_arguments:
+          atol: MAXULP_MPC_SENTINEL_HISTORY * np.spacing(_SENTINEL_BASE + _DRIVER_STEPS[driver])
+          rtol: RTOL_PYTHON_FP64_ZERO
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-29:
+        kind: tolerance-comparison
+        expression: 'np.testing.assert_allclose(got_estimator, expected_estimator, atol=ATOL_PYTHON_FP64_MEDIUM, rtol=RTOL_PYTHON_FP64_ZERO, err_msg=f''{driver}:
+          get_dE_mpc mean/error does not match independent weighted jackknife'')'
+        actual: got_estimator
+        reference: expected_estimator
+        tolerance_arguments:
+          atol: ATOL_PYTHON_FP64_MEDIUM
+          rtol: RTOL_PYTHON_FP64_ZERO
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-31:
+        kind: assertion-helper
+        expression: _assert_state_tree_equal(_passive_ewald_state(driver, d_on), _passive_ewald_state(driver, d_off), path=driver)
+        actual: _passive_ewald_state(driver, d_on)
+        reference: _passive_ewald_state(driver, d_off)
+      tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-31-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_state_tree_equal(_passive_ewald_state(driver, d_on), _passive_ewald_state(driver, d_off), path=driver)
+    roles:
+      routing-and-preconditions:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Native call count, shape, finiteness, periodic fixture, nonvacuity and reference preconditions; not a numerical oracle.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        - tests/test_rs_kernel/test_mpc_observable.py::_independent_dE_mpc#assert-1
+        - tests/test_rs_kernel/test_mpc_observable.py::_new_mpc_module#assert-1
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-1
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-2
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-3
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-4
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-5
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-6
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-7
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#assert-8
+        checks: []
+        source_only: {}
+      passive-ewald-state:
+        method: VM-MATH-SOURCE-ARRAY-IDENTITY-001
+        meaning: MPC on/off preserves the same-seed trajectory, weights, force and gradient arrays exactly. The existing stress buffers in this
+          test are empty; they establish shape preservation only, not numerical stress agreement.
+        observations:
+        - tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#assert-1
+        - tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#assert-2
+        - tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#assert-3
+        - tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-12
+        - tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-12-helper-call
+        - tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-14
+        - tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-6
+        - tests/test_rs_kernel/test_mpc_observable.py::_assert_state_tree_equal#call-6-helper-call
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-31
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-31-helper-call
+        checks:
+        - state-array-equality
+        source_only: {}
+      native-backend-value:
+        method: VM-IMPL-BACKEND-PARITY-001
+        meaning: Every native MPC correction equals XLA at the actual stored-step walker input.
+        observations:
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-16
+        checks:
+        - comparison-1
+        source_only: {}
+      sentinel-dataflow:
+        method: VM-MATH-SOURCE-SPACING-IDENTITY-001
+        meaning: The step-coded native return reaches every saved MPC row; the original four-ULP fold allowance is unchanged.
+        observations:
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-23
+        checks:
+        - comparison-2
+        source_only: {}
+      weighted-jackknife-reference:
+        method: VM-MATH-REFERENCE-001
+        meaning: Both estimator outputs equal an independently written weighted jackknife.
+        observations:
+        - tests/test_rs_kernel/test_mpc_observable.py::test_mpc_correction_production_route_is_blocking#call-29
+        checks:
+        - comparison-3
+        source_only: {}
+  tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow:
+    guarantee: IMPL-RS-VMC-DRIVERS-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow#assert-1:
+        kind: exact-comparison
+        expression: int(single['accepted']) == int(sweep['accepted'])
+        actual: int(single['accepted'])
+        reference: int(sweep['accepted'])
+      tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow#assert-2:
+        kind: tolerance-comparison
+        expression: np.allclose(np.asarray(single['r_up']), np.asarray(sweep['r_up']), atol=atol, rtol=rtol)
+        actual: np.asarray(single['r_up'])
+        reference: np.asarray(sweep['r_up'])
+        tolerance_arguments:
+          atol: atol
+          rtol: rtol
+      tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow#assert-3:
+        kind: tolerance-comparison
+        expression: np.allclose(np.asarray(single['geminal_inv']), np.asarray(sweep['geminal_inv']), atol=atol, rtol=rtol)
+        actual: np.asarray(single['geminal_inv'])
+        reference: np.asarray(sweep['geminal_inv'])
+        tolerance_arguments:
+          atol: atol
+          rtol: rtol
+    roles:
+      supporting-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture types, active model branches, shapes, prescribed zone membership and conditioning bounds are supporting source contracts
+          only; they establish neither backend equality nor independent mathematical truth.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        checks: []
+        source_only: {}
+      native-single-move-sweep:
+        method: VM-IMPL-ROUTE-PARITY-001
+        meaning: 'Native single-move versus native one-move sweep with identical inputs and keys: exact acceptance equality and strict source-zone
+          agreement of up-spin positions and geminal inverse across the explicit configuration/key grid. Both routes are Rust; indirect XLA-tested
+          siblings do not make this node backend parity. Down-spin positions and ratios are not directly compared here.'
+        observations:
+        - tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow#assert-1
+        - tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow#assert-2
+        - tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow#assert-3
+        checks:
+        - comparison-1
+        - comparison-2
+        source_only: {}
+  tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components:
+    guarantee: IMPL-RS-VMC-DRIVERS-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-1:
+        kind: existence
+        expression: isinstance(aos, AOs_bspline_complex_data)
+        actual: aos
+        reference: AOs_bspline_complex_data
+      tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-2:
+        kind: existence
+        expression: aos.k_point is not None and any((k != 0 for k in aos.k_point))
+      tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-3:
+        kind: unclassified-predicate
+        expression: ham.structure_data.pbc_flag and ham.coulomb_potential_data.ecp_flag
+      tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-4:
+        kind: existence
+        expression: dtn is not None and dtn.use_u and dtn.use_chi and dtn.use_f
+      tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#assert-1:
+        kind: exact-comparison
+        expression: zones == _ZONES_VALUE
+        actual: zones
+        reference: _ZONES_VALUE
+      tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#assert-2:
+        kind: shape-or-dtype
+        expression: got.shape == ref.shape
+      tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#call-18:
+        kind: tolerance-comparison
+        expression: np.testing.assert_allclose(got, ref, atol=component_atol, rtol=component_rtol, err_msg=f'{pattern} walker={w}
+          component={name}')
+        actual: got
+        reference: ref
+        tolerance_arguments:
+          atol: component_atol
+          rtol: component_rtol
+      tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#call-24:
+        kind: tolerance-comparison
+        expression: np.testing.assert_allclose(parts, float(np.real(evaluate_ln_wavefunction(wf, ru, rd))), atol=closure_atol, rtol=closure_rtol,
+          err_msg=f'{pattern} w{w} ln|Psi| closure')
+        actual: parts
+        reference: float(np.real(evaluate_ln_wavefunction(wf, ru, rd)))
+        tolerance_arguments:
+          atol: closure_atol
+          rtol: closure_rtol
+      tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#call-32:
+        kind: tolerance-comparison
+        expression: np.testing.assert_allclose(native, parts, atol=atol, rtol=rtol, err_msg=f'{pattern} w{w} native ln|Psi| closure')
+        actual: native
+        reference: parts
+        tolerance_arguments:
+          atol: atol
+          rtol: rtol
+    roles:
+      supporting-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture types, active model branches, shapes, prescribed zone membership and conditioning bounds are supporting source contracts
+          only; they establish neither backend equality nor independent mathematical truth.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        - tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-1
+        - tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-2
+        - tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-3
+        - tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-4
+        - tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#assert-1
+        - tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#assert-2
+        checks: []
+        source_only: {}
+      rust-xla-log-components:
+        method: VM-IMPL-BACKEND-PARITY-001
+        meaning: Native log-determinant/Jastrow components versus their XLA callbacks, and the sum of native components versus the XLA determinant-plus-Jastrow
+          sum, under the strict backend policy; in mixed precision the per-component rows use the reviewed medium backend policy. J3 uses XLA AO blocks as shared input to the native contraction; this does not independently establish
+          native AO evaluation. The native-sum comparison is cross-backend despite its closure label.
+        observations:
+        - tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#call-18
+        - tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#call-32
+        checks:
+        - w11-backend-medium-comparison-1
+        - w11-backend-medium-comparison-3
+        source_only: {}
+      xla-log-assembly:
+        method: VM-IMPL-ROUTE-PARITY-001
+        meaning: The XLA determinant-plus-Jastrow sum versus the XLA evaluate_ln_wavefunction wrapper on the same walkers under strict source-zone
+          tolerance. This is shared-backend assembly consistency, not a Rust comparison or independent physical oracle.
+        observations:
+        - tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#call-24
+        checks:
+        - w11-backend-medium-comparison-2
+        source_only: {}
+  tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_e_L_component_closure:
+    guarantee: IMPL-RS-VMC-DRIVERS-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-1:
+        kind: existence
+        expression: isinstance(aos, AOs_bspline_complex_data)
+        actual: aos
+        reference: AOs_bspline_complex_data
+      tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-2:
+        kind: existence
+        expression: aos.k_point is not None and any((k != 0 for k in aos.k_point))
+      tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-3:
+        kind: unclassified-predicate
+        expression: ham.structure_data.pbc_flag and ham.coulomb_potential_data.ecp_flag
+      tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-4:
+        kind: existence
+        expression: dtn is not None and dtn.use_u and dtn.use_chi and dtn.use_f
+      tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_e_L_component_closure#assert-1:
+        kind: numerical-bound
+        expression: np.isfinite(cond_g) and cond_g <= _WALKER_COND_MAX
+      tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_e_L_component_closure#call-31:
+        kind: tolerance-comparison
+        expression: np.testing.assert_allclose(total, float(np.real(_native_e_L(ham, ru, rd, ginv))), atol=atol, rtol=rtol, err_msg=f'{pattern}
+          w{w} native e_L != sum of its pinned components')
+        actual: total
+        reference: float(np.real(_native_e_L(ham, ru, rd, ginv)))
+        tolerance_arguments:
+          atol: atol
+          rtol: rtol
+    roles:
+      supporting-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture types, active model branches, shapes, prescribed zone membership and conditioning bounds are supporting source contracts
+          only; they establish neither backend equality nor independent mathematical truth.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        - tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-1
+        - tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-2
+        - tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-3
+        - tests/test_rs_kernel/_rs_fixtures.py::rs_energy_ham#assert-4
+        - tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_e_L_component_closure#assert-1
+        checks: []
+        source_only: {}
+      native-real-energy-assembly:
+        method: VM-IMPL-ROUTE-PARITY-001
+        meaning: The real native kinetic/Coulomb/ECP component sum versus real native total local energy under strict source-zone tolerance. Periodic
+          ion-ion energy is supplied by the shared XLA/static _ewald_ii calculation, so this is an assembly contract with a common constant, not
+          independent all-native or Rust-versus-XLA energy evidence; no imaginary-energy claim.
+        observations:
+        - tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_e_L_component_closure#call-31
+        checks:
+        - w11-backend-medium-comparison-1
+        source_only: {}
+  tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_reference_assembly_matches_production:
+    guarantee: IMPL-RS-GFMC-DRIVERS-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_reference_assembly_matches_production#assert-1:
+        kind: numerical-bound
+        expression: abs(c[k_leaf] - c[k_prod]) <= atol + rtol * abs(c[k_prod])
+        actual: c[k_leaf]
+        reference: c[k_prod]
+    roles:
+      supporting-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture types, active model branches, shapes, prescribed zone membership and conditioning bounds are supporting source contracts
+          only; they establish neither backend equality nor independent mathematical truth.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        checks: []
+        source_only: {}
+      xla-gfmc-leaf-assembly:
+        method: VM-IMPL-ROUTE-PARITY-001
+        meaning: XLA leaf-summand reconstructions of v_diag and b_l versus the XLA production _compute_V_elements_t closure on the same inputs.
+          The indexed absolute-plus-relative inequality retains its strict source-zone tolerance and is bound to an executable comparison. It
+          verifies leaf-to-production closure, not backend parity or an independent mathematical oracle; runtime certification requires the corresponding
+          receipts.
+        observations:
+        - tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_reference_assembly_matches_production#assert-1
+        checks:
+        - d8-i-140
+        source_only: {}
+  tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc:
+    guarantee: IMPL-RS-GFMC-DRIVERS-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/test_gfmc_projection.py::_assert_close#assert-1:
+        kind: numerical-bound
+        expression: abs(got - ref) <= atol + rtol * abs(ref)
+        actual: got
+        reference: ref
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#assert-1:
+        kind: numerical-bound
+        expression: int(getattr(aos, '_n_image', 1)) > 1
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-14:
+        kind: assertion-helper
+        expression: _assert_close(fast_e, slow_e, route_atol, route_rtol, 'cart-pbc fast vs full-recompute e_L')
+        actual: fast_e
+        reference: slow_e
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-14-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_close(fast_e, slow_e, route_atol, route_rtol, 'cart-pbc fast vs full-recompute e_L')
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-14-helper-call-value:
+        kind: numerical-bound
+        expression: _assert_close(fast_e, slow_e, route_atol, route_rtol, 'cart-pbc fast vs full-recompute e_L')
+        actual: fast_e
+        reference: slow_e
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-15:
+        kind: assertion-helper
+        expression: _assert_close(fast_b, slow_b, route_atol, route_rtol, 'cart-pbc fast vs full-recompute b_L')
+        actual: fast_b
+        reference: slow_b
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-15-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_close(fast_b, slow_b, route_atol, route_rtol, 'cart-pbc fast vs full-recompute b_L')
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-15-helper-call-value:
+        kind: numerical-bound
+        expression: _assert_close(fast_b, slow_b, route_atol, route_rtol, 'cart-pbc fast vs full-recompute b_L')
+        actual: fast_b
+        reference: slow_b
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-16:
+        kind: assertion-helper
+        expression: _assert_close(fast_e, ref['e_L'], atol, rtol, 'cart-pbc fast e_L vs XLA')
+        actual: fast_e
+        reference: ref['e_L']
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-16-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_close(fast_e, ref['e_L'], atol, rtol, 'cart-pbc fast e_L vs XLA')
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-16-helper-call-value:
+        kind: numerical-bound
+        expression: _assert_close(fast_e, ref['e_L'], atol, rtol, 'cart-pbc fast e_L vs XLA')
+        actual: fast_e
+        reference: ref['e_L']
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-17:
+        kind: assertion-helper
+        expression: _assert_close(fast_b, ref['b_L'], atol, rtol, 'cart-pbc fast b_L vs XLA')
+        actual: fast_b
+        reference: ref['b_L']
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-17-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_close(fast_b, ref['b_L'], atol, rtol, 'cart-pbc fast b_L vs XLA')
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-17-helper-call-value:
+        kind: numerical-bound
+        expression: _assert_close(fast_b, ref['b_L'], atol, rtol, 'cart-pbc fast b_L vs XLA')
+        actual: fast_b
+        reference: ref['b_L']
+    roles:
+      supporting-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture types, active model branches, shapes, prescribed zone membership and conditioning bounds are supporting source contracts
+          only; they establish neither backend equality nor independent mathematical truth.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        - tests/test_rs_kernel/test_gfmc_projection.py::_assert_close#assert-1
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#assert-1
+        checks: []
+        source_only:
+          tests/test_rs_kernel/test_gfmc_projection.py::_assert_close#inequality-1: Generic helper definition has unresolved caller parameters
+            and no independent operand identity; its four specialized call-site comparisons are separately policy-bound to route or backend roles.
+            Do not count the definition as an additional numerical certificate.
+      native-incremental-full:
+        method: VM-IMPL-ROUTE-PARITY-001
+        meaning: Native fast/incremental and native full-recomputation GFMC e_L and b_L at the same fixed configuration agree under strict source-zone
+          tolerance. This is same-backend route parity, not Rust-versus-XLA evidence.
+        observations:
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-14
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-14-helper-call
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-14-helper-call-value
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-15
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-15-helper-call
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-15-helper-call-value
+        checks:
+        - gfmc-helper-comparison-1
+        - gfmc-helper-comparison-2
+        source_only: {}
+      native-xla-gfmc:
+        method: VM-IMPL-BACKEND-PARITY-001
+        meaning: Native fast GFMC e_L and b_L versus the XLA step reference on the same fixed configuration under strict backend tolerance. This
+          is independent-backend implementation consistency, not physical correctness or a sampled trajectory guarantee.
+        observations:
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-16
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-16-helper-call
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-16-helper-call-value
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-17
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-17-helper-call
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_cart_pbc#call-17-helper-call-value
+        checks:
+        - gfmc-helper-comparison-3
+        - gfmc-helper-comparison-4
+        source_only: {}
+  tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc:
+    guarantee: IMPL-RS-GFMC-DRIVERS-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/test_gfmc_projection.py::_assert_close#assert-1:
+        kind: numerical-bound
+        expression: abs(got - ref) <= atol + rtol * abs(ref)
+        actual: got
+        reference: ref
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#assert-1:
+        kind: existence
+        expression: isinstance(orb.aos_data, AOs_bspline_data)
+        actual: orb.aos_data
+        reference: AOs_bspline_data
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-13:
+        kind: assertion-helper
+        expression: _assert_close(fast_e, slow_e, route_atol, route_rtol, 'bspline-pbc fast vs full-recompute e_L')
+        actual: fast_e
+        reference: slow_e
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-13-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_close(fast_e, slow_e, route_atol, route_rtol, 'bspline-pbc fast vs full-recompute e_L')
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-13-helper-call-value:
+        kind: numerical-bound
+        expression: _assert_close(fast_e, slow_e, route_atol, route_rtol, 'bspline-pbc fast vs full-recompute e_L')
+        actual: fast_e
+        reference: slow_e
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-14:
+        kind: assertion-helper
+        expression: _assert_close(fast_b, slow_b, route_atol, route_rtol, 'bspline-pbc fast vs full-recompute b_L')
+        actual: fast_b
+        reference: slow_b
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-14-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_close(fast_b, slow_b, route_atol, route_rtol, 'bspline-pbc fast vs full-recompute b_L')
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-14-helper-call-value:
+        kind: numerical-bound
+        expression: _assert_close(fast_b, slow_b, route_atol, route_rtol, 'bspline-pbc fast vs full-recompute b_L')
+        actual: fast_b
+        reference: slow_b
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-15:
+        kind: assertion-helper
+        expression: _assert_close(fast_e, ref['e_L'], atol, rtol, 'bspline-pbc fast e_L vs XLA')
+        actual: fast_e
+        reference: ref['e_L']
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-15-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_close(fast_e, ref['e_L'], atol, rtol, 'bspline-pbc fast e_L vs XLA')
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-15-helper-call-value:
+        kind: numerical-bound
+        expression: _assert_close(fast_e, ref['e_L'], atol, rtol, 'bspline-pbc fast e_L vs XLA')
+        actual: fast_e
+        reference: ref['e_L']
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-16:
+        kind: assertion-helper
+        expression: _assert_close(fast_b, ref['b_L'], atol, rtol, 'bspline-pbc fast b_L vs XLA')
+        actual: fast_b
+        reference: ref['b_L']
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-16-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_close(fast_b, ref['b_L'], atol, rtol, 'bspline-pbc fast b_L vs XLA')
+      tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-16-helper-call-value:
+        kind: numerical-bound
+        expression: _assert_close(fast_b, ref['b_L'], atol, rtol, 'bspline-pbc fast b_L vs XLA')
+        actual: fast_b
+        reference: ref['b_L']
+    roles:
+      supporting-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture types, active model branches, shapes, prescribed zone membership and conditioning bounds are supporting source contracts
+          only; they establish neither backend equality nor independent mathematical truth.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        - tests/test_rs_kernel/test_gfmc_projection.py::_assert_close#assert-1
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#assert-1
+        checks: []
+        source_only:
+          tests/test_rs_kernel/test_gfmc_projection.py::_assert_close#inequality-1: Generic helper definition has unresolved caller parameters
+            and no independent operand identity; its four specialized call-site comparisons are separately policy-bound to route or backend roles.
+            Do not count the definition as an additional numerical certificate.
+      native-incremental-full:
+        method: VM-IMPL-ROUTE-PARITY-001
+        meaning: Native fast/incremental and native full-recomputation GFMC e_L and b_L at the same fixed configuration agree under strict source-zone
+          tolerance. This is same-backend route parity, not Rust-versus-XLA evidence.
+        observations:
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-13
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-13-helper-call
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-13-helper-call-value
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-14
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-14-helper-call
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-14-helper-call-value
+        checks:
+        - gfmc-helper-comparison-1
+        - gfmc-helper-comparison-2
+        source_only: {}
+      native-xla-gfmc:
+        method: VM-IMPL-BACKEND-PARITY-001
+        meaning: Native fast GFMC e_L and b_L versus the XLA step reference on the same fixed configuration under strict backend tolerance. This
+          is independent-backend implementation consistency, not physical correctness or a sampled trajectory guarantee.
+        observations:
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-15
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-15-helper-call
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-15-helper-call-value
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-16
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-16-helper-call
+        - tests/test_rs_kernel/test_gfmc_projection.py::test_fast_state_equals_full_recompute_bspline_pbc#call-16-helper-call-value
+        checks:
+        - gfmc-helper-comparison-3
+        - gfmc-helper-comparison-4
+        source_only: {}
+  tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_reference_is_trustworthy:
+    guarantee: IMPL-RS-PARAM-DERIV-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_reference_is_trustworthy#call-7:
+        kind: tolerance-comparison
+        expression: np.testing.assert_allclose(ana, auto, atol=atol, rtol=rtol, err_msg='assemble O_k != _auto O_k (oracle broken)')
+        actual: ana
+        reference: auto
+        tolerance_arguments:
+          atol: atol
+          rtol: rtol
+    roles:
+      supporting-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture types, active model branches, shapes, prescribed zone membership and conditioning bounds are supporting source contracts
+          only; they establish neither backend equality nor independent mathematical truth.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        checks: []
+        source_only: {}
+      xla-analytic-ad-c-axis:
+        method: VM-MATH-AD-ORACLE-001
+        meaning: XLA analytical and automatic-derivative ln_Psi mo_coefficients_up blocks agree after the shared optimizer-coordinate reducer
+          on one complex-twist fixture. Same model, input inverse and reduction are shared. This is source analytical-versus-AD evidence, not
+          native parity, an independent physics truth, or a full derivative-universe claim.
+        observations:
+        - tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_reference_is_trustworthy#call-7
+        checks:
+        - comparison-1
+        source_only: {}
+  tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_matches_jax:
+    guarantee: IMPL-RS-GEMINAL-JASTROW-KERNELS-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_matches_jax#assert-1:
+        kind: tolerance-comparison
+        expression: np.isclose(got, rank1, rtol=rtol, atol=atol)
+        actual: got
+        reference: rank1
+        tolerance_arguments:
+          rtol: rtol
+          atol: atol
+      tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_matches_jax#assert-2:
+        kind: tolerance-comparison
+        expression: np.isclose(got, truth, rtol=rtol_n, atol=atol_n)
+        actual: got
+        reference: truth
+        tolerance_arguments:
+          rtol: rtol_n
+          atol: atol_n
+    roles:
+      fixture-and-finiteness:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture type or finite-output precondition, not numerical equivalence evidence.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        checks: []
+        source_only: {}
+      backend-equivalent-evaluation:
+        method: VM-IMPL-BACKEND-PARITY-001
+        meaning: Native and XLA equivalent value/rank-one algorithms agree at identical input.
+        observations:
+        - tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_matches_jax#assert-1
+        checks:
+        - comparison-1
+        source_only: {}
+      full-recomputation-identity:
+        method: VM-MATH-REVIEWED-IDENTITY-001
+        meaning: Native rank-one ratio equals XLA full Jastrow recomputation by the defining ratio identity; not same-backend route parity.
+        observations:
+        - tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_matches_jax#assert-2
+        checks:
+        - comparison-2
+        source_only: {}
+  tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_pbc_matches_jax:
+    guarantee: IMPL-RS-GEMINAL-JASTROW-KERNELS-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_pbc_matches_jax#assert-1:
+        kind: tolerance-comparison
+        expression: np.isclose(got, rank1, rtol=rtol, atol=atol)
+        actual: got
+        reference: rank1
+        tolerance_arguments:
+          rtol: rtol
+          atol: atol
+      tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_pbc_matches_jax#assert-2:
+        kind: tolerance-comparison
+        expression: np.isclose(got, truth, rtol=rtol_n, atol=atol_n)
+        actual: got
+        reference: truth
+        tolerance_arguments:
+          rtol: rtol_n
+          atol: atol_n
+    roles:
+      fixture-and-finiteness:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture type or finite-output precondition, not numerical equivalence evidence.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        checks: []
+        source_only: {}
+      backend-equivalent-evaluation:
+        method: VM-IMPL-BACKEND-PARITY-001
+        meaning: Native and XLA equivalent value/rank-one algorithms agree at identical input.
+        observations:
+        - tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_pbc_matches_jax#assert-1
+        checks:
+        - comparison-1
+        source_only: {}
+      full-recomputation-identity:
+        method: VM-MATH-REVIEWED-IDENTITY-001
+        meaning: Native rank-one ratio equals XLA full Jastrow recomputation by the defining ratio identity; not same-backend route parity.
+        observations:
+        - tests/test_rs_kernel/test_jastrow_ratio.py::test_jastrow_1b2b_ratio_pbc_matches_jax#assert-2
+        checks:
+        - comparison-2
+        source_only: {}
+  tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity::test_j1_j2_triclinic_parity:
+    guarantee: IMPL-RS-GEMINAL-JASTROW-KERNELS-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-1:
+        kind: tolerance-comparison
+        expression: np.isclose(j1_r, j1_x, atol=av, rtol=rv)
+        actual: j1_r
+        reference: j1_x
+        tolerance_arguments:
+          atol: av
+          rtol: rv
+      tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-2:
+        kind: tolerance-comparison
+        expression: np.isclose(j2_r, j2_x, atol=av, rtol=rv)
+        actual: j2_r
+        reference: j2_x
+        tolerance_arguments:
+          atol: av
+          rtol: rv
+      tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-3:
+        kind: tolerance-comparison
+        expression: np.isclose(j1_rd, j1_xd, atol=av, rtol=rv)
+        actual: j1_rd
+        reference: j1_xd
+        tolerance_arguments:
+          atol: av
+          rtol: rv
+      tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-4:
+        kind: tolerance-comparison
+        expression: np.isclose(j2_rd, j2_xd, atol=av, rtol=rv)
+        actual: j2_rd
+        reference: j2_xd
+        tolerance_arguments:
+          atol: av
+          rtol: rv
+      tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-5:
+        kind: tolerance-comparison
+        expression: np.isclose(j2_xd, j2_x, atol=av, rtol=rv)
+        actual: j2_xd
+        reference: j2_x
+        tolerance_arguments:
+          atol: av
+          rtol: rv
+      tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-6:
+        kind: tolerance-comparison
+        expression: np.isclose(j2_rd, j2_r, atol=av, rtol=rv)
+        actual: j2_rd
+        reference: j2_r
+        tolerance_arguments:
+          atol: av
+          rtol: rv
+      tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-7:
+        kind: finiteness
+        expression: np.isfinite(rust)
+        actual: rust
+      tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-8:
+        kind: tolerance-comparison
+        expression: np.isclose(rust, rank1, atol=ar, rtol=rr)
+        actual: rust
+        reference: rank1
+        tolerance_arguments:
+          atol: ar
+          rtol: rr
+      tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-9:
+        kind: tolerance-comparison
+        expression: np.isclose(rust, truth, atol=an, rtol=rn)
+        actual: rust
+        reference: truth
+        tolerance_arguments:
+          atol: an
+          rtol: rn
+    roles:
+      backend-equivalent-evaluation:
+        method: VM-IMPL-BACKEND-PARITY-001
+        meaning: Native and XLA equivalent value/rank-one algorithms agree at identical input.
+        observations:
+        - tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-1
+        - tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-2
+        - tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-3
+        - tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-4
+        - tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-8
+        checks:
+        - comparison-1
+        - comparison-2
+        - comparison-3
+        - comparison-4
+        - comparison-7
+        source_only: {}
+      diagonal-exclusion-identity:
+        method: VM-MATH-SOURCE-BUDGET-IDENTITY-001
+        meaning: Within each backend, including the diagonal leaves J2 unchanged; the existing backend-budget tolerance is retained without claiming
+          cross-backend comparison.
+        observations:
+        - tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-5
+        - tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-6
+        checks:
+        - comparison-5
+        - comparison-6
+        source_only: {}
+      fixture-and-finiteness:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Fixture type or finite-output precondition, not numerical equivalence evidence.
+        observations:
+        - tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-7
+        checks: []
+        source_only: {}
+      full-recomputation-identity:
+        method: VM-MATH-REVIEWED-IDENTITY-001
+        meaning: Native rank-one ratio equals XLA full Jastrow recomputation by the defining ratio identity; not same-backend route parity.
+        observations:
+        - tests/test_rs_kernel/test_jastrow_dtn.py::TestJ1J2TriclinicParity.test_j1_j2_triclinic_parity#assert-9
+        checks:
+        - comparison-8
+        source_only: {}
+  tests/test_rs_kernel/test_derivatives_ragged_basis.py::test_rust_permuted_equals_reference:
+    guarantee: IMPL-RS-PARAM-DERIV-001
+    registration_method: VM-IMPL-BACKEND-PARITY-001
+    observations:
+      tests/test_jqmc_kernel/test_derivatives_ragged_basis.py::_make_pair#assert-1:
+        kind: numerical-distinction
+        expression: perm != list(range(len(perm)))
+      tests/test_rs_kernel/test_derivatives_ragged_basis.py::test_rust_permuted_equals_reference#call-9:
+        kind: tolerance-comparison
+        expression: np.testing.assert_allclose(b, a, atol=_ATOL, rtol=_RTOL, err_msg=f'{spec_key}/{axis} rust permuted != reference')
+        actual: b
+        reference: a
+        tolerance_arguments:
+          atol: _ATOL
+          rtol: _RTOL
+    roles:
+      nontrivial-permutation:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: The permutation is not the identity; no value equality is inferred from this precondition.
+        observations:
+        - tests/test_jqmc_kernel/test_derivatives_ragged_basis.py::_make_pair#assert-1
+        checks: []
+        source_only: {}
+      physical-ao-permutation:
+        method: VM-PHY-INVARIANT-001
+        meaning: Native energy, force and stress are invariant under the declared nontrivial physical AO permutation.
+        observations:
+        - tests/test_rs_kernel/test_derivatives_ragged_basis.py::test_rust_permuted_equals_reference#call-9
+        checks:
+        - comparison-1
+        source_only: {}
+  tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_bounded_centered_asr_rejects_negative_metric:
+    guarantee: IMPL-OPT-SELECTION-POLICY-001
+    registration_method: VM-ERROR-DISPOSITION-001
+    observations:
+      tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_bounded_centered_asr_rejects_negative_metric#assert-1:
+        kind: unclassified-predicate
+        expression: result.used_fallback
+      tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_bounded_centered_asr_rejects_negative_metric#call-2:
+        kind: tolerance-comparison
+        expression: np.testing.assert_allclose(result.gamma, 0.1, rtol=RTOL_C9_GAMMA_SR_UPDATE, atol=ATOL_C9_GAMMA_SR_UPDATE)
+        actual: result.gamma
+        reference: '0.1'
+        tolerance_arguments:
+          rtol: RTOL_C9_GAMMA_SR_UPDATE
+          atol: ATOL_C9_GAMMA_SR_UPDATE
+    roles:
+      successful-numerical-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Successful source-prescribed fallback or update/contraction values; separate from expected rejection observations. No independent
+          mathematical or backend-equality claim.
+        observations:
+        - tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_bounded_centered_asr_rejects_negative_metric#call-2
+        checks:
+        - d8-n-298
+        source_only: {}
+      rejection-and-support:
+        method: VM-ERROR-DISPOSITION-001
+        meaning: Existing expected rejection/fallback and nonvacuity source contracts retained unchanged.
+        observations:
+        - tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_bounded_centered_asr_rejects_negative_metric#assert-1
+        checks: []
+        source_only: {}
+  ? tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry
+  : guarantee: IMPL-OPT-SELECTION-POLICY-001
+    registration_method: VM-ERROR-DISPOSITION-001
+    observations:
+      ? tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry#assert-1
+      : kind: numerical-distinction
+        expression: not np.allclose(expected, discarded, rtol=RTOL_NONVACUITY_DISTINCTION, atol=ATOL_NONVACUITY_DISTINCTION)
+      ? tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry#call-10
+      : kind: expected-error
+        expression: pytest.raises(ValueError, match='real')
+      ? tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry#call-12
+      : kind: expected-error
+        expression: pytest.raises(ValueError, match='real')
+      ? tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry#call-7
+      : kind: tolerance-comparison
+        expression: np.testing.assert_allclose(prepared.b_preconditioned, expected, rtol=RTOL_PYTHON_FP64_LOOSE, atol=ATOL_BIT_EXACT)
+        actual: prepared.b_preconditioned
+        reference: expected
+        tolerance_arguments:
+          rtol: RTOL_PYTHON_FP64_LOOSE
+          atol: ATOL_BIT_EXACT
+    roles:
+      successful-numerical-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Successful source-prescribed fallback or update/contraction values; separate from expected rejection observations. No independent
+          mathematical or backend-equality claim.
+        observations:
+        - tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry#call-7
+        checks:
+        - d8-n-299
+        source_only: {}
+      rejection-and-support:
+        method: VM-ERROR-DISPOSITION-001
+        meaning: Existing expected rejection/fallback and nonvacuity source contracts retained unchanged.
+        observations:
+        - tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry#assert-1
+        - tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry#call-10
+        - tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry#call-12
+        checks: []
+        source_only: {}
+  ? tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate
+  : guarantee: IMPL-OPT-SOURCE-CONTRACTS-001
+    registration_method: VM-ERROR-DISPOSITION-001
+    observations:
+      ? tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#call-12
+      : kind: expected-error
+        expression: pytest.raises(ValueError, match='non-finite')
+      ? tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#call-17
+      : kind: tolerance-comparison
+        expression: np.testing.assert_allclose(candidate.jastrow_data.jastrow_one_body_data.jastrow_1b_param, 0.5, rtol=RTOL_PYTHON_FP64_LOOSE,
+          atol=ATOL_BIT_EXACT)
+        actual: candidate.jastrow_data.jastrow_one_body_data.jastrow_1b_param
+        reference: '0.5'
+        tolerance_arguments:
+          rtol: RTOL_PYTHON_FP64_LOOSE
+          atol: ATOL_BIT_EXACT
+      ? tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#call-18
+      : kind: tolerance-comparison
+        expression: np.testing.assert_allclose(wf.jastrow_data.jastrow_one_body_data.jastrow_1b_param, 0.4, rtol=RTOL_PYTHON_FP64_LOOSE, atol=ATOL_BIT_EXACT)
+        actual: wf.jastrow_data.jastrow_one_body_data.jastrow_1b_param
+        reference: '0.4'
+        tolerance_arguments:
+          rtol: RTOL_PYTHON_FP64_LOOSE
+          atol: ATOL_BIT_EXACT
+      ? tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#call-9
+      : kind: expected-error
+        expression: pytest.raises(ValueError, match='stale')
+    roles:
+      successful-numerical-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Successful source-prescribed fallback or update/contraction values; separate from expected rejection observations. No independent
+          mathematical or backend-equality claim.
+        observations:
+        - tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#call-17
+        - tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#call-18
+        checks:
+        - d8-n-320
+        - d8-n-321
+        source_only: {}
+      rejection-and-support:
+        method: VM-ERROR-DISPOSITION-001
+        meaning: Existing expected rejection/fallback and nonvacuity source contracts retained unchanged.
+        observations:
+        - tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#call-12
+        - tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#call-9
+        checks: []
+        source_only: {}
+  tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject:
+    guarantee: IMPL-RS-VMC-DRIVERS-001
+    registration_method: VM-ERROR-DISPOSITION-001
+    observations:
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_up_spin, MOs_data)
+        actual: new_gem.orb_data_up_spin
+        reference: MOs_data
+      tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2:
+        kind: existence
+        expression: isinstance(new_gem.orb_data_dn_spin, MOs_data)
+        actual: new_gem.orb_data_dn_spin
+        reference: MOs_data
+      tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-1:
+        kind: exact-comparison
+        expression: xla['accepted'] == int(rs['accepted'])
+        actual: xla['accepted']
+        reference: int(rs['accepted'])
+      tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-2:
+        kind: tolerance-comparison
+        expression: np.allclose(rs['r_up'], xla['r_up'], atol=pos_atol, rtol=pos_rtol)
+        actual: rs['r_up']
+        reference: xla['r_up']
+        tolerance_arguments:
+          atol: pos_atol
+          rtol: pos_rtol
+      tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-3:
+        kind: tolerance-comparison
+        expression: np.allclose(rs['r_dn'], xla['r_dn'], atol=pos_atol, rtol=pos_rtol)
+        actual: rs['r_dn']
+        reference: xla['r_dn']
+        tolerance_arguments:
+          atol: pos_atol
+          rtol: pos_rtol
+      tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-4:
+        kind: tolerance-comparison
+        expression: np.allclose(rs['geminal'], xla['geminal'], atol=gem_atol, rtol=gem_rtol)
+        actual: rs['geminal']
+        reference: xla['geminal']
+        tolerance_arguments:
+          atol: gem_atol
+          rtol: gem_rtol
+      tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-5:
+        kind: tolerance-comparison
+        expression: np.allclose(rs['geminal_inv'], xla['geminal_inv'], atol=gem_atol, rtol=gem_rtol)
+        actual: rs['geminal_inv']
+        reference: xla['geminal_inv']
+        tolerance_arguments:
+          atol: gem_atol
+          rtol: gem_rtol
+      tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-6:
+        kind: tolerance-comparison
+        expression: np.allclose(rs[name], xla[name], atol=ao_atol, rtol=ao_rtol)
+        actual: rs[name]
+        reference: xla[name]
+        tolerance_arguments:
+          atol: ao_atol
+          rtol: ao_rtol
+      tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-7:
+        kind: tolerance-comparison
+        expression: np.allclose(rk, xk, atol=ATOL_BIT_EXACT, rtol=RTOL_BIT_EXACT)
+        actual: rk
+        reference: xk
+        tolerance_arguments:
+          atol: ATOL_BIT_EXACT
+          rtol: RTOL_BIT_EXACT
+      tests/test_rs_kernel/test_mcmc_transition.py::_run_and_compare#call-11:
+        kind: assertion-helper
+        expression: _assert_transition_parity(xla, rs, tag or f'{pattern}/seed={seed}/Dt={Dt}', complex_path=complex_path)
+        actual: xla
+        reference: rs
+      tests/test_rs_kernel/test_mcmc_transition.py::_run_and_compare#call-11-helper-call:
+        kind: comparison-helper-call
+        expression: _assert_transition_parity(xla, rs, tag or f'{pattern}/seed={seed}/Dt={Dt}', complex_path=complex_path)
+      tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#assert-1:
+        kind: exact-comparison
+        expression: int(rs['accepted']) == 0
+        actual: int(rs['accepted'])
+        reference: '0'
+      tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#assert-2:
+        kind: tolerance-comparison
+        expression: np.allclose(xla['r_up'], r_up, atol=ATOL_BIT_EXACT, rtol=RTOL_BIT_EXACT)
+        actual: xla['r_up']
+        reference: r_up
+        tolerance_arguments:
+          atol: ATOL_BIT_EXACT
+          rtol: RTOL_BIT_EXACT
+      tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#assert-3:
+        kind: tolerance-comparison
+        expression: np.allclose(np.asarray(rs['r_up']), r_up, atol=ATOL_BIT_EXACT, rtol=RTOL_BIT_EXACT)
+        actual: np.asarray(rs['r_up'])
+        reference: r_up
+        tolerance_arguments:
+          atol: ATOL_BIT_EXACT
+          rtol: RTOL_BIT_EXACT
+      tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#assert-4:
+        kind: unclassified-predicate
+        expression: reached
+    roles:
+      successful-numerical-contract:
+        method: VM-IMPL-REVIEWED-CONTRACT-001
+        meaning: Successful source-prescribed fallback or update/contraction values; separate from expected rejection observations. No independent
+          mathematical or backend-equality claim.
+        observations:
+        - tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#assert-2
+        - tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#assert-3
+        checks:
+        - d8-n-369
+        - d8-n-370
+        source_only: {}
+      rejection-and-support:
+        method: VM-ERROR-DISPOSITION-001
+        meaning: Existing expected rejection/fallback and nonvacuity source contracts retained unchanged.
+        observations:
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-1
+        - tests/test_jqmc_kernel/_generated_matrix_base.py::_apply_gem#assert-2
+        - tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-1
+        - tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-2
+        - tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-3
+        - tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-4
+        - tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-5
+        - tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-6
+        - tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#assert-7
+        - tests/test_rs_kernel/test_mcmc_transition.py::_run_and_compare#call-11
+        - tests/test_rs_kernel/test_mcmc_transition.py::_run_and_compare#call-11-helper-call
+        - tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#assert-1
+        - tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#assert-4
+        checks: []
+        source_only:
+          tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-1: Preserved supporting source comparison/nonvacuity;
+            no successful numerical policy certification for this separate observation.
+          tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-2: Preserved supporting source comparison/nonvacuity;
+            no successful numerical policy certification for this separate observation.
+          tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-3: Preserved supporting source comparison/nonvacuity;
+            no successful numerical policy certification for this separate observation.
+          tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-4: Preserved supporting source comparison/nonvacuity;
+            no successful numerical policy certification for this separate observation.
+          tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-5: Preserved supporting source comparison/nonvacuity;
+            no successful numerical policy certification for this separate observation.
+          tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-6: Preserved supporting source comparison/nonvacuity;
+            no successful numerical policy certification for this separate observation.

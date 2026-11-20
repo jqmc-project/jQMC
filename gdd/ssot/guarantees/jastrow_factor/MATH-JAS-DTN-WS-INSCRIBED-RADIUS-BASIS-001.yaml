@@ -1,0 +1,41 @@
+id: MATH-JAS-DTN-WS-INSCRIBED-RADIUS-BASIS-001
+kind: mathematical
+name: Periodic DTN defaults and minimum image use the true Wigner-Seitz inscribed radius on any cell basis
+plain_language: >-
+  Structure_data._wigner_seitz_inscribed_radius is half the shortest non-zero lattice vector, a property of the
+  lattice alone: for an orthorhombic diag(6,7,8) Bohr lattice and the FCC (a = 8), BCC (a = 8) and hexagonal
+  (a = 6, c = 10) primitive cells, each written in the bases U @ L for U = I, a single shear and the
+  transform U = [[6,1,-1],[-2,1,0],[-3,-2,1]] (det U = 1), it equals the brute-force half shortest vector of L within ATOL_PYTHON_FP64_LOOSE /
+  RTOL_PYTHON_FP64_LOOSE, and the orthorhombic cell in its own basis gives 0.5 / max_j |g_j| (g_j the columns of the inverse cell) bit for bit. The
+  default periodic DTN cutoffs are L_u = L_chi = 0.95 R and L_f = 0.95 R / 2 with that R. The DTN minimum image is
+  the true one for every separation below R on any cell: for the FCC, BCC and hexagonal lattices and the orthorhombic
+  lattice, each in the identity, the sheared and the [[6,1,-1],[-2,1,0],[-3,-2,1]] basis (the last one takes the LLL-reduced wrap basis),
+  with electrons placed where the plain parallelepiped wrap picks a longer image inside a cutoff, _dtn_distance_rows
+  and the derivative-module _md equal the brute-force minimum-image length for every e-e and e-N pair shorter than R
+  (fp64 loose), the XLA compute_Jastrow_DTN value and compute_grads_and_laplacian_Jastrow_DTN gradients and
+  Laplacians agree between the bases within the jastrow_eval / jastrow_grad_lap strict zone tolerances, and the Rust
+  compute_dtn_value and compute_grads_and_laplacian_dtn in every basis equal the XLA value of the identity basis
+  within the XLA-Rust consistency tolerance of the same zones. The Rust/XLA gradient and Laplacian comparison uses
+  the independent_fp32 pair, the sum of the strict single-route envelopes for two separate fp32 implementations;
+  in full precision that pair equals the strict fp64 pair. Rust gradients and Laplacians also agree between bases
+  within the strict jastrow_grad_lap consistency pair. The value comparison keeps the strict pair. Full and mixed
+  are each required.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::test_wigner_seitz_inscribed_radius_is_half_shortest_lattice_vector_in_any_basis
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::test_periodic_dtn_default_cutoffs_and_value_are_basis_independent_on_oblique_lattices
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_jastrow_dtn.py::test_rust_periodic_dtn_default_value_is_basis_independent_on_oblique_lattices
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_jastrow_dtn.py::test_periodic_dtn_grad_lap_preserves_close_displacements_in_lattice_images
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: xla}
+    - {backend: rust}

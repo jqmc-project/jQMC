@@ -1,0 +1,49 @@
+id: MATH-MPC-LATTICE-GEOMETRY-001
+kind: mathematical
+name: MPC lattice-geometry properties
+plain_language: The Wigner-Seitz radius matches the known cubic value and accounts for lattice-vector combinations beyond
+  the primitives, and the FFT grid shape covers the cutoff sphere, oversamples it fourfold per axis (at least 64 points)
+  for the interpolator, and grows monotonically with the cutoff.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestLatticeGeometry::test_wigner_seitz_radius_cubic
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_grid_geometry.py::test_mpc_grid_covers_integer_sphere
+    required_parameter_cases:
+    - {geometry: cubic}
+    - {geometry: shear-1}
+    - {geometry: shear-2}
+    - {geometry: shear-4}
+    - {geometry: shear-minus-4}
+    - {geometry: permuted-shear-4}
+    - {geometry: orthorhombic}
+    - {geometry: orthorhombic-shear-2}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_grid_geometry.py::test_mpc_grid_preserves_sampling_density
+    required_parameter_cases:
+    - {geometry: cubic}
+    - {geometry: shear-1}
+    - {geometry: shear-2}
+    - {geometry: shear-4}
+    - {geometry: shear-minus-4}
+    - {geometry: permuted-shear-4}
+    - {geometry: orthorhombic}
+    - {geometry: orthorhombic-shear-2}
+    required_precision_modes: [full, mixed]
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestLatticeGeometry::test_wigner_seitz_radius_uses_combinations_not_just_primitives
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestLatticeGeometry::test_resolve_grid_shape_covers_the_cutoff_sphere
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestLatticeGeometry::test_resolve_grid_shape_is_monotone_in_cutoff
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestLatticeGeometry::test_resolve_grid_shape_oversamples_the_cutoff_sphere_fourfold
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_grid_geometry.py::test_mpc_grid_orthogonal_regression
+    required_parameter_cases:
+    - {case: cubic-50}
+    - {case: orthorhombic-15}
+    - {case: orthorhombic-30}
+    - {case: orthorhombic-60}
+    - {case: orthorhombic-240}
+    required_precision_modes: [full, mixed]

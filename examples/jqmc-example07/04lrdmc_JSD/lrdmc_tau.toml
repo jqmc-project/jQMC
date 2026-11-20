@@ -1,0 +1,22 @@
+[control]
+job_type = "lrdmc-tau"    # Imaginary-time (GFMC_t) flavour.
+mcmc_seed = 34468
+number_of_walkers = 4
+max_time = 86400
+restart = false
+restart_chk = "restart.h5"
+hamiltonian_h5 = "hamiltonian_data.h5"
+verbosity = "high"
+
+[lrdmc-tau]
+num_mcmc_steps = 5000
+tau = 0.10                # Imaginary-time step (Ha^-1, atomic units of imaginary time).
+alat = 0.30               # Lattice discretisation grid (bohr).
+non_local_move = "tmove"
+num_gfmc_warmup_steps = 50
+num_gfmc_bin_blocks = 50
+num_gfmc_collect_steps = 20
+atomic_force = false
+compute_stress = false
+use_swct = false
+epsilon_PW = 0.0

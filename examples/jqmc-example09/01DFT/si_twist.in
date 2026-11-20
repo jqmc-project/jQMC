@@ -1,0 +1,47 @@
+&CONTROL
+    calculation   = 'scf'
+    prefix        = 'silicon_twist'
+    outdir        = './out'
+    ! Reads the ccECP UPF downloaded into jqmc-example07/01DFT (see its README).
+    pseudo_dir    = '../../jqmc-example07/01DFT'
+    verbosity     = 'high'
+    tstress       = .false.
+    tprnfor       = .false.
+    disk_io       = 'medium'
+/
+&SYSTEM
+    ! Two-atom diamond-Si primitive cell, matching jqmc-example07.
+    ibrav         = 0
+    nat           = 2
+    ntyp          = 1
+    nbnd          = 8
+    ecutwfc       = 100.0
+    ecutrho       = 400.0
+    occupations   = 'fixed'
+    nspin         = 1
+    input_dft     = 'pz'
+    ! Retain the complete shifted grid so the tutorial always produces
+    ! exactly eight twists and has a deterministic MPI launch size.
+    nosym         = .true.
+    noinv         = .true.
+/
+&ELECTRONS
+    conv_thr         = 1.0d-9
+    mixing_beta      = 0.5
+    electron_maxstep = 200
+/
+ATOMIC_SPECIES
+    Si  28.085  Si.ccECP.upf
+
+CELL_PARAMETERS {angstrom}
+    0.000000   2.690500   2.690500
+    2.690500   0.000000   2.690500
+    2.690500   2.690500   0.000000
+
+ATOMIC_POSITIONS {crystal}
+    Si  0.000000   0.000000   0.000000
+    Si  0.250000   0.250000   0.250000
+
+! Eight non-Gamma points at (+/-1/4, +/-1/4, +/-1/4).
+K_POINTS automatic
+    2 2 2 1 1 1

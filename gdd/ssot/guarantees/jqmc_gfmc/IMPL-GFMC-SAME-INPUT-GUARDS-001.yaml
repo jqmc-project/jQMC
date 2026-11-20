@@ -1,0 +1,16 @@
+id: IMPL-GFMC-SAME-INPUT-GUARDS-001
+kind: implementation
+name: Same-input reference and missing-evidence negative controls
+plain_language: The GFMC same-input audit rejects missing or corrupted hops, categorical choices, keys, carries,
+  population records and stored moments. Its fixed-sample force reference agrees with an independent normalized-energy
+  derivative on nonfactorizable real and complex input. These synthetic controls validate the test machinery,
+  not physical wavefunction coverage.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_same_input_reference.py::test_gfmc_projection_reference_rejects_incomplete_or_corrupt_records
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_same_input_reference.py::test_gfmc_population_reference_rejects_missing_or_corrupt_reductions
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_same_input_reference.py::test_gfmc_measurement_reference_rejects_wrong_inputs_and_leaves
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_same_input_reference.py::test_gfmc_finite_sample_force_reference_matches_independent_quotient_derivative

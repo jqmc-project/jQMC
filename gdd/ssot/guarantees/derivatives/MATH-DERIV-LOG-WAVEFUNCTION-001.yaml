@@ -1,0 +1,68 @@
+id: MATH-DERIV-LOG-WAVEFUNCTION-001
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-REGIME-CONDITIONED-PROOF-001
+- VM-ERROR-DISPOSITION-001
+- VM-NA-DISPOSITION-001
+name: Analytical derivatives of log(Psi)
+kind: mathematical
+family: ln_Psi
+plain_language: The production analytical derivative of log(Psi) must agree with XLA automatic differentiation for wavefunction
+  parameters, electron positions, ion positions, and strain.
+statement: For every required continuous ln(Psi) derivative obligation, the production analytical result matches the independent
+  JAX automatic-differentiation oracle, or satisfies its explicitly reviewed identity, n-a, or error disposition.
+scope:
+  universe: derivatives.required_cases.v1
+  fixture_set: DERIV-FIX-AUTODIFF-ANALYTICAL-001
+  family_selector: ln_Psi
+  expected_obligations: 377
+  axes:
+  - c
+  - r
+  - R
+  - eps
+required_evidence:
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_evidence.py::test_numerical_regime_evidence
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_evidence.py::test_parameter_leaf_evidence
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_evidence.py::test_v1_potential_independence_identity
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_evidence.py::test_validity_disposition
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_curated.py::test_8set_analytic_vs_auto
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_curated.py::test_composite_j3_basis_grads_vs_auto
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_curated.py::test_flag_split_selects_requested_axis
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_generated_molecular.py::test_dense_ao_agp_ln_psi_c_axis_now_analytic
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_generated_molecular.py::test_matrix_cell
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_generated_molecular.py::test_mo_backed_j3_pulay_now_analytic
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_generated_molecular.py::test_mo_backed_j3_r_drift_matches_auto
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_generated_periodic.py::test_matrix_cell
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_generated_twist.py::test_matrix_cell
+  value_default:
+    proof: direct-ad
+    precision:
+    - full
+    - mixed
+  potential_independence:
+    source_id: B20
+    proof: identity
+    precision:
+    - full
+    - mixed
+  parameter_leaves:
+    source_ids:
+      first: P01
+      last: P15
+    require_expected_leaves: true
+    require_liveness: true
+  numerical_regimes:
+    source_ids:
+    - R01
+    - R02
+    - R03
+    - R09
+    - R10
+  validity:
+    source_ids:
+    - C08
+    - C09
+    require_explicit_disposition: true

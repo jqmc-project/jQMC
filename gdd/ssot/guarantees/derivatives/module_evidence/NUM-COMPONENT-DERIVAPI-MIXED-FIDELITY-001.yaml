@@ -1,0 +1,68 @@
+id: NUM-COMPONENT-DERIVAPI-MIXED-FIDELITY-001
+kind: numerical
+name: Analytical determinant parameter components retain full-production fidelity in mixed precision
+plain_language: The original real/complex PCG64 matrix sources for provided-inverse parameter gradients and unpaired bare-geminal
+  derivatives are rebuilt independently under full and mixed policy. Complete homogeneous analytical derivative matrices obey
+  the unchanged central parameter_derivative infinity-norm budget, with finite/nonempty controls and a rejected mixed-only
+  perturbation. Full preserves the original strict directional holomorphic JVP formulas. The fast/provided-inverse versus
+  nonfast analytical parity keeps its original same-precision strict pair in both callbacks; no other same-precision or finite-difference
+  check is converted.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_fast.py::test_fast_logdet_param_grad_matches_nonfast_and_autograd
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - complex_lambda: false
+    - complex_lambda: true
+    executable_checks:
+      production-fidelity-parameter_derivative:
+        site: tests/test_jqmc_kernel/test_derivatives_fast.py::test_fast_logdet_param_grad_matches_nonfast_and_autograd#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-parameter-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-parameter-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_geminal.py::test_dln_det_dlambda_unpaired_vs_holomorphic_jvp
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - n: 5
+      n_up: 3
+      n_dn: 2
+      complex_unpaired: false
+    - n: 5
+      n_up: 3
+      n_dn: 2
+      complex_unpaired: true
+    - n: 6
+      n_up: 4
+      n_dn: 1
+      complex_unpaired: false
+    - n: 6
+      n_up: 4
+      n_dn: 1
+      complex_unpaired: true
+    executable_checks:
+      production-fidelity-parameter_derivative:
+        site: tests/test_jqmc_kernel/test_derivatives_geminal.py::test_dln_det_dlambda_unpaired_vs_holomorphic_jvp#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-parameter-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-parameter-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

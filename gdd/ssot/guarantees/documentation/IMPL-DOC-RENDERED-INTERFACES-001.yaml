@@ -1,0 +1,18 @@
+id: IMPL-DOC-RENDERED-INTERFACES-001
+kind: implementation
+name: Rendered documentation preserves examples and exposes declared interfaces
+plain_language: >-
+  Documentation includes resolve correctly or reject dangling references;
+  constructor and inherited-method documentation omissions are detected.
+  Example rendering preserves fenced code while adapting headings, alerts,
+  and manual links for the published manual.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_include_with_blank_line_and_named_region
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_dangling_include_is_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_constructor_docstring_gate_is_nonvacuous
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_rendered_api_guard_catches_inherited_method_omission
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_examples_renderer_keeps_code_blocks_verbatim
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_include_omits_only_the_project_header

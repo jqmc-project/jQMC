@@ -1,0 +1,41 @@
+id: MATH-GFMC-NOVAR0-ENERGY-SPLIT-001
+kind: mathematical
+name: novar=0 propagation and measurement local-energy routing
+plain_language: For both the conventional and load-balanced production algorithms, XLA and Rust must use the clipped lattice
+  local energy to construct the propagation weight while storing the continuum local energy as the measurement observable.
+  The fixture must make the two energies and the resulting weight formulas numerically distinct, so a swapped or collapsed
+  route cannot pass vacuously.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_projection.py::test_novar0_propagation_and_measurement_energies_are_routed_separately
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {algorithm: conventional, backend: xla}
+    - {algorithm: load-balanced, backend: xla}
+    - {algorithm: conventional, backend: rust}
+    - {algorithm: load-balanced, backend: rust}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_propagation_reference.py::test_novar0_propagation_matches_independent_leaf_assembly
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {state: initial}
+    - {state: after-one-hop}
+    executable_checks:
+      propagation-diagonal:
+        site: tests/test_jqmc_kernel/test_gfmc_propagation_reference.py::test_novar0_propagation_matches_independent_leaf_assembly#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-propagation-diagonal, expression: diagonal}
+        reference: {role: independent-leaf-diagonal, expression: expected_diagonal}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+      propagation-off-diagonal:
+        site: tests/test_jqmc_kernel/test_gfmc_propagation_reference.py::test_novar0_propagation_matches_independent_leaf_assembly#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-fn-off-diagonal, expression: off_diagonal}
+        reference: {role: independent-leaf-off-diagonal, expression: expected_off_diagonal}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}

@@ -1,0 +1,19 @@
+id: MATH-AO-BSPLINE-CONTRACTION-AXIS-ORDER-001
+kind: mathematical
+name: Quintic B-spline control-point contraction pairs each axis with its own weights
+plain_language: >-
+  The separable quintic B-spline value sums cg[p, q, r] wx[p] wy[q] wz[r]: the x, y and z control-point axes
+  are contracted with the x, y and z weights. In the ao_eval dtype of the active mode (the CPU fp32 static
+  pairwise path in mixed precision, the einsum path in full precision), the leaf's contraction of seeded
+  control points with three different weight vectors equals the float64 numpy tensor contraction, and
+  compute_AOs of a quintic real B-spline leaf on an anisotropic (8, 10, 12) grid with bands that are not
+  symmetric under an axis exchange equals an independent one-axis-at-a-time separable spline evaluator,
+  both at the ao_eval strict zone policy. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_quintic_contraction_pairs_each_axis_with_its_weights
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}

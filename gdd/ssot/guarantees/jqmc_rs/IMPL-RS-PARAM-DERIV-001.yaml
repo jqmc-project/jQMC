@@ -1,0 +1,2322 @@
+id: IMPL-RS-PARAM-DERIV-001
+kind: implementation
+name: Rust/XLA parity of parameter derivatives outside the derivative universe
+plain_language: The Rust parameter-gradient kernels (ln psi and e_L), ragged-basis derivatives, and the staged ungate families
+  reproduce the XLA evaluators; the reviewed derivative-universe closure itself is owned by the derivative ledger.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_agpn_gamma_ecp_sources.py::test_native_agpn_gamma_ecp_lambda_source
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save, leaf: lambda_diag}
+    - {fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save, leaf: lambda_unpaired}
+    executable_checks:
+      native-total-energy-source:
+        site: tests/test_rs_kernel/test_agpn_gamma_ecp_sources.py::test_native_agpn_gamma_ecp_lambda_source#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-production-parameter-source, expression: actual}
+        reference: {role: independently-anchored-xla-total-energy-source, expression: reference}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap, coulomb]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap, coulomb]}
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_lambda
+    executable_checks:
+      d8-h-161-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_lambda#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_mo
+    executable_checks:
+      d8-h-162-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_mo#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+      d8-h-162-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_mo#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_lambda_diag
+    executable_checks:
+      d8-h-163-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_lambda_diag#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+      d8-h-163-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_lambda_diag#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_mo_pw_composite
+    executable_checks:
+      d8-h-164-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_mo_pw_composite#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+      d8-h-164-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_mo_pw_composite#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_jastrow_12_param
+    executable_checks:
+      d8-h-165-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_jastrow_12_param#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+      d8-h-165-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_jastrow_12_param#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_j3_jmatrix
+    executable_checks:
+      d8-h-166-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_j3_jmatrix#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params
+    executable_checks:
+      d8-h-167-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+      d8-h-167-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+      d8-h-167-3:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_3
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_3
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params_twist
+    executable_checks:
+      d8-h-168-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params_twist#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+      d8-h-168-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params_twist#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+      d8-h-168-3:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params_twist#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_3
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_3
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_basis
+    executable_checks:
+      d8-h-169-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_basis#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+        iterations:
+          variable: comparison_label
+          required_values:
+          - 0:orb_data_up_spin
+          - 0:orb_data_dn_spin
+          - 1:orb_data_up_spin
+          - 1:orb_data_dn_spin
+      d8-h-169-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_basis#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+        iterations:
+          variable: comparison_label
+          required_values:
+          - 0:orb_data_up_spin
+          - 0:orb_data_dn_spin
+          - 1:orb_data_up_spin
+          - 1:orb_data_dn_spin
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_basis_periodic
+    executable_checks:
+      d8-h-170-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_basis_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+        iterations:
+          variable: comparison_label
+          required_values:
+          - 0:orb_data_up_spin
+          - 0:orb_data_dn_spin
+          - 1:orb_data_up_spin
+          - 1:orb_data_dn_spin
+      d8-h-170-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_basis_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+        iterations:
+          variable: comparison_label
+          required_values:
+          - 0:orb_data_up_spin
+          - 0:orb_data_dn_spin
+          - 1:orb_data_up_spin
+          - 1:orb_data_dn_spin
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_kinetic
+    executable_checks:
+      d8-h-171-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_kinetic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+        iterations:
+          variable: comparison_label
+          required_values:
+          - 0:orb_data_up_spin
+          - 0:orb_data_dn_spin
+          - 1:orb_data_up_spin
+          - 1:orb_data_dn_spin
+      d8-h-171-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_kinetic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+        iterations:
+          variable: comparison_label
+          required_values:
+          - 0:orb_data_up_spin
+          - 0:orb_data_dn_spin
+          - 1:orb_data_up_spin
+          - 1:orb_data_dn_spin
+  - pytest_node: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_kinetic_periodic
+    executable_checks:
+      d8-h-172-1:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_kinetic_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+        iterations:
+          variable: comparison_label
+          required_values:
+          - 0:orb_data_up_spin
+          - 0:orb_data_dn_spin
+          - 1:orb_data_up_spin
+          - 1:orb_data_dn_spin
+      d8-h-172-2:
+        site: tests/test_rs_kernel/test_param_grad.py::test_grad_radial_kinetic_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+        iterations:
+          variable: comparison_label
+          required_values:
+          - 0:orb_data_up_spin
+          - 0:orb_data_dn_spin
+          - 1:orb_data_up_spin
+          - 1:orb_data_dn_spin
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda
+    executable_checks:
+      d8-h-173-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo
+    executable_checks:
+      d8-h-174-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-174-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo_consumes_supplied_geminal_inverse
+    executable_checks:
+      d8-h-175-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo_consumes_supplied_geminal_inverse#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: with_inv
+        reference:
+          role: xla-same-precision
+          expression: expected
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+        iterations:
+          variable: spin
+          required_values:
+          - up
+          - dn
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda_diag
+    executable_checks:
+      d8-h-176-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda_diag#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-176-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda_diag#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda_diag_non_full_rank_does_not_take_structural_zero_branch
+    executable_checks:
+      d8-h-177-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda_diag_non_full_rank_does_not_take_structural_zero_branch#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo_pw_composite
+    executable_checks:
+      d8-h-178-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo_pw_composite#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-178-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo_pw_composite#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_jastrow_12
+    executable_checks:
+      d8-h-179-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_jastrow_12#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-179-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_jastrow_12#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_j3
+    executable_checks:
+      d8-h-180-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_j3#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_lambda
+    executable_checks:
+      d8-h-181-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_lambda#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_mo
+    executable_checks:
+      d8-h-182-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_mo#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+      d8-h-182-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_mo#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_mo_sm_vs_rebuild_ab
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_mo_sm_vs_rebuild_near_coincident
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_lambda_sm_vs_rebuild_ab
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_dtn_kinetic
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_cart_sd_jdtn}
+    - {pattern: mol_ecp_sphe_jdtn}
+    - {pattern: mol_ecp_sphe_j3dtn}
+    - {pattern: pbc_gamma_sphepgto_j3dtn}
+    executable_checks:
+      d8-h-183-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_dtn_kinetic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-183-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_dtn_kinetic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-183-3:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_dtn_kinetic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_3
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_3
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_ecp_radial_nearest_selection.py::test_native_radial_gradient_preserves_nearest_centre_selection_effect
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{seed: 0, spread: 1.2}, {seed: 1, spread: 1.8}, {seed: 2, spread: 1.2}]
+    executable_checks:
+      all-pairs-operator-linearity:
+        site: tests/test_rs_kernel/test_ecp_radial_nearest_selection.py::test_native_radial_gradient_preserves_nearest_centre_selection_effect#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: direct-all-pairs-nonlocal-energy, expression: all_pairs_value}
+        reference: {role: sum-of-independent-single-centre-operators, expression: part_sum}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+      nearest-selection-radial-gradient-effect:
+        site: tests/test_rs_kernel/test_ecp_radial_nearest_selection.py::test_native_radial_gradient_preserves_nearest_centre_selection_effect#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-nearest-selection-radial-derivative-effect, expression: actual}
+        reference: {role: xla-analytical-nearest-selection-radial-derivative-effect, expression: expected}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_radial
+    executable_checks:
+      d8-h-184-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_radial#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+        iterations:
+          variable: comparison_label
+          required_values:
+          - orb_data_up_spin
+          - orb_data_dn_spin
+      d8-h-184-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_radial#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+        iterations:
+          variable: comparison_label
+          required_values:
+          - orb_data_up_spin
+          - orb_data_dn_spin
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_radial_periodic
+    executable_checks:
+      d8-h-185-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_radial_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+        iterations:
+          variable: comparison_label
+          required_values:
+          - orb_data_up_spin
+          - orb_data_dn_spin
+      d8-h-185-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_radial_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+        iterations:
+          variable: comparison_label
+          required_values:
+          - orb_data_up_spin
+          - orb_data_dn_spin
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_jastrow_12
+    executable_checks:
+      d8-h-186-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_jastrow_12#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+      d8-h-186-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_jastrow_12#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_j3
+    executable_checks:
+      d8-h-187-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_j3#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_sphe_jdtn}
+    - {pattern: mol_ecp_sphe_j3dtn}
+    - {pattern: pbc_gamma_sphepgto_j3dtn}
+    executable_checks:
+      d8-h-188-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+      d8-h-188-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+      d8-h-188-3:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_3
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_3
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_det_jastrow_12
+    executable_checks:
+      d8-h-189-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_det_jastrow_12#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-189-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_det_jastrow_12#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-189-3:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_det_jastrow_12#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_3
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_3
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-189-4:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_det_jastrow_12#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_4
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_4
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_j3
+    executable_checks:
+      d8-h-190-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_j3#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_dtn
+    executable_checks:
+      d8-h-191-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_dtn#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-191-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_dtn#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-191-3:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_dtn#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_3
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_3
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ae_j123
+    executable_checks:
+      d8-h-192-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ae_j123#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-192-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ae_j123#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-192-3:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ae_j123#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_3
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_3
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_j12
+    executable_checks:
+      d8-h-193-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_j12#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-193-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_j12#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_dtn
+    executable_checks:
+      d8-h-194-1:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_dtn#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_1
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_1
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-194-2:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_dtn#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_2
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_2
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+      d8-h-194-3:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_dtn#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: comparison_actual_3
+        reference:
+          role: xla-same-precision
+          expression: comparison_reference_3
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_derivatives_ragged_basis.py::test_rust_permuted_equals_reference
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_derivatives_ragged_basis.py::test_rust_permuted_equals_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: physical-ao-permutation-actual
+          expression: b
+        reference:
+          role: physical-ao-permutation-reference
+          expression: a
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_ungate_basis_opt_param_deriv.py::test_ungate_c3_basis_block_present
+  - pytest_node: tests/test_rs_kernel/test_ungate_basis_opt_param_deriv.py::test_ungate_c3_basis_block_values
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ungate_basis_opt_param_deriv.py::test_ungate_c3_basis_block_values#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.real(native[b])
+        reference:
+          role: existing-test-reference
+          expression: np.real(ref[b])
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+        iterations:
+          variable: b
+          required_values:
+          - lambda_basis_coeff
+          - lambda_basis_exp
+  - pytest_node: tests/test_rs_kernel/test_ungate_complex_driver_param_deriv.py::test_complex_driver_okc_matches_xla
+    executable_checks:
+      w11-backend-medium-compare:
+        site: tests/test_rs_kernel/test_ungate_complex_driver_param_deriv.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.real(np.asarray(native[b]))
+        reference:
+          role: existing-test-reference
+          expression: np.real(np.asarray(ref[b]))
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+  - pytest_node: tests/test_rs_kernel/test_ungate_complex_driver_param_deriv.py::test_complex_driver_delc_matches_xla
+    executable_checks:
+      w11-backend-medium-compare:
+        site: tests/test_rs_kernel/test_ungate_complex_driver_param_deriv.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.real(np.asarray(native[b]))
+        reference:
+          role: existing-test-reference
+          expression: np.real(np.asarray(ref[b]))
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+  - pytest_node: tests/test_rs_kernel/test_ungate_complex_stress_leaf.py::test_ungate_c6_complex_stress_leaf
+  - pytest_node: tests/test_rs_kernel/test_ungate_complex_stress_leaf.py::test_ungate_c6_pure_pw_gamma_stress_green
+  - pytest_node: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_reference_is_trustworthy
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_reference_is_trustworthy#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-analytical-optimizer-source, expression: ana}
+        reference: {role: same-precision-xla-autodiff-source, expression: auto}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, jastrow_eval]}
+  - pytest_node: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_okc_mo_complex
+    executable_checks:
+      d8-h-203:
+        site: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_okc_mo_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: native
+        reference:
+          role: xla-same-precision
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_okc_lambda_complex
+    executable_checks:
+      d8-h-204:
+        site: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_okc_lambda_complex#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: np.asarray(lam)
+        reference:
+          role: xla-same-precision
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_delc_mo_complex_kinetic_ae
+    executable_checks:
+      d8-h-205:
+        site: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_delc_mo_complex_kinetic_ae#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: native
+        reference:
+          role: xla-same-precision
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+  - pytest_node: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_delc_mo_complex_ecp
+    executable_checks:
+      d8-h-206:
+        site: tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_delc_mo_complex_ecp#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-same-input
+          expression: au
+        reference:
+          role: xla-same-precision
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+  - pytest_node: tests/test_rs_kernel/test_ungate_gfmc_pbc_ae_force.py::test_ungate_b2_pbc_ae_force_green
+  - pytest_node: tests/test_rs_kernel/test_ungate_gfmc_pbc_ae_force.py::test_ungate_b2_pbc_ae_stress_green
+  - pytest_node: tests/test_rs_kernel/test_ungate_leaf_param_deriv.py::test_ungate_c4_okc_mo_leaf
+  - pytest_node: tests/test_rs_kernel/test_ungate_leaf_param_deriv.py::test_ungate_c4_delc_mo_leaf
+  - pytest_node: tests/test_rs_kernel/test_ungate_periodic_config_param_deriv.py::test_far_roamed_periodic_c_axis_matches_xla
+    executable_checks:
+      w11-backend-medium-comparison-1:
+        site: tests/test_rs_kernel/test_ungate_periodic_config_param_deriv.py::test_far_roamed_periodic_c_axis_matches_xla#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.real(np.asarray(native[b]))
+        reference:
+          role: existing-test-reference
+          expression: np.real(np.asarray(ref[b]))
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+  - pytest_node: tests/test_rs_kernel/test_ungate_periodic_config_param_deriv.py::test_native_c_axis_is_lattice_shift_invariant
+    executable_checks:
+      w11-backend-medium-comparison-1:
+        site: tests/test_rs_kernel/test_ungate_periodic_config_param_deriv.py::test_native_c_axis_is_lattice_shift_invariant#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.real(np.asarray(shifted[b]))
+        reference:
+          role: existing-test-reference
+          expression: np.real(np.asarray(base[b]))
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+            - coulomb
+  - pytest_node: tests/test_rs_kernel/test_rs_complex_twist_param_parity.py::test_rs_complex_twist_ecp_j3_basis_e_l_matches_xla

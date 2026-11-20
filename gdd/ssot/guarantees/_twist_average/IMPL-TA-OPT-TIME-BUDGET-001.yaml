@@ -1,0 +1,45 @@
+id: IMPL-TA-OPT-TIME-BUDGET-001
+kind: implementation
+name: Twist-averaged optimizer time budget and external stop span the whole chunked run
+plain_language: >-
+  run_twist_average_optimize splits a run into wf_dump_freq-step chunks, but max_time and stop = true in
+  external_control_opt.toml apply to the whole call, shared by all chunks and all ranks, exactly as for one direct
+  MCMC.run_optimize call: the budget clock starts once before the first chunk and every chunk receives only the
+  remaining budget; run_optimize reports why it stopped early (max_time or stop_flag), the decision being taken on the
+  world root and broadcast; the driver then writes that chunk's non-converged checkpoint and starts no further chunk.
+  The whole call owns one control file, so a stop request written during a Hamiltonian dump survives the chunk boundary.
+  With one twist and the
+  committed H-atom J1/J2 input, a virtual clock of 1000 s per optimization step and a 2500 s budget, or a stop request
+  written into the real control file, the driver stops at the same step as the direct run (2 and 1 of 5 requested
+  steps) with a byte-identical optimized Hamiltonian, for wf_dump_freq 1 (CLI default) and 5. A step
+  predicted by the mean step time to end after the budget (the third, at 3000 s) is not started, also when it would
+  be the first step of the next chunk. A one-shot stop request
+  after the first real Hamiltonian dump with wf_dump_freq 1 stops both routes at step 2 with the same Hamiltonian.
+  With two twists on two
+  ranks and one-step chunks, a budget exceeded on the world root's optimizer or driver clock, or a stop request,
+  ends both ranks after step 1, while a budget exceeded only on the other rank changes nothing (3 of 3 steps).
+  Discarding the user budget (max_time forced to infinity) must fail.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_budget_and_stop_request_end_the_whole_chunked_run_like_direct_run_optimize
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {stop: max_time, wf_dump_freq: 1}
+    - {stop: max_time, wf_dump_freq: 5}
+    - {stop: stop_flag, wf_dump_freq: 1}
+    - {stop: stop_flag, wf_dump_freq: 5}
+    - {stop: stop_during_dump, wf_dump_freq: 1}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_stop_coordination_mpi.py::test_twist_budget_stop_is_decided_once_for_all_ranks_and_chunks
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {clock: optimizer, late_rank: 0}
+    - {clock: optimizer, late_rank: 1}
+    - {clock: driver, late_rank: 0}
+    - {clock: driver, late_rank: 1}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_stop_coordination_mpi.py::test_twist_stop_request_ends_every_rank_after_the_same_step
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

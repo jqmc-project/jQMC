@@ -1,0 +1,77 @@
+id: IMPL-MCMC-CHECKPOINT-001
+kind: implementation
+name: Checkpoint round trip of the MCMC driver
+plain_language: 'Saving and restarting the MCMC driver reproduces the direct run (route parity, direct vs
+  through-disk): walker state, RNG state, counters, parameter and force derivatives, and the SR optimizer state; a doctored
+  time-reversal-tied checkpoint is rejected, and the TOML restart policy stays in sync with the checkpoint config.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-ERROR-DISPOSITION-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::test_driver_config_roundtrip_uses_constructor_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: MCMC}
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_nondefault_config.py::test_nondefault_checkpoint_continuation_matches_uninterrupted
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: mcmc_dt}
+    - {case: mcmc_swct}
+    executable_checks:
+      continued-histories:
+        site: tests/test_jqmc_kernel/test_checkpoint_nondefault_config.py::test_nondefault_checkpoint_continuation_matches_uninterrupted#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: checkpoint-continued-nondefault-history, expression: actual}
+        reference: {role: uninterrupted-nondefault-history, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCSaveLoadRoundtrip::test_basic_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCSaveLoadRoundtrip::test_walker_state_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCSaveLoadRoundtrip::test_rng_state_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCSaveLoadRoundtrip::test_counters_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCSaveLoadRoundtrip::test_continue_run_after_load
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCSaveLoadRoundtrip.test_continue_run_after_load#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mcmc2.e_L
+        reference:
+          role: existing-test-reference
+          expression: uninterrupted.e_L
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCSaveLoadRoundtrip::test_hamiltonian_embedded
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCSaveLoadRoundtrip::test_param_deriv_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCSaveLoadRoundtrip::test_force_derivative_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::TestMCMCOptimizerRoundtrip::test_sr_optimizer_roundtrip
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::test_restart_rejects_doctored_tied_sd_down_spin
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::test_restart_rejects_rank_local_nonfinite_energy_history
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+# Registered outside VM-IMPL-ROUTE-PARITY-001: the test asserts no value agreement, so it is not route-parity evidence. The round-trip nodes remain route-parity evidence.
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::test_restart_policy_matches_checkpoint

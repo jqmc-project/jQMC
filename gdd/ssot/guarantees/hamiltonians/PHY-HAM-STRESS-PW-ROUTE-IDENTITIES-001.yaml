@@ -1,0 +1,24 @@
+id: PHY-HAM-STRESS-PW-ROUTE-IDENTITIES-001
+kind: physical
+name: Rotation invariance, strain-map parity and vanishing Pulay stress of the production plane-wave stress routes
+plain_language: >-
+  For the same triclinic system with a Jastrow-free Gamma real plane-wave determinant at three fixed electron
+  configurations, the production analytic HF stress (compute_grad_e_L with opt_eps, analytic=True) equals its
+  transpose (e_L is rotation invariant) and equals the _auto jacrev strain derivative through
+  Hamiltonian_data._apply_strain. The Pulay stress vanishes because a plane-wave value is affine-strain
+  invariant: the cell response of ln|Psi| through Wavefunction_data._apply_strain (electrons fixed) equals minus
+  the electron virial built from the production analytic drift, and the production analytic Pulay stress equals
+  their sum. A real-space electron-ion virial whose second leg drops the lattice image must fail the antisymmetry
+  and parity checks; a strain map that leaves the plane-wave leaf unstrained must fail the Pulay cancellation and
+  the parity check. Strict zone tolerance, the Pulay cancellation rebased on the virial scale; full and mixed are
+  judged separately. Jastrow, pGTO and ECP stress are not claimed here.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_stress_probe_identities.py::test_production_stress_route_identities_pure_plane_wave
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_stress_probe_identities.py::test_production_stress_route_identities_reject_mutations
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

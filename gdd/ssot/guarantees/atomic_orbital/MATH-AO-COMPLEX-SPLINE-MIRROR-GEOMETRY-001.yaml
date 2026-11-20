@@ -1,0 +1,28 @@
+id: MATH-AO-COMPLEX-SPLINE-MIRROR-GEOMETRY-001
+kind: mathematical
+name: CPU complex quintic spline leaves form the local grid offset before the AO-zone cast
+plain_language: >-
+  Three complex control bands (factor 1+0.5i) on a 30 x 30 x 30 quintic cardinal spline grid are each odd along
+  one axis about the half-integer knot coordinate t=28.5, times a smooth even profile on the other axes. The
+  symmetric cardinal kernel preserves the oddness, so the cell-periodic part obeys u(c+d) + u(c-d) = 0 exactly
+  for any offset d. In the triclinic cell with rows (6,0,0), (1,7,0), (0.5,1.5,8), 64 mirror pairs per band use
+  seed 784, offsets d uniform in (0.05,0.45) grid units and transverse fractional coordinates uniform in
+  (0.05,0.95). The single-k complex leaf at k_frac=(0.11,0.13,0.09) and the 2 x 1 x 1 tiled primitive-cell leaf
+  (primitive k (0.11,0.13,0.09) and (0.61,0.13,0.09)) are evaluated at the home-cell points and at their lattice
+  translation (2,-3,1). After the Bloch phase is removed in float64, the mirror sums equal zero on CPU at the
+  existing strict ao_eval tolerance, separately in full and mixed precision, for both the XLA evaluator and the
+  independent NumPy forward oracle, which retain the complex ao_eval dtype. The periodic parts at the samples
+  exceed 100 times the absolute tolerance. Near t=N, a local offset formed after an fp32 fractional coordinate
+  carries an absolute error of about eps32 N, which this sum exposes. This is a finite mirror-pair accuracy
+  contract, not a claim of exact mixed-precision zeros, GPU behavior or arbitrary-distance accuracy.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_nodal_geometry.py::test_complex_spline_mirror_pairs_cancel
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {leaf_kind: complex, cell_case: home}
+    - {leaf_kind: complex, cell_case: translated}
+    - {leaf_kind: tiled, cell_case: home}
+    - {leaf_kind: tiled, cell_case: translated}

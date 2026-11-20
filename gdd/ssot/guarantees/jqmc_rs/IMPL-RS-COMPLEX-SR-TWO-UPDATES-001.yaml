@@ -1,0 +1,11 @@
+id: IMPL-RS-COMPLEX-SR-TWO-UPDATES-001
+kind: implementation
+name: Two complex native SR updates consume the correct derivative payloads
+plain_language: Two successive actual native SR updates on the committed complex lithium fixture agree with same-mode XLA for every consumed weight, complex local energy, derivative coordinate, solved update and applied update. Walkers and keys remain exact under identical proposal inputs. The native gradient path must execute in both steps; the real Jastrow derivative must occupy the correct slot of the complex payload.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_sr_two_steps.py::test_complex_native_sr_two_steps_equal_xla
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

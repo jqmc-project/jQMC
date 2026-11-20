@@ -1,0 +1,47 @@
+id: IMPL-TOOL-TWIST-AVERAGE-SHARED-AO-J3-001
+kind: implementation
+name: Untiled QE and TREXIO twist averaging share one phase-free AO J3
+plain_language: >-
+  Untiled QE and multi-k TREXIO twist-average conversion accept the ao, ao-small,
+  ao-medium, ao-large and ao-full J3 choices and store one J3 in the shared
+  template. QE builds an independent ordinary periodic Cartesian GTO basis for
+  the physical cell from the twist-shared UPF shell seeds, as tiled conversion
+  does, so a plane-wave determinant also has J3. Each seed UPF is resolved by
+  species label first, then element, as for the ECP, so a tagged species Li1
+  with the element key Li converts. TREXIO builds the basis from
+  the AO basis common to all k points, removes the Bloch phase and keeps the
+  source spherical form. On the committed Li_k_twist save and lithium_twist_222
+  file, every loaded twist passes Hamiltonian sanity_check and has the same J3
+  matrix and basis values at fixed points, which are invariant under a lattice
+  translation. MO J3 is rejected before conversion with the twist-dependent
+  basis reason; the TREXIO MO refusal is the mo case of the existing
+  unsupported-option refusal test. In an actual two-rank optimizer step on the
+  converted QE input, a nonzero J3 is updated, stays symmetric and is identical
+  on two twists with different determinant k, while J2 and the determinants are
+  unchanged. This step is not compared with an independent SR model; the shared
+  world-scoped update is certified for J1/J2 by MATH-TA-OPT-ACTUAL-MPI-UPDATE-001.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_multi_twist.py::TestQEMultiTwist::test_twist_average_writes_one_shared_phase_free_ao_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_multi_twist.py::TestQEMultiTwist::test_twist_average_ao_j3_resolves_tagged_species_by_element_upf_key
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_cli_twist_average_shares_one_phase_free_ao_j3_in_source_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_update_mpi.py::test_actual_mpi_twist_optimizer_updates_one_converted_shared_ao_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_multi_twist.py::TestQEMultiTwist::test_twist_average_rejects_mo_j3_before_conversion
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_cli_twist_average_rejects_unsupported_options
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {j3_basis_type: mo, ao_conv_to: null, message: twist-dependent}

@@ -1,0 +1,18 @@
+id: IMPL-WORKFLOW-VANISHED-JOB-OUTPUT-001
+kind: implementation
+name: A queued job that left the queue without its output is never recorded as fetched or completed
+plain_language: >-
+  On a local machine with a queuing system, a job that leaves the queue without writing its
+  output file did not run. Whether the workflow submitted the job itself, resumed a job recorded
+  as submitted by an earlier driver, or found it recorded as completed but not fetched, the
+  stage ends FAILED with an error naming the missing output file and the job id; the job is not
+  recorded as fetched and no continuation run is submitted on top of it, so a fixed-step
+  production loop cannot report fewer runs as a finished result. Jobs that ran keep their
+  behavior: every run is fetched and the stage completes. The reference is the output file on
+  disk: every job recorded as fetched has an output ending with Program ends. This is a
+  precision-independent Python workflow contract, owned by the full precision lane.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_vanished_job_output.py::test_job_that_left_queue_without_output_fails_the_stage

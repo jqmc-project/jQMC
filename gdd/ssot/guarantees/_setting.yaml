@@ -1,0 +1,16 @@
+schema_version: 1
+document:
+  id: jqmc._setting
+  version: 1
+  lifecycle: cutover
+  title: Setting guarantees
+  purpose: Which test guarantees what, by which verdict method, for the central settings module (physical defaults and stream-budget
+    helpers; the tolerance symbols themselves are governed by the tolerance registry of the verdict contract).
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-SETTING-STREAM-BUDGET-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

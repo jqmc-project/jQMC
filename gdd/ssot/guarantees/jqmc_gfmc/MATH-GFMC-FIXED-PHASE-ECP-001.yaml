@@ -1,0 +1,36 @@
+id: MATH-GFMC-FIXED-PHASE-ECP-001
+kind: mathematical
+name: LRDMC ECP increments obey the independent per-candidate sign split
+plain_language: >-
+  Conventional and load-balanced LRDMC retain their fixed-phase ECP definition
+  on lithium_k025.h5 with active DTN, one electron per spin and the fixed
+  seed7 image-offset configuration, cond(G)<1e4, identity rotation, NN=1 and
+  Nv=12. Independently computed complex candidate ratios are made real before
+  sign splitting. Tmove uses max(Re(full),0) and min(Re(full),0); dltmove uses
+  max(Re(det),0) and min(Re(det),0)*exp(deltaJ). Positive and negative terms
+  and imaginary candidate parts must all be active. Subtracting the same
+  production Hamiltonian closure with only nonlocal coefficients zeroed
+  isolates the ECP diagonal, off-diagonal and measurement-energy increments.
+  Both algorithms and moves are required in full and mixed at their existing
+  strict zone comparison. This is not an independent kinetic-term proof or
+  a stochastic long-run energy test.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_policy.py::test_lrdmc_ecp_sign_split_matches_independent_candidate_definition
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/test_complex_ecp_policy.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'actual'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {algorithm: conventional, move: tmove}
+    - {algorithm: conventional, move: dltmove}
+    - {algorithm: load-balanced, move: tmove}
+    - {algorithm: load-balanced, move: dltmove}

@@ -1,0 +1,29 @@
+id: MATH-RUST-COMPLEX-ECP-ABSOLUTE-001
+kind: mathematical
+name: Native VMC complex local energy matches the shared independent ECP reference
+plain_language: >-
+  Native compute_local_energy_fast_complex retains Im(Vnl) on the committed
+  lithium_k025.h5 Li SD/DTN twist input with one up and one down electron,
+  seed7 image-offset configuration, cond(G)<1e4, identity Nv12 nearest-ECP
+  mesh and exact geminal inverse. The primitive/Bloch, determinant/DTN,
+  Hessian-kinetic, NumPy Ewald and explicit ECP quadrature reference is shared
+  with the XLA absolute guarantee, not reimplemented for Rust. Both real and
+  imaginary values are compared separately in each precision at the existing
+  strict zone policy. Nonzero Im(Vnl) and both real candidate signs are
+  prerequisites; this does not alter the LRDMC fixed-phase candidate mesh.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_vmc_complex_ecp_policy.py::test_native_vmc_complex_ecp_matches_shared_independent_absolute_reference
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+    executable_checks:
+      native-independent-complex-energy:
+        site: tests/test_rs_kernel/test_vmc_complex_ecp_policy.py::test_native_vmc_complex_ecp_matches_shared_independent_absolute_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-complex-local-energy-component, expression: 'part(actual)'}
+        reference: {role: shared-independent-complex-energy-component, expression: 'part(expected)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}

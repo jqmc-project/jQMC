@@ -1,11 +1,209 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+# setuptools builds the wheel and setuptools_scm supplies the dynamic version
+# from git tags. ``jax`` is NOT a build-time requirement -- it is only a runtime
+# dependency (declared once, with its version range, in ``[project].dependencies``
+# below).
+#
+# ``setuptools-rust`` compiles the ``jqmc_rs`` CPU-kernel extension as part of the
+# ordinary build, so ``pip install .`` / ``pip install -e .`` produce a working
+# install with no separate ``maturin develop`` step. setuptools-rust (rather than
+# switching build-backend to maturin) because maturin cannot supply the
+# setuptools_scm git-tag version this project depends on.
+#
+# A Rust toolchain is a source-BUILD requirement, not a runtime requirement for
+# users installing a precompiled release wheel. Building locally keeps the repo-root
+# ``.cargo/config.toml``'s ``target-cpu=native`` (cargo reads config from the
+# build's working directory upward, i.e. the repo root -- NOT from the crate's
+# manifest dir, so ``jqmc/rs/.cargo/config.toml`` alone is not seen by pip
+# builds). The public distribution workflow overrides this with baseline CPU
+# code generation when building portable wheels; local builds keep native tuning.
+requires = [
+    # >= 77: PEP 639 ``license`` expression and ``license-files`` below.
+    "setuptools >= 77",
+    # >= 10.1.1: the full commit that ``version_file_template`` below writes
+    # (issue #183) survives an sdist -> wheel build without .git, the PyPI route.
+    # setuptools_scm 9.2.2 and 10.0.x rewrite it to None there (PR #184).
+    "setuptools_scm[toml] >= 10.1.1",
+    "setuptools-rust >= 1.9",
+]
 build-backend = "setuptools.build_meta"
 
-# pyproject.toml
+# The compiled module is importable as ``import jqmc_rs`` (top-level, matching the
+# ``maturin develop`` layout the dispatch in jqmc/_setting.py expects).
+[[tool.setuptools-rust.ext-modules]]
+target = "jqmc_rs"
+path = "jqmc/rs/Cargo.toml"
+binding = "PyO3"
+# pyo3 is built with ``abi3-py310`` (jqmc/rs/Cargo.toml), so ONE wheel covers
+# CPython 3.10+. Explicit (not "auto"): auto tagged the build ``cp312`` here,
+# which would force a separate redistributable wheel per Python minor version.
+py-limited-api = true
+# MUST be false. setuptools-rust defaults an editable/develop build to the cargo
+# DEBUG profile, which builds these hot kernels unoptimized -- measured 92 MB
+# (debug) vs 9 MB (release) for the same extension. A debug jqmc_rs would be
+# slower than the JAX path it replaces, silently defeating the whole port.
+debug = false
+
+[project]
+name = "jqmc"
+dynamic = ["version"]
+description = "jQMC: a JAX-based quantum Monte Carlo package"
+readme = "README.md"
+requires-python = ">=3.11.0"
+authors = [{ name = "Kosuke Nakano", email = "kousuke_1123@icloud.com" }]
+# ``license`` is the licence of jQMC itself (LICENSE). The third-party code the
+# distributions also contain (the JAX/XLA-derived part of
+# jqmc/rs/src/threefry.rs and, in the wheel, statically linked Rust crates)
+# keeps its own licences, which ship as the licence files under LICENSES/.
+license = "BSD-3-Clause"
+license-files = ["LICENSE", "LICENSES/*"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "numpy >= 1.26.4",
+    # scipy 1.16.2-1.17.x bundle OpenBLAS 0.3.29.dev/0.3.30, whose multi-threaded
+    # LU can deadlock (the device SR direct solve hung on many-core hosts,
+    # issue 906). scipy 1.16.0-1.16.1 fail the pGTO exponent SLSQP with
+    # "Singular matrix E in LSQ subproblem" (issue 917). 1.15.x and 1.18 are clean.
+    "scipy >= 1.12.0, != 1.16.*, != 1.17.*",
+    "jax >= 0.7.0, <= 0.10.2",
+    # jaxlib is intentionally NOT listed here -- it is a transitive dependency
+    # of ``jax`` (and of its CUDA/TPU extras like ``jax[cuda12]``). Listing it
+    # explicitly would let pip's resolver "upgrade" a user's existing
+    # CUDA-flavoured jaxlib to a plain CPU wheel when installing jqmc, silently
+    # breaking their GPU setup. The ``jax`` constraint above is sufficient: jax
+    # pulls a matching jaxlib (CPU or CUDA per the user's extras) as part of
+    # its own dependency resolution.
+    "flax >= 0.10.0, < 0.13.0",
+    "mpi4py >= 4.0.2",
+    "trexio >= 2.6.0",
+    # Used at run time in a git checkout: jqmc/_build_info.py reports the
+    # version of the checkout through setuptools_scm.
+    "setuptools_scm >= 8.1.2",
+    "pyyaml >= 6.0.0",
+    "toml >= 0.10.2",
+    "typer >= 0.15.1",
+    "click >= 8.0.0",
+    "tomlkit >= 0.13.2",
+    "uncertainties >= 3.2.2",
+    "matplotlib >= 3.10.1",
+    "h5py >= 3.10.0",
+    "paramiko < 4.0.0",
+    "joblib >= 1.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest >= 8.3.5",
+    "pytest-xdist",
+    "pre-commit >= 4.0.2",
+]
+docs = [
+    # The GDD manual pages generated during the docs build import test helpers.
+    "pytest >= 8.3.5",
+    "sphinx >= 7.2, < 9.0",
+    "myst-parser[linkify] >= 2.0, < 5.0",
+    "sphinx-book-theme >= 1.1, < 2.0",
+    "ipython >= 8.18, < 10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jqmc-project/jQMC"
+"Bug tracker" = "https://github.com/jqmc-project/jQMC/issues"
+Documentation = "https://jqmc-project.github.io/jQMC/"
+
+[project.scripts]
+# Light entries (issue #185): --version / --help never import mpi4py, JAX or jqmc_rs.
+jqmc = "jqmc._cli_entry:main"
+jqmc-tool = "jqmc._cli_entry:tool_main"
+jqmc-jobmanager = "jqmc_workflow._cli:job_manager_cli"
+
+[tool.distutils.bdist_wheel]
+# setuptools-rust builds the extension as abi3 (jqmc_rs.abi3.so) but does NOT
+# widen the wheel tag on its own -- without this the wheel is tagged cp3XX-cp3XX
+# and a separate redistributable wheel would be needed per Python minor version.
+# cp310 matches pyo3's ``abi3-py310`` feature. The package itself still requires
+# Python >=3.11, independently of the extension's ABI floor.
+py-limited-api = "cp310"
+
+[tool.setuptools]
+# Include git-tracked non-Python files (jqmc_workflow templates) via the
+# setuptools_scm file finder.
+include-package-data = true
+# ``jqmc_rs`` is a compiled top-level extension (see [[tool.setuptools-rust.ext-modules]]),
+# not a .py file. Declaring it here is what puts it in the editable install's import
+# MAPPING -- without it the in-place built .so is importable ONLY when the process
+# happens to run from the source root, which silently "works" in-tree and fails
+# everywhere else.
+py-modules = ["jqmc_rs"]
+
+[tool.setuptools.packages.find]
+# Pure-Python packages shipped in the wheel (jqmc, jqmc_workflow + subpackages
+# like jqmc_workflow.template). ``jqmc.rs*`` is the Rust crate: it is a cargo
+# tree, not Python. Without this
+# exclusion setuptools' ``jqmc*`` glob walks it as namespace packages and maps
+# every cargo build directory (jqmc.rs.target.debug.build.pyo3-...), bloating the
+# editable finder to ~50 KB of junk entries.
+include = ["jqmc*", "jqmc_workflow*"]
+exclude = ["jqmc.rs*"]
+
+[tool.setuptools.package-data]
+jqmc_workflow = ["template/**/*.yaml", "template/**/*.toml", "template/**/*.sh"]
+
+[tool.setuptools.exclude-package-data]
+# The cargo tree is BUILD input, not runtime content: what the wheel needs from
+# jqmc/rs is the compiled jqmc_rs extension, which setuptools-rust places at the
+# top level. Without this, `include-package-data = true` + the setuptools_scm file
+# finder ship every git-tracked file under jqmc/rs (the Rust sources and the
+# cargo files), which no installed user can do anything with.
+jqmc = ["rs/*", "rs/**/*"]
+
 [tool.setuptools_scm]
-write_to = "jqmc/_version.py"
+version_file = "jqmc/_version.py"
 local_scheme = "no-local-version"
+# ``scm_version.node`` is ``g`` + the FULL commit hash (``__commit_id__`` keeps
+# only the abbreviated one). It is written at build time from the git checkout
+# and travels unchanged through sdist -> wheel, so an installed distribution
+# reports the commit it was built from (``jqmc/_build_info.py``, issue #183).
+version_file_template = """# file generated by setuptools-scm
+# don't change, don't track in version control
+__version__ = version = {version!r}
+__version_tuple__ = version_tuple = {version_tuple!r}
+__commit_id__ = commit_id = {scm_version.short_node!r}
+__git_commit_full__ = {scm_version.node!r}
+"""
+
+[tool.coverage.run]
+# jqmc/_version.py is generated by setuptools_scm (version_file above) at build
+# time and is not tracked, so a checkout that combines coverage data need not
+# contain it, and ``coverage xml`` would then stop with
+#   No source for code: '.../jqmc/_version.py'
+# It is generated boilerplate with no meaningful coverage signal -- exclude
+# it from measurement and from reporting.
+omit = ["*/_version.py"]
+
+[tool.coverage.report]
+omit = ["*/_version.py"]
+
+[tool.coverage.paths]
+# Test shards that run from different checkout directories record the same
+# source file under different absolute paths. Without aliasing,
+# ``coverage combine`` treats those as distinct files and never unions their
+# data. These maps collapse every checkout path back onto the repo-root tree
+# so combine merges the shards. coverage only applies a ``[paths]`` map when
+# its first (canonical) entry exists on the combining machine, so combine
+# from a checkout that contains jqmc/ and jqmc_workflow/.
+source = ["jqmc", "*/jqmc"]
+workflow = ["jqmc_workflow", "*/jqmc_workflow"]
 
 [tool.ruff]
 line-length = 128
@@ -36,7 +234,7 @@ lint.extend-ignore = [
     "PERF203", # try-except in loop (sometimes required)
     "PT011",   # pytest.raises too broad
     "SIM108",  # ternary if-else (sometimes if-block is more readable)
-    # --- TODO: currently-violating rules; fix and remove from this list ---
+    # --- Rules the code base does not satisfy yet ---
     # bugbear
     "B007", "B904", "B905",
     # flake8-comprehensions
@@ -65,7 +263,21 @@ lint.extend-ignore = [
     # flake8-print
     "T201",
 ]
-exclude = ["jqmc/obsolete", "prototypes"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.pytest.ini_options]
+# ``tests/conftest.py`` registers the remaining markers (``light``,
+# ``with_chdir``, ``without_chdir``, ``mpi_only``, ``activate_if_disable_jit``,
+# ``obsolete`` and session-eligibility markers such as ``skip_mixed_precision``).
+markers = [
+    "heavy: long-running test; every collected test carries exactly one of light / heavy",
+    "design_pin(name): pins a design invariant; do not delete during routine cleanups",
+    "gdd_no_committed_artifact(reason): this metadata/synthetic test materializes no committed source artifact",
+    "gdd_synthetic_derivative_receipts(reason): GDD contract test that calls a derivative recorder entry point with synthetic inputs on purpose; not a registered emitter (scripts/check_gdd_derivative_registry.py)",
+    "gdd_electron_configuration(mode, position_source, reason): explicit electron-fixture disposition for GDD materialization",
+    "gdd_physics_object(mode, reason): explicit runtime physics-object disposition for GDD materialization",
+    "gdd_finiteness_evidence(mode, reason): per-case (pytest.param) finiteness-only smoke or stability evidence",
+    "gdd_runs_science: GDD contract test that executes real jqmc numerics (JAX or jqmc_rs); measured classification (scripts/gdd_static_preflight.py), deselected from the static GDD preflight and run with the numerical tests",
+]

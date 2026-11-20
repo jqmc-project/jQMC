@@ -1,0 +1,10 @@
+id: MATH-MPC-CORRECTION-IDENTITY-001
+kind: mathematical
+name: MPC correction equals the explicit difference
+plain_language: The MPC correction equals the explicitly computed difference of the interaction energies, exactly as defined.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestCorrection::test_correction_matches_explicit_difference

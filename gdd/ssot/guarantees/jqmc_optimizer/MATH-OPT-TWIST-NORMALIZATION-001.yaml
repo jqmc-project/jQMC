@@ -1,0 +1,239 @@
+id: MATH-OPT-TWIST-NORMALIZATION-001
+kind: mathematical
+name: Separately normalized fixed-weight twist optimization
+plain_language: Shared force and SR geometry differentiate the fixed-weight sum of independently normalized twist energies.
+  Constant per-twist Hamiltonians give zero force and zero SR/LM/aSR updates despite different log-derivative means. Nonconstant
+  diagonal Hamiltonians match an independent normalized-objective derivative, including unequal or zero BZ weights and unequal
+  sample multiplicities. Twist normalization gauges and independent energy origins do not change updates. Shared force errors
+  combine within-twist jackknives in weighted quadrature.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_constant_per_twist_energy_has_zero_shared_force_and_update
+    executable_checks:
+      d8-n-204:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_constant_per_twist_energy_has_zero_shared_force_and_update#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: _energy(c, o, h, [0.5, 0.5])
+        reference:
+          role: source-reference-value
+          expression: '1.0'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '-0.1'
+          - '0.0'
+          - '0.1'
+      d8-n-200:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_constant_per_twist_energy_has_zero_shared_force_and_update#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.coordinate_force
+        reference:
+          role: source-reference-value
+          expression: np.zeros(1, dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-201:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_constant_per_twist_energy_has_zero_shared_force_and_update#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.metric_diagonal
+        reference:
+          role: source-reference-value
+          expression: np.ones(1, dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-202:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_constant_per_twist_energy_has_zero_shared_force_and_update#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.sr_q
+        reference:
+          role: source-reference-value
+          expression: np.zeros(1, dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+      d8-n-203:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_constant_per_twist_energy_has_zero_shared_force_and_update#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.q
+        reference:
+          role: source-reference-value
+          expression: np.zeros(1, dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_independent_twist_gauges_do_not_change_update
+    executable_checks:
+      d8-n-205:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_independent_twist_gauges_do_not_change_update#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: getattr(a, name)
+        reference:
+          role: source-reference-value
+          expression: getattr(b, name)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+        iterations:
+          variable: name
+          required_values:
+          - coordinate_force
+          - coordinate_force_std
+          - metric_diagonal
+          - sr_q
+          - q
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_single_twist_planb_identity
+    executable_checks:
+      d8-n-206:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_single_twist_planb_identity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: getattr(a, name)
+        reference:
+          role: source-reference-value
+          expression: getattr(b, name)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+        iterations:
+          variable: name
+          required_values:
+          - coordinate_force
+          - metric_diagonal
+          - sr_q
+          - q
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_fixed_bz_gradient_matches_normalized_energy_difference
+    executable_checks:
+      d8-n-207:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_fixed_bz_gradient_matches_normalized_energy_difference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: reference_fd
+        reference:
+          role: source-reference-value
+          expression: force
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FD-VS-ANALYTIC-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FD-VS-ANALYTIC-TIGHT-R-PYTHON-FP64-ZERO-001
+      d8-n-208:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_fixed_bz_gradient_matches_normalized_energy_difference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.coordinate_force
+        reference:
+          role: source-reference-value
+          expression: np.asarray([force])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-209:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_fixed_bz_gradient_matches_normalized_energy_difference#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.metric_diagonal
+        reference:
+          role: source-reference-value
+          expression: np.asarray([metric])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-210:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_fixed_bz_gradient_matches_normalized_energy_difference#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.sr_q
+        reference:
+          role: source-reference-value
+          expression: np.asarray([force / (1.01 * metric)])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_shared_force_error_is_quadrature_of_twist_jackknives
+    executable_checks:
+      d8-n-211:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_shared_force_error_is_quadrature_of_twist_jackknives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: a.coordinate_force_std
+        reference:
+          role: source-reference-value
+          expression: np.asarray([np.sqrt(variance)])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001

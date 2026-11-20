@@ -1,0 +1,22 @@
+id: PHY-HAM-STRESS-EWALD-ETA-INDEPENDENCE-001
+kind: physical
+name: Each Ewald channel energy and analytic strain tensor is independent of the split parameter
+plain_language: >-
+  For two all-electron H nuclei in a triclinic cell with one up and one down electron (net ion charge 2, two
+  electrons, so every channel's own uniform-background term is non-zero), the Ewald tables are rebuilt with
+  build_ewald_data(eta_override = f * eta) for f = 0.8 and 1.25, with the cutoffs re-derived from the default
+  tolerance. The ii, ei and ee energies of the production evaluators and the full 3x3 analytic strain tensors
+  grad_Eii_wrt_strain, grad_Eei_wrt_strain and grad_Eee_wrt_strain equal their values at the production eta.
+  Removing s_bg from any one channel's strain tensor, or the background term from the ee or ei energy, must
+  fail that channel. Ewald zone strict tolerance (fp64 in both modes); full and mixed are judged separately.
+  Only this fixture and these two split parameters are claimed.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_stress_probe_identities.py::test_ewald_channels_are_eta_independent
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_stress_probe_identities.py::test_ewald_eta_independence_rejects_dropped_background
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

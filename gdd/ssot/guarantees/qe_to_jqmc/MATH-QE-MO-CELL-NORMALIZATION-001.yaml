@@ -1,0 +1,38 @@
+id: MATH-QE-MO-CELL-NORMALIZATION-001
+kind: mathematical
+name: QE conversions emit unit-cell-normalized MOs
+plain_language: >-
+  Every QE conversion kind represents the unit-cell-normalized band psi_n = Omega^(-1/2) sum_G c_nG
+  exp(i(G+k).r): the Omega^(-1/2) is carried by the coefficients (the pGTO and mixed projection
+  right-hand side is c, not sqrt(Omega) c; PW coefficients and B-spline control points are scaled by
+  Omega^(-1/2)); the basis functions and the HDF5 schema are unchanged. On the committed Li QE saves (Gamma
+  and k = 1/4, occupied-band conversion through build_wavefunction_from_projection), the diagonal of conj(C) S
+  C^T with S = compute_overlap_matrix of the converted leaf equals 1 - r_n (r_n the projection's own residual)
+  for the full converted block and both determinant spin channels: pw (analytic overlap) within the fp64
+  projection pair tolerance in full mode and the strict ao_eval tolerance in mixed mode (the real Gamma PW
+  overlap is stored in the ao_eval dtype, and the reference 1 - r_n takes the plane-wave block's cell metric
+  in that same dtype, i.e. its PW-block norm is scaled by fl_ao_eval(V)/V, exactly 1 in full); bspline, pgto+pw and pgto+bspline (cell-quadrature overlaps) within the medium ao/mo
+  zone tolerance. Under the sqrt(Omega) convention the same diagonal is Omega (1 - r_n). For the pure pGTO projection with
+  orthonormalization disabled, the diagonal of conj(C) S_E C^T (S_E = G^H G of the projection's analytic
+  design matrix on the QE G-set) equals 1 - r_n within the fp64 projection pair tolerance. The
+  sqrt(Omega) convention must fail these checks. Full and mixed are judged separately; no mixed result is
+  compared with fp64.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_converted_mos_are_unit_cell_normalized
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: li-gamma, kind: pw}
+    - {fixture: li-k025, kind: pw}
+    - {fixture: li-gamma, kind: bspline}
+    - {fixture: li-gamma, kind: pgto+pw}
+    - {fixture: li-k025, kind: pgto+pw}
+    - {fixture: li-gamma, kind: pgto+bspline}
+    - {fixture: li-k025, kind: pgto+bspline}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_unorthonormalized_pgto_projection_has_cell_normalized_scale
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: li-gamma}
+    - {fixture: li-k025}

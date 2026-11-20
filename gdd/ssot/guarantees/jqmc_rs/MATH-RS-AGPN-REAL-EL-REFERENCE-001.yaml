@@ -1,0 +1,30 @@
+id: MATH-RS-AGPN-REAL-EL-REFERENCE-001
+kind: mathematical
+name: Independent same-precision anchor for real open-shell AGPn energy parameters
+plain_language: >-
+  On the committed O-lsda_k025 pGTO ccECP fixture with four up and two down electrons,
+  nonfactorized real AGPn occupations and unpaired parameters (seed 431), and one
+  electron configuration (seed 41, no cond(G) rejection), the XLA analytical
+  derivative of Re(e_L) equals the automatic derivative of that same forward model
+  in each active precision. Paired and unpaired blocks are separately required and
+  nonzero. This anchors the Rust parity chain against a shared analytical error;
+  it does not cover complex-valued parameters, ln_Psi, or the unwired complex AGPn
+  driver adapter.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_agpn_ecp_reference.py::test_open_shell_twist_agpn_real_el_analytic_matches_autodiff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {block: paired}
+    - {block: unpaired}
+    executable_checks:
+      agpn-ad:
+        site: tests/test_jqmc_kernel/test_agpn_ecp_reference.py::test_open_shell_twist_agpn_real_el_analytic_matches_autodiff#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-analytical-real-parameter-gradient, expression: actual}
+        reference: {role: same-precision-primal-autodiff-gradient, expression: oracle}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}

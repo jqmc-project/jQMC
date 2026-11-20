@@ -1,0 +1,21 @@
+id: IMPL-RS-RICHER-TWIST-LONG-INTERVAL-DRIVER-PARITY-001
+kind: implementation
+name: Complex-twist B-spline DTN production GFMC values preserve same-input parity over long projection intervals
+plain_language: >-
+  The committed QE Li k=(1/4,1/4,1/4) ccECP input realized as a complex B-spline determinant with exp
+  J1/J2 and an active DTN runs one-walker forty-step fixed-mesh GFMC_t with tau 0.3 and GFMC_n with
+  fifteen projections per measurement, seed 34356, energy only. The native complex projection chunk must
+  run, the complex fast state and the B-spline candidate/derivative, DTN derivative and ECP-mesh DTN
+  table caches must engage with every named slow-route counter at zero, and stored weights, energies,
+  squared energies and the public energy are compared with XLA under the existing within-mode backend
+  policy, with final positions and keys exact. The long intervals advance the carried DTN caches over many
+  hops per measurement. Full and mixed are separate same-mode verdicts.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_richer_production_drivers.py::test_bspline_dtn_twist_long_interval_gfmc_values_match_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: n}
+    - {driver: t}

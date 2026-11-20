@@ -1,0 +1,52 @@
+id: IMPL-CLI-OPTIMIZER-CONTROLS-001
+kind: implementation
+name: Explicit VMC TOML controls select the actual SR and LM solvers
+plain_language: >-
+  Actual VMC CLI input selects direct or conjugate-gradient SR exactly once,
+  and active LM with subspace dimension one forwards non-default lm_cond=0.05
+  to the real pencil solver. Record exact controls at the optimizer boundary
+  and observe real downstream solver calls, without substituting numerical
+  results. Both precisions use one J2-only step on committed H2 AE Cartesian MO,
+  Pade J2=1, two walkers, seed 12345 and eight measurements, with no cond(G)
+  selection. A real updated checkpoint is required; overriding either control
+  must fail after a successful baseline. Solver numerical accuracy remains
+  owned by the optimizer's independent dense/pencil guarantees. This input
+  contract does not certify device/native/twist paths or all option products.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_optimizer_controls.py::test_optimizer_toml_controls_reach_real_solvers
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cg_flag: false, use_lm: false, lm_cond: 0.001}
+    - {cg_flag: true, use_lm: false, lm_cond: 0.001}
+    - {cg_flag: false, use_lm: true, lm_cond: 0.05}
+    executable_checks:
+      optimizer-inputs:
+        site: tests/test_jqmc_kernel/test_cli_optimizer_controls.py::test_optimizer_toml_controls_reach_real_solvers#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: arguments-observed-at-real-optimizer-boundary, expression: target_arguments}
+        reference: {role: explicit-TOML-controls, expression: '[[cg_flag, use_lm, lm_cond, 1]]'}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      actual-sr-solver:
+        site: tests/test_jqmc_kernel/test_cli_optimizer_controls.py::test_optimizer_toml_controls_reach_real_solvers#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-CG-and-direct-solver-call-counts, expression: observed_calls}
+        reference: {role: exactly-one-selected-solver-call, expression: expected_calls}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      actual-lm-cutoff:
+        site: tests/test_jqmc_kernel/test_cli_optimizer_controls.py::test_optimizer_toml_controls_reach_real_solvers#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: call-count-and-cutoff-observed-at-real-pencil-solver, expression: observed_lm}
+        reference: {role: explicit-call-count-and-cutoff-only-when-LM-active, expression: expected_lm}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_cli_optimizer_controls.py::test_optimizer_toml_verdict_rejects_ignored_controls
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{fault: force-cg}, {fault: reset-lm-cutoff}]

@@ -1,0 +1,17 @@
+id: IMPL-JQMCQE-PW-TAPER-LSDA-CHANNEL-ATTRS-001
+kind: implementation
+name: A single-k LSDA conversion records the up and the down taper summaries separately
+plain_language: >-
+  On the committed O LSDA gamma save stretched to a vacuum cell, run_qe2jqmc (kind bspline) records the up
+  channel's per-band, occupied-mean and occupied-max spectral loss unlabeled and the down channel's with the
+  _dn label; each equals an independent power-sum oracle sum|c|^2 (1 - w^2) / sum|c|^2 of that channel's
+  bands (kept through its highest occupied band) to ATOL_PYTHON_FP64_LOOSE, and the two channels' maxima
+  differ. Merging only the down channel's per-band array, as the previous code did, leaves the _dn summaries
+  missing and fails (single-k LSDA merge).
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_single_k_lsda_records_both_spin_taper_summaries
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

@@ -1,0 +1,12 @@
+id: NUM-PREC-MIXED-SMOKE-001
+kind: numerical
+name: Mixed-mode production smoke
+plain_language: The continuous and GFMC analytical production paths complete in mixed precision; this is a smoke check,
+  never a correctness oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::test_mixed_production_continuous_analytical_smoke
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::test_mixed_production_gfmc_analytical_smoke

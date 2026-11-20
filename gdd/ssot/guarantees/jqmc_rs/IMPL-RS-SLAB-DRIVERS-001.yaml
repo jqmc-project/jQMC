@@ -1,0 +1,121 @@
+id: IMPL-RS-SLAB-DRIVERS-001
+kind: implementation
+name: Rust/XLA parity of slab driver components
+plain_language: 'The Rust slab evaluators reproduce the XLA drivers component by component: fast local energy, VMC force
+  and stress, GFMC step components, and the MCMC driver route.'
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_local_energy_fast_parity
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_local_energy_fast_parity#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: native
+        reference:
+          role: existing-test-reference
+          expression: jax_eL
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_vmc_force_parity
+  - pytest_node: tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_vmc_stress_parity
+  - pytest_node: tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_gfmc_step_components_parity
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_gfmc_step_components_parity#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: els
+        reference:
+          role: existing-test-reference
+          expression: ref['elements']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_gfmc_step_components_parity#comparison-2
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: e_L
+        reference:
+          role: existing-test-reference
+          expression: ref['e_L']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_gfmc_step_components_parity#comparison-3
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: b_L
+        reference:
+          role: existing-test-reference
+          expression: ref['b_L']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_mcmc_driver_route_parity

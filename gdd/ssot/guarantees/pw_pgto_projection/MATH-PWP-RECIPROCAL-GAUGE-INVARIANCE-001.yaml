@@ -1,0 +1,143 @@
+id: MATH-PWP-RECIPROCAL-GAUGE-INVARIANCE-001
+kind: mathematical
+name: Reciprocal-gauge invariance of PW, pGTO, and mixed conversion
+plain_language: The PW, pGTO, and mixed pGTO+PW converters preserve their physical output when k and every Miller row are
+  transported together by an integer reciprocal shift so that G+k is unchanged, including the +pi/-pi boundary. Changing k
+  without the Miller transport is required to remain different.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_pw_to_pgto_converters_are_reciprocal_gauge_invariant
+    executable_checks:
+      d8-n-458:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_pw_to_pgto_converters_are_reciprocal_gauge_invariant#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: pgto_shifted.residuals
+        reference:
+          role: source-reference-value
+          expression: pgto.residuals
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+      d8-n-459:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_pw_to_pgto_converters_are_reciprocal_gauge_invariant#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: pgto_shifted.coefficients
+        reference:
+          role: source-reference-value
+          expression: pgto.coefficients
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+      d8-n-460:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_pw_to_pgto_converters_are_reciprocal_gauge_invariant#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: q_shifted
+        reference:
+          role: source-reference-value
+          expression: q_mixed
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+      d8-n-461:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_pw_to_pgto_converters_are_reciprocal_gauge_invariant#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: mixed_shifted.residuals
+        reference:
+          role: source-reference-value
+          expression: mixed.residuals
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+      d8-n-462:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_pw_to_pgto_converters_are_reciprocal_gauge_invariant#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: mixed_shifted.coefficients
+        reference:
+          role: source-reference-value
+          expression: mixed.coefficients
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+      d8-n-463:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_pw_to_pgto_converters_are_reciprocal_gauge_invariant#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: coeff_shifted
+        reference:
+          role: source-reference-value
+          expression: coeff_mixed
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_truncated_pw_converter_is_reciprocal_gauge_invariant
+    executable_checks:
+      d8-n-464:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_truncated_pw_converter_is_reciprocal_gauge_invariant#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: q_shifted
+        reference:
+          role: source-reference-value
+          expression: q_projected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+      d8-n-465:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_truncated_pw_converter_is_reciprocal_gauge_invariant#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: projected_shifted.residuals
+        reference:
+          role: source-reference-value
+          expression: projected.residuals
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001

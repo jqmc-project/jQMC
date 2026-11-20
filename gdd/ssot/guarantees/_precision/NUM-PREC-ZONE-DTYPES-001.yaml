@@ -1,0 +1,39 @@
+id: NUM-PREC-ZONE-DTYPES-001
+kind: numerical
+name: Per-kernel zone dtypes
+plain_language: Every production kernel returns the declared per-zone dtypes in every supported precision mode (AO, MO,
+  Jastrow, geminal, determinant, Coulomb, kinetic, wavefunction, and fast updates); this is a smoke check, never a correctness
+  oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestAODtype::test_compute_AOs_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestAODtype::test_compute_AOs_grad_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestAODtype::test_compute_AOs_laplacian_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestMODtype::test_compute_MOs_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestJastrowDtype::test_jastrow_two_body_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestJastrowDtype::test_jastrow_three_body_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestJastrowDtype::test_jastrow_part_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestGeminalDtype::test_geminal_matrix_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestDeterminantDtype::test_ln_det_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestDeterminantDtype::test_compute_grads_and_laplacian_ln_Det_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestCoulombDtype::test_bare_coulomb_el_el_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestCoulombDtype::test_bare_coulomb_el_ion_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestCoulombDtype::test_bare_coulomb_total_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestKineticDtype::test_kinetic_energy_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestWavefunctionDtype::test_ln_wavefunction_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestAOSpheDtype::test_compute_AOs_sphe_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestAOSpheDtype::test_compute_AOs_sphe_grad_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestAOSpheDtype::test_compute_AOs_sphe_laplacian_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestMOExtendedDtype::test_compute_MOs_grad_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestMOExtendedDtype::test_compute_MOs_laplacian_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestJastrowOneBodyDtype::test_compute_Jastrow_one_body_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestGeminalFastUpdateDtype::test_geminal_up_one_row_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestGeminalFastUpdateDtype::test_geminal_dn_one_column_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestECPDtype::test_compute_ecp_local_parts_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestECPDtype::test_compute_ecp_non_local_eval_shape_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestLocalEnergyDtype::test_compute_local_energy_output_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestKineticEvalShape::test_kinetic_energy_eval_shape_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::TestKineticEvalShape::test_evaluate_ln_wavefunction_eval_shape_dtype

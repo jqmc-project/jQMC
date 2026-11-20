@@ -1,0 +1,28 @@
+id: IMPL-OPT-SR-DEVICE-NONFINITE-REFUSAL-001
+kind: implementation
+name: Non-finite SR samples are refused on the device routes, on every rank together
+plain_language: >-
+  A non-finite centered SR sample (a NaN or infinite log derivative or local energy) makes the reduced metric
+  diagonal or coordinate force non-finite. The dense single-k, dense twist-scope and streaming device SR routes
+  test those already reduced coordinate vectors and raise the host route's ValueError "wide SR sample arrays must
+  be finite." instead of freezing the coordinate or returning a zero solve; no extra pass over the samples is made.
+  The reduced vectors agree on the ranks of the solve; a twist-local scope adds one world flag allreduce, so a
+  NaN on one twist makes every rank of every twist raise together, without a hang, on the device and host twist
+  routes.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_solver_guards.py::test_nonfinite_sr_sample_raises_on_every_device_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: dense-single-k, kind: log-derivative}
+    - {route: dense-single-k, kind: local-energy}
+    - {route: dense-planb, kind: log-derivative}
+    - {route: dense-planb, kind: local-energy}
+    - {route: streaming, kind: log-derivative}
+    - {route: streaming, kind: local-energy}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_nonfinite_twist_local_sample_raises_on_every_twist
+    required_precision_modes: [full, mixed]
+    required_execution_profiles: [{name: mpi, world_size: 2}]
+    required_parameter_cases: [{device: false}, {device: true}]

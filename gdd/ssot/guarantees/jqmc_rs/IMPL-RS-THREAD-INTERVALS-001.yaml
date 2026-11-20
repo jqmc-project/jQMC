@@ -1,0 +1,78 @@
+id: IMPL-RS-THREAD-INTERVALS-001
+kind: implementation
+name: Fixed-input native GFMC intervals across one, two and four Rayon threads
+plain_language: >-
+  Five ordered fixed walkers must have the same native GFMC_t and GFMC_n
+  interval outputs under actual one-, two- and four-thread Rayon pools.
+  H2 AE spherical/no-J, H2 ECP Cartesian/J1+J2 exp tmove and dltmove,
+  Gamma Li ECP pGTO/J1+J2 exp and non-Gamma Li ECP pGTO/J1+J2 exp
+  tmove and dltmove cover the real and complex batch APIs. Existing interval
+  seeds 1/3/2/4 plus five explicit linear offsets and uint32 keys (0,7+i)
+  define inputs without conditioning filters. All spawned processes receive
+  identical active-mode frozen Hamiltonians, positions, keys and native
+  precision policies. Verify live pool widths, not just environment values.
+  For alat 0.30, compare GFMC_t tau 0.20 and GFMC_n three substeps with
+  E_scf -1.0, each with native mesh randomness off/on and 12-point ECP
+  quadrature. Require every coordinate, energy, weight, HF/Pulay force,
+  periodic stress and GFMC_n V_diag field in walker order at same-mode
+  central strict tolerance with finite values. RNG keys and integer
+  substep/potential-update counters are exact. Width mismatch, omitted e_L,
+  reversed walker energies and a flipped RNG bit must be rejected. Require
+  full and mixed separately, without cross-backend or cross-precision
+  comparisons or a floating-point bit-identity contract. This is thread
+  invariance, not an independent physical energy/force oracle.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+  - verdict_method: VM-IMPL-ROUTE-PARITY-001
+    nodes:
+      - pytest_node: tests/test_rs_kernel/test_native_thread_intervals.py::test_native_intervals_match_across_thread_counts
+        required_precision_modes: [full, mixed]
+        required_parameter_cases:
+          - {cell: mol_ae_sphe}
+          - {cell: mol_ecp_tmove}
+          - {cell: mol_ecp_dltmove}
+          - {cell: pbc_gamma}
+          - {cell: twist_j12_tmove}
+          - {cell: twist_j12_dltmove}
+        executable_checks:
+          native-interval-numerical-fields:
+            site: tests/test_rs_kernel/test_native_thread_intervals.py::_compare_interval_batches#comparison-1
+            comparator: numpy.testing.assert_allclose
+            actual: {role: two-or-four-thread-native-interval-batch, expression: actual_value}
+            reference: {role: one-thread-native-interval-batch-identical-inputs, expression: expected_value}
+            iterations:
+              variable: field
+              required_values: [e_L, w_L, r_up, r_dn, hf_dR, hf_dr_up, hf_dr_dn, pp_dR, pp_dr_up, pp_dr_dn, V_diag]
+            precision:
+              full:
+                policy: CMP-ZONE-ALLCLOSE-STRICT-001
+                zones: [ao_eval, det_eval, det_ratio, wf_eval, wf_kinetic, coulomb, local_energy, jastrow_eval, jastrow_grad_lap, ewald]
+              mixed:
+                policy: CMP-ZONE-ALLCLOSE-STRICT-001
+                zones: [ao_eval, det_eval, det_ratio, wf_eval, wf_kinetic, coulomb, local_energy, jastrow_eval, jastrow_grad_lap, ewald]
+          native-interval-periodic-stress:
+            site: tests/test_rs_kernel/test_native_thread_intervals.py::_compare_interval_batches#comparison-2
+            comparator: numpy.testing.assert_allclose
+            actual: {role: two-or-four-thread-native-periodic-stress, expression: actual_value}
+            reference: {role: one-thread-native-periodic-stress-identical-inputs, expression: expected_value}
+            iterations:
+              variable: field
+              required_values: [stress_HF, stress_PP]
+            precision:
+              full:
+                policy: CMP-ZONE-ALLCLOSE-STRICT-001
+                zones: [ao_eval, det_eval, det_ratio, wf_eval, wf_kinetic, coulomb, local_energy, jastrow_eval, jastrow_grad_lap, ewald]
+              mixed:
+                policy: CMP-ZONE-ALLCLOSE-STRICT-001
+                zones: [ao_eval, det_eval, det_ratio, wf_eval, wf_kinetic, coulomb, local_energy, jastrow_eval, jastrow_grad_lap, ewald]
+          native-interval-discrete-fields:
+            site: tests/test_rs_kernel/test_native_thread_intervals.py::_compare_interval_batches#exact-comparison-1
+            comparator: numpy.testing.assert_array_equal
+            actual: {role: two-or-four-thread-native-discrete-output, expression: 'got[field]'}
+            reference: {role: one-thread-native-discrete-output-identical-inputs, expression: 'expected[field]'}
+            iterations:
+              variable: field
+              required_values: [final_key, n_substeps, n_pot_updates]
+            precision:
+              full: {policy: CMP-EXACT-VALUES-001}
+              mixed: {policy: CMP-EXACT-VALUES-001}

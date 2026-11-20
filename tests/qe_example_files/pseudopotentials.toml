@@ -1,0 +1,43 @@
+# Third-party pseudopotentials read by the QE example tree.
+#
+# The files are not kept in git. tests/_test_data_cache.py downloads each one
+# from `url` into the host-local test-data cache, checks the bytes against
+# `sha256` (the upstream file, unmodified), and the test session links it at
+# every path of `locations` (relative to this directory) in its mirror of
+# tests/qe_example_files. QE reads the pseudopotential named in
+# data-file-schema.xml from the save directory, hence the copies there.
+#
+# Pre-populate the cache with `python -m tests._test_data_cache`.
+
+[[pseudopotential]]
+name = "H.coulomb-ae.UPF"
+url = "https://pseudopotentials.quantum-espresso.org/upf_files/H.coulomb-ae.UPF"
+sha256 = "135c0d8fda51204c41a54e67c929654fd16f87ae447e6f2ab1e79c0479d5ff38"
+locations = [
+  "H.coulomb-ae.UPF",
+  "H-ae_gamma/out/h_gamma.save/H.coulomb-ae.UPF",
+  "H-ae_k025/out/h_k025.save/H.coulomb-ae.UPF",
+]
+
+[[pseudopotential]]
+name = "Li.ccECP.upf"
+url = "https://pseudopotentiallibrary.org/recipes/Li/ccECP/Li.ccECP.upf"
+sha256 = "8e1a4624548d2a6d7d284c0c377bd870e592e39dae178a9b86493091b6d0291b"
+locations = [
+  "Li.ccECP.upf",
+  "Li_gamma/out/li.save/Li.ccECP.upf",
+  "Li_k025/out/li_k025.save/Li.ccECP.upf",
+  "Li_k_twist/out/li_twist.save/Li.ccECP.upf",
+  "Li_tiling_sectors/out/li_tiling.save/Li.ccECP.upf",
+]
+
+[[pseudopotential]]
+name = "O.ccECP.upf"
+url = "https://pseudopotentiallibrary.org/recipes/O/ccECP/O.ccECP.upf"
+sha256 = "9960c094ca870fc3bed32b12713a71b5c2b8f8c70c0d3ff5f26395c3dd83f3a3"
+locations = [
+  "O.ccECP.upf",
+  "O-lsda_gamma/out/o.save/O.ccECP.upf",
+  "O-lsda_k025/out/o_k025.save/O.ccECP.upf",
+  "O_tiling_sectors/out/o_tiling.save/O.ccECP.upf",
+]

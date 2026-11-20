@@ -1,0 +1,24 @@
+[control]
+job_type = "mcmc"
+mcmc_seed = 34478
+number_of_walkers = 64
+max_time = 86400
+restart = false
+restart_chk = "restart.h5"
+hamiltonian_h5 = "hamiltonian_data.h5"
+verbosity = "high"
+
+[mcmc]
+num_mcmc_steps = 5000
+num_mcmc_per_measurement = 20
+num_mcmc_warmup_steps = 30
+num_mcmc_bin_blocks = 10
+Dt = 3.0
+epsilon_AS = 0.0
+atomic_force = false
+compute_stress = false
+use_swct = true
+parameter_derivatives = false
+
+[precision]
+mode = "mixed"

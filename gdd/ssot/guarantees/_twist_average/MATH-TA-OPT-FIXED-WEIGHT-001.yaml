@@ -1,0 +1,29 @@
+id: MATH-TA-OPT-FIXED-WEIGHT-001
+kind: mathematical
+name: Fixed BZ objective through the twist optimization driver
+plain_language: The twist driver and MCMC optimization facade deliver the nonzero derivative of an independently normalized
+  finite-state BZ objective with unequal weights, across repeated optimization chunks. Omitting the fixed BZ weight yields
+  a different numerical force and fails the oracle.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_twist_driver_produces_the_unequally_weighted_gradient
+    executable_checks:
+      d8-n-004:
+        site: tests/test_jqmc_kernel/test_optimizer_twist_normalization.py::test_twist_driver_produces_the_unequally_weighted_gradient#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: observed
+        reference:
+          role: source-reference-value
+          expression: np.full((2, 1), expected)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001

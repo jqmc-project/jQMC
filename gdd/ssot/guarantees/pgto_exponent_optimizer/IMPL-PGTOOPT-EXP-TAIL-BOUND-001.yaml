@@ -1,0 +1,83 @@
+id: IMPL-PGTOOPT-EXP-TAIL-BOUND-001
+kind: implementation
+name: Exponent-tail box bound of the exponent-only optimizer and its entry-point wiring
+plain_language: >-
+  optimize_pgto_exponents(exp_tail_eps=eps) bounds ln(alpha) <= ln(alpha_max(l, eps)) per shell angular momentum l
+  (recorded per unique exponent by _build_layout, which rejects equivalent atoms whose shells disagree in l), with
+  g_max the largest |G + k| of the WFC spheres of all references (equal to the q rows of _reference_block, the same
+  for LSDA up and down, the maximum over twists, never g_cut). On the O LSDA ccECP seed at a 10 Ry handoff the s 6.88
+  and p 8.45 exponents exceed the bound: one warning reports the two clipped seeds, the deployed baseline is
+  evaluated on the seed clipped to alpha_max * exp(-PGTO_EXP_TAIL_CLIP_MARGIN), the result is adopted with every
+  exponent at most alpha_max(l) * (1 + RTOL_PYTHON_FP64_TIGHT) (the exp of a clamped ln alpha) and a per-l audit
+  report that compares ln(alpha) with ln(alpha_max) exactly. A seed inside the bound
+  starts SLSQP unchanged and silently; an SLSQP point beyond the box is clamped before the deployed audit; a rejected
+  point returns the clipped seed while PGTO_EXP_TAIL_RETURN_CLIPPED_ON_REJECT is set.
+  exp_tail_eps=None (default, also with a g_max argument) is the optimizer without the tail bound: SLSQP receives exactly the
+  pre-change arguments (the unclipped seed ln(alpha), the floor-only or absent box, one log-condition inequality
+  [0, inf), method SLSQP and options {ftol, maxiter, disp: False}), its point is used unclamped for the candidate
+  basis, the deployed baseline is the caller's own seed object, no bound diagnostics are produced, and the SLSQP
+  point, the objective, gradient and constraint values at the seed, and every result field equal those of the plain
+  call bit for bit in the same process (a recorded hex snapshot is not used: the iterates differ in the last bits
+  between precision modes and jax versions). run_qe2jqmc resolves exp_tail_eps (absent: PGTO_EXP_TAIL_EPS_USER_DEFAULT = 1e-2;
+  None or 0: off) and forwards it to the single-k and twist-shared optimizer calls; with the
+  default the fixed 10 Ry O LSDA conversion projects onto the returned bounded basis; jqmc-tool qe --exp-tail-eps and
+  QE_Workflow carry the same default. Full and mixed are judged separately (the optimizer is fp64 in both).
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_wfc_g_max_equals_reference_block_target_q
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: Li_gamma}
+    - {fixture: Li_k025}
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_layout_records_shell_angular_momentum_per_exponent
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_g_max_is_maximum_over_lsda_channels_and_twists
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_active_bound_clips_lsda_seed_and_bounds_optimised_exponents
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_inactive_bound_leaves_seed_unchanged_and_silent
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_slsqp_overshoot_is_clamped_to_box_upper_bound
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_rejected_point_returns_clipped_seed_per_provisional_policy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_disabled_bound_is_bit_identical_to_pre_change_optimizer
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: mixed_floor, spelling: omitted}
+    - {case: mixed_floor, spelling: explicit-none}
+    - {case: mixed_floor, spelling: none-with-g-max}
+    - {case: pgto, spelling: omitted}
+    - {case: pgto, spelling: explicit-none}
+    - {case: pgto, spelling: none-with-g-max}
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_run_qe2jqmc_resolves_and_forwards_exp_tail_eps
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {setting: absent, twist_average: false}
+    - {setting: none, twist_average: false}
+    - {setting: zero, twist_average: false}
+    - {setting: explicit, twist_average: false}
+    - {setting: absent, twist_average: true}
+    - {setting: none, twist_average: true}
+    - {setting: zero, twist_average: true}
+    - {setting: explicit, twist_average: true}
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_run_qe2jqmc_default_deploys_bounded_basis_on_fixed_lsda_cutoff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_jqmc_tool_qe_exp_tail_eps_option
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cli_value: default}
+    - {cli_value: '0'}
+    - {cli_value: '0.05'}
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_qe_workflow_exp_tail_eps_command
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

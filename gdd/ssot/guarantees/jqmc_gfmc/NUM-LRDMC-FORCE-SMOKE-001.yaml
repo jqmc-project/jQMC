@@ -1,0 +1,14 @@
+id: NUM-LRDMC-FORCE-SMOKE-001
+kind: numerical
+name: LRDMC force smoke runs
+plain_language: LRDMC force evaluation completes with finite results with and without SWCT for both drivers; this is a smoke
+  check, never a correctness oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_force.py::TestGFMCNForce::test_lrdmc_force_with_SWCT_n
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_force.py::TestGFMCNForce::test_lrdmc_force_without_SWCT_n
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_force.py::TestGFMCTForce::test_lrdmc_force_with_SWCT_t
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_force.py::TestGFMCTForce::test_lrdmc_force_without_SWCT_t

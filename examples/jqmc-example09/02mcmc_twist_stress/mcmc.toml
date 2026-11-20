@@ -1,0 +1,29 @@
+[control]
+job_type = "mcmc"
+mcmc_seed = 34456
+number_of_walkers = 8
+max_time = 86400
+restart = false
+# A directory, not one HDF5 file, on the twist-averaged route.
+restart_chk = "restart_twists"
+hamiltonian_h5 = "hamiltonian_twists.h5"
+# The /twists schema in hamiltonian_h5 selects twist averaging.
+verbosity = "high"
+[mcmc]
+num_mcmc_steps = 1000
+num_mcmc_per_measurement = 40
+num_mcmc_warmup_steps = 30
+num_mcmc_bin_blocks = 10
+Dt = 1.5
+epsilon_AS = 0.0
+atomic_force = true
+compute_stress = true
+use_swct = true
+parameter_derivatives = false
+
+[coulomb]
+mpc = true
+mpc_cutoff = 30.0
+
+[precision]
+mode = "mixed"

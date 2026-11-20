@@ -1,0 +1,25 @@
+id: MATH-AO-NON-REDUCED-BASIS-IMAGE-SET-001
+kind: mathematical
+name: Periodic AO image selection is complete for any cell basis
+plain_language: >-
+  Periodic AO image selection keeps every lattice image whose primitive envelope exceeds AO_IMAGE_TRUNCATION_ATOL
+  somewhere in the home cell, for any cell basis of the lattice, including non-reduced bases with an ill-conditioned
+  Gram matrix, because the box-constrained closest-approach distance is computed exactly (27-pattern active-set
+  enumeration) rather than by a fixed number of coordinate-descent sweeps. For the lattice diag(6,7,8) Bohr written in
+  the basis U @ diag(6,7,8) with U = [[1,-6,-7],[0,7,11],[0,-2,-3]] (det U = 1) and one hydrogen with the s/p/d/f test
+  shells: the per-atom image set of every primitive equals the set selected by an exact scipy BVLS closest approach; the
+  cell-cell _primitive_image_list_debug oracle (Cartesian point-to-face/edge geometry, independent of production) equals
+  the same BVLS reference; and the XLA AO values of the image-expanded leaf at Gamma (real leaf) and at a twist (complex
+  leaf), and the Rust compute_AOs_exact values at Gamma, equal the brute-force lattice sum of the molecular AO kernel
+  over the reduced cell within the ao_eval strict zone plus AO_IMAGE_TRUNCATION_ATOL. Full and mixed are each required.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_periodic_pgto_values_in_non_reduced_basis_match_bruteforce_image_sum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital_pgto.py::test_pgto_value_in_non_reduced_basis_matches_bruteforce_image_sum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

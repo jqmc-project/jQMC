@@ -1,0 +1,55 @@
+id: MATH-MCMC-MPI-ESTIMATORS-001
+kind: mathematical
+name: Distributed force, stress and pressure against a fixed raw ensemble
+plain_language: >-
+  Two actual MPI ranks, each carrying ten fixed slices and three unequal
+  walkers, must give force/stress/pressure means and jackknife errors equal
+  to independent AD after deleting each rank/walker/time block from the raw
+  normalized ensemble. Rank inputs deliberately differ. One warmup slice,
+  three local blocks, real and complex energies, and both precision modes
+  are required. An actual serial accessor with all six walkers must match
+  the same reference. Dropping non-root contributions must fail after a
+  passing baseline. Compare deterministic values at same-mode local_energy
+  strict tolerances, not statistical confidence bands. This is stored-buffer
+  aggregation, not sampling, physical force or stress correctness.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_mcmc_mpi_estimators_match_raw_ensemble_derivatives
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {quantity: force, complex_values: false}
+    - {quantity: stress, complex_values: false}
+    - {quantity: pressure, complex_values: false}
+    - {quantity: force, complex_values: true}
+    - {quantity: stress, complex_values: true}
+    - {quantity: pressure, complex_values: true}
+    executable_checks:
+      distributed-mean-and-error:
+        site: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_mcmc_mpi_estimators_match_raw_ensemble_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: two-rank-mean-and-jackknife-error, expression: actual}
+        reference: {role: independent-raw-ensemble-derivative, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      serial-mean-and-error:
+        site: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_mcmc_mpi_estimators_match_raw_ensemble_derivatives#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: one-rank-six-walker-mean-and-jackknife-error, expression: serial_actual}
+        reference: {role: independent-raw-ensemble-derivative, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_mcmc_mpi_oracle_rejects_missing_nonroot_contribution
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {quantity: force, complex_values: false}
+    - {quantity: stress, complex_values: false}
+    - {quantity: pressure, complex_values: false}
+    - {quantity: force, complex_values: true}
+    - {quantity: stress, complex_values: true}
+    - {quantity: pressure, complex_values: true}

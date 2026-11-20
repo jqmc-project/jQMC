@@ -1,0 +1,18 @@
+id: IMPL-OPT-SHIPPED-DEFAULT-SNAPSHOT-001
+kind: implementation
+name: Reviewed published optimizer configuration
+plain_language: >-
+  The shipped VMC optimizer keyword dictionary retains the reviewed keys, exact values and scalar types.
+  A changed, missing or extra default must fail, including replacing a boolean by an equal-valued integer.
+  This is a configuration snapshot, not a calculated physics output or a claim of optimal defaults for every system.
+  Propagation and solver correctness remain separate guarantees; this does not resolve the Plan-B minimum-reference-weight option.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_shipped_optimizer_defaults_equal_reviewed_snapshot
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_shipped_optimizer_default_snapshot_rejects_drift
+    required_parameter_cases: [{"fault":"method"},{"fault":"delta"},{"fault":"epsilon"},{"fault":"cg_flag"},{"fault":"cg_max_iter"},{"fault":"cg_tol"},{"fault":"use_lm"},{"fault":"lm_subspace_dim"},{"fault":"lm_cond"},{"fault":"missing-key"},{"fault":"extra-key"},{"fault":"bool-as-int"}]
+    required_precision_modes: [full, mixed]

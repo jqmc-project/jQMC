@@ -1,0 +1,23 @@
+id: MATH-DET-AS-FACTOR-TINY-ROW-001
+kind: mathematical
+name: The AS regularization factor of a geminal with a row or column below sqrt(tiny) is its scale-invariant value
+plain_language: >-
+  compute_AS_regularization_factor_fast_update (XLA) and the native AS factor
+  (jqmc_rs.compute_AS_regularization_factor_fast_update) evaluate R_AS = (S F)^(-3/8) without an underflowing S or an
+  overflowing F: for a finite, nonsingular geminal and its inverse the result equals the row-rescaled log-domain
+  reference, and it does not change when one row (up electron) or column (down electron) of G is scaled further into
+  the region where its squares underflow (S ~ c^2, F ~ c^-2). Evidence: committed water ccECP cc-pVQZ G at the PCG64
+  seed 2025 start and its numpy inverse with row 0 or column 0 scaled by c in {1e-160, 1e-170} (inverse column / row by
+  1/c), compared with the reference and with the factor at c = 1e-60 (linear range) at the det_eval / det_ratio strict
+  pair; the 1x1 x^12 geminal at x = 1e-14 (~4e-171) must give exactly the identity value 1 within the same pair. Full
+  and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_as_factor_robust.py::test_xla_as_factor_is_invariant_under_a_tiny_row_or_column
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{spin: up, scale: 1.0e-160}, {spin: up, scale: 1.0e-170}, {spin: down, scale: 1.0e-160}, {spin: down, scale: 1.0e-170}]
+  - pytest_node: tests/test_rs_kernel/test_mcmc_as_factor_robust_native.py::test_native_as_factor_is_invariant_under_a_tiny_row_or_column
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{spin: up, scale: 1.0e-160}, {spin: up, scale: 1.0e-170}, {spin: down, scale: 1.0e-160}, {spin: down, scale: 1.0e-170}]

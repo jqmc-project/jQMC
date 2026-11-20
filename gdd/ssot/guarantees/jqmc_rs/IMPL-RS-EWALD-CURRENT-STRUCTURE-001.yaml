@@ -1,0 +1,40 @@
+id: IMPL-RS-EWALD-CURRENT-STRUCTURE-001
+kind: implementation
+name: Native Rust Ewald energy follows the current structure of the Hamiltonian
+plain_language: >-
+  The native Rust local energy evaluates the periodic Ewald energy of the structure the Hamiltonian currently holds,
+  as the XLA local energy does, not the setup-time caches of build_ewald_data (real_image_list, g_vectors, g_factors,
+  ii_energy). On the committed periodic lithium fixture pbc_gamma_sphepgto_j12, with ion 0 displaced by
+  (0.25, 0.10, -0.20) Bohr in every Structure_data leaf, and with the cell and nuclei strained by
+  Hamiltonian_data._apply_strain (F = I + eps, about 2 percent with shear), the cached ii_energy differs from the
+  ion-ion energy of the changed structure (non-vacuity), the XLA ion-ion plus electron-ion plus electron-electron
+  Ewald energy equals an independent textbook NumPy Ewald sum of the changed point charges, and the Rust-minus-XLA
+  local-energy gap of the free native local energy and of the production native observable context equals the gap
+  of the same Hamiltonian after the checkpoint-load Ewald rebuild, at the fp64 ewald-zone backend tolerance. Full and
+  mixed precision are each required. This does not certify other fixtures, other displacements or strains, or
+  native force and stress kernels on a changed structure.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ewald_native_current_structure.py::test_native_local_energy_follows_current_structure
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{case: displaced_ion}, {case: strained_cell}]
+    executable_checks:
+      free-native-gap:
+        site: tests/test_rs_kernel/test_ewald_native_current_structure.py::test_native_local_energy_follows_current_structure#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-minus-xla-free-e-l-changed-structure, expression: gap_free}
+        reference: {role: rust-minus-xla-free-e-l-rebuilt-ewald, expression: gap_free_rebuilt}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ewald]}
+      ctx-native-gap:
+        site: tests/test_rs_kernel/test_ewald_native_current_structure.py::test_native_local_energy_follows_current_structure#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-minus-xla-ctx-e-l-changed-structure, expression: gap_ctx}
+        reference: {role: rust-minus-xla-ctx-e-l-rebuilt-ewald, expression: gap_ctx_rebuilt}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ewald]}

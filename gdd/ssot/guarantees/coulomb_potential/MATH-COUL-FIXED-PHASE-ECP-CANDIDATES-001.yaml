@@ -1,0 +1,47 @@
+id: MATH-COUL-FIXED-PHASE-ECP-CANDIDATES-001
+kind: mathematical
+name: Fixed-phase ECP keeps the signed real value of every independent candidate
+plain_language: >-
+  On the committed lithium_k025.h5 Li DTN SD twist input, the standard and fast
+  fixed-phase projector APIs preserve every proposed configuration and return
+  the real part of each independently assembled complex nonlocal ECP term.
+  Full-Psi and determinant-only ratios are separate required cases; the latter
+  supplies the dltmove boundary. The unchanged seed7 image-offset configuration
+  has one electron per spin, cond(G)<1e4, NN=1, Nv=12 and identity rotation.
+  Both real signs and a nonzero imaginary ECP contribution must be present.
+  Dropping the real projection or using magnitude instead of signed real value
+  must fail the same independent reference. The existing strict zone comparison
+  applies separately in full and mixed; no VMC complex value is substituted for
+  an LRDMC signed transition element.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_policy.py::test_fixed_phase_ecp_candidates_match_independent_real_projection
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/test_complex_ecp_policy.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'actual'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: standard, determinant_only: false}
+    - {route: standard, determinant_only: true}
+    - {route: fast, determinant_only: false}
+    - {route: fast, determinant_only: true}
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_policy.py::test_fixed_phase_candidate_oracle_rejects_projection_fault
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/test_complex_ecp_policy.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'actual'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{fault: omit-real-projection}, {fault: absolute-instead-of-real}]

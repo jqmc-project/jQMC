@@ -1,0 +1,24 @@
+id: IMPL-DET-GRADS-LAP-BWD-NO-COMPLEX-WARNING-001
+kind: implementation
+name: The grads-and-Laplacian custom VJP runs at k != Gamma without a ComplexWarning filter
+plain_language: On the all-electron H4 periodic twist H4_pbc_ae_k025_cart.h5 with a time-reversal SD, a dense complex
+  AO AGP and a four-MO AGPn geminal, the reverse-mode derivative of every compute_grads_and_laplacian_ln_Det output
+  with respect to the geminal parameters and both electron-coordinate slots, eager and under jax.jit, raises no
+  numpy ComplexWarning while ComplexWarning is promoted to an error. A spy on _grads_lap_body (called only by the
+  backward pass) proves the backward pass ran on complex data; the electron-coordinate cotangents are real, finite
+  and non-zero. This is the evidence that the backward pass needs no warning suppression at its real projection of
+  the coordinate cotangents; it does not check derivative values.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_grads_lap_bwd_complex_warning.py::test_grads_lap_bwd_at_twist_emits_no_complex_warning
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: sd_tr, jit: false}
+    - {case: sd_tr, jit: true}
+    - {case: agp, jit: false}
+    - {case: agp, jit: true}
+    - {case: agpn, jit: false}
+    - {case: agpn, jit: true}

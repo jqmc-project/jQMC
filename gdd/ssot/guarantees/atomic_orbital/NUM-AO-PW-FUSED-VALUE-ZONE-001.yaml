@@ -1,0 +1,21 @@
+id: NUM-AO-PW-FUSED-VALUE-ZONE-001
+kind: numerical
+name: Value dtype of the fused real plane-wave AO evaluation
+plain_language: >-
+  compute_AOs_value_grad_lap on a real Gamma plane-wave leaf returns the value in the ao_eval zone dtype
+  (the dtype compute_AOs returns) and the gradient and Laplacian in the ao_grad_lap zone dtype, in every
+  supported precision mode, as documented for the fused API. The expected dtypes come from
+  the zone table of the active mode; the dedicated check also compares the fused value with the direct numpy
+  cos(G.r) / sin(G.r) reference. The dtype part is a contract, not a correctness oracle.
+verdict_methods: [VM-NUM-SMOKE-001]
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_fused_value_grad_lap_returns_documented_zone_dtypes
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_value_grad_lap_consistency
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}

@@ -1,0 +1,19 @@
+id: MATH-ECP-LEGENDRE-CLOSED-FORM-001
+kind: mathematical
+name: Legendre values and derivative endpoint identities remain exact anchors
+plain_language: >-
+  Both arithmetic modes preserve the existing strict coulomb P_l value comparison
+  with the independently tabulated polynomial and derivative endpoint formula
+  P_l'(+-1)=(+-1)^(l-1)l(l+1)/2 on l=0..6. The l=1/2 finite-value control refuses the
+  nonfinite endpoints of the recurrence form l (P_(l-1) - x P_l) / (1 - x^2). This is an independent closed-form/finite-value anchor, not an AD
+  or mixed/full numerical-fidelity claim. The unchanged strict whole-grid AD check remains separately registered in both modes.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_legendre_derivative.py::test_legendre_derivative_matches_polynomial_on_closed_interval
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{l: 0}, {l: 1}, {l: 2}, {l: 3}, {l: 4}, {l: 5}, {l: 6}]
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_legendre_derivative.py::test_legendre_derivative_check_rejects_the_recurrence_form
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{l: 1}, {l: 2}]

@@ -1,0 +1,579 @@
+id: IMPL-RS-WAVEFUNCTION-KERNELS-001
+kind: implementation
+name: Rust/XLA parity of wavefunction kernels
+plain_language: The Rust Jastrow, ln(det), and kinetic kernels reproduce the XLA evaluators, including the J3 channels,
+  the Jastrow form token, and composite AOs with core electrons. The native FAST energy chunk of a raw-AO molecular J3
+  contracts its chunk-carried J3 derivative table in both precision modes (in mixed precision in fp64, with the summed
+  Jastrow gradient and Laplacian rounded to the fp32 jastrow_grad_lap zone, as the GFMC kinetic does); its endpoint
+  energy equals the XLA local energy rebuilt from scratch at the returned walkers. The native FAST energy chunk of a
+  real-Gamma periodic MO-pGTO ccECP geminal (spherical and Cartesian lithium cells, J1+J2) carries the sweep's
+  determinant state across steps in both precision modes (in mixed precision the zone-local fp32 ao_eval sweep values)
+  and hands it to the FAST kinetic and the ECP non-local; its endpoint energy equals the XLA local energy rebuilt from
+  scratch at the returned walkers.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_chain_modes.py::test_molecular_mo_j3_chunk_energy_matches_xla_at_returned_walkers
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      rectangular-mo-j3-endpoint-energy:
+        site: tests/test_rs_kernel/test_chain_modes.py::_assert_value_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-real-molecular-chunk-energy, expression: rust_value}
+        reference: {role: xla-from-scratch-energy-at-native-endpoint, expression: xla_value}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+  - pytest_node: tests/test_rs_kernel/test_chain_modes.py::test_molecular_raw_ao_j3_chunk_energy_matches_xla_at_returned_walkers
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_j123}
+    - {pattern: mol_cart_sd_j123}
+    executable_checks:
+      raw-ao-j3-endpoint-energy:
+        site: tests/test_rs_kernel/test_chain_modes.py::_assert_value_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-real-molecular-chunk-energy, expression: rust_value}
+        reference: {role: xla-from-scratch-energy-at-native-endpoint, expression: xla_value}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+  - pytest_node: tests/test_rs_kernel/test_chain_modes.py::test_periodic_pgto_chunk_energy_matches_xla_at_returned_walkers
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell: lithium.h5}
+    - {cell: lithium_cart.h5}
+    executable_checks:
+      periodic-pgto-endpoint-energy:
+        site: tests/test_rs_kernel/test_chain_modes.py::_assert_value_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-real-periodic-chunk-energy, expression: rust_value}
+        reference: {role: xla-from-scratch-energy-at-native-endpoint, expression: xla_value}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+  - pytest_node: tests/test_rs_kernel/test_jastrow.py::test_jastrow_one_body_matches_jax
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_jastrow.py::test_jastrow_one_body_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_jastrow.py::test_jastrow_two_body_matches_jax
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_jastrow.py::test_jastrow_two_body_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_jastrow.py::test_jastrow_three_body_value_matches_jax
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_jastrow.py::test_jastrow_three_body_value_matches_jax#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_eval
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_ln_det
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_ln_det#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: gu
+        reference:
+          role: existing-test-reference
+          expression: Gu
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_ln_det#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: gd
+        reference:
+          role: existing-test-reference
+          expression: Gd
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_ln_det#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: lu
+        reference:
+          role: existing-test-reference
+          expression: Lu
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+      comparison-4:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_ln_det#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: ld
+        reference:
+          role: existing-test-reference
+          expression: Ld
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: gu
+        reference:
+          role: existing-test-reference
+          expression: Gu
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: gd
+        reference:
+          role: existing-test-reference
+          expression: Gd
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: lu
+        reference:
+          role: existing-test-reference
+          expression: Lu
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      comparison-4:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: ld
+        reference:
+          role: existing-test-reference
+          expression: Ld
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_rust_jastrow_form_token_is_honoured
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {exp_pattern: mol_cart_sd_j12, pade_pattern: mol_cart_sd_j12_pade}
+    - {exp_pattern: mol_cart_sd_j12, pade_pattern: mol_cart_sd_j12_p1e2}
+    - {exp_pattern: mol_cart_sd_j12, pade_pattern: mol_cart_sd_j12_e1p2}
+    - {exp_pattern: mol_ecp_sphe_j12, pade_pattern: mol_ecp_sphe_j12_pade}
+    executable_checks:
+      both-functional-forms:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_rust_jastrow_form_token_is_honoured#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-jastrow-gradient-laplacian, expression: actual}
+        reference: {role: xla-jastrow-gradient-laplacian, expression: reference}
+        iterations: {variable: form, required_values: [exp, pade]}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_kinetic_energy
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_kinetic_energy#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: k_rust
+        reference:
+          role: existing-test-reference
+          expression: k_jqmc
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_three_body
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_three_body#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: gu
+        reference:
+          role: existing-test-reference
+          expression: Gu
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_eval
+            - ao_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_three_body#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: gd
+        reference:
+          role: existing-test-reference
+          expression: Gd
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_eval
+            - ao_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_three_body#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: lu
+        reference:
+          role: existing-test-reference
+          expression: Lu
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_eval
+            - ao_grad_lap
+      comparison-4:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_three_body#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: ld
+        reference:
+          role: existing-test-reference
+          expression: Ld
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_eval
+            - ao_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_eval
+            - ao_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_kinetic_energy_with_j3
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_kinetic_energy_with_j3#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: k_rust
+        reference:
+          role: existing-test-reference
+          expression: k_jqmc
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_rust_reads_core_electrons_on_composite_ao
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part_composite_core_electrons
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part_composite_core_electrons#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: gu
+        reference:
+          role: existing-test-reference
+          expression: Gu
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part_composite_core_electrons#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: gd
+        reference:
+          role: existing-test-reference
+          expression: Gd
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part_composite_core_electrons#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: lu
+        reference:
+          role: existing-test-reference
+          expression: Lu
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      comparison-4:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_grads_laplacian_jastrow_part_composite_core_electrons#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: ld
+        reference:
+          role: existing-test-reference
+          expression: Ld
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_kinetic_energy_composite_core_electrons
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_kinetic_energy_composite_core_electrons#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: k_rust
+        reference:
+          role: existing-test-reference
+          expression: k_jqmc
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_local_energy_fast_composite_core_electrons
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_grads_laplacian.py::test_local_energy_fast_composite_core_electrons#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: native
+        reference:
+          role: existing-test-reference
+          expression: jax_eL
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_grads_laplacian.py::test_route_parity_composite_core_electrons
+  - pytest_node: tests/test_rs_kernel/test_bspline.py::test_bspline_geminal_lndet_and_kinetic

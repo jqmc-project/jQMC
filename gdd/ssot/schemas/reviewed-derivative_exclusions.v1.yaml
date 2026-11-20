@@ -1,0 +1,175 @@
+{
+  "schema_format": 1,
+  "schema_id": "reviewed-derivative_exclusions.v1",
+  "match": {
+    "path": "gdd/ssot/inventories/derivative_exclusions.yaml"
+  },
+  "document_schema_version": 1,
+  "required_top_level": [
+    "schema_version",
+    "document",
+    "axes",
+    "excluded_cell_rules",
+    "realization_aliases"
+  ],
+  "optional_top_level": [],
+  "document_block": {
+    "required_fields": ["id", "version", "lifecycle", "title", "purpose"]
+  },
+  "prose_keys_extra": ["reviewer_note", "realization"],
+  "runtime_schema": {
+    "type": "mapping",
+    "properties": {
+      "document": {
+        "type": "mapping",
+        "properties": {},
+        "required": [],
+        "additional_properties": true
+      },
+      "schema_version": {
+        "type": "integer",
+        "const": 1
+      },
+      "axes": {
+        "type": "sequence",
+        "items": {
+          "type": "string",
+          "min_length": 1
+        },
+        "min_items": 1,
+        "unique_items": true
+      },
+      "excluded_cell_rules": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "rule_id": {
+              "type": "string",
+              "min_length": 1
+            },
+            "pattern": {
+              "type": "sequence",
+              "items": {
+                "type": "mapping",
+                "properties": {
+                  "axis": {
+                    "type": "string",
+                    "min_length": 1,
+                    "enum_from": "axes"
+                  },
+                  "tokens": {
+                    "type": "sequence",
+                    "items": {
+                      "type": "string",
+                      "min_length": 1
+                    },
+                    "min_items": 1,
+                    "unique_items": true
+                  }
+                },
+                "required": [
+                  "axis",
+                  "tokens"
+                ],
+                "additional_properties": false
+              },
+              "min_items": 1,
+              "unique_by": [
+                "axis"
+              ]
+            },
+            "expected_cells": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "predicate": {
+              "type": "string",
+              "min_length": 1
+            },
+            "reason": {
+              "type": "string",
+              "min_length": 1
+            },
+            "reviewer_note": {
+              "type": "string",
+              "min_length": 1
+            }
+          },
+          "required": [
+            "rule_id",
+            "pattern",
+            "expected_cells",
+            "predicate",
+            "reason",
+            "reviewer_note"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 1,
+        "unique_by": [
+          "rule_id"
+        ]
+      },
+      "realization_aliases": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "alias_id": {
+              "type": "string",
+              "min_length": 1
+            },
+            "axis": {
+              "type": "string",
+              "min_length": 1,
+              "enum_from": "axes"
+            },
+            "tokens": {
+              "type": "sequence",
+              "items": {
+                "type": "string",
+                "min_length": 1
+              },
+              "min_items": 1,
+              "unique_items": true
+            },
+            "realization": {
+              "type": "string",
+              "min_length": 1
+            },
+            "reason": {
+              "type": "string",
+              "min_length": 1
+            },
+            "reviewer_note": {
+              "type": "string",
+              "min_length": 1
+            }
+          },
+          "required": [
+            "alias_id",
+            "axis",
+            "tokens",
+            "realization",
+            "reason",
+            "reviewer_note"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 1,
+        "unique_by": [
+          "alias_id"
+        ]
+      }
+    },
+    "required": [
+      "schema_version",
+      "document",
+      "axes",
+      "excluded_cell_rules",
+      "realization_aliases"
+    ],
+    "additional_properties": false
+  }
+}

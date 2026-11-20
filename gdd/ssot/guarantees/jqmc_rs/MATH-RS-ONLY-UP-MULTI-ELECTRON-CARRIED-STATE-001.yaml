@@ -1,0 +1,71 @@
+id: MATH-RS-ONLY-UP-MULTI-ELECTRON-CARRIED-STATE-001
+kind: mathematical
+name: The native MCMC sweep keeps G, G^-1 and ln|det| equal to a from-scratch Slater rebuild for two or more up electrons
+plain_language: >-
+  For a system with no down-spin electron and two or more up-spin electrons, the native MCMC sweep
+  (jqmc_rs._mcmc_sweep, the mcmc::mcmc_sweep core that the flag_rust_on_CPU route of MCMC.run drives)
+  keeps its carried geminal equal to the Slater matrix rebuilt from scratch at the current electron positions by
+  the XLA compute_MOs, and its carried Sherman-Morrison inverse and log-determinant equal to the numpy inverse and
+  numpy slogdet of a fresh native geminal (jqmc_rs.compute_geminal_all_elements, the same-precision evaluation of
+  the sweep's own orbital columns), after a chain of accepted moves of every up electron (not only electron 0).
+  Evidence: committed all-electron N atom (cc-pVDZ, Cartesian), no Jastrow, n_dn = 0 and n_up in (2, 3, 4), as a
+  single determinant of the first n_up MOs and as the same determinant converted to AGP. The chain is seeded as the
+  production driver seeds a real native sweep (NativeObsCtx.sweep_seed_geminal_batch with the active precision
+  policy, inverse by numpy). Four native sweeps of 25 proposals (Dt 1.2, PRNGKey(5), injected normals from
+  _draw_injected_normals, start at 0.7 times PCG64 seed-3 normals) carry the walker, threefry key, G and G^-1;
+  after every sweep the carried G equals compute_MOs(orb_up, r_up).T, G^-1 the numpy inverse of the fresh native
+  geminal, G_fresh G^-1 the identity, and -ln|det G^-1| equals ln|det G_fresh| with equal signs. No reference uses
+  a rank-1 update or streaming cache. The inverse-weighted checks use the same-precision native rebuild because
+  under the mixed fp32 ao_eval zone two AO implementations differ by about 6e-8 and the identity residual
+  multiplies that by the condition number (2.5e-6 at n_up = 4). Every up electron must have moved by the end of
+  the chain. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_open_shell_single_spin.py::test_only_up_multi_electron_native_sweep_matches_rebuilt_slater
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {num_up: 2, kind: sd}
+    - {num_up: 3, kind: sd}
+    - {num_up: 4, kind: sd}
+    - {num_up: 2, kind: agp}
+    - {num_up: 3, kind: agp}
+    - {num_up: 4, kind: agp}
+    executable_checks:
+      carried-geminal:
+        site: tests/test_rs_kernel/test_open_shell_single_spin.py::test_only_up_multi_electron_native_sweep_matches_rebuilt_slater#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-geminal, expression: G}
+        reference: {role: slater-matrix-rebuilt-from-compute-mos, expression: g_ref}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+        iterations: {variable: sweep_label, required_values: ['0', '1', '2', '3']}
+      carried-inverse:
+        site: tests/test_rs_kernel/test_open_shell_single_spin.py::test_only_up_multi_electron_native_sweep_matches_rebuilt_slater#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-sherman-morrison-inverse, expression: G_inv}
+        reference: {role: numpy-inverse-of-fresh-native-geminal, expression: np.linalg.inv(g_fresh)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+        iterations: {variable: sweep_label, required_values: ['0', '1', '2', '3']}
+      inverse-identity:
+        site: tests/test_rs_kernel/test_open_shell_single_spin.py::test_only_up_multi_electron_native_sweep_matches_rebuilt_slater#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fresh-native-geminal-times-carried-inverse, expression: g_fresh @ G_inv}
+        reference: {role: identity, expression: np.eye(num_up)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+        iterations: {variable: sweep_label, required_values: ['0', '1', '2', '3']}
+      log-determinant:
+        site: tests/test_rs_kernel/test_open_shell_single_spin.py::test_only_up_multi_electron_native_sweep_matches_rebuilt_slater#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: minus-log-abs-det-of-carried-inverse, expression: -logabs_x}
+        reference: {role: numpy-slogdet-of-fresh-native-geminal, expression: logabs_ref}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+        iterations: {variable: sweep_label, required_values: ['0', '1', '2', '3']}

@@ -1,0 +1,49 @@
+id: NUM-GFMC-DRIVER-STRESS-MIXED-FIDELITY-001
+kind: numerical
+name: Actual GFMC native stress buffers retain mixed full measurement fidelity
+plain_language: One original actual native t/n interval records two walkers on full-source-reloaded lithium.h5 periodic
+  Li ccECP spherical-GTO SD with exp J1/J2, seed34356, identity fixed mesh, alat.30 and tmove. Native HF and Pulay
+  3x3 stress blocks at each recorded final walker coordinate, plus the three stored HF/Pulay/E_L*Pulay step moments,
+  obey the central parameter-derivative homogeneous-block mixed/full norm budget. Full native HF uses the same production
+  GFMC measurement kernel; full Pulay uses the same production context kernel with an independently rebuilt native
+  sweep-seed inverse. Stored full-shadow moments use the actual step t/n weights, normalization and measured energy.
+  The actual mixed buffer-to-fresh-native kernel and buffer-to-stored reductions remain separate same-policy controls.
+  All seven physical fields have 3x3 shape, finite values and original all-entry mixed-medium nonzero threshold
+  captured before both callbacks. An isolated out-of-budget mutation is rejected with full reference fixed. Full
+  strict AD and independent full-only FD remain. No full/mixed stochastic trajectory equality or production zone
+  promotion is claimed.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_driver_stress_fd.py::test_gfmc_driver_stress_buffers_match_same_precision_ad
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - driver: t
+    - driver: n
+    executable_checks:
+      actual-buffers-vs-independent-full-measurement:
+        site: tests/test_jqmc_kernel/test_gfmc_driver_stress_fd.py::test_gfmc_driver_stress_buffers_match_same_precision_ad#helper-inequality-5
+        comparator: python.inequality
+        actual:
+          role: actual-recorded-mixed-native-stress-block
+          expression: mixed_block
+        reference:
+          role: independent-full-native-measurement-at-same-recorded-configuration
+          expression: full_block
+        iterations:
+          variable: quantity
+          required_values:
+          - walker0-stress_HF
+          - walker0-stress_PP
+          - walker1-stress_HF
+          - walker1-stress_PP
+          - stored-stress_HF
+          - stored-stress_PP
+          - stored-E_L_stress_PP
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

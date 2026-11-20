@@ -1,0 +1,28 @@
+id: IMPL-CLI-MPI-FAILURE-DISPOSITION-001
+kind: implementation
+name: Console MPI failure disposition and runtime cleanup
+plain_language: >-
+  The real jqmc console entry delegates to the MPI-owning main wrapper. An uncaught
+  RuntimeError, KeyboardInterrupt or nonzero SystemExit in an initialized, unfinalized
+  multi-rank MPI world emits a rank-prefixed fatal traceback and calls COMM_WORLD.Abort(1)
+  before runtime cleanup. Successful calls, clean SystemExit(0/None), single-rank jobs,
+  uninitialized MPI and finalized MPI do not abort. If control returns from the abort
+  interface, the original exception is preserved. Shutdown of an initialized JAX
+  runtime precedes any active MPI finalization. The branch detector uses typed process-runtime interfaces and no
+  scientific calculation or electronic fixture.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::test_console_entrypoint_handles_mpi_failures_and_cleanup
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {outcome: return, size: 2, initialized: true, finalized: false, expected_abort: false}
+    - {outcome: runtime-error, size: 2, initialized: true, finalized: false, expected_abort: true}
+    - {outcome: interrupt, size: 2, initialized: true, finalized: false, expected_abort: true}
+    - {outcome: exit-error, size: 2, initialized: true, finalized: false, expected_abort: true}
+    - {outcome: exit-zero, size: 2, initialized: true, finalized: false, expected_abort: false}
+    - {outcome: exit-none, size: 2, initialized: true, finalized: false, expected_abort: false}
+    - {outcome: runtime-error, size: 1, initialized: true, finalized: false, expected_abort: false}
+    - {outcome: runtime-error, size: 2, initialized: false, finalized: false, expected_abort: false}
+    - {outcome: runtime-error, size: 2, initialized: true, finalized: true, expected_abort: false}

@@ -1,0 +1,18 @@
+id: IMPL-CKPT-MERGE-FAILURE-001
+kind: implementation
+name: Failed multi-rank merge preserves restart state
+plain_language: >-
+  When a multi-rank checkpoint merge fails during Hamiltonian serialization,
+  rank copying or publication, the error propagates and the previous merged
+  checkpoint and all rank inputs remain byte-identical. The failed merge
+  cleans up its staging files and the same rank inputs can be retried.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestRankCheckpoint::test_failed_merge_preserves_checkpoint_and_rank_inputs
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {failure: hamiltonian-write}
+    - {failure: rank-copy}
+    - {failure: publish}

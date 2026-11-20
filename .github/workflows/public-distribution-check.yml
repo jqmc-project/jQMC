@@ -1,0 +1,41 @@
+name: jQMC public distribution check
+
+on:
+  push:
+    # rc pushes already run the identical distribution check before TestPyPI.
+    branches: [main]
+  pull_request:
+    branches: [main, rc]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-distribution-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    if: github.repository == 'jqmc-project/jQMC'
+    uses: ./.github/workflows/public-build-distributions.yml
+
+  distribution-result:
+    name: public-distribution-check
+    if: github.repository == 'jqmc-project/jQMC' && always()
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require the distribution build and every platform check to pass
+        env:
+          JOB_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+
+          results = json.loads(os.environ["JOB_RESULTS"])
+          if set(results) != {"package"} or results["package"]["result"] != "success":
+              raise SystemExit(f"The public distribution check is incomplete or failed: {results}")
+          PY

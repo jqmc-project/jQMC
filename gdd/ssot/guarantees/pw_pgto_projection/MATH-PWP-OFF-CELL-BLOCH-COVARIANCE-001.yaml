@@ -1,0 +1,18 @@
+id: MATH-PWP-OFF-CELL-BLOCH-COVARIANCE-001
+kind: mathematical
+name: Off-cell primitive centres retain periodic values and Bloch covariance
+plain_language: Moving one primitive centre by an integer lattice vector preserves Gamma grid values and gives the
+  exact exp(-ikL) column phase at non-Gamma k. Raw normalized pGTO overlap transforms by conjugate phases on its two
+  indices, and raw pGTO and pGTO-plus-PW overlap condition numbers are unchanged. The reviewed deterministic grid
+  covers s, p and d primitives in cubic and oblique cells with a many-cell displacement; both precision modes use
+  the converter's existing float64 IO zone and the unchanged projection tolerance.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_projection_offcell.py::test_converter_primitive_far_center_translation
+    required_parameter_cases: [{"angular":[0,0,0],"cell_kind":"cubic"},{"angular":[0,0,0],"cell_kind":"skew"},{"angular":[1,0,0],"cell_kind":"cubic"},{"angular":[1,0,0],"cell_kind":"skew"},{"angular":[0,1,1],"cell_kind":"cubic"},{"angular":[0,1,1],"cell_kind":"skew"}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_projection_offcell.py::test_converter_far_center_bloch_covariance
+    required_parameter_cases: [{"fractional_k":[0.0,0.0,0.0],"angular":[0,0,0],"cell_kind":"cubic"},{"fractional_k":[0.0,0.0,0.0],"angular":[0,0,0],"cell_kind":"skew"},{"fractional_k":[0.0,0.0,0.0],"angular":[1,0,0],"cell_kind":"cubic"},{"fractional_k":[0.0,0.0,0.0],"angular":[1,0,0],"cell_kind":"skew"},{"fractional_k":[0.0,0.0,0.0],"angular":[0,1,1],"cell_kind":"cubic"},{"fractional_k":[0.0,0.0,0.0],"angular":[0,1,1],"cell_kind":"skew"},{"fractional_k":[0.25,0.125,-0.2],"angular":[0,0,0],"cell_kind":"cubic"},{"fractional_k":[0.25,0.125,-0.2],"angular":[0,0,0],"cell_kind":"skew"},{"fractional_k":[0.25,0.125,-0.2],"angular":[1,0,0],"cell_kind":"cubic"},{"fractional_k":[0.25,0.125,-0.2],"angular":[1,0,0],"cell_kind":"skew"},{"fractional_k":[0.25,0.125,-0.2],"angular":[0,1,1],"cell_kind":"cubic"},{"fractional_k":[0.25,0.125,-0.2],"angular":[0,1,1],"cell_kind":"skew"}]
+    required_precision_modes: [full, mixed]

@@ -1,0 +1,33 @@
+id: IMPL-BUILDINFO-API-BANNER-001
+kind: implementation
+name: A Python API process reports the version lines once, also with default logging and when it only restarts a driver
+plain_language: >-
+  In a fresh Python process with default logging (level WARNING, no handler), constructing an
+  MCMC, GFMC_t or GFMC_n driver twice prints "version = ..." and "git commit = ..." exactly once, on stderr of rank 0,
+  instead of passing them to a logger that drops them. A fresh process that only restarts the driver with
+  load_from_hdf5 (which bypasses the constructor) reports them exactly once as well, here through a configured INFO
+  logger. The lines equal those resolved for the same checkout.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_ranks.py::test_api_banner_stderr_fallback_obeys_mpi_rank_and_lifecycle
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {rank: 0, initialized: true, finalized: false}
+    - {rank: 1, initialized: true, finalized: false}
+    - {rank: 3, initialized: true, finalized: false}
+    - {rank: 1, initialized: false, finalized: false}
+    - {rank: 1, initialized: true, finalized: true}
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_routes.py::test_python_api_driver_construction_reports_the_version_lines_once
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: MCMC}
+    - {driver: GFMC_t}
+    - {driver: GFMC_n}
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_routes.py::test_python_api_restart_reports_the_version_lines_once
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: MCMC}
+    - {driver: GFMC_t}
+    - {driver: GFMC_n}

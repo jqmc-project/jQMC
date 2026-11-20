@@ -1,0 +1,37 @@
+id: NUM-AO-CART-PERIODIC-VALUE-COHERENT-BIAS-001
+kind: numerical
+name: The periodic Cartesian pGTO value routes carry no resolved coherent scale bias against an independent fp64 lattice sum
+plain_language: >-
+  The standalone periodic Cartesian pGTO AO value routes (XLA compute_AOs through the pbc_flag branch of
+  AOs_cart_gto_data._compute_AOs, and the Rust jqmc_rs.compute_AOs_exact and jqmc_rs.compute_AOs f32 value kernel of the
+  mixed value path) keep the whole electron-independent radial factor -- the primitive normalization N, the contraction
+  coefficient c and the exponent Z -- at storage precision and round the primitive product N (c exp(-Z r^2)) once to the
+  ao_eval zone dtype, with only r^2 and exp of the once-rounded exponent in the zone; the AO values stay float32 in mixed.
+  They therefore carry no coherent (per-primitive, image-independent) value-scale error against an implementation-independent
+  reference: an fp64 numpy lattice sum chi(r) = sum_n sum_p c_p (2 Z_p / pi)^(3/4) exp(-Z_p |r - R_A - n . L|^2) of
+  textbook-normalized Cartesian s Gaussians, computed without any jqmc AO evaluation, normalization or image-enumeration
+  code over the leaf's declared kept image set (every image of an independently enumerated box two layers wider that the
+  leaf dropped is asserted to be below its image truncation tolerance at every point, the outermost layer entirely dropped).
+  On the committed periodic Gamma Cartesian-pGTO fixture lithium_cart.h5 (bcc Li, ccECP), at 32768 fixed points uniform in
+  the cell (seed 0), for every s-type AO the coherent relative scale kappa = sum v_ref (v - v_ref) / sum v_ref^2 satisfies
+  |kappa| <= AO_CART_PERIODIC_VALUE_COHERENT_BIAS_EPS_FRACTION * eps(ao_eval) + AO_VALUE_COHERENT_BIAS_FP64_EPS_MULTIPLE *
+  eps(float64), with AO_CART_PERIODIC_VALUE_COHERENT_BIAS_EPS_FRACTION = 0.1. The verdict is required to be resolved: the
+  weighted (delta-method) standard error of the ratio statistic, sqrt(sum (v_ref e - kappa v_ref^2)^2) / sum v_ref^2, is at
+  most AO_VALUE_COHERENT_BIAS_STANDARD_ERROR_FRACTION of the bound, and the effective sample size
+  (sum v_ref^2)^2 / sum v_ref^4 is at least AO_CART_PERIODIC_VALUE_COHERENT_BIAS_MIN_EFFECTIVE_POINTS; an unresolved
+  statistic fails. Full and mixed are judged separately with the same rule.
+  Bound justification (measured in mixed over 16 independent seeds of 32768 points, worst
+  s AO per seed): rounding N, c and Z to float32 separately gave |kappa| 0.169-0.193 float32 eps on XLA and 0.160-0.186 on
+  Rust (all 16 seeds above 0.1 by at least 5 standard errors); rounding the primitive product once gives 0.048-0.065 on XLA and 0.012-0.045 on
+  Rust (all 16 seeds below 0.1 by at least 3.5 standard errors); full precision gives at most 2.2 eps64. The derivation of
+  the bound, the resolution floor and the measurements are recorded at the constants in jqmc/_setting.py.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_cart_pgto_value_coherent_bias.py::test_cart_pgto_value_has_no_coherent_scale_bias_vs_independent_lattice_sum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: xla_compute_AOs}
+    - {route: rust_compute_AOs_exact}
+    - {route: rust_compute_AOs}

@@ -1,0 +1,45 @@
+id: IMPL-RS-GFMC-EXTENDED-INTERVAL-TWIN-001
+kind: implementation
+name: Native periodic AE, composite and twist interval twins
+plain_language: With fixed electron positions and identical random keys, periodic H4 all-electron, real pGTO+PW and
+  complex spherical-pGTO J1/J2 native GFMC intervals preserve the full-recompute twin for both conventional and
+  load-balanced algorithms and both mesh modes. Walkers and keys agree exactly; finite complex energies, weights and
+  the load-balanced diagonal potential agree at the existing incremental-twin tolerance. Nonzero carried-update counts
+  are required in production and zero counts in its full-recompute twin.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_extended_incremental_twin.py::test_extended_incremental_twin
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: h4_ae, driver: t, random_mesh: false}
+    - {pattern: h4_ae, driver: t, random_mesh: true}
+    - {pattern: h4_ae, driver: n, random_mesh: false}
+    - {pattern: h4_ae, driver: n, random_mesh: true}
+    - {pattern: pbc_composite_jnone, driver: t, random_mesh: false}
+    - {pattern: pbc_composite_jnone, driver: t, random_mesh: true}
+    - {pattern: pbc_composite_jnone, driver: n, random_mesh: false}
+    - {pattern: pbc_composite_jnone, driver: n, random_mesh: true}
+    - {pattern: twist_sphepgto_j12, driver: t, random_mesh: false}
+    - {pattern: twist_sphepgto_j12, driver: t, random_mesh: true}
+    - {pattern: twist_sphepgto_j12, driver: n, random_mesh: false}
+    - {pattern: twist_sphepgto_j12, driver: n, random_mesh: true}
+    executable_checks:
+      complex-energy-and-weight:
+        site: tests/test_rs_kernel/test_gfmc_extended_incremental_twin.py::test_extended_incremental_twin#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-incremental-interval, expression: 'production[name]'}
+        reference: {role: same-native-full-recompute-interval, expression: 'reference[name]'}
+        iterations: {variable: name, required_values: [e_L, w_L]}
+        precision:
+          full: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+          mixed: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+      load-balanced-diagonal:
+        site: tests/test_rs_kernel/test_gfmc_extended_incremental_twin.py::test_extended_incremental_twin#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-incremental-diagonal-potential, expression: "production['V_diag']"}
+        reference: {role: same-native-full-recompute-diagonal-potential, expression: "reference['V_diag']"}
+        precision:
+          full: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+          mixed: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}

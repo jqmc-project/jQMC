@@ -1,0 +1,26 @@
+id: IMPL-JASTROW-PAIR-ACCUMULATION-WORK-001
+kind: implementation
+name: J3 kinetic pair accumulation has no quadratic electron masks
+plain_language: >-
+  Analytic J3 gradients and Laplacians accumulate ordered electron-pair contributions
+  with linear prefix/suffix sums, without dense electron-by-electron mask contractions.
+  The two coupling orientations remain distinct, preserving accepted roundoff
+  asymmetry and unconstrained coupling derivatives at symmetric physical inputs.
+  Scalar ordered-pair sums independently check local-jet values and parameter
+  directional derivatives, including empty-down spin, in the unchanged strict
+  jastrow_grad_lap budgets. Arbitrary asymmetric inputs are algebraic controls,
+  not an extension of the physical symmetric-J3 domain.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_kinetic_contraction_work.py::test_j3_pair_accumulation_has_no_quadratic_electron_contractions
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_kinetic_contraction_work.py::test_j3_ordered_pair_values_and_coupling_derivatives
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {n_down: 0, symmetric: false}
+    - {n_down: 0, symmetric: true}
+    - {n_down: 2, symmetric: false}
+    - {n_down: 2, symmetric: true}

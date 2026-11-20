@@ -1,0 +1,18 @@
+[control]
+  job_type = 'lrdmc-tau'
+  mcmc_seed = 34467
+  number_of_walkers = 8
+  max_time = 10800
+  restart = false
+  restart_chk = 'restart.h5'
+  hamiltonian_h5 = 'hamiltonian_data.h5'
+  verbosity = 'low'
+
+[lrdmc-tau]
+  num_mcmc_steps  = 40000
+  tau = 0.10
+  alat = 0.20
+  non_local_move = "dltmove"
+  num_gfmc_warmup_steps = 50
+  num_gfmc_bin_blocks = 50
+  num_gfmc_collect_steps = 20

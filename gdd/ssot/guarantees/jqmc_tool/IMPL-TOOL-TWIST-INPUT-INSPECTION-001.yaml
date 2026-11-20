@@ -1,0 +1,18 @@
+id: IMPL-TOOL-TWIST-INPUT-INSPECTION-001
+kind: implementation
+name: Inspection commands accept twist-averaged inputs and the module entry point runs the tool
+plain_language: >-
+  hamiltonian show-info on a twist-averaged combined input prints the twist table followed by the information of
+  the twist selected with --twist, and rejects an out-of-range twist index as a usage error; hamiltonian to-xyz
+  writes the structure shared by the twists. python -m jqmc.jqmc_tool runs the same command-line interface as the
+  installed jqmc-tool instead of exiting without doing anything.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tool_twist_inputs.py::test_show_info_accepts_twist_averaged_input
+  - pytest_node: tests/test_jqmc_kernel/test_tool_twist_inputs.py::test_to_xyz_accepts_twist_averaged_input
+  - pytest_node: tests/test_jqmc_kernel/test_tool_twist_inputs.py::test_module_entry_point_runs_the_cli
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tool_twist_inputs.py::test_show_info_rejects_out_of_range_twist

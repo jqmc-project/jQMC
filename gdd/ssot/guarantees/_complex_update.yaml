@@ -1,0 +1,16 @@
+schema_version: 1
+document:
+  id: jqmc._complex_update
+  version: 1
+  lifecycle: cutover
+  title: Complex-safe indexed update guarantees
+  purpose: Which test guarantees what, by which verdict method, for the complex128 row/column/block overwrites of the
+    streaming MCMC/LRDMC state updates (jqmc._complex_update).
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-COMPLEXUPD-NATIVE-EQUIVALENCE-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

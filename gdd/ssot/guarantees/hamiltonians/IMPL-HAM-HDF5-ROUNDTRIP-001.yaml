@@ -1,0 +1,52 @@
+id: IMPL-HAM-HDF5-ROUNDTRIP-001
+kind: implementation
+name: HDF5 persistence round trip of Hamiltonian data
+plain_language: 'Saving and reloading Hamiltonian data through HDF5 reproduces the directly built object
+  (route parity, direct vs through-disk), including PBC systems, complex SD, backward-compatible backfills, and unversioned files with explicit occupied orbital providers; malformed or inconsistent files are rejected explicitly.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5::test_hamiltonian_hdf5_roundtrip_accepts_independent_complex_sd
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5::test_hamiltonian_hdf5
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5PBC::test_hamiltonian_data_save_and_load_hdf5_roundtrip_pbc_silicon
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5PBC::test_hamiltonian_data_save_and_load_hdf5_roundtrip_pbc_lithium_k025
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5PBC::test_hamiltonian_data_roundtrip_pbc_j3_via_uncontracted_aos
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5PBC::test_hamiltonian_data_save_and_load_hdf5_roundtrip_pbc_dummy
+    executable_checks:
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5PBC.test_hamiltonian_data_save_and_load_hdf5_roundtrip_pbc_dummy#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: psi_after
+        reference:
+          role: existing-test-reference
+          expression: psi_before
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5Compat::test_hamiltonian_data_load_hdf5_without_version_metadata
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5Compat::test_hamiltonian_data_load_hdf5_backfills_jastrow_two_body_structure_data_in_pbc
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::test_get_num_electrons_from_h5
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5::test_hamiltonian_hdf5_rejects_missing_sd_provider
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5::test_hamiltonian_hdf5_rejects_noncanonical_sd_payload
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5::test_hamiltonian_hdf5_loader_rejects_inconsistent_time_reversal_sd
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestHamiltonianHDF5::test_hamiltonian_hdf5_writer_rejects_inconsistent_time_reversal_sd

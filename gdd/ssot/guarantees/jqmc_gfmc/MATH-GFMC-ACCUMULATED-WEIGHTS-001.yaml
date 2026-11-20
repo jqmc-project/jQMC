@@ -1,0 +1,26 @@
+id: MATH-GFMC-ACCUMULATED-WEIGHTS-001
+kind: mathematical
+name: Historical branching-weight products and empty-history boundary
+plain_language: 'For every retained measurement i, accumulated GFMC weights are the product of the preceding collect rows,
+  excluding row i. Both production and debug return shape (0, walkers) when the history has no retained measurement;
+  a zero-width product is one. Explicit NumPy windows over exact powers of two provide an independent bit-exact reference.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_accumulated_weights_match_independent_window_products
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {implementation: production, rows: 0, collect: 5, walkers: 1}
+    - {implementation: debug, rows: 0, collect: 5, walkers: 3}
+    - {implementation: production, rows: 4, collect: 5, walkers: 3}
+    - {implementation: debug, rows: 4, collect: 5, walkers: 1}
+    - {implementation: production, rows: 5, collect: 5, walkers: 1}
+    - {implementation: debug, rows: 5, collect: 5, walkers: 3}
+    - {implementation: production, rows: 6, collect: 5, walkers: 3}
+    - {implementation: debug, rows: 6, collect: 5, walkers: 1}
+    - {implementation: production, rows: 9, collect: 1, walkers: 1}
+    - {implementation: debug, rows: 9, collect: 1, walkers: 3}
+    - {implementation: production, rows: 6, collect: 0, walkers: 3}
+    - {implementation: debug, rows: 6, collect: 0, walkers: 1}

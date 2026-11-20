@@ -1,0 +1,72 @@
+name: jQMC public PyPI deploy
+
+# Keep tag-triggered releases and the requirement that the commit is on rc.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-pypi-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate_tag:
+    name: validate jqmc tag
+    if: github.repository == 'jqmc-project/jQMC' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install packaging
+      - name: Require a canonical PEP 440 tag on rc
+        run: |
+          git fetch origin rc:refs/remotes/origin/rc
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/rc
+          python - <<'PY'
+          import os
+          from packaging.version import Version
+
+          tag = os.environ["GITHUB_REF_NAME"]
+          version = Version(tag.removeprefix("v"))
+          if tag != "v" + version.public:
+              raise SystemExit(f"Tag must be canonical: expected v{version.public}, got {tag}")
+          PY
+
+  package:
+    if: github.repository == 'jqmc-project/jQMC'
+    needs: validate_tag
+    uses: ./.github/workflows/public-build-distributions.yml
+
+  deploy-pypi:
+    name: publish jqmc to pypi
+    if: github.repository == 'jqmc-project/jQMC' && startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: public-distributions
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_JQMC_TOKEN }}
+          skip-existing: true
+          verbose: true
+
+  verify-pypi:
+    if: github.repository == 'jqmc-project/jQMC' && startsWith(github.ref, 'refs/tags/v')
+    needs: deploy-pypi
+    uses: ./.github/workflows/public-verify-index.yml
+    with:
+      index: https://pypi.org/simple/

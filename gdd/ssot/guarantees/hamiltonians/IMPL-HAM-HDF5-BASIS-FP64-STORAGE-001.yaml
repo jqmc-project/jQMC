@@ -1,0 +1,34 @@
+id: IMPL-HAM-HDF5-BASIS-FP64-STORAGE-001
+kind: implementation
+name: HDF5 reload keeps the fp64 AO basis storage and bit-identical AO evaluation
+plain_language: >-
+  AO radial exponents and contraction coefficients are fp64 model storage in both precision modes. For the committed
+  Cartesian H_ae_ccpvdz_cart.h5 and spherical H2_ae_ccpvdz_sphe.h5 SD Hamiltonians with an exponential J2 and an AO
+  J3 on the same basis, written by Hamiltonian_data.save_to_hdf5, the merged MCMC checkpoint writer or the
+  twist-averaged input writer and read back by Hamiltonian_data.load_from_hdf5, load_hamiltonian_from_checkpoint or
+  load_twist, every radial exponents/coefficients dataset read independently with h5py is float64 and bit-equal to
+  the in-memory TREXIO arrays, and the reloaded SD up/dn and J3 AO leaves hold float64 arrays bit-equal to those
+  datasets. compute_AOs, compute_AOs_grad and compute_AOs_laplacian of the in-memory and the reloaded leaves are
+  bit-identical (no tolerance) at five seeded electron positions in full and in mixed, so a reloaded Hamiltonian
+  evaluates the same AOs as the one it was saved from. A merged checkpoint whose radial datasets were written as
+  float32 (a float32 mixed layout) is restored by load_hamiltonian_from_checkpoint as float64 leaves holding
+  exactly those float32 values. This is a storage and route-identity contract; it makes no statement about AO
+  accuracy against an fp64 reference.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hdf5_basis_storage_fp64.py::test_hdf5_reload_keeps_fp64_basis_and_bit_identical_aos
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H_ae_ccpvdz_cart.h5, route: load_from_hdf5}
+    - {trexio_file: H_ae_ccpvdz_cart.h5, route: checkpoint}
+    - {trexio_file: H_ae_ccpvdz_cart.h5, route: load_twist}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, route: load_from_hdf5}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, route: checkpoint}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5, route: load_twist}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hdf5_basis_storage_fp64.py::test_checkpoint_restore_lifts_legacy_fp32_basis_storage_to_fp64
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

@@ -1,0 +1,63 @@
+id: IMPL-GFMC-SUPPRESSED-HOP-CACHE-NOOP-001
+kind: implementation
+name: A suppressed GFMC hop names an existing electron and leaves every streaming cache unchanged
+plain_language: >-
+  In a GFMC_t sub-step whose tau is exhausted no electron moves, but the streaming wrappers still
+  advance the kinetic grad/lap state and the kinetic and ECP candidate meshes, which the walker's later masked
+  sub-steps read for the stored measurement e_L. The wrappers' mover rule (jqmc_gfmc._streaming_mover, shared by
+  both GFMC_t wrappers and GFMC_n) must name an electron of a non-empty spin channel for up-only, dn-only and
+  two-spin shapes on real and suppressed hops, keeping every real two-spin hop. At a seeded configuration
+  (electrons drawn with scale 0.6 around the nuclei, seed 11), each of those caches advanced at UNCHANGED
+  positions must equal its fresh build under the strict zone bounds, both for the legacy suppressed-hop mover
+  (spin dn, index 0; with an empty dn channel one past the end) and for the wrapper's mover, on the fully
+  polarized up-only canonical WF-PATTERN-003 (all-electron, J1/J2/J3, DTN u) and WF-PATTERN-008 (ccECP, J2/J3,
+  DTN chi+f) and the two-spin control WF-PATTERN-012 (ccECP, DTN u). With no dn-only canonical fixture, the J1,
+  J2, J3 and DTN candidate-mesh advances of WF-PATTERN-003's Jastrow are also run on a dn-only electron set
+  (seed 12). Full and mixed are separate obligations. This does not certify a real hop's advance (owned by
+  IMPL-WF-CANDIDATE-MESH-VALUES-001) or the native route, whose interval loop advances only after applied hops.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_suppressed_hop_cache_advance.py::test_streaming_mover_names_an_existing_electron
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {n_up: 3, n_dn: 0, has_up: false, up_idx: 0, dn_idx: 0}
+    - {n_up: 3, n_dn: 0, has_up: true, up_idx: 2, dn_idx: 0}
+    - {n_up: 0, n_dn: 3, has_up: false, up_idx: 0, dn_idx: 0}
+    - {n_up: 0, n_dn: 3, has_up: false, up_idx: 0, dn_idx: 2}
+    - {n_up: 2, n_dn: 2, has_up: false, up_idx: 0, dn_idx: 0}
+    - {n_up: 2, n_dn: 2, has_up: true, up_idx: 1, dn_idx: 0}
+    - {n_up: 2, n_dn: 2, has_up: false, up_idx: 0, dn_idx: 1}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_suppressed_hop_cache_advance.py::test_suppressed_hop_advance_is_a_no_op
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-003, mover: legacy-dn0}
+    - {pattern: WF-PATTERN-003, mover: streaming-mover}
+    - {pattern: WF-PATTERN-008, mover: legacy-dn0}
+    - {pattern: WF-PATTERN-008, mover: streaming-mover}
+    - {pattern: WF-PATTERN-012, mover: legacy-dn0}
+    - {pattern: WF-PATTERN-012, mover: streaming-mover}
+    executable_checks:
+      cache-leaf-values:
+        site: tests/test_jqmc_kernel/test_gfmc_suppressed_hop_cache_advance.py::_assert_tree_unchanged#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: cache-advanced-at-unchanged-positions, expression: actual}
+        reference: {role: fresh-cache-build, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio, jastrow_grad_lap, det_ratio, det_grad_lap, wf_kinetic, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio, jastrow_grad_lap, det_ratio, det_grad_lap, wf_kinetic, coulomb]}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_suppressed_hop_cache_advance.py::test_suppressed_hop_jastrow_candidate_advance_is_a_no_op_dn_only
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {mover: legacy-dn0}
+    - {mover: streaming-mover}
+    executable_checks:
+      cache-leaf-values:
+        site: tests/test_jqmc_kernel/test_gfmc_suppressed_hop_cache_advance.py::_assert_tree_unchanged#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: cache-advanced-at-unchanged-positions, expression: actual}
+        reference: {role: fresh-cache-build, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio, jastrow_grad_lap, det_ratio, det_grad_lap, wf_kinetic, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio, jastrow_grad_lap, det_ratio, det_grad_lap, wf_kinetic, coulomb]}

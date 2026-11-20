@@ -1,0 +1,37 @@
+id: IMPL-DOC-GDD-INEQUALITY-EXPECTED-REJECTION-001
+kind: implementation
+name: Expected inequality rejections require the real failed primary and captured bound violation
+plain_language: A captured Python assert inequality records evaluated, not a comparator return-frame failure. It certifies
+  negative evidence only when the actual exception or accepted expected-rejection context identifies that primary and the
+  captured finite comparison replays as value-mismatch with the unchanged central tolerance. An expected-error procedure containing
+  an authored primary must fail on an authored primary along its reciprocal actual failing call chain; a passing norm, unrelated
+  raise/assertion, or a nonfinite precondition cannot replace it. Isolated source fixtures exercise actual NumPy traces, both
+  first-block failure and a passing prefix before second-block failure, normal positive inequalities and NumPy allclose, nested
+  error propagation, altered failure identity, fabricated passing evidence, missing failure, tampered nested linkage and substituted
+  budget. Original positive semantics and ordinary NumPy failed-comparator handling remain intact. These are synthetic comparator-protocol
+  tests with an empty physical artifact registry, not scientific model values, physical precision certification or replayed
+  quantum calculations.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_gdd_simplification/test_inequality_rejection_receipts.py::test_fabricated_negative_receipts_cannot_certify_rejection
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {fault: passing-fabrication}
+    - {fault: different-failed-site}
+    - {fault: budget-substitution}
+    - {fault: missing-failure}
+    - {fault: 'none'}
+    - {fault: tampered-caller}
+  - pytest_node: tests/test_gdd_simplification/test_inequality_rejection_receipts.py::test_an_unrelated_exception_is_not_a_numerical_primary_rejection
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - failure: elsewhere
+    - failure: other-assertion
+    - failure: nonfinite

@@ -1,0 +1,27 @@
+id: IMPL-RS-FREE-REAL-PRECONDITIONS-001
+kind: implementation
+name: Free real native derivative wrappers report unsupported inputs as Python errors
+plain_language: >-
+  The free real native dense kinetic lambda and dense/diagonal ECP lambda wrappers
+  reject occupied-only SD data, the ECP MO coefficient derivative wrapper rejects AO-basis AGP
+  data without MO coefficients, the kinetic/ECP J3 matrix derivative wrappers reject
+  absent J3 data, and the B-spline kinetic strain/dcell wrappers reject determinant
+  orbitals without a B-spline leaf. Each raises ValueError with a representation or
+  missing-channel diagnostic before entering the numerical kernel, so the error is
+  catchable by ordinary Python except Exception. Both precision modes obey this
+  boundary contract. Supported numerical inputs retain their existing contracts.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_free_wrapper_preconditions.py::test_free_real_wrapper_unsupported_input_is_value_error
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {wrapper: grad_eL_wrt_lambda, invalid_input: sd, message: undefined for occupied-only SD}
+    - {wrapper: grad_eL_ecp_wrt_lambda, invalid_input: sd, message: undefined for occupied-only SD}
+    - {wrapper: grad_eL_ecp_wrt_lambda_diag, invalid_input: sd, message: undefined for occupied-only SD}
+    - {wrapper: grad_eL_ecp_wrt_mo_coeff, invalid_input: ao_agp, message: up spin has no mo_coefficients}
+    - {wrapper: grad_eL_wrt_jastrow_3b_jmatrix, invalid_input: no_j3, message: no jastrow_three_body_data}
+    - {wrapper: grad_eL_ecp_wrt_jastrow_3b_jmatrix, invalid_input: no_j3, message: no jastrow_three_body_data}
+    - {wrapper: grad_T_bspline_dcell, invalid_input: non_bspline, message: not a B-spline leaf}
+    - {wrapper: grad_T_bspline_kinetic_strain, invalid_input: non_bspline, message: not a B-spline leaf}

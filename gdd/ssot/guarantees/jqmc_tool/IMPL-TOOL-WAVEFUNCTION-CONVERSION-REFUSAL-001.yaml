@@ -1,0 +1,28 @@
+id: IMPL-TOOL-WAVEFUNCTION-CONVERSION-REFUSAL-001
+kind: implementation
+name: Wavefunction conversion CLI refuses an unrepresentable AGP before writing
+plain_language: >-
+  conv-wf -c jagp on an AGPn whose up and down orbitals are built on AO sets of different size (canonical
+  WF-PATTERN-014) exits non-zero with the AGP dimension diagnostic, prints no success message, and neither creates
+  the output file nor replaces an existing one, because an AO-basis AGP needs a square paired block and
+  C_up^T diag(lambda) C_dn is not square. Representable AGPn conversions are still written: the equal-AO-count AGPn
+  (WF-PATTERN-009) to jagp and the same unequal-AO-count AGPn to jagpn produce a file that reloads with
+  Hamiltonian_data.load_from_hdf5 and reproduces the source signed or complex wavefunction and log magnitude at three
+  explicit electron configurations in the same precision mode. No other ansatz pair or ill-conditioned input is
+  claimed.
+verdict_methods: [VM-ERROR-DISPOSITION-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_wavefunction_conversion.py::test_cli_conversion_refuses_unequal_ao_agp_without_writing
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {existing_output: false}
+    - {existing_output: true}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_wavefunction_conversion.py::test_cli_conversion_of_canonical_agpn_reloads_and_preserves_wavefunction
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern_id: WF-PATTERN-009, target: jagp}
+    - {pattern_id: WF-PATTERN-014, target: jagpn}

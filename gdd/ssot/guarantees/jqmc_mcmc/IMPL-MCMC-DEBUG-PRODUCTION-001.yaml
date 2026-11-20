@@ -1,0 +1,778 @@
+id: IMPL-MCMC-DEBUG-PRODUCTION-001
+kind: implementation
+name: Debug/production parity of the MCMC driver
+plain_language: The production MCMC driver equals the _MCMC_debug oracle on w_L, e_L, e_L^2, force, and stress estimators,
+  and the LM and stress assembly kernels equal their debug twins. Mixed XLA MCMC additionally has an end-to-end stochastic-trajectory
+  witness on an explicitly screened well-conditioned 2x2 open-shell determinant with J1+J2+J3; final walkers, PRNG state,
+  acceptance decisions, weights, and local-energy observables are compared.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCDriver::test_jqmc_mcmc
+    executable_checks:
+      comparison-8:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCDriver.test_jqmc_mcmc#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: force_mean_debug
+        reference:
+          role: existing-test-reference
+          expression: force_mean_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-9:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCDriver.test_jqmc_mcmc#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: force_std_debug
+        reference:
+          role: existing-test-reference
+          expression: force_std_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCDriver.test_jqmc_mcmc#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: w_L_debug
+        reference:
+          role: existing-test-reference
+          expression: w_L_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCDriver.test_jqmc_mcmc#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: e_L_debug
+        reference:
+          role: existing-test-reference
+          expression: e_L_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCDriver.test_jqmc_mcmc#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_debug
+        reference:
+          role: existing-test-reference
+          expression: E_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCDriver.test_jqmc_mcmc#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_err_debug
+        reference:
+          role: existing-test-reference
+          expression: E_err_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-6:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCDriver.test_jqmc_mcmc#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: Var_debug
+        reference:
+          role: existing-test-reference
+          expression: Var_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-7:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCDriver.test_jqmc_mcmc#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: Var_err_debug
+        reference:
+          role: existing-test-reference
+          expression: Var_err_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM::test_get_aH_and_solve_lm_debug_vs_production
+    executable_checks:
+      d8-n-187:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: metadata.bin_weight_sums
+        reference:
+          role: source-reference-value
+          expression: expected_weight_sums
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      d8-n-188:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: metadata.bin_weighted_energy_sums
+        reference:
+          role: source-reference-value
+          expression: expected_weighted_energy_sums
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      comparison-8:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: K_d
+        reference:
+          role: existing-test-reference
+          expression: K_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-9:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: B_d
+        reference:
+          role: existing-test-reference
+          expression: B_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-10:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: bra_d
+        reference:
+          role: existing-test-reference
+          expression: bra_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-11:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-11
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: H_0_d2
+        reference:
+          role: existing-test-reference
+          expression: H_0_p2
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-12:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-12
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: H_1_d
+        reference:
+          role: existing-test-reference
+          expression: H_1_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-13:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-13
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: H_2_d
+        reference:
+          role: existing-test-reference
+          expression: H_2_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-14:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-14
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: S_2_d
+        reference:
+          role: existing-test-reference
+          expression: S_2_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-15:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-15
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: H_1_d
+        reference:
+          role: existing-test-reference
+          expression: H_1_from_mat
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-16:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-16
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: S_2_d
+        reference:
+          role: existing-test-reference
+          expression: S_2_from_mat
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-17:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-17
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: H_2_d
+        reference:
+          role: existing-test-reference
+          expression: H_2_from_mat
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-18:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-18
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: f_aH
+        reference:
+          role: existing-test-reference
+          expression: f_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: H_0_d
+        reference:
+          role: existing-test-reference
+          expression: H_0_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-6:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: f_d
+        reference:
+          role: existing-test-reference
+          expression: f_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+      comparison-7:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugLM.test_get_aH_and_solve_lm_debug_vs_production#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: S_d
+        reference:
+          role: existing-test-reference
+          expression: S_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::test_mixed_xla_mcmc_debug_equals_production_in_well_conditioned_domain
+    executable_checks:
+      d8-n-192:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::test_mixed_xla_mcmc_debug_equals_production_in_well_conditioned_domain#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug_r_up
+        reference:
+          role: source-reference-value
+          expression: production_r_up
+        precision:
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+      d8-n-193:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::test_mixed_xla_mcmc_debug_equals_production_in_well_conditioned_domain#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug_r_dn
+        reference:
+          role: source-reference-value
+          expression: production_r_dn
+        precision:
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugStress::test_get_aT_aP_debug_vs_production
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugStress.test_get_aT_aP_debug_vs_production#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sigma_mean_d
+        reference:
+          role: existing-test-reference
+          expression: sigma_mean_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugStress.test_get_aT_aP_debug_vs_production#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sigma_std_d
+        reference:
+          role: existing-test-reference
+          expression: sigma_std_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugStress.test_get_aT_aP_debug_vs_production#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: P_mean_d
+        reference:
+          role: existing-test-reference
+          expression: P_mean_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestProdVsDebugStress.test_get_aT_aP_debug_vs_production#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: P_std_d
+        reference:
+          role: existing-test-reference
+          expression: P_std_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressAD::test_ewald_ii_jax_vs_numpy
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressAD.test_ewald_ii_jax_vs_numpy#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: ii_jax
+        reference:
+          role: existing-test-reference
+          expression: ii_numpy
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald

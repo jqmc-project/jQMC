@@ -1,0 +1,88 @@
+id: MATH-AO-OFF-CELL-NUCLEUS-BRUTE-FORCE-001
+kind: mathematical
+name: Periodic pGTO values and overlap with nuclei outside the home cell against brute-force lattice sums
+plain_language: >-
+  On a cubic, a triclinic and a hexagonal cell, with the two nuclei passed to production unwrapped at
+  fractional placements just outside a lower and an upper face (-0.1 and 1.1), exactly on a corner and an
+  upper face (0 and 1), and more than one cell away (-1.1 and 2.15), periodic Cartesian and spherical pGTO
+  values equal the brute-force lattice sum of the open-boundary AO kernel at Gamma and k = (0.25, -0.1, 0.4)
+  (ao_eval strict plus AO_IMAGE_TRUNCATION_ATOL), with the brute-force image sum reduced in the zone dtype of
+  the compared quantity (ao_eval for values, ao_grad_lap for Laplacians), and
+  the periodic Cartesian overlap equals the brute-force whole-space overlap sum (det_eval strict). A nucleus
+  on the cell corner displaced by -1e-3, -5e-5, 0, 5e-5 and 1e-3 Bohr along a, with the pGTO leaf and its
+  image layout rebuilt at every step, gives AO values (production truncation) and AO Laplacians (ao_grad_lap
+  strict, leaf built at the tighter truncation AO_IMAGE_TRUNCATION_ATOL**2 because the production bound is
+  stated for values) equal to the brute-force sum at every step, so the kept image set does not jump at the
+  face; this face crossing runs on the cubic, the triclinic and the primitive FCC cell. The per-atom image
+  indices for atoms at -0.1, 1.1, -1e-12 / 1.0 and -1.1 / 2.15 fractional equal an independent active-set
+  enumeration for the unwrapped atom. Choosing the AO image set for the wrapped nucleus, or ignoring the cells
+  of the two overlap centres, must fail with its own message. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_periodic_pgto_values_with_nuclei_off_the_home_cell_match_bruteforce
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: cubic_10bohr, kind: cart, placement: outside}
+    - {cell_name: cubic_10bohr, kind: cart, placement: boundary}
+    - {cell_name: cubic_10bohr, kind: cart, placement: far}
+    - {cell_name: cubic_10bohr, kind: sphe, placement: outside}
+    - {cell_name: cubic_10bohr, kind: sphe, placement: boundary}
+    - {cell_name: cubic_10bohr, kind: sphe, placement: far}
+    - {cell_name: triclinic_skewed, kind: cart, placement: outside}
+    - {cell_name: triclinic_skewed, kind: cart, placement: boundary}
+    - {cell_name: triclinic_skewed, kind: cart, placement: far}
+    - {cell_name: triclinic_skewed, kind: sphe, placement: outside}
+    - {cell_name: triclinic_skewed, kind: sphe, placement: boundary}
+    - {cell_name: triclinic_skewed, kind: sphe, placement: far}
+    - {cell_name: hexagonal, kind: cart, placement: outside}
+    - {cell_name: hexagonal, kind: cart, placement: boundary}
+    - {cell_name: hexagonal, kind: cart, placement: far}
+    - {cell_name: hexagonal, kind: sphe, placement: outside}
+    - {cell_name: hexagonal, kind: sphe, placement: boundary}
+    - {cell_name: hexagonal, kind: sphe, placement: far}
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_periodic_overlap_with_nuclei_off_the_home_cell_matches_bruteforce
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: cubic_10bohr, placement: outside}
+    - {cell_name: cubic_10bohr, placement: boundary}
+    - {cell_name: cubic_10bohr, placement: far}
+    - {cell_name: triclinic_skewed, placement: outside}
+    - {cell_name: triclinic_skewed, placement: boundary}
+    - {cell_name: triclinic_skewed, placement: far}
+    - {cell_name: hexagonal, placement: outside}
+    - {cell_name: hexagonal, placement: boundary}
+    - {cell_name: hexagonal, placement: far}
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_ao_value_and_laplacian_continuous_as_a_corner_nucleus_crosses_a_face
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: cubic_10bohr, kind: cart}
+    - {cell_name: cubic_10bohr, kind: sphe}
+    - {cell_name: triclinic_skewed, kind: cart}
+    - {cell_name: triclinic_skewed, kind: sphe}
+    - {cell_name: primitive_fcc_si, kind: cart}
+    - {cell_name: primitive_fcc_si, kind: sphe}
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_placed_nucleus_oracles_reject_wrapped_image_selection
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: wrap-ao-image-selection}
+    - {fault: drop-overlap-cell-offset}
+  # Forwarding entry that calls the same checker
+  # implementation as test_structure.py::TestStructureImageList::test_per_atom_image_indices_match_independent_active_set (structure-owned)
+  # with the same cases, modes, markers and fixtures; it is not an independent oracle.
+  - pytest_node: tests/test_jqmc_kernel/test_ao_per_atom_image_set_forwarding.py::test_ao_per_atom_image_indices_match_independent_active_set
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: cubic_10bohr, fractional_atom: [-0.1, 0.4, 0.75]}
+    - {cell_name: primitive_fcc_si, fractional_atom: [-0.1, 0.4, 0.75]}
+    - {cell_name: triclinic_skewed, fractional_atom: [-0.1, 0.4, 0.75]}
+    - {cell_name: cubic_10bohr, fractional_atom: [0.15, 1.1, 0.75]}
+    - {cell_name: primitive_fcc_si, fractional_atom: [0.15, 1.1, 0.75]}
+    - {cell_name: triclinic_skewed, fractional_atom: [0.15, 1.1, 0.75]}
+    - {cell_name: cubic_10bohr, fractional_atom: [-1.0e-12, 0.5, 1.0]}
+    - {cell_name: primitive_fcc_si, fractional_atom: [-1.0e-12, 0.5, 1.0]}
+    - {cell_name: triclinic_skewed, fractional_atom: [-1.0e-12, 0.5, 1.0]}
+    - {cell_name: cubic_10bohr, fractional_atom: [-1.1, 0.4, 2.15]}
+    - {cell_name: primitive_fcc_si, fractional_atom: [-1.1, 0.4, 2.15]}
+    - {cell_name: triclinic_skewed, fractional_atom: [-1.1, 0.4, 2.15]}

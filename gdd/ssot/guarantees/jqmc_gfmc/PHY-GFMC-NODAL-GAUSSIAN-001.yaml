@@ -1,0 +1,48 @@
+id: PHY-GFMC-NODAL-GAUSSIAN-001
+kind: physical
+name: Nodal Gaussian fixed-node regularization and novar measurement
+plain_language: >-
+  For a synthetic molecular He triplet SD with occupied s and px Gaussian orbitals,
+  the GFMC propagation diagonal, fixed-node off-diagonal and continuum measurement
+  agree with a closed-form polynomial-Gaussian and Coulomb reference. The reference
+  calls no production physics kernel. Two up and zero down electrons occupy fixed
+  points (0.4,0.7,-0.2) and (-0.6,-0.3,0.8), with no screening or cond(G) limit.
+  Exponents 0.5/1.25 and identity-mesh alat 0.3/1.5/3.0 require zero/two node-crossing
+  electrons and zero/one/two active cutoff branches. Sign-flip and cutoff corrections
+  belong to propagation and must not contaminate novar=0 continuum measurement.
+  Both modes use their existing central strict tolerances. Omitted sign-flip terms,
+  reversed cutoffs and measurement misrouting must fail after a passing baseline.
+  No sampled-distribution or ground-state-energy acceptance criterion is used.
+  The reference evaluates each piece in its production zone dtype (orbital
+  values in ao_eval, orbital derivatives in ao_grad_lap, ratios in det_ratio, Coulomb in coulomb), so mixed
+  mode is never judged against an fp64 reference.
+verdict_methods: [VM-PHY-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-PHY-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_nodal_reference.py::test_nodal_gaussian_fixed_node_and_novar_formula
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {exponent: 0.5, alat: 0.3, expected_flips: 0, expected_clamps: 0}
+    - {exponent: 0.5, alat: 1.5, expected_flips: 2, expected_clamps: 1}
+    - {exponent: 0.5, alat: 3.0, expected_flips: 2, expected_clamps: 2}
+    - {exponent: 1.25, alat: 0.3, expected_flips: 0, expected_clamps: 0}
+    - {exponent: 1.25, alat: 1.5, expected_flips: 2, expected_clamps: 0}
+    - {exponent: 1.25, alat: 3.0, expected_flips: 2, expected_clamps: 0}
+    executable_checks:
+      nodal-propagation: &nodal-propagation-check
+        site: tests/test_jqmc_kernel/test_gfmc_nodal_reference.py::_compare_nodal#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-gfmc-closure, expression: actual}
+        reference: {role: polynomial-gaussian-and-coulomb-formula, expression: reference}
+        iterations:
+          variable: quantity
+          required_values: [propagation-diagonal, fixed-node-off-diagonal, continuum-measurement]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_nodal_reference.py::test_nodal_reference_rejects_actual_propagation_fault
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{fault: sign-flip}, {fault: cutoff}, {fault: measurement-routing}]
+    executable_checks:
+      nodal-propagation: *nodal-propagation-check

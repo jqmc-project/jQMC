@@ -1,0 +1,31 @@
+id: MATH-OPT-COMPLEX-TWIST-UPDATE-001
+kind: mathematical
+name: Complex-twist real-sampler SR and LM steps equal independent dense recomputations
+plain_language: >-
+  One MCMC.run_optimize step on the complex Bloch fixture H2_pbc_ae_k025_cart (all-electron, Pade J1+J2 and the
+  time-reversal SD MO block, a Wirtinger pair on an S-Stiefel tangent, fixed seed, real sampler) consumes a complex
+  e_L and coordinate columns equal to independent per-coordinate derivatives of the phase-preserving ln Psi (and,
+  for LM, of e_L) along the forward coordinate directions. The SR target equals the dense solve with
+  S = Re<dO* dO> and f = -2 Re<dO* (e - Re<e>)>; the accepted full-space LM target, predicted energy and reference
+  weight equal the dense eigensolve of the real projection of the centred non-symmetric pencil after the
+  correlation cutoff. The applied change is delta q on J1/J2 and E (delta q) on the MO storage. Conjugating the
+  d_pbar component in the real adjoint or in the MCMC source publisher fails these verdicts.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_complex_twist_update.py::test_complex_twist_batch_matches_independent_coordinate_derivatives
+    required_parameter_cases: [{"case":"sr"},{"case":"lm"}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_complex_twist_update.py::test_complex_twist_run_optimize_sr_update_matches_dense_recomputation
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_complex_twist_update.py::test_complex_twist_run_optimize_lm_update_matches_dense_pencil
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_complex_twist_update.py::test_negative_control_conjugated_pbar_in_adjoint_fails_update_check
+    required_parameter_cases: [{"case":"sr"},{"case":"lm"}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_complex_twist_update.py::test_negative_control_conjugated_pbar_in_publisher_fails_source_check
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

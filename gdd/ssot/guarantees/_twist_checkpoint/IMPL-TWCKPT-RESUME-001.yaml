@@ -1,0 +1,123 @@
+id: IMPL-TWCKPT-RESUME-001
+kind: implementation
+name: Resume equals the uninterrupted run
+plain_language: 'Resuming reproduces the uninterrupted result (route parity): skipped completed twists reproduce
+  the uninterrupted average, resume after a partial chunk matches the uninterrupted final state, a single chunk matches
+  the unchunked call, shared state round-trips, and the no-checkpoint and overwrite behaviors follow the reviewed contract.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_partial_twist_resume_matches_uninterrupted_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{cached_index: 0}, {cached_index: 1}]
+    executable_checks:
+      per-twist-values:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_partial_twist_resume_matches_uninterrupted_values#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-indexed-twist-values, expression: observed}
+        reference: {role: uninterrupted-indexed-twist-values, expression: reference}
+        iterations: {variable: name, required_values: [per_twist_E, per_twist_E_std]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      combined-values:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_partial_twist_resume_matches_uninterrupted_values#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-energy-error-dispersion, expression: observed_aggregate}
+        reference: {role: uninterrupted-energy-error-dispersion, expression: expected_aggregate}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      normalized-weights:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_partial_twist_resume_matches_uninterrupted_values#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-normalized-weights, expression: actual.energy.W}
+        reference: {role: explicit-unequal-weights, expression: 'np.asarray([0.25, 0.75])'}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      independent-weighted-mean:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_partial_twist_resume_matches_uninterrupted_values#exact-comparison-4
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-weighted-mean, expression: actual.energy.E_TA}
+        reference: {role: explicit-weighted-sum, expression: '0.25 * expected.per_twist_E[0] + 0.75 * expected.per_twist_E[1]'}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_twist_stopped_on_max_time_is_rerun_on_resume
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      per-twist-values:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_twist_stopped_on_max_time_is_rerun_on_resume.assert_same_values#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-after-max-time-twist-values, expression: observed}
+        reference: {role: uninterrupted-indexed-twist-values, expression: reference}
+        iterations: {variable: name, required_values: [per_twist_E, per_twist_E_std]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      combined-values:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_twist_stopped_on_max_time_is_rerun_on_resume.assert_same_values#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-after-max-time-energy-error-dispersion, expression: observed_aggregate}
+        reference: {role: uninterrupted-energy-error-dispersion, expression: expected_aggregate}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestSharedState::test_shared_state_round_trip_preserves_jastrow
+  - pytest_node: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_completed_twist_resume_preserves_observables
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}]
+    executable_checks:
+      indexed-derivative-observables:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_completed_twist_resume_preserves_observables#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-indexed-force-stress-pressure-values-and-errors, expression: observed}
+        reference: {role: uninterrupted-indexed-force-stress-pressure-values-and-errors, expression: reference}
+        iterations: {variable: quantity, required_values: [force, stress, P_hydro]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      bz-derivative-observables:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_completed_twist_resume_preserves_observables#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-bz-force-stress-pressure-values-and-errors, expression: 'np.stack((bz.F_TA, bz.F_TA_std))'}
+        reference: {role: explicit-weighted-means-and-independent-twist-quadratures, expression: '_hand_weighted_twist_pair(means, errors)'}
+        iterations: {variable: quantity, required_values: [force, stress, P_hydro]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      indexed-mpc-observables:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_completed_twist_resume_preserves_observables#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-indexed-mpc-correction-and-corrected-energy-values-and-errors, expression: observed}
+        reference: {role: uninterrupted-indexed-mpc-correction-and-corrected-energy-values-and-errors, expression: reference}
+        iterations: {variable: quantity, required_values: [correction, energy]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      bz-mpc-observables:
+        site: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_completed_twist_resume_preserves_observables#exact-comparison-4
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-bz-mpc-correction-and-corrected-energy-values-and-errors, expression: 'np.asarray([bz.E_TA, bz.E_TA_std])'}
+        reference: {role: explicit-weighted-means-and-independent-twist-quadratures, expression: '_hand_weighted_twist_pair(means, errors)'}
+        iterations: {variable: quantity, required_values: [correction, energy]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_twist_resume.py::TestTwistResume::test_resume_skips_completed_twist_and_reproduces_uninterrupted_E_TA
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_resume.py::TestTwistOptimizeResume::test_single_chunk_matches_unchunked_direct_call
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_resume.py::TestTwistOptimizeResume::test_resume_after_partial_chunk_matches_uninterrupted_final_state
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_partial_twist_resume_verdict_rejects_corrupted_cached_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{cached_index: 0}, {cached_index: 1}]
+  - pytest_node: tests/test_jqmc_kernel/test_twist_resume.py::TestTwistResume::test_resume_false_overwrites_existing_checkpoint
+  - pytest_node: tests/test_jqmc_kernel/test_twist_resume.py::TestTwistResume::test_no_checkpoint_dir_is_a_no_op_relative_to_pre_change_behaviour
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_resume.py::TestTwistOptimizeResume::test_resume_loads_shared_jastrow_when_present
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_resume.py::TestTwistOptimizeResume::test_checkpoint_files_materialise_after_run

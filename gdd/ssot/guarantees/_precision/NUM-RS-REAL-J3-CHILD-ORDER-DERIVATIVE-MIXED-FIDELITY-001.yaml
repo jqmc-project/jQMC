@@ -1,0 +1,42 @@
+id: NUM-RS-REAL-J3-CHILD-ORDER-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: Native real J3 child-order forces and stress retain mixed/full fidelity
+plain_language: The real-Gamma J3 pGTO+PW native VMC free/context and GFMC T-move HF nuclear/electron forces, VMC
+  free/context Pulay nuclear force and Pulay/HF strain tensors retain the central parameter-derivative mixed/full
+  homogeneous-block infinity-norm budget in both J3 child orders. Both policies independently reload fresh Hamiltonian
+  leaves from identical serialized full physical input; deterministic coordinates, J matrix, XLA-supplied inverse
+  compatibility inputs, identity rotation, mesh, alat and native arguments remain unchanged. All native fields have
+  physical nuclear/electron/3x3 shapes and finite values. Original block nonzero predicates use the same original
+  active-mixed-policy medium tuple captured before either callback. Each mixed case rejects an out-of-budget isolated
+  perturbation against a fixed full reference. Original full independent AD formulas remain at strict; all four
+  cases and both scientific execution modes remain required. No production zone is promoted.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_vmc_real_j3_pw_first_force_stress.py::test_real_j3_composite_forces_match_ad_in_both_child_orders
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {order: gto_first}
+    - {order: pw_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_vmc_real_j3_pw_first_force_stress.py::test_real_j3_composite_forces_match_ad_in_both_child_orders#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_rs_kernel/test_vmc_real_j3_pw_first_force_stress.py::test_real_j3_composite_stress_matches_strain_ad_in_both_child_orders
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {order: gto_first}
+    - {order: pw_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_vmc_real_j3_pw_first_force_stress.py::test_real_j3_composite_stress_matches_strain_ad_in_both_child_orders#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}

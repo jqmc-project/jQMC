@@ -1,0 +1,226 @@
+id: IMPL-JAS-DEBUG-PRODUCTION-001
+kind: implementation
+name: Debug/production route parity of Jastrow values
+plain_language: The production J1, J2, and J3 (AO and MO basis) values equal their straightforward debug twins on identical
+  input, molecular and periodic, including the DTN family.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody::test_Jastrow_onebody_part_molecular
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_Jastrow_onebody_part_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J1_reference
+        reference:
+          role: existing-test-reference
+          expression: J1_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody::test_Jastrow_onebody_part_periodic
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_Jastrow_onebody_part_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J1_reference
+        reference:
+          role: existing-test-reference
+          expression: J1_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody::test_Jastrow_twobody_part_molecular
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_Jastrow_twobody_part_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J2_reference
+        reference:
+          role: existing-test-reference
+          expression: J2_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody::test_Jastrow_twobody_part_periodic
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_Jastrow_twobody_part_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J2_reference
+        reference:
+          role: existing-test-reference
+          expression: J2_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestAOBasis::test_Jastrow_threebody_part_with_AOs_data_molecular
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_Jastrow_threebody_part_with_AOs_data_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J3_debug
+        reference:
+          role: existing-test-reference
+          expression: J3_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestAOBasis::test_Jastrow_threebody_part_with_AOs_data_periodic
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_Jastrow_threebody_part_with_AOs_data_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J3_debug
+        reference:
+          role: existing-test-reference
+          expression: J3_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestMOBasis::test_Jastrow_threebody_part_with_MOs_data_molecular
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_Jastrow_threebody_part_with_MOs_data_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J3_debug
+        reference:
+          role: existing-test-reference
+          expression: J3_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestMOBasis::test_Jastrow_threebody_part_with_MOs_data_periodic
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_Jastrow_threebody_part_with_MOs_data_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J3_debug
+        reference:
+          role: existing-test-reference
+          expression: J3_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNValue::test_Jastrow_dtn_part_molecular
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNValue.test_Jastrow_dtn_part_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J_prod
+        reference:
+          role: existing-test-reference
+          expression: J_orac
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNValue::test_Jastrow_dtn_part_periodic
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {preset: u, C: 3, cutoff_scale: 1.0}
+    - {preset: u, C: 3, cutoff_scale: 0.999}
+    - {preset: u, C: 3, cutoff_scale: 1.001}
+    - {preset: u, C: 4, cutoff_scale: 1.0}
+    - {preset: u, C: 4, cutoff_scale: 0.999}
+    - {preset: u, C: 4, cutoff_scale: 1.001}
+    - {preset: u_chi, C: 3, cutoff_scale: 1.0}
+    - {preset: u_chi, C: 3, cutoff_scale: 0.999}
+    - {preset: u_chi, C: 3, cutoff_scale: 1.001}
+    - {preset: u_chi, C: 4, cutoff_scale: 1.0}
+    - {preset: u_chi, C: 4, cutoff_scale: 0.999}
+    - {preset: u_chi, C: 4, cutoff_scale: 1.001}
+    - {preset: u_f, C: 3, cutoff_scale: 1.0}
+    - {preset: u_f, C: 3, cutoff_scale: 0.999}
+    - {preset: u_f, C: 3, cutoff_scale: 1.001}
+    - {preset: u_f, C: 4, cutoff_scale: 1.0}
+    - {preset: u_f, C: 4, cutoff_scale: 0.999}
+    - {preset: u_f, C: 4, cutoff_scale: 1.001}
+    - {preset: u_chi_f, C: 3, cutoff_scale: 1.0}
+    - {preset: u_chi_f, C: 3, cutoff_scale: 0.999}
+    - {preset: u_chi_f, C: 3, cutoff_scale: 1.001}
+    - {preset: u_chi_f, C: 4, cutoff_scale: 1.0}
+    - {preset: u_chi_f, C: 4, cutoff_scale: 0.999}
+    - {preset: u_chi_f, C: 4, cutoff_scale: 1.001}
+    executable_checks:
+      periodic-value:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNValue.test_Jastrow_dtn_part_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-periodic-DTN-value, expression: J_prod}
+        reference: {role: independent-NumPy-inflation-transport-and-value, expression: J_orac}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}

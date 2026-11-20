@@ -1,0 +1,34 @@
+id: NUM-COMPONENT-DET-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: Converted-AO determinant fields retain full-production fidelity in mixed precision
+plain_language: On the original H/H2/N TREXIO-to-AO conversion and seeded nuclear-position cases, mixed analytical logarithmic
+  determinant gradient and Laplacian arrays are compared to the same production route independently rebuilt in full precision.
+  Sanity and finite/shape controls remain for both cases. Each homogeneous field block obeys the unchanged central orbital_derivative
+  infinity-norm budget, and a mixed-only out-of-budget block is rejected. Full retains the original analytical-versus-AD strict
+  comparison.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantGradientVariants::test_analytic_and_auto_grads_and_laplacians_ln_Det
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: H_ae_ccpvdz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    executable_checks:
+      production-fidelity-orbital_derivative:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestDeterminantGradientVariants.test_analytic_and_auto_grads_and_laplacians_ln_Det#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-orbital-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-analytical-orbital-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative

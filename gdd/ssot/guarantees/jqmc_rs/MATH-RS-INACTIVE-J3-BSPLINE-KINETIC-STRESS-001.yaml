@@ -1,0 +1,19 @@
+id: MATH-RS-INACTIVE-J3-BSPLINE-KINETIC-STRESS-001
+kind: mathematical
+name: The free native B-spline kinetic stress with an all-zero-j_matrix J3 equals the J3-free value
+plain_language: >-
+  An all-zero j_matrix makes the three-body Jastrow factor identically zero, so the B-spline determinant kinetic
+  stress of the free native bindings grad_T_bspline_kinetic_strain (full 3x3) and grad_T_bspline_dcell (directional
+  derivative along a fixed dcell) must be exactly the values of the same calls with jastrow_three_body_data=None,
+  also when the J3 orbital is an MO over a composite of a real pGTO and a complex plane-wave child. On the committed
+  Li Gamma ccECP B-spline single determinant with an identity-MO-wrapped (pGTO s, plane-wave) composite J3 orbital,
+  for a complex plane-wave child with a nonzero G vector, a complex constant (k = 0) child and a real constant child
+  as the control, at one seeded electron configuration, both outputs agree exactly with the J3-free outputs, which
+  are finite and nonzero. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_inactive_j3_explicit_parse.py::test_bspline_kinetic_stress_inactive_complex_pw_j3_equals_j3_free
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{child: complex_pw_G}, {child: complex_pw_0}, {child: real_pw}]

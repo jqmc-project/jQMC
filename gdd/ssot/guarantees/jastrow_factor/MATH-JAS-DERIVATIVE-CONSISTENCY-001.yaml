@@ -1,0 +1,625 @@
+id: MATH-JAS-DERIVATIVE-CONSISTENCY-001
+kind: mathematical
+name: Derivative consistency of the Jastrow factor
+plain_language: Analytical gradients and Laplacians of J1, J2, J3 (AO and MO basis), the combined Jastrow, and the DTN family
+  equal the autodiff oracle, including the f-atom kernel and the scalar-distance derivatives.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowPBCAnalytic::test_j1_pbc_analytic_vs_auto
+    required_parameter_cases:
+    - {jb_type: exp, triclinic: false}
+    - {jb_type: pade, triclinic: false}
+    - {jb_type: exp, triclinic: true}
+    - {jb_type: pade, triclinic: true}
+    required_precision_modes: [full]
+    executable_checks:
+      spin-derivatives:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowPBCAnalytic.test_j1_pbc_analytic_vs_auto#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-spin-derivatives, expression: np.asarray(got)}
+        reference: {role: autodiff-j1-spin-derivatives, expression: np.asarray(ref)}
+        iterations:
+          variable: component
+          required_values: [gradient-up, gradient-down, laplacian-up, laplacian-down]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowPBCAnalytic::test_j2_pbc_analytic_vs_auto
+    required_parameter_cases:
+    - {jb_type: exp, triclinic: false}
+    - {jb_type: pade, triclinic: false}
+    - {jb_type: exp, triclinic: true}
+    - {jb_type: pade, triclinic: true}
+    required_precision_modes: [full]
+    executable_checks:
+      spin-derivatives:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowPBCAnalytic.test_j2_pbc_analytic_vs_auto#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j2-spin-derivatives, expression: np.asarray(got)}
+        reference: {role: autodiff-j2-spin-derivatives, expression: np.asarray(ref)}
+        iterations:
+          variable: component
+          required_values: [gradient-up, gradient-down, laplacian-up, laplacian-down]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody::test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_molecular
+    required_parameter_cases:
+    - {j1b_type: exp}
+    - {j1b_type: pade}
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-gradient-up, expression: np.asarray(grad_up_an)}
+        reference: {role: autodiff-j1-gradient-up, expression: np.asarray(grad_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-gradient-down, expression: np.asarray(grad_dn_an)}
+        reference: {role: autodiff-j1-gradient-down, expression: np.asarray(grad_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-laplacian-up, expression: np.asarray(lap_up_an)}
+        reference: {role: autodiff-j1-laplacian-up, expression: np.asarray(lap_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_molecular#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-laplacian-down, expression: np.asarray(lap_dn_an)}
+        reference: {role: autodiff-j1-laplacian-down, expression: np.asarray(lap_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody::test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_periodic
+    required_parameter_cases:
+    - {j1b_type: exp}
+    - {j1b_type: pade}
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-gradient-up, expression: np.asarray(grad_up_an)}
+        reference: {role: autodiff-j1-gradient-up, expression: np.asarray(grad_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_periodic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-gradient-down, expression: np.asarray(grad_dn_an)}
+        reference: {role: autodiff-j1-gradient-down, expression: np.asarray(grad_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_periodic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-laplacian-up, expression: np.asarray(lap_up_an)}
+        reference: {role: autodiff-j1-laplacian-up, expression: np.asarray(lap_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowOneBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_onebody_part_periodic#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-laplacian-down, expression: np.asarray(lap_dn_an)}
+        reference: {role: autodiff-j1-laplacian-down, expression: np.asarray(lap_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody::test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_molecular
+    required_parameter_cases:
+    - {j2b_type: exp}
+    - {j2b_type: pade}
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j2-gradient-up, expression: np.asarray(grad_J2_up_analytic)}
+        reference: {role: autodiff-j2-gradient-up, expression: np.asarray(grad_J2_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j2-gradient-down, expression: np.asarray(grad_J2_dn_analytic)}
+        reference: {role: autodiff-j2-gradient-down, expression: np.asarray(grad_J2_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j2-laplacian-up, expression: np.asarray(lap_J2_up_analytic)}
+        reference: {role: autodiff-j2-laplacian-up, expression: np.asarray(lap_J2_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_molecular#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j2-laplacian-down, expression: np.asarray(lap_J2_dn_analytic)}
+        reference: {role: autodiff-j2-laplacian-down, expression: np.asarray(lap_J2_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody::test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_periodic
+    required_parameter_cases:
+    - {j2b_type: exp}
+    - {j2b_type: pade}
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j2-gradient-up, expression: np.asarray(grad_J2_up_analytic)}
+        reference: {role: autodiff-j2-gradient-up, expression: np.asarray(grad_J2_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_periodic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j2-gradient-down, expression: np.asarray(grad_J2_dn_analytic)}
+        reference: {role: autodiff-j2-gradient-down, expression: np.asarray(grad_J2_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_periodic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j2-laplacian-up, expression: np.asarray(lap_J2_up_analytic)}
+        reference: {role: autodiff-j2-laplacian-up, expression: np.asarray(lap_J2_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowTwoBody.test_analytical_and_auto_grads_and_laplacian_Jastrow_twobody_part_periodic#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j2-laplacian-down, expression: np.asarray(lap_J2_dn_analytic)}
+        reference: {role: autodiff-j2-laplacian-down, expression: np.asarray(lap_J2_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestAOBasis::test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_molecular
+    required_parameter_cases: [{}]
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-gradient-up, expression: np.asarray(grad_up_an)}
+        reference: {role: autodiff-j3-gradient-up, expression: np.asarray(grad_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-gradient-down, expression: np.asarray(grad_dn_an)}
+        reference: {role: autodiff-j3-gradient-down, expression: np.asarray(grad_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-laplacian-up, expression: np.asarray(lap_up_an)}
+        reference: {role: autodiff-j3-laplacian-up, expression: np.asarray(lap_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_molecular#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-laplacian-down, expression: np.asarray(lap_dn_an)}
+        reference: {role: autodiff-j3-laplacian-down, expression: np.asarray(lap_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestAOBasis::test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_periodic
+    required_parameter_cases: [{}]
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-gradient-up, expression: np.asarray(grad_up_an)}
+        reference: {role: autodiff-j3-gradient-up, expression: np.asarray(grad_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_periodic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-gradient-down, expression: np.asarray(grad_dn_an)}
+        reference: {role: autodiff-j3-gradient-down, expression: np.asarray(grad_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_periodic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-laplacian-up, expression: np.asarray(lap_up_an)}
+        reference: {role: autodiff-j3-laplacian-up, expression: np.asarray(lap_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestAOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_AOs_data_periodic#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-laplacian-down, expression: np.asarray(lap_dn_an)}
+        reference: {role: autodiff-j3-laplacian-down, expression: np.asarray(lap_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestMOBasis::test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_molecular
+    required_parameter_cases: [{}]
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-gradient-up, expression: np.asarray(grad_up_an)}
+        reference: {role: autodiff-j3-gradient-up, expression: np.asarray(grad_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-gradient-down, expression: np.asarray(grad_dn_an)}
+        reference: {role: autodiff-j3-gradient-down, expression: np.asarray(grad_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-laplacian-up, expression: np.asarray(lap_up_an)}
+        reference: {role: autodiff-j3-laplacian-up, expression: np.asarray(lap_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_molecular#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-laplacian-down, expression: np.asarray(lap_dn_an)}
+        reference: {role: autodiff-j3-laplacian-down, expression: np.asarray(lap_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestMOBasis::test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_periodic
+    required_parameter_cases: [{}]
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-gradient-up, expression: np.asarray(grad_up_an)}
+        reference: {role: autodiff-j3-gradient-up, expression: np.asarray(grad_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_periodic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-gradient-down, expression: np.asarray(grad_dn_an)}
+        reference: {role: autodiff-j3-gradient-down, expression: np.asarray(grad_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_periodic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-laplacian-up, expression: np.asarray(lap_up_an)}
+        reference: {role: autodiff-j3-laplacian-up, expression: np.asarray(lap_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_analytical_and_auto_grads_and_laplacian_Jastrow_threebody_part_with_MOs_data_periodic#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j3-laplacian-down, expression: np.asarray(lap_dn_an)}
+        reference: {role: autodiff-j3-laplacian-down, expression: np.asarray(lap_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined::test_analytical_and_auto_grads_and_laplacian_Jastrow_part_molecular
+    # Selector coverage only: include_nn is unused by the builders.
+    # Its True row is not evidence of a neural-network component.
+    required_parameter_cases:
+    - {j1b_type: exp, j2b_type: pade, include_nn: false}
+    - {j1b_type: pade, j2b_type: pade, include_nn: false}
+    - {j1b_type: exp, j2b_type: exp, include_nn: false}
+    - {j1b_type: pade, j2b_type: exp, include_nn: false}
+    - {j1b_type: exp, j2b_type: pade, include_nn: true}
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined.test_analytical_and_auto_grads_and_laplacian_Jastrow_part_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-j2-j3-gradient-up, expression: np.asarray(grad_up_an)}
+        reference: {role: autodiff-j1-j2-j3-gradient-up, expression: np.asarray(grad_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined.test_analytical_and_auto_grads_and_laplacian_Jastrow_part_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-j2-j3-gradient-down, expression: np.asarray(grad_dn_an)}
+        reference: {role: autodiff-j1-j2-j3-gradient-down, expression: np.asarray(grad_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined.test_analytical_and_auto_grads_and_laplacian_Jastrow_part_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-j2-j3-laplacian-up, expression: np.asarray(lap_up_an)}
+        reference: {role: autodiff-j1-j2-j3-laplacian-up, expression: np.asarray(lap_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined.test_analytical_and_auto_grads_and_laplacian_Jastrow_part_molecular#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-j2-j3-laplacian-down, expression: np.asarray(lap_dn_an)}
+        reference: {role: autodiff-j1-j2-j3-laplacian-down, expression: np.asarray(lap_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined::test_analytical_and_auto_grads_and_laplacian_Jastrow_part_periodic
+    # Selector coverage only: include_nn is unused by the builders.
+    # Its True row is not evidence of a neural-network component.
+    required_parameter_cases:
+    - {j1b_type: exp, j2b_type: pade, include_nn: false}
+    - {j1b_type: pade, j2b_type: pade, include_nn: false}
+    - {j1b_type: exp, j2b_type: exp, include_nn: false}
+    - {j1b_type: pade, j2b_type: exp, include_nn: false}
+    - {j1b_type: exp, j2b_type: pade, include_nn: true}
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined.test_analytical_and_auto_grads_and_laplacian_Jastrow_part_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-j2-j3-gradient-up, expression: np.asarray(grad_up_an)}
+        reference: {role: autodiff-j1-j2-j3-gradient-up, expression: np.asarray(grad_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined.test_analytical_and_auto_grads_and_laplacian_Jastrow_part_periodic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-j2-j3-gradient-down, expression: np.asarray(grad_dn_an)}
+        reference: {role: autodiff-j1-j2-j3-gradient-down, expression: np.asarray(grad_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined.test_analytical_and_auto_grads_and_laplacian_Jastrow_part_periodic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-j2-j3-laplacian-up, expression: np.asarray(lap_up_an)}
+        reference: {role: autodiff-j1-j2-j3-laplacian-up, expression: np.asarray(lap_up_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowCombined.test_analytical_and_auto_grads_and_laplacian_Jastrow_part_periodic#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-j1-j2-j3-laplacian-down, expression: np.asarray(lap_dn_an)}
+        reference: {role: autodiff-j1-j2-j3-laplacian-down, expression: np.asarray(lap_dn_auto)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap, ao_grad_lap, mo_grad, mo_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_grads_and_laplacian_Jastrow_dtn_molecular
+    required_parameter_cases:
+    - {preset: u, C: 3}
+    - {preset: u, C: 4}
+    - {preset: u_chi, C: 3}
+    - {preset: u_chi, C: 4}
+    - {preset: u_f, C: 3}
+    - {preset: u_f, C: 4}
+    - {preset: u_chi_f, C: 3}
+    - {preset: u_chi_f, C: 4}
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-gradient-up, expression: 'np.asarray(g_up_p)'}
+        reference: {role: reference-dtn-gradient-up, expression: 'np.asarray(g_up_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-gradient-down, expression: 'np.asarray(g_dn_p)'}
+        reference: {role: reference-dtn-gradient-down, expression: 'np.asarray(g_dn_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-laplacian-up, expression: 'np.asarray(l_up_p)'}
+        reference: {role: reference-dtn-laplacian-up, expression: 'np.asarray(l_up_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-laplacian-down, expression: 'np.asarray(l_dn_p)'}
+        reference: {role: reference-dtn-laplacian-down, expression: 'np.asarray(l_dn_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_grads_and_laplacian_Jastrow_dtn_periodic
+    required_parameter_cases:
+    - {preset: u, C: 3}
+    - {preset: u, C: 4}
+    - {preset: u_chi, C: 3}
+    - {preset: u_chi, C: 4}
+    - {preset: u_f, C: 3}
+    - {preset: u_f, C: 4}
+    - {preset: u_chi_f, C: 3}
+    - {preset: u_chi_f, C: 4}
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-gradient-up, expression: 'np.asarray(g_up_p)'}
+        reference: {role: reference-dtn-gradient-up, expression: 'np.asarray(g_up_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-gradient-down, expression: 'np.asarray(g_dn_p)'}
+        reference: {role: reference-dtn-gradient-down, expression: 'np.asarray(g_dn_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-laplacian-up, expression: 'np.asarray(l_up_p)'}
+        reference: {role: reference-dtn-laplacian-up, expression: 'np.asarray(l_up_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-laplacian-down, expression: 'np.asarray(l_dn_p)'}
+        reference: {role: reference-dtn-laplacian-down, expression: 'np.asarray(l_dn_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_grads_and_laplacian_Jastrow_dtn_li_ae
+    required_parameter_cases:
+    - {preset: u, C: 3}
+    - {preset: u, C: 4}
+    - {preset: u_chi, C: 3}
+    - {preset: u_chi, C: 4}
+    - {preset: u_f, C: 3}
+    - {preset: u_f, C: 4}
+    - {preset: u_chi_f, C: 3}
+    - {preset: u_chi_f, C: 4}
+    required_precision_modes: [full]
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-gradient-up, expression: 'np.asarray(g_up_p)'}
+        reference: {role: reference-dtn-gradient-up, expression: 'np.asarray(g_up_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-gradient-down, expression: 'np.asarray(g_dn_p)'}
+        reference: {role: reference-dtn-gradient-down, expression: 'np.asarray(g_dn_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-laplacian-up, expression: 'np.asarray(l_up_p)'}
+        reference: {role: reference-dtn-laplacian-up, expression: 'np.asarray(l_up_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_check_analytic_and_auto_one#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-laplacian-down, expression: 'np.asarray(l_dn_p)'}
+        reference: {role: reference-dtn-laplacian-down, expression: 'np.asarray(l_dn_a)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_f_atom_value_grad_hess
+    required_parameter_cases:
+    - {C: 3, seed: 0}
+    - {C: 4, seed: 0}
+    - {C: 3, seed: 1}
+    - {C: 4, seed: 1}
+    - {C: 3, seed: 2}
+    - {C: 4, seed: 2}
+    required_precision_modes: [full]
+    executable_checks:
+      f-value:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_f_atom_value_grad_hess#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-f-value, expression: 'np.asarray(F_an)'}
+        reference: {role: reference-dtn-f-value, expression: 'np.asarray(F_au)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      f-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_f_atom_value_grad_hess#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-f-gradient, expression: 'np.asarray(gF_an)'}
+        reference: {role: reference-dtn-f-gradient, expression: 'np.asarray(gF_au)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      f-hessian:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_f_atom_value_grad_hess#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-f-hessian, expression: 'np.asarray(hF_an)'}
+        reference: {role: reference-dtn-f-hessian, expression: 'np.asarray(hF_au)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_scalar_dist_with_derivs_pbc
+    required_parameter_cases:
+    - {cell_name_idx: 0, seed: 0}
+    - {cell_name_idx: 1, seed: 0}
+    - {cell_name_idx: 0, seed: 1}
+    - {cell_name_idx: 1, seed: 1}
+    - {cell_name_idx: 0, seed: 2}
+    - {cell_name_idx: 1, seed: 2}
+    - {cell_name_idx: 0, seed: 3}
+    - {cell_name_idx: 1, seed: 3}
+    required_precision_modes: [full]
+    executable_checks:
+      distance:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-distance, expression: 'float(r_an)'}
+        reference: {role: reference-dtn-distance, expression: 'float(r_au)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      distance-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-distance-gradient, expression: 'np.asarray(gr_an)'}
+        reference: {role: reference-dtn-distance-gradient, expression: 'np.asarray(gr_au)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      distance-laplacian:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-distance-laplacian, expression: 'float(lr_an)'}
+        reference: {role: reference-dtn-distance-laplacian, expression: 'float(lr_au)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident
+    required_parameter_cases: [{}]
+    required_precision_modes: [full]
+    executable_checks:
+      analytic-zero-distance:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-analytic-zero-distance, expression: 'float(r_an)'}
+        reference: {role: reference-dtn-analytic-zero-distance, expression: '0.0'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      analytic-zero-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-analytic-zero-gradient, expression: 'np.asarray(gr_an)'}
+        reference: {role: reference-dtn-analytic-zero-gradient, expression: 'np.zeros(3)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      analytic-zero-laplacian:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-analytic-zero-laplacian, expression: 'float(lr_an)'}
+        reference: {role: reference-dtn-analytic-zero-laplacian, expression: '0.0'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      autodiff-zero-distance:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-autodiff-zero-distance, expression: 'float(r_au)'}
+        reference: {role: reference-dtn-autodiff-zero-distance, expression: '0.0'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      extended-distance-parity:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-extended-distance-parity, expression: 'float(r_an)'}
+        reference: {role: reference-dtn-extended-distance-parity, expression: 'float(r_au)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      extended-gradient-parity:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-extended-gradient-parity, expression: 'np.asarray(gr_an)'}
+        reference: {role: reference-dtn-extended-gradient-parity, expression: 'np.asarray(gr_au)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      extended-laplacian-parity:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian.test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-dtn-extended-laplacian-parity, expression: 'float(lr_an)'}
+        reference: {role: reference-dtn-extended-laplacian-parity, expression: 'float(lr_au)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}

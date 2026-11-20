@@ -1,0 +1,336 @@
+id: IMPL-GFMC-CHECKPOINT-001
+kind: implementation
+name: Checkpoint round trip of the GFMC drivers
+plain_language: 'Saving and restarting the GFMC_t and GFMC_n drivers reproduces the direct run (route parity,
+  direct vs through-disk), including driver-specific configuration and force derivatives; a doctored time-reversal-tied
+  checkpoint is rejected.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::test_driver_config_roundtrip_uses_constructor_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: GFMC_t}
+    - {driver_kind: GFMC_n}
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_nondefault_config.py::test_nondefault_checkpoint_continuation_matches_uninterrupted
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: gfmc_t_dltmove}
+    - {case: gfmc_n_dltmove}
+    executable_checks:
+      continued-histories:
+        site: tests/test_jqmc_kernel/test_checkpoint_nondefault_config.py::test_nondefault_checkpoint_continuation_matches_uninterrupted#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: checkpoint-continued-nondefault-history, expression: actual}
+        reference: {role: uninterrupted-nondefault-history, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_force_enabled_restart_matches_continuous_history
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: none}
+    - {driver_kind: load-balanced, trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: none}
+    - {driver_kind: conventional, trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: 1b+2b+3b}
+    - {driver_kind: load-balanced, trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: 1b+2b+3b}
+    executable_checks:
+      continued-histories:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_force_enabled_restart_matches_continuous_history#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: checkpoint-continued-energy-weight-force-histories, expression: actual}
+        reference: {role: uninterrupted-energy-weight-force-histories, expression: reference}
+        iterations:
+          variable: field
+          required_values: [_stored_e_L, _stored_w_L, _stored_force_HF, _stored_force_PP, _stored_E_L_force_PP]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+      walker-state:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_force_enabled_restart_matches_continuous_history#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: checkpoint-continued-walker-state, expression: actual}
+        reference: {role: uninterrupted-walker-state, expression: reference}
+        iterations:
+          variable: field
+          required_values: [_latest_r_up_carts, _latest_r_dn_carts, _jax_PRNG_key_list]
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      branching-rng:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_force_enabled_restart_matches_continuous_history#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: checkpoint-continued-branching-rng, expression: 'actual_rng[1]'}
+        reference: {role: uninterrupted-branching-rng, expression: 'reference_rng[1]'}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip::test_basic_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip::test_walker_state_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip::test_rng_state_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip::test_counters_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip::test_continue_run_after_load
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip.test_continue_run_after_load#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: gfmc2._stored_e_L
+        reference:
+          role: existing-test-reference
+          expression: uninterrupted._stored_e_L
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip.test_continue_run_after_load#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: gfmc2.bare_w_L
+        reference:
+          role: existing-test-reference
+          expression: uninterrupted.bare_w_L
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip.test_continue_run_after_load#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: gfmc2.e_L
+        reference:
+          role: existing-test-reference
+          expression: uninterrupted.e_L
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip.test_continue_run_after_load#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: gfmc2.w_L
+        reference:
+          role: existing-test-reference
+          expression: uninterrupted.w_L
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: none}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: none}
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: 1b}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: 1b}
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: 1b+2b}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: 1b+2b}
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: 1b+2b+3b}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: 1b+2b+3b}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip::test_hamiltonian_embedded
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip::test_gfmc_t_specific_config_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCtSaveLoadRoundtrip::test_force_derivative_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip::test_basic_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip::test_walker_state_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip::test_rng_state_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip::test_counters_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip::test_continue_run_after_load
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip.test_continue_run_after_load#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: gfmc2._stored_e_L
+        reference:
+          role: existing-test-reference
+          expression: uninterrupted._stored_e_L
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip.test_continue_run_after_load#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: gfmc2.bare_w_L
+        reference:
+          role: existing-test-reference
+          expression: uninterrupted.bare_w_L
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip.test_continue_run_after_load#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: gfmc2.e_L
+        reference:
+          role: existing-test-reference
+          expression: uninterrupted.e_L
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip.test_continue_run_after_load#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: gfmc2.w_L
+        reference:
+          role: existing-test-reference
+          expression: uninterrupted.w_L
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - local_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: none}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: none}
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: 1b}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: 1b}
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: 1b+2b}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: 1b+2b}
+    - {trexio_file: H2_ae_ccpvdz_cart.h5, jastrow_combo: 1b+2b+3b}
+    - {trexio_file: H2_ecp_ccpvdz_cart.h5, jastrow_combo: 1b+2b+3b}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip::test_hamiltonian_embedded
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip::test_gfmc_n_specific_config_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::TestGFMCnSaveLoadRoundtrip::test_force_derivative_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_branching_rng_initial_stream_is_driver_owned
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: GFMC_t}
+    - {driver_name: GFMC_n}
+    - {driver_name: _GFMC_t_debug}
+    - {driver_name: _GFMC_n_debug}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_split_run_preserves_actual_branching_draws
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver_kind: t}, {driver_kind: n}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_checkpoint_preserves_complete_branching_rng
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_restart_rejects_doctored_tied_sd_down_spin
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_checkpoint_rejects_corrupt_branching_rng
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_restart_rejects_rank_local_nonfinite_energy_history
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver_kind: t}, {driver_kind: n}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_production_step_rejects_nonfinite_energy_before_aggregation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver_kind: t}, {driver_kind: n}]

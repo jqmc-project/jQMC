@@ -1,0 +1,62 @@
+id: MATH-COUL-ECP-JASTROW-REFERENCE-001
+kind: mathematical
+name: Independent Gaussian and J2 nonlocal projector assembly
+plain_language: >-
+  Every proposed configuration, nonlocal contribution and total agrees with
+  an independent one-centre Gaussian/J2 s-projector formula in the all-pairs
+  and nearest-neighbour APIs and their debug references. Both electron spins
+  have nonconstant Jastrow ratios. A stale down-spin Jastrow numerator must
+  fail. This fixed-input molecular assembly guarantee does not certify
+  general J3, periodic quadrature or carried inverse stability.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_jastrow_reference.py::test_ecp_jastrow_complete_mesh_matches_independent_formula
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {nv: 6, route: all-pairs}
+    - {nv: 18, route: all-pairs}
+    - {nv: 6, route: nearest}
+    - {nv: 18, route: nearest}
+    - {nv: 6, route: debug-all-pairs}
+    - {nv: 18, route: debug-all-pairs}
+    - {nv: 6, route: debug-nearest}
+    - {nv: 18, route: debug-nearest}
+    executable_checks:
+      configurations:
+        site: tests/test_jqmc_kernel/test_ecp_jastrow_reference.py::test_ecp_jastrow_complete_mesh_matches_independent_formula#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: proposed-configurations, expression: actual_points}
+        reference: {role: independent-radial-rotations, expression: reference_points}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, ao_eval, jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, ao_eval, jastrow_eval]}
+      contributions:
+        site: tests/test_jqmc_kernel/test_ecp_jastrow_reference.py::test_ecp_jastrow_complete_mesh_matches_independent_formula#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: nonlocal-mesh-values, expression: actual}
+        reference: {role: independent-gaussian-j2-projector, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, ao_eval, jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, ao_eval, jastrow_eval]}
+      total:
+        site: tests/test_jqmc_kernel/test_ecp_jastrow_reference.py::test_ecp_jastrow_complete_mesh_matches_independent_formula#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: nonlocal-total, expression: actual_total}
+        reference: {role: independent-projector-sum, expression: reference_total}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, ao_eval, jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, ao_eval, jastrow_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_jastrow_reference.py::test_ecp_reference_rejects_stale_down_spin_jastrow
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{nv: 6}, {nv: 18}]
+    executable_checks:
+      baseline:
+        site: tests/test_jqmc_kernel/test_ecp_jastrow_reference.py::test_ecp_reference_rejects_stale_down_spin_jastrow#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: unmodified-debug-contributions, expression: actual}
+        reference: {role: independent-gaussian-j2-projector, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, ao_eval, jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, ao_eval, jastrow_eval]}

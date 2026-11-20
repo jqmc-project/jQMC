@@ -1,0 +1,117 @@
+id: IMPL-CLI-RESTART-CONTINUATION-001
+kind: implementation
+name: Numerical continuation through all four actual CLI jobs
+plain_language: >-
+  Actual mcmc, vmc, lrdmc-bra and lrdmc-tau CLI checkpoint continuation agrees
+  with continuous execution for the fixed H2 AE Cartesian MO/Pade-J2 input,
+  two walkers and seed 12345. Positions, RNG and counters are exact; histories,
+  reduced energies, optimized J2 and load-balanced shift history use existing
+  same-precision strict tolerances. MCMC uses 16 versus 8+8 measurements,
+  VMC two versus 1+1 SR updates followed by four equal post-update measurements,
+  and GFMC 80 versus 40+40 measurements, crossing shift warmup while retaining
+  the same shift-update cadence. This does not equate different update cadences,
+  fresh-run UUID namespaces, different precisions, or statistical error bars.
+  With MPC enabled on the periodic Li fixture, single-twist MCMC, GFMC_n and
+  GFMC_t also inherit omitted MPC settings, preserve the stored correction
+  history and report the same MPC correction, corrected energy and cutoff as
+  uninterrupted execution.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{job_type: mcmc}, {job_type: vmc}, {job_type: lrdmc-bra}, {job_type: lrdmc-tau}]
+    executable_checks:
+      positions:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: continued-walker-positions, expression: "actual['walker_state'][name]"}
+        reference: {role: continuous-walker-positions, expression: "reference['walker_state'][name]"}
+        iterations: {variable: name, required_values: [latest_r_up_carts, latest_r_dn_carts]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      jax-keys:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: continued-jax-keys, expression: "actual['rng_state']['jax_PRNG_key_list']"}
+        reference: {role: continuous-jax-keys, expression: "reference['rng_state']['jax_PRNG_key_list']"}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      branching-rng:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: continued-branching-rng, expression: "actual['rng_state'][name]"}
+        reference: {role: continuous-branching-rng, expression: "reference['rng_state'][name]"}
+        iterations: {variable: name, required_values: [branching_rng_keys, branching_rng_position, branching_rng_has_gauss, branching_rng_cached_gaussian]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      measurement-history:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: continued-measurement-history, expression: observed}
+        reference: {role: continuous-measurement-history, expression: expected}
+        iterations: {variable: name, required_values: [e_L, e_L2, w_L]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+      adaptive-shift:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: continued-adaptive-energy-shift, expression: "actual['driver_config']['E_scf']"}
+        reference: {role: continuous-adaptive-energy-shift, expression: "reference['driver_config']['E_scf']"}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+      accumulated-history:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: continued-accumulated-history, expression: observed}
+        reference: {role: continuous-accumulated-history, expression: expected}
+        iterations: {variable: name, required_values: [G_L, G_e_L]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+      reduced-energy:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: continued-reduced-energy, expression: observed_energy}
+        reference: {role: continuous-reduced-energy, expression: expected_energy}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+      j2-parameter:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: continued-j2-parameter, expression: observed_j2}
+        reference: {role: continuous-j2-parameter, expression: expected_j2}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+  - pytest_node: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_mpc_history_and_reporting
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{job_type: mcmc}, {job_type: lrdmc-bra}, {job_type: lrdmc-tau}]
+    executable_checks:
+      mpc-history:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_mpc_history_and_reporting#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: continued-mpc-correction-history, expression: observed}
+        reference: {role: continuous-mpc-correction-history, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, det_grad_lap, coulomb, local_energy]}
+  - pytest_node: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_force_stress_reporting
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{job_type: mcmc}, {job_type: lrdmc-bra}, {job_type: lrdmc-tau}]
+    executable_checks:
+      force-stress-pressure-output:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_force_stress_reporting#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: resumed-force-stress-pressure-output, expression: actual_values}
+        reference: {role: uninterrupted-force-stress-pressure-output, expression: expected_values}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

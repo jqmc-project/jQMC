@@ -1,0 +1,36 @@
+id: IMPL-MPC-SHARED-SETUP-001
+kind: implementation
+name: MPC tables are built once per sampling communicator, with unchanged values
+plain_language: The compiled minimum-image sweep used to tabulate g_G matches an eager per-image reference loop within the
+  central fp64 ulp bound (zero atol), dropping the lattice images that provably cannot be nearest (|T| > 2 R) changes no
+  bit of the minimum-image distances, and a full build_mpc_data matches the build that uses that reference loop within the
+  central fp64 accumulator bound. With a multi-rank communicator only rank 0 builds the tables; every other rank receives
+  rank 0's arrays and scalars bit for bit without reading its own Hamiltonian, and a rank-0 build failure is raised on rank
+  0 and reported on every other rank instead of leaving them waiting. Samplers forward their own sampling communicator.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestSharedSetup::test_compiled_min_image_sweep_matches_the_former_eager_sweep
+    required_parameter_cases:
+    - {cell_name: fcc-si}
+    - {cell_name: triclinic}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestSharedSetup::test_image_pruning_is_bitwise_exact
+    required_parameter_cases:
+    - {cell_name: fcc-si}
+    - {cell_name: triclinic}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestSharedSetup::test_build_mpc_data_matches_the_former_eager_build
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestSharedSetup::test_comm_build_runs_once_on_rank_zero_and_broadcasts_bitwise
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestSharedSetup::test_comm_build_failure_on_rank_zero_is_raised_on_every_rank
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

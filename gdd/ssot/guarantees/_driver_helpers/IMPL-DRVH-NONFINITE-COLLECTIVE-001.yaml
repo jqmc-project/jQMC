@@ -1,0 +1,18 @@
+id: IMPL-DRVH-NONFINITE-COLLECTIVE-001
+kind: implementation
+name: Non-finite walker observables fail collectively with rank-local diagnostics
+plain_language: >-
+  The shared production-driver boundary accepts finite real and complex scalar-per-walker arrays without collecting
+  diagnostic strings. A NaN or either infinity raises FloatingPointError naming driver, stage, precision, execution backend,
+  sampling rank, world rank, step, walker, field and maximum absolute current coordinate. This includes a non-finite e_L2
+  produced by squaring a finite but unrepresentably large local energy. A locally finite rank also raises when the reduction
+  reports a bad value owned by another rank. No failed walker is dropped and no biased estimate is published or checkpointed.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_driver_nonfinite_observables.py::test_finite_driver_observables_do_not_collect_diagnostics
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_driver_nonfinite_observables.py::test_local_nonfinite_observable_names_rank_step_walker_and_field
+  - pytest_node: tests/test_jqmc_kernel/test_driver_nonfinite_observables.py::test_remote_nonfinite_observable_raises_on_a_locally_finite_rank

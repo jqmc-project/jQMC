@@ -1,0 +1,74 @@
+id: MATH-DERIVAPI-GFMC-NON-SD-FORCE-001
+kind: mathematical
+name: Analytic GFMC force for non-SD geminal representations
+plain_language: Full analytical GFMC/LRDMC forces equal the independent AD oracle at strict for AGPn and AGP_MO,
+  for both tau and bra drivers. Mixed cases are separately required by NUM-GFMC-NON-SD-FORCE-MIXED-FIDELITY-001.
+  The original compared nuclear-gradient nonzero control and same-policy tolerance consistency check remain.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_entry_and_representation_parity.py::test_gfmc_force_analytic_vs_autograd_non_sd_geminal
+    executable_checks:
+      w11-mode-arm-comparison-1:
+        site: tests/test_jqmc_kernel/test_gfmc_entry_and_representation_parity.py::test_gfmc_force_analytic_vs_autograd_non_sd_geminal#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(dR)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(gR_oracle)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+      w11-mode-arm-comparison-2:
+        site: tests/test_jqmc_kernel/test_gfmc_entry_and_representation_parity.py::test_gfmc_force_analytic_vs_autograd_non_sd_geminal#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(dr_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(gru_oracle)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+      w11-mode-arm-comparison-3:
+        site: tests/test_jqmc_kernel/test_gfmc_entry_and_representation_parity.py::test_gfmc_force_analytic_vs_autograd_non_sd_geminal#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(dr_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(grd_oracle)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+    required_parameter_cases:
+    - {driver: t, gem: AGPn}
+    - {driver: t, gem: AGP_MO}
+    - {driver: n, gem: AGPn}
+    - {driver: n, gem: AGP_MO}
+    required_precision_modes:
+    - full

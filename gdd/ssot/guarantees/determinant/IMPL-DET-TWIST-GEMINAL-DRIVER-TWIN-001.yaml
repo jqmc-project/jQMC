@@ -1,0 +1,148 @@
+id: IMPL-DET-TWIST-GEMINAL-DRIVER-TWIN-001
+kind: implementation
+name: AGP, AGPn and untied SD geminals at k != Gamma reach the production drivers and equal their debug twins
+plain_language: On the all-electron H4 periodic twist H4_pbc_ae_k025_cart.h5 with J1+J2, production XLA MCMC (2
+  walkers, 4 measurements), GFMC_n (2 walkers) and GFMC_t (1 walker), each started from seed 3446, equal their
+  eager debug twins for a dense complex AO AGP, a four-MO AGPn and an untied SD with time_reversal=False. PRNG keys
+  and MCMC acceptance counters are identical and final walkers agree at the fp64 accumulator pin before any value is
+  compared; the stored complex e_L (with measurable Im), e_L2 and w_L, and for MCMC every stored d ln Psi / dc block
+  (for AGPn at least mo_coefficients_up and lambda_diag), agree strictly in each precision mode. This is a
+  same-backend route check; the independent value oracle is MATH-HAM-COMPLEX-TWIST-VALUE-ORACLE-001.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_geminal_driver_twins.py::test_twist_geminal_mcmc_matches_debug_twin
+    executable_checks:
+      d8-n-150:
+        site: tests/test_jqmc_kernel/test_twist_geminal_driver_twins.py::_assert_walk#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug_r_up
+        reference:
+          role: source-reference-value
+          expression: production_r_up
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+      d8-n-151:
+        site: tests/test_jqmc_kernel/test_twist_geminal_driver_twins.py::_assert_walk#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug_r_dn
+        reference:
+          role: source-reference-value
+          expression: production_r_dn
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+      values-comparison-1:
+        site: tests/test_jqmc_kernel/test_twist_geminal_driver_twins.py::_assert_values#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: debug_value
+        reference:
+          role: existing-test-reference
+          expression: production_value
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp}
+    - {case: agpn}
+    - {case: sd_untied}
+  - pytest_node: tests/test_jqmc_kernel/test_twist_geminal_driver_twins.py::test_twist_geminal_gfmc_matches_debug_twin
+    executable_checks:
+      d8-n-152:
+        site: tests/test_jqmc_kernel/test_twist_geminal_driver_twins.py::_assert_walk#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug_r_up
+        reference:
+          role: source-reference-value
+          expression: production_r_up
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+      d8-n-153:
+        site: tests/test_jqmc_kernel/test_twist_geminal_driver_twins.py::_assert_walk#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug_r_dn
+        reference:
+          role: source-reference-value
+          expression: production_r_dn
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+      values-comparison-1:
+        site: tests/test_jqmc_kernel/test_twist_geminal_driver_twins.py::_assert_values#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: debug_value
+        reference:
+          role: existing-test-reference
+          expression: production_value
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp, driver: n}
+    - {case: agp, driver: t}
+    - {case: agpn, driver: n}
+    - {case: agpn, driver: t}
+    - {case: sd_untied, driver: n}
+    - {case: sd_untied, driver: t}

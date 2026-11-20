@@ -1,0 +1,23 @@
+id: IMPL-HAM-HDF5-BASIS-FP64-LEGACY-TWIST-001
+kind: implementation
+name: load_twist widens legacy float32 AO basis datasets exactly to fp64 storage
+plain_language: >-
+  A twist-averaged combined input whose /shared AO radial exponents/coefficients datasets are float32 (for example a
+  combined dump that write_twist_optimized_hamiltonian assembled from a pre-fp64 shared_state.h5) is restored by
+  load_twist as float64 AO leaves holding exactly those float32 values, in both precision modes. For the committed
+  Cartesian H_ae_ccpvdz_cart.h5 and spherical H2_ae_ccpvdz_sphe.h5 SD Hamiltonians with an exponential J2 and an AO J3
+  on the same basis, written by the twist-averaged input writer with all six /shared radial datasets (SD up/dn and J3)
+  replaced by their float32 rounding, the loaded leaves are float64 and bit-equal to the raw h5py datasets widened
+  exactly, and compute_AOs, compute_AOs_grad and compute_AOs_laplacian of each loaded leaf are bit-identical (no
+  tolerance) to those of the in-memory leaf holding the widened arrays at five seeded electron positions in full and
+  in mixed. This is a storage and route-identity contract; it makes no statement about AO accuracy against an fp64
+  reference.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hdf5_basis_storage_fp64.py::test_load_twist_lifts_legacy_fp32_basis_storage_to_fp64
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H_ae_ccpvdz_cart.h5}
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5}

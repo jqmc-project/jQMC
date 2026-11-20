@@ -1,0 +1,65 @@
+id: MATH-DERIV-XLA-COMPLEX-MO-J3-FIELDS-001
+kind: mathematical
+name: XLA J3 orbital fields and local-energy gradients of a complex-MO three-body Jastrow equal autodiff of Re(C @ AO)
+plain_language: >-
+  When the three-body Jastrow orbital is an MO with complex coefficients C (as the QE converter writes for
+  -j3 mo at k != 0), the J3 orbital field is Re(C @ AO), also when the AO basis is itself complex (a plane-wave
+  or complex B-spline composite child). The XLA J3 field tower (value, gradient, Laplacian, Hessian and
+  gradient of the Laplacian) must equal forward-mode autodiff of Re(compute_MOs); taking Re of each AO field
+  before the MO contraction (Re(C) @ Re(AO)) is wrong. With a seeded random j_matrix of scale 0.3, the XLA
+  analytic electron, strain and J3-parameter (j_matrix, J3 radial exponents and coefficients) gradients of
+  the local energy and the strain gradient of ln|Psi| must equal reverse-mode autodiff of Re e_L and
+  Re ln Psi. Cases: the committed Li ccECP k = 0.25 sphe-pGTO SD and the QE-projected pGTO(+)plane-wave and
+  pGTO(+)B-spline composite SDs, each with a J3 on its phase-free complex occupied MO, with and without a
+  global MO phase exp(i pi/3), at one seeded well-conditioned electron configuration. Every compared reference
+  is nonzero, and the J3 share of each energy-gradient reference exceeds the comparison tolerance. Full retains the original mathematical AD comparisons and budgets. Mixed derivatives are
+  separately governed by NUM-COMPLEX-MO-J3-DERIVATIVE-MIXED-FIDELITY-001, and value API parity
+  remains same-mode under IMPL-XLA-COMPLEX-MO-J3-VALUE-PARITY-001.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_xla_complex_mo_j3_fields.py::test_xla_complex_mo_j3_basis_fields_match_autodiff_of_re_mo
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {kind: pgto, rotated: false}
+    - {kind: pgto, rotated: true}
+    - {kind: pgto_pw, rotated: false}
+    - {kind: pgto_pw, rotated: true}
+    - {kind: pgto_bspline, rotated: false}
+    - {kind: pgto_bspline, rotated: true}
+    executable_checks:
+      j3-field-tower-vs-autodiff:
+        site: tests/test_jqmc_kernel/test_xla_complex_mo_j3_fields.py::test_xla_complex_mo_j3_basis_fields_match_autodiff_of_re_mo#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-j3-basis-field-tower, expression: "np.concatenate([field.ravel() for field in actual])"}
+        reference: {role: forward-autodiff-of-re-compute-mos, expression: "np.concatenate([ref.ravel() for ref in reference])"}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, jastrow_eval, jastrow_grad_lap]
+  - pytest_node: tests/test_jqmc_kernel/test_xla_complex_mo_j3_fields.py::test_xla_complex_mo_j3_local_energy_gradients_match_autodiff
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {kind: pgto, rotated: false, quantity: e_L/r}
+    - {kind: pgto, rotated: false, quantity: e_L/eps}
+    - {kind: pgto, rotated: false, quantity: ln_Psi/eps}
+    - {kind: pgto, rotated: false, quantity: e_L/c}
+    - {kind: pgto_pw, rotated: false, quantity: e_L/r}
+    - {kind: pgto_pw, rotated: false, quantity: e_L/eps}
+    - {kind: pgto_pw, rotated: false, quantity: ln_Psi/eps}
+    - {kind: pgto_pw, rotated: false, quantity: e_L/c}
+    - {kind: pgto_bspline, rotated: true, quantity: e_L/r}
+    - {kind: pgto_bspline, rotated: true, quantity: e_L/eps}
+    - {kind: pgto_bspline, rotated: true, quantity: ln_Psi/eps}
+    - {kind: pgto_bspline, rotated: true, quantity: e_L/c}
+    executable_checks:
+      gradient-vs-autodiff:
+        site: tests/test_jqmc_kernel/test_xla_complex_mo_j3_fields.py::test_xla_complex_mo_j3_local_energy_gradients_match_autodiff#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-analytic-gradient, expression: actual}
+        reference: {role: same-precision-reverse-autodiff, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, ewald, coulomb, jastrow_eval, jastrow_grad_lap]

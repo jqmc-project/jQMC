@@ -1,0 +1,22 @@
+id: IMPL-RS-VMC-STRESS-TWIST-J3-HOME-CELL-001
+kind: implementation
+name: Native complex-twist VMC stress with shared phase-free J3 equals XLA for home and unwrapped walkers
+plain_language: >-
+  For twist_sphepgto_j123 (lithium_k025.h5, ccECP, J1/J2 and a phase-free spherical pGTO J3 with a seeded
+  symmetric coupling), the native vmc_grad_e_L_eps_pbc_complex and vmc_grad_ln_psi_eps_pbc_complex equal the XLA
+  analytic HF and Pulay strain derivatives at the near configuration and at the far3, far6 and far-scatter
+  configurations without mapping far walkers to their home-cell images, within the medium XLA-Rust policy floored at the periodic
+  medium floor. Dropping the native complex J3 value-strain term must fail. Full and mixed are judged separately.
+  The phase-free J3 basis follows the existing all-twist shared convention. Node and parameter names
+  containing home do not restrict the walkers to the home cell.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_complex_j123_home_cell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 0, far: false, scatter: false}
+    - {seed: 3, far: true, scatter: false}
+    - {seed: 6, far: true, scatter: false}
+    - {seed: 3, far: true, scatter: true}

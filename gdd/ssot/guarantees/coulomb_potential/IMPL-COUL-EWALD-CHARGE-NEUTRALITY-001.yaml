@@ -1,0 +1,36 @@
+id: IMPL-COUL-EWALD-CHARGE-NEUTRALITY-001
+kind: implementation
+name: Ewald construction rejects charged periodic cells
+plain_language: >-
+  When the electron count is supplied, the Ewald builder (build_ewald_data and
+  Ewald_data.build) accepts a periodic cell only if the electron count equals
+  the total effective ionic charge, the sum of Z for all-electron atoms and of
+  Z - z_core for ECP atoms. A cell charged by either sign, including an ECP
+  cell given the bare all-electron count sum(Z), raises ValueError before any
+  Ewald table is built. The periodic TREXIO loader applies the same rejection
+  to a file whose valence nuclear charges disagree with its electron count,
+  while the unmodified neutral file loads.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldError::test_build_ewald_data_accepts_charge_neutral_cells
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldError::test_build_ewald_data_rejects_charged_all_electron_cell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {n_electron: 1}
+    - {n_electron: 3}
+    - {n_electron: 4}
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldError::test_build_ewald_data_rejects_charged_ecp_cell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {electron_count: bare_z}
+    - {electron_count: valence_minus_1}
+    - {electron_count: valence_plus_1}
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldError::test_read_trexio_file_rejects_charged_periodic_file
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {charge_shift: -1}
+    - {charge_shift: 1}

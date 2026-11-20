@@ -1,0 +1,21 @@
+id: IMPL-JQMCQE-PW-TAPER-VACUUM-ONLY-001
+kind: implementation
+name: run_qe2jqmc tapers the plane-wave sphere edge only for vacuum cells and records it
+plain_language: >-
+  For the plane-wave-carrying kinds (pw, bspline, pgto+pw, pgto+bspline) the converter passes the
+  loaded QE reference through taper_qe_reference before any projection. On the committed Li gamma save
+  (no vacuum) the written Hamiltonian carries no pw_taper_* attribute. When the loaded reference has a
+  vacuum region (the same save with its third lattice vector stretched fourfold) the file records the
+  taper (start fraction, g_start, g_end, vacuum radius, largest nucleus-free distance, occupied and
+  per-band spectral loss) as root attributes; for the bspline kind the stored B-spline table equals
+  project_pw_to_spline of the tapered reference bit for bit and differs from the projection of the
+  untapered one, and for a pw basis truncated at a numeric ecutwfc the recorded edge g_end is its own
+  cutoff g_cut = sqrt(ecutwfc_Ry) rather than the QE sphere edge. No user option selects this: the
+  decision follows the geometry alone.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_run_qe2jqmc_tapers_only_vacuum_cells_and_records_it
+    required_parameter_cases: [{kind: bspline, ecutwfc: null}, {kind: pw, ecutwfc: 40.0}]
+    required_precision_modes: [full, mixed]

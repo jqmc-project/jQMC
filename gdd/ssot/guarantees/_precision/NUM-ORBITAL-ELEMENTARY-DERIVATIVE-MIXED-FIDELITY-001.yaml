@@ -1,0 +1,342 @@
+id: NUM-ORBITAL-ELEMENTARY-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: Complex orbital and elementary derivatives retain full production fidelity in mixed
+plain_language: On the existing deterministic AO leaves (including complex twist, high l and straddling-cell points),
+  complex-coefficient periodic MOs, AO-converted H2 geminal, isolated Cartesian-twist ECP basis blocks, Legendre
+  l=0..6 closed-interval grid and Li QE twist-grid corners, mixed analytical derivatives retain the same independently
+  rebuilt full analytical route. Each finite nonempty homogeneous component or parameter leaf is judged by the central
+  orbital_derivative or parameter_derivative block infinity-norm budget, without new constants. Factories rebuild
+  after each policy switch; the mode-blind QE projection cache is cleared before each model build. Seeds and coordinates
+  remain the original fixed cases, with no conditioning rejection or selected-reference loop. The kinetic block
+  is specifically the per-electron normalized wavefunction Laplacian T=-Laplacian(Psi)/(2*Psi) on the original no-Jastrow/J1+J2
+  Gamma-free twist fixtures and fixed seed coordinates with finite nonzero Psi; it uses the existing orbital_derivative
+  budget for the derivative-derived block and ratio. Scalar/vector total-energy invariance is outside this fidelity
+  claim; same-mode kinetic total/sum closure remains a separate strict mathematical identity. Full mathematical
+  AD evidence and existing liveness, phase/conjugation faults, fused API parity and closed-form endpoint evidence
+  remain separate. Hard production faults are installed only after the clean full reference is copied to host, so
+  shared-error cancellation cannot satisfy a negative control. Every positive block comparison also proves an out-of-budget
+  injected error is rejected.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_complex_and_high_l_ao_derivatives_match_autodiff
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - case: pgto_cart_l4_real
+    - case: pgto_sphe_l4_real
+    - case: pgto_cart_l4_complex
+    - case: pgto_sphe_l4_complex
+    - case: pw_complex
+    - case: bspline_complex
+    - case: composite_complex
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_negative_control_dropped_bloch_cross_term_fails_ao_laplacian
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - case: bspline_complex
+    - case: composite_complex
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_negative_control_double_restore_phase_fails_ao_laplacian
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - case: pgto_cart_l4_complex
+    - case: pgto_sphe_l4_complex
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_cart_twist_ecp_basis.py::test_cart_twist_nonlocal_basis_matches_autodiff
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_parameter_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_cart_twist_ecp_basis.py::test_cart_twist_nonlocal_basis_rejects_real_projected_weights
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_parameter_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_legendre_derivative.py::test_legendre_derivative_matches_polynomial_on_closed_interval
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - l: 0
+    - l: 1
+    - l: 2
+    - l: 3
+    - l: 4
+    - l: 5
+    - l: 6
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_mixed_alternative.py::test_ao_converted_geminal_exponent_gradient_matches_primal_ad
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_parameter_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::test_complex_periodic_MOs_grad_analytic_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - trexio_file: lithium_k025.h5
+    - trexio_file: H2_pbc_ae_k025_cart.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::test_complex_periodic_MOs_laplacian_analytic_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - trexio_file: lithium_k025.h5
+    - trexio_file: H2_pbc_ae_k025_cart.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::test_complex_periodic_MOs_fused_matches_standalone_and_autodiff
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - trexio_file: lithium_k025.h5
+    - trexio_file: H2_pbc_ae_k025_cart.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_mo_complex_coefficients.py::test_negative_control_conjugated_ao_derivatives_fail_complex_mo_rows
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_grid_composite.py::test_twist_grid_composite_grad_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - ik: 1
+      quantity: ln_Psi
+    - ik: 8
+      quantity: ln_Psi
+    - ik: 1
+      quantity: e_L
+    - ik: 8
+      quantity: e_L
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_parameter_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_grid_composite.py::test_twist_grid_composite_basis_is_live
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - ik: 1
+      quantity: ln_Psi
+    - ik: 8
+      quantity: ln_Psi
+    - ik: 1
+      quantity: e_L
+    - ik: 8
+      quantity: e_L
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_parameter_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_complex_twist_kinetic_matches_complex_psi_hessian
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - case: lithium_k025-jnone
+    - case: lithium_k025-j12
+    - case: H2_pbc_ae_k025_cart-jnone
+    - case: H2_pbc_ae_k025_cart-j12
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_negative_control_double_restore_phase_fails_twist_kinetic
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_orbital_mixed_fidelity.py::assert_mixed_orbital_derivative_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: orbital_derivative

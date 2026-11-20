@@ -1,0 +1,44 @@
+id: NUM-GFMC-NON-SD-FORCE-MIXED-FIDELITY-001
+kind: numerical
+name: Non-SD GFMC representation forces retain mixed full fidelity
+plain_language: The same AGPn and AGP_MO physical inputs, both tau and bra drivers, seed0 scale.9 electron configurations
+  and seed1 quadrature retain central parameter-derivative block infinity-norm mixed/full fidelity. Full physical
+  Hamiltonian input is serialized once and freshly loaded for each policy. Original nuclear-gradient maxabs>0 is
+  checked in both callbacks and active-policy battery tolerance consistency remains. All three physical nuclear/electron
+  fields have complete shape and finite controls; every case rejects an isolated over-budget mutation with fixed
+  full reference. Original full strict AD and ordinary fused/separate entry parity remain. No production zone or
+  central budget changes.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_entry_and_representation_parity.py::test_gfmc_force_analytic_vs_autograd_non_sd_geminal
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - driver: t
+      gem: AGPn
+    - driver: t
+      gem: AGP_MO
+    - driver: n
+      gem: AGPn
+    - driver: n
+      gem: AGP_MO
+    executable_checks:
+      mixed-vs-independently-rebuilt-full:
+        site: tests/test_jqmc_kernel/test_gfmc_entry_and_representation_parity.py::test_gfmc_force_analytic_vs_autograd_non_sd_geminal#helper-inequality-2
+        comparator: python.inequality
+        actual:
+          role: mixed-xla-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: full-xla-analytical-derivative-block
+          expression: full_block
+        iterations:
+          variable: quantity
+          required_values: [electron-down, electron-up, nuclear]
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

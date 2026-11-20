@@ -1,0 +1,95 @@
+schema_version: 1
+
+document:
+  id: jqmc.fixtures.sources
+  version: 1
+  lifecycle: cutover
+  title: Committed fixture source registry
+  purpose: >-
+    Assign stable IDs to committed artifacts that a guarantee case may select
+    through a committed-artifact input binding.
+
+# Who enforces each top-level section (see gdd/ssot/README.md for the legend).
+enforcement_map:
+  roots: scripts/check_gdd_wavefunction_fixtures_contract.py
+  sources: scripts/check_gdd_wavefunction_fixtures_contract.py
+  rules: per-rule
+
+roots:
+  TREXIO-EXAMPLES:
+    path: tests/trexio_example_files
+    provenance: committed-input
+  QE-EXAMPLES:
+    path: tests/qe_example_files
+    provenance: committed-input
+  JQMC-HAMILTONIAN-EXAMPLES:
+    path: tests/jqmc_hamiltonian_data
+    provenance: committed-input
+
+  GDD-SSOT:
+    path: gdd/ssot
+    provenance: committed-input
+
+sources:
+  WF-SRC-LI-PERIODIC-J3-BASIS-AUDIT: {root: JQMC-HAMILTONIAN-EXAMPLES, path: periodic_j3_basis_audit_initial.h5, format: hdf5}
+  GDD-SRC-PRECISION-REQUIREMENTS-001: {root: GDD-SSOT, path: guarantees/_precision.yaml, format: yaml}
+  GDD-SRC-COULOMB-REQUIREMENTS-001: {root: GDD-SSOT, path: guarantees/coulomb_potential.yaml, format: yaml}
+  GDD-SRC-DERIVATIVE-REQUIREMENTS-001: {root: GDD-SSOT, path: guarantees/derivatives.yaml, format: yaml}
+  ECP-SRC-LI-CCECP-UPF: {root: QE-EXAMPLES, path: Li.ccECP.upf, format: upf}
+  WF-SRC-H2-AE-CART-MOL: {root: TREXIO-EXAMPLES, path: H2_ae_ccpvdz_cart.h5, format: trexio}
+  WF-SRC-H2-AE-SPHE-MOL: {root: TREXIO-EXAMPLES, path: H2_ae_ccpvdz_sphe.h5, format: trexio}
+  WF-SRC-H2-ECP-CART-MOL: {root: TREXIO-EXAMPLES, path: H2_ecp_ccpvdz_cart.h5, format: trexio}
+  WF-SRC-H2-ECP-SPHE-MOL: {root: TREXIO-EXAMPLES, path: H2_ecp_ccpvtz.h5, format: trexio}
+  WF-SRC-N-AE-CART-MOL: {root: TREXIO-EXAMPLES, path: N_ae_ccpvdz_cart.h5, format: trexio}
+  WF-SRC-LI-AE-CART-MOL: {root: TREXIO-EXAMPLES, path: Li_ae_ccpvdz_cart.h5, format: trexio}
+  WF-SRC-N2-ECP-CART-MOL: {root: TREXIO-EXAMPLES, path: N2_ecp_ccpvtz_cart.h5, format: trexio}
+  WF-SRC-CL2-ECP-CART-MOL: {root: TREXIO-EXAMPLES, path: Cl2_ecp_ccpvtz_cart.h5, format: trexio}
+  WF-SRC-CUBR-ECP-CART-MOL: {root: TREXIO-EXAMPLES, path: CuBr_ecp_ccpvtz_cart.h5, format: trexio}
+  WF-SRC-TI2-ECP-CART-MOL: {root: TREXIO-EXAMPLES, path: Ti2_ecp_ccpvtz_cart.h5, format: trexio}
+  WF-SRC-H-AE-CART-MOL: {root: TREXIO-EXAMPLES, path: H_ae_ccpvdz_cart.h5, format: trexio}
+  WF-SRC-H-ECP-CART-MOL: {root: TREXIO-EXAMPLES, path: H_ecp_ccpvdz_cart.h5, format: trexio}
+  WF-SRC-H-ECP-SPHE-MOL: {root: TREXIO-EXAMPLES, path: H_ecp_ccpvqz.h5, format: trexio}
+  WF-SRC-H2-AE-CART-TZ-MOL: {root: TREXIO-EXAMPLES, path: H2_ae_ccpvtz_cart.h5, format: trexio}
+  WF-SRC-H2-AE-SPHE-QZ-MOL: {root: TREXIO-EXAMPLES, path: H2_ae_ccpvqz.h5, format: trexio}
+  WF-SRC-H2-ECP-CART-TZ-MOL: {root: TREXIO-EXAMPLES, path: H2_ecp_ccpvtz_cart.h5, format: trexio}
+  WF-SRC-LI-ECP-CART-MOL: {root: TREXIO-EXAMPLES, path: Li_ecp_ccpvdz_cart.h5, format: trexio}
+  WF-SRC-WATER-ECP-SPHE-MOL: {root: TREXIO-EXAMPLES, path: water_ccecp_ccpvqz.h5, format: trexio}
+  WF-SRC-JASTROW-AE-J1-J2-J3: {root: TREXIO-EXAMPLES, path: jastrow_data_w_1b_2b_1b3b_ae.h5, format: hdf5}
+  WF-SRC-JASTROW-ECP-J2-J3: {root: TREXIO-EXAMPLES, path: jastrow_data_w_2b_3b_w_ecp.h5, format: hdf5}
+  WF-SRC-JASTROW-ECP-J1-J2-J3: {root: TREXIO-EXAMPLES, path: jastrow_data_w_2b_1b3b_w_ecp.h5, format: hdf5}
+  WF-SRC-SI-AE-SPHE-GAMMA: {root: TREXIO-EXAMPLES, path: silicon.h5, format: trexio}
+  WF-SRC-H2-AE-CART-GAMMA: {root: TREXIO-EXAMPLES, path: H2_pbc_ae_cart.h5, format: trexio}
+  WF-SRC-H2-AE-SPHE-GAMMA: {root: TREXIO-EXAMPLES, path: H2_pbc_ae_sphe.h5, format: trexio}
+  WF-SRC-H2-AE-CART-NON-GAMMA: {root: TREXIO-EXAMPLES, path: H2_pbc_ae_k025_cart.h5, format: trexio}
+  WF-SRC-H2-AE-SPHE-NON-GAMMA: {root: TREXIO-EXAMPLES, path: H2_pbc_ae_k025_sphe.h5, format: trexio}
+  WF-SRC-H4-AE-CART-GAMMA: {root: TREXIO-EXAMPLES, path: H4_pbc_ae_cart.h5, format: trexio}
+  WF-SRC-H4-AE-CART-NON-GAMMA: {root: TREXIO-EXAMPLES, path: H4_pbc_ae_k025_cart.h5, format: trexio}
+  WF-SRC-LI-ECP-SPHE-GAMMA: {root: TREXIO-EXAMPLES, path: lithium.h5, format: trexio}
+  WF-SRC-LI-ECP-CART-GAMMA: {root: TREXIO-EXAMPLES, path: lithium_cart.h5, format: trexio}
+  WF-SRC-LI-ECP-SPHE-NON-GAMMA: {root: TREXIO-EXAMPLES, path: lithium_k025.h5, format: trexio}
+  WF-SRC-LI-ECP-CART-NON-GAMMA: {root: TREXIO-EXAMPLES, path: lithium_k025_cart.h5, format: trexio}
+  WF-SRC-LI-ECP-TWIST-222: {root: TREXIO-EXAMPLES, path: lithium_twist_222.h5, format: trexio}
+  WF-SRC-AR-AE-CART-MOL: {root: TREXIO-EXAMPLES, path: Ar_ae_ccpvdz_cart.h5, format: trexio}
+  WF-SRC-AR-AE-SPHE-MOL: {root: TREXIO-EXAMPLES, path: Ar_ae_ccpvdz_sphe.h5, format: trexio}
+  WF-SRC-LI-AE-CCPVDZ-CART-GAMMA: {root: TREXIO-EXAMPLES, path: Li_pbc_ae_ccpvdz_cart.h5, format: trexio}
+  WF-SRC-LI-AE-CCPVDZ-SPHE-GAMMA: {root: TREXIO-EXAMPLES, path: Li_pbc_ae_ccpvdz_sphe.h5, format: trexio}
+  WF-SRC-H-AE-GAMMA: {root: QE-EXAMPLES, path: H-ae_gamma/out/h_gamma.save, format: qe-save}
+  WF-SRC-H-AE-NON-GAMMA: {root: QE-EXAMPLES, path: H-ae_k025/out/h_k025.save, format: qe-save}
+  WF-SRC-LI-ECP-GAMMA: {root: QE-EXAMPLES, path: Li_gamma/out/li.save, format: qe-save}
+  WF-SRC-LI-ECP-NON-GAMMA: {root: QE-EXAMPLES, path: Li_k025/out/li_k025.save, format: qe-save}
+  WF-SRC-O-ECP-UNRESTRICTED-GAMMA: {root: QE-EXAMPLES, path: O-lsda_gamma/out/o.save, format: qe-save}
+  WF-SRC-O-ECP-UNRESTRICTED-NON-GAMMA: {root: QE-EXAMPLES, path: O-lsda_k025/out/o_k025.save, format: qe-save}
+  WF-SRC-LI-ECP-TWIST-GRID: {root: QE-EXAMPLES, path: Li_k_twist/out/li_twist.save, format: qe-save}
+
+  WF-SRC-LI-TILING-SECTORS-SPHE: {root: TREXIO-EXAMPLES, path: lithium_tiling_sectors.h5, format: trexio}
+  WF-SRC-LI-TILING-SECTORS-CART: {root: TREXIO-EXAMPLES, path: lithium_tiling_sectors_cart.h5, format: trexio}
+  WF-SRC-O-TILING-SECTORS-SPHE: {root: TREXIO-EXAMPLES, path: oxygen_tiling_sectors_sphe.h5, format: trexio}
+  WF-SRC-O-TILING-SECTORS-CART: {root: TREXIO-EXAMPLES, path: oxygen_tiling_sectors_cart.h5, format: trexio}
+  WF-SRC-QE-LI-TILING-SECTORS: {root: QE-EXAMPLES, path: Li_tiling_sectors/out/li_tiling.save, format: qe-save}
+  WF-SRC-QE-O-TILING-SECTORS: {root: QE-EXAMPLES, path: O_tiling_sectors/out/o_tiling.save, format: qe-save}
+
+rules:
+  - rule: An unknown committed source ID fails the certificate.
+    enforced_by: scripts/check_gdd_derivatives_contract.py
+  - rule: Unseeded transformations of a committed source are forbidden.
+    enforced_by: gdd.engine.evidence.ElectronConfigurationBinding

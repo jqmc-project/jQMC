@@ -24,7 +24,7 @@ and finally performs the extrapolation.
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -47,14 +47,14 @@ import re
 import subprocess
 from logging import getLogger
 
-from ._setting import (
+from .state import WorkflowStatus, read_state
+from .lrdmc_workflow import (
     GFMC_MIN_BIN_BLOCKS,
     GFMC_MIN_COLLECT_STEPS,
     GFMC_MIN_WARMUP_STEPS,
+    LRDMC_Workflow,
 )
-from ._state import WorkflowStatus, read_state
-from .lrdmc_workflow import LRDMC_Workflow
-from .workflow import Container, Workflow
+from .workflow import Container, ValueFrom, Workflow
 
 logger = getLogger("jqmc-workflow").getChild(__name__)
 
@@ -150,7 +150,8 @@ class LRDMC_Ext_Workflow(Workflow):
         verbosity (str, optional):
             Verbosity level.  Default from ``jqmc_miscs``.
         poll_interval (int):
-            Seconds between job-status polls.
+            Seconds between job-status polls, and between
+            submission attempts while the queue's ``max_job_submit`` is reached.
         target_error (float):
             Target statistical error (Ha) for each sub-LRDMC run.
             Passed through to each :class:`LRDMC_Workflow`.
@@ -170,6 +171,11 @@ class LRDMC_Ext_Workflow(Workflow):
             are always removed; remote files are removed only when the
             workflow targets a remote machine.  Passed through to each
             child :class:`LRDMC_Workflow`.  Default *None* (no cleanup).
+        precision_mode (str):
+            Precision mode written to the ``[precision]`` section
+            (``mode``) of every sub-run's TOML: ``"full"`` (all float64)
+            or ``"mixed"`` (mixed precision).  Passed through to each
+            child :class:`LRDMC_Workflow`.  Default ``"full"``.
 
     Examples:
         GFMC_t mode (default)::
@@ -226,9 +232,15 @@ class LRDMC_Ext_Workflow(Workflow):
             Top-level error message (only on failure).
 
     Notes:
-        * At least two ``alat`` values are required for extrapolation.
-          With a single value, per-alat results are returned but no
-          extrapolation is performed.
+        * ``alat_list`` must hold at least ``max(polynomial_order + 1, 2)``
+          distinct values; otherwise construction raises ``ValueError``
+          (or, for a value resolved later through ``ValueFrom``, the run
+          fails before any alat is launched).
+        * A ``COMPLETED`` status always carries ``extrapolated_energy`` and
+          ``extrapolated_energy_error`` computed from the checkpoints of
+          every alat in ``alat_list``.  A missing checkpoint or a failed
+          ``jqmc-tool lrdmc extrapolate-energy`` call ends the workflow as
+          ``FAILED`` with the cause in ``error``.
         * Each sub-run directory is named ``lrdmc_alat_<value>/``.
 
     See Also:
@@ -246,8 +258,8 @@ class LRDMC_Ext_Workflow(Workflow):
         number_of_walkers: int = 4,
         max_time: int = 86400,
         polynomial_order: int = 2,
-        num_gfmc_bin_blocks: int = 5,
-        num_gfmc_warmup_steps: int = 0,
+        num_gfmc_bin_blocks: int = 10,
+        num_gfmc_warmup_steps: int = 25,
         num_gfmc_collect_steps: int = 5,
         # -- [lrdmc-bra / lrdmc-tau] section parameters --
         time_projection_tau: float | None = 0.10,
@@ -281,6 +293,9 @@ class LRDMC_Ext_Workflow(Workflow):
         self.number_of_walkers = number_of_walkers
         self.max_time = max_time
         self.polynomial_order = polynomial_order
+        request_error = self._extrapolation_request_error()
+        if request_error is not None:
+            raise ValueError(request_error)
         # Validate GFMC post-processing parameters
         if num_gfmc_warmup_steps < GFMC_MIN_WARMUP_STEPS:
             raise ValueError(
@@ -340,6 +355,27 @@ class LRDMC_Ext_Workflow(Workflow):
         self.max_continuation = max_continuation
         # [precision] section
         self.precision_mode = precision_mode
+
+    def _extrapolation_request_error(self) -> str | None:
+        """Return why ``alat_list`` cannot support the requested fit, or *None*.
+
+        ``jqmc-tool lrdmc extrapolate-energy`` needs one checkpoint per
+        distinct lattice spacing and at least ``polynomial_order + 1`` of
+        them; the workflow itself needs at least two.  Values still held as
+        ``ValueFrom`` placeholders are checked again in :meth:`run`.
+        """
+        if isinstance(self.alat_list, ValueFrom) or isinstance(self.polynomial_order, ValueFrom):
+            return None
+        distinct = len({float(alat) for alat in self.alat_list})
+        if distinct != len(self.alat_list):
+            return f"alat_list {self.alat_list} contains duplicate lattice spacings; give each alat once."
+        needed = max(int(self.polynomial_order) + 1, 2)
+        if distinct < needed:
+            return (
+                f"polynomial_order {self.polynomial_order} needs at least {needed} distinct lattice spacings, "
+                f"but alat_list {self.alat_list} has {distinct}. Lower polynomial_order or add alat values."
+            )
+        return None
 
     def _make_lrdmc_workflow(self, alat):
         """Create one :class:`Container` for a given *alat* value.
@@ -492,6 +528,15 @@ class LRDMC_Ext_Workflow(Workflow):
                     f"{self.num_projection_per_measurement!r}"
                 ) from exc
 
+        # Re-check after Launcher ValueFrom resolution, before any alat
+        # run is launched.
+        request_error = self._extrapolation_request_error()
+        if request_error is not None:
+            logger.error(request_error)
+            self.status = WorkflowStatus.FAILED
+            self.output_values["error"] = request_error
+            return self.status, [], {"error": request_error}
+
         sorted_alats = sorted(self.alat_list, reverse=True)
 
         # -- helper: run a single alat, return a uniform result tuple ------
@@ -518,6 +563,7 @@ class LRDMC_Ext_Workflow(Workflow):
 
         # -- collect results -----------------------------------------------
         restart_chks = []
+        missing_chks = []
         per_alat_results = []
         errors = []
 
@@ -533,10 +579,13 @@ class LRDMC_Ext_Workflow(Workflow):
 
             # Collect the restart checkpoint from the sub-run directory
             chk = out_values.get("restart_chk")
-            if chk:
-                full_path = os.path.join(enc.project_dir, chk)
-                if os.path.isfile(full_path):
-                    restart_chks.append(full_path)
+            full_path = os.path.join(enc.project_dir, chk) if chk else None
+            if full_path is not None and os.path.isfile(full_path):
+                restart_chks.append(full_path)
+            else:
+                alat_value = out_values.get("alat")
+                name = f"alat={float(alat_value):.3f}" if alat_value is not None else enc.label
+                missing_chks.append(f"{name} ({full_path or 'no restart_chk recorded in ' + enc.project_dir})")
 
             per_alat_results.append(
                 {
@@ -553,13 +602,27 @@ class LRDMC_Ext_Workflow(Workflow):
 
         logger.info(f"All {len(self.alat_list)} LRDMC runs completed.")
 
+        # Every alat must contribute its checkpoint: extrapolating over a
+        # subset would publish a fit other than the one requested.
+        if missing_chks:
+            msg = "Restart checkpoint missing for " + "; ".join(missing_chks) + "; cannot extrapolate over alat_list."
+            logger.error(msg)
+            self.status = WorkflowStatus.FAILED
+            self.output_values["error"] = msg
+            return self.status, [], {"error": msg}
+
         # -- Extrapolation -----------------------------------------
         if len(restart_chks) >= 2:
-            ext_energy, ext_error = self._extrapolate_energy(restart_chks)
-            if ext_energy is not None:
-                self.output_values["extrapolated_energy"] = ext_energy
-                self.output_values["extrapolated_energy_error"] = ext_error
-                logger.info(f"Extrapolated energy (a->0): {ext_energy} +- {ext_error} Ha")
+            try:
+                ext_energy, ext_error = self._extrapolate_energy(restart_chks)
+            except RuntimeError as exc:
+                msg = str(exc)
+                self.status = WorkflowStatus.FAILED
+                self.output_values["error"] = msg
+                return self.status, [], {"error": msg}
+            self.output_values["extrapolated_energy"] = ext_energy
+            self.output_values["extrapolated_energy_error"] = ext_error
+            logger.info(f"Extrapolated energy (a->0): {ext_energy} +- {ext_error} Ha")
         else:
             msg = f"Only {len(restart_chks)} checkpoint(s) found; cannot extrapolate."
             logger.error(msg)
@@ -605,7 +668,12 @@ class LRDMC_Ext_Workflow(Workflow):
 
         Returns:
             tuple:
-                ``(energy, error)`` or ``(None, None)``.
+                ``(energy, error)``.
+
+        Raises:
+            RuntimeError:
+                If ``jqmc-tool`` is not found, exits with an error, or its
+                output has no ``For a -> 0 bohr: E = ...`` line.
         """
         cmd = [
             "jqmc-tool",
@@ -632,13 +700,21 @@ class LRDMC_Ext_Workflow(Workflow):
                 check=True,
                 cwd=self.project_dir,
             )
-            return self._parse_extrapolation_output(result.stdout)
         except FileNotFoundError as e:
-            logger.error(f"extrapolate-energy: '{cmd[0]}' not found on PATH ({e})")
-            return None, None
+            msg = f"extrapolate-energy: '{cmd[0]}' not found on PATH ({e})"
+            logger.error(msg)
+            raise RuntimeError(msg) from e
         except subprocess.CalledProcessError as e:
             logger.error(f"extrapolate-energy failed: {e.stderr}")
-            return None, None
+            lines = [line.strip() for line in (e.stderr or "").splitlines() if line.strip()]
+            reason = lines[-1] if lines else "no stderr"
+            raise RuntimeError(f"{' '.join(cmd[:3])} failed (exit {e.returncode}): {reason}") from e
+        energy, error = self._parse_extrapolation_output(result.stdout)
+        if energy is None:
+            msg = f"{' '.join(cmd[:3])}: no 'For a -> 0 bohr: E = ... +- ... Ha' line in its output."
+            logger.error(f"{msg}\n{result.stdout}")
+            raise RuntimeError(msg)
+        return energy, error
 
     @staticmethod
     def _parse_extrapolation_output(text: str):

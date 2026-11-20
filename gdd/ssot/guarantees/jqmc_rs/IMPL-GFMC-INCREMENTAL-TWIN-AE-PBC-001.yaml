@@ -1,0 +1,70 @@
+id: IMPL-GFMC-INCREMENTAL-TWIN-AE-PBC-001
+kind: implementation
+name: Incremental interval potential equals the full-recompute twin per sub-step (Rust GFMC_n, periodic all-electron)
+plain_language: 'On the periodic all-electron fixture H4_pbc_ae_cart.h5 (where the carried state holds the discretized
+  electron-ion rows that the ECP twin cells never build), the native GFMC_n interval run for nsub = 1 .. 12 sub-steps from
+  one key reproduces the debug_full_recompute route at every nsub: the walker is byte-identical, w_L, V_diag and e_L agree
+  at the tight absolute twin pin, and the applied-update counter equals nsub on the incremental route and zero on the twin.
+  The walk starts with same-spin pairs across the exchange node next to protons, and on at least one returned configuration
+  an electron that has moved has its discretized row selected into V_diag (sign-flipped kinetic elements and ei_disc above
+  ZV, evaluated with the XLA kernels), so the carried ei_disc channel is consumed.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_incremental_twin_ae_pbc.py::test_rust_ae_pbc_gfmc_n_interval_matches_full_recompute_per_substep
+    executable_checks:
+      incremental-components:
+        site: tests/test_rs_kernel/test_gfmc_incremental_twin_ae_pbc.py::test_rust_ae_pbc_gfmc_n_interval_matches_full_recompute_per_substep#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: float(np.real(prod[k]))
+        reference:
+          role: existing-test-reference
+          expression: float(np.real(twin[k]))
+        precision:
+          full:
+            policy: CMP-GFMC-INCREMENTAL-TWIN-001
+          mixed:
+            policy: CMP-GFMC-INCREMENTAL-TWIN-001
+        iterations:
+          variable: comparison_label
+          required_values:
+          - 1/w_L
+          - 1/V_diag
+          - 1/e_L
+          - 2/w_L
+          - 2/V_diag
+          - 2/e_L
+          - 3/w_L
+          - 3/V_diag
+          - 3/e_L
+          - 4/w_L
+          - 4/V_diag
+          - 4/e_L
+          - 5/w_L
+          - 5/V_diag
+          - 5/e_L
+          - 6/w_L
+          - 6/V_diag
+          - 6/e_L
+          - 7/w_L
+          - 7/V_diag
+          - 7/e_L
+          - 8/w_L
+          - 8/V_diag
+          - 8/e_L
+          - 9/w_L
+          - 9/V_diag
+          - 9/e_L
+          - 10/w_L
+          - 10/V_diag
+          - 10/e_L
+          - 11/w_L
+          - 11/V_diag
+          - 11/e_L
+          - 12/w_L
+          - 12/V_diag
+          - 12/e_L

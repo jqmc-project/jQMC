@@ -1,0 +1,18 @@
+id: MATH-TA-OPT-LM-GATE-ERROR-ROUTING-001
+kind: mathematical
+name: Twist-averaged LM energy gate receives the BZ error for the shared pencil and the twist error for the local pencil
+plain_language: >-
+  In the actual two-rank run_twist_average_optimize driver with unequal BZ weights, shared J1/J2 coordinates and
+  twist-local geminal coordinates, one linear-method step hands the Plan-B target the BZ quadrature
+  sigma_TA = sqrt(sum_k W_k^2 sigma_k^2) for the shared pencil and the twist's own jackknife sigma_k for the local
+  pencil, both equal to an independent jackknife of each twist's consumed energies. With only the dense LM eigensolve
+  replaced by a candidate whose predicted energy lies strictly between H_0 + 3 sigma_TA and H_0 + 3 sigma_k, the
+  production per-scope gate rejects the shared candidate and accepts the twist-local one. Exchanging the two errors at
+  the driver call fails both verdicts. All verdicts are deterministic on saved samples, not statistical bands.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_optimize_update_mpi.py::test_actual_mpi_twist_lm_gate_uses_bz_error_for_shared_and_twist_error_for_local_pencil
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

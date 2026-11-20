@@ -1,0 +1,103 @@
+id: MATH-SWCT-DEFINING-FORMULA-001
+kind: mathematical
+name: SWCT weights equal the defining formula on the right displacements
+plain_language: Under PBC the production and debug omega, domega and omega-dot equal an independent brute-force minimum-image
+  evaluation of kappa = 1/d^4; for molecules the weights are the raw r - R formula bit for bit.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_matches_independent_minimum_image_reference
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_matches_independent_minimum_image_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: omega
+        reference:
+          role: existing-test-reference
+          expression: ref_omega
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_matches_independent_minimum_image_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: domega
+        reference:
+          role: existing-test-reference
+          expression: ref_domega
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_matches_independent_minimum_image_reference#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: corr
+        reference:
+          role: existing-test-reference
+          expression: ref_corr
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_matches_independent_minimum_image_reference#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: omega_dbg
+        reference:
+          role: existing-test-reference
+          expression: ref_omega
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_matches_independent_minimum_image_reference#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: domega_dbg
+        reference:
+          role: existing-test-reference
+          expression: ref_domega
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+  - pytest_node: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_molecular_values_are_the_raw_formula_bit_for_bit

@@ -1,0 +1,105 @@
+id: MATH-WF-COMPLEX-TWIST-KINETIC-AD-001
+kind: mathematical
+name: Complex twist kinetic energy equals the autodiff Hessian of the complex wavefunction
+plain_language: >-
+  On original lithium_k025.h5 and H2_pbc_ae_k025_cart.h5 twist fixtures with no
+  Jastrow or J1+J2 and fixed straddling-cell coordinates, full analytical
+  per-electron kinetic energy and total retain strict equality with
+  -Laplacian(Psi)/(2*Psi), using the complex-Psi Hessian trace rather than ln|Psi|.
+  The imaginary channel remains non-vacuous. Doubled AO wrap-restore phase must
+  fail, and full AD keeps its original zone budgets. Mixed per-electron normalized
+  Laplacian fidelity belongs to NUM-ORBITAL-ELEMENTARY-DERIVATIVE-MIXED-FIDELITY-001,
+  using a clean independently rebuilt full reference before fault injection.
+  Mixed scalar kinetic energy retains the separate strict identity that it equals
+  the sum of the same-mode per-electron values; no cross-precision total-energy
+  scalar or invariance oracle is removed or reclassified. Twist J3 is outside scope.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_complex_twist_kinetic_matches_complex_psi_hessian
+    executable_checks:
+      kinetic-comparison-1:
+        site: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::_compare_kinetic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual
+        reference:
+          role: existing-test-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_eval
+            - wf_kinetic
+      kinetic-comparison-2:
+        site: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::_compare_kinetic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: total
+        reference:
+          role: existing-test-reference
+          expression: complex(np.sum(reference))
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_eval
+            - wf_kinetic
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {case: lithium_k025-jnone}
+    - {case: lithium_k025-j12}
+    - {case: H2_pbc_ae_k025_cart-jnone}
+    - {case: H2_pbc_ae_k025_cart-j12}
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_negative_control_double_restore_phase_fails_twist_kinetic
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      full-hessian-ad-rejection:
+        site: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::_compare_kinetic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-output-or-control-fault
+          expression: actual
+        reference:
+          role: full-same-forward-value-autodiff-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_eval
+            - wf_kinetic

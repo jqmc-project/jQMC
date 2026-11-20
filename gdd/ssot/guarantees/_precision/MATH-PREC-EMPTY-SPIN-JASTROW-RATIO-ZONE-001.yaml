@@ -1,0 +1,94 @@
+id: MATH-PREC-EMPTY-SPIN-JASTROW-RATIO-ZONE-001
+kind: mathematical
+name: The shared one-move Jastrow ratio kernels evaluate an empty-spin-channel ratio in the fp64 jastrow_ratio zone
+plain_language: >-
+  On the committed N2 ccECP Cartesian fixture with the reviewed exp J1/J2 builder
+  (_build_ham_ecp(..., "j12")) and with that exp J1 plus the reviewed DTN builder
+  (_build_ham_ecp_dtn, "j1_dtn"), NumPy seed 0 (ten electrons, each at a nucleus drawn by the
+  stream plus a normal offset of scale 0.9, all placed in one spin channel so the other is empty,
+  both orientations), and per electron six one-move candidates displaced by a normal step of
+  scale 0.4, the one-move Jastrow ratio exp(J(R')-J(R)) of the split-spin ECP kernel
+  (_compute_ratio_Jastrow_part_split_spin, both Jastrows) and of the rank-one kernel
+  (_compute_ratio_Jastrow_part_rank1_update, j1_dtn, without and with the MCMC DTN ratio state)
+  agrees with the fp64 NumPy debug Jastrow evaluator (zone jastrow_ratio) applied to the same
+  configurations of an independently rebuilt full-precision case of the same serialized input.
+  The comparison is on the log-ratio. The precision policy assigns this ratio to jastrow_ratio,
+  float64 in both modes; J1, J2 and DTN read no AO values, so the strict jastrow_ratio budget
+  applies in full and mixed alike, and every ratio must carry the jastrow_ratio dtype.
+  Configurations must be identical in both cases, values finite and the ratio live. Full is a
+  same-case consistency check. A ratio formed from two whole compute_Jastrow_part values
+  (jastrow_eval, float32 in mixed) fails this budget. The rank-one J1/J2 case (j12) is also checked at candidate step scales 0.4 and 0.02
+  for both empty-spin orientations and for two spins (the first five electrons up, the rest down,
+  each spin's moves in its own block), for the rank-one and split-spin kernels: the rank-one
+  kernel's uncached molecular J2 branch must exclude the moved electron's self pair, whose
+  Gram-form distance is a sqrt(eps64)-sized artefact (a 1.49e-8 log-ratio error at the small step).
+  This does not claim mixed fidelity of AO-reading J3 ratios (ao_eval,
+  float32 in mixed), the assembled ECP energy, force or stress, or the native Rust route.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_ratio_empty_spin_zone.py::test_empty_spin_split_spin_jastrow_ratio_matches_full_precision_debug_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: j12, empty: dn}
+    - {kind: j12, empty: up}
+    - {kind: j1_dtn, empty: dn}
+    - {kind: j1_dtn, empty: up}
+    executable_checks:
+      empty-spin-split-spin-jastrow-ratio:
+        site: tests/test_jqmc_kernel/test_jastrow_ratio_empty_spin_zone.py::test_empty_spin_split_spin_jastrow_ratio_matches_full_precision_debug_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: empty-spin-split-spin-jastrow-log-ratio, expression: np.log(split)}
+        reference: {role: full-rebuild-fp64-debug-whole-jastrow-log-ratio, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_ratio_empty_spin_zone.py::test_empty_spin_rank1_jastrow_ratio_matches_full_precision_debug_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {empty: dn}
+    - {empty: up}
+    executable_checks:
+      empty-spin-rank1-jastrow-ratio:
+        site: tests/test_jqmc_kernel/test_jastrow_ratio_empty_spin_zone.py::test_empty_spin_rank1_jastrow_ratio_matches_full_precision_debug_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: empty-spin-rank1-jastrow-log-ratio, expression: np.log(stateless)}
+        reference: {role: full-rebuild-fp64-debug-whole-jastrow-log-ratio, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+      empty-spin-rank1-dtn-state-jastrow-ratio:
+        site: tests/test_jqmc_kernel/test_jastrow_ratio_empty_spin_zone.py::test_empty_spin_rank1_jastrow_ratio_matches_full_precision_debug_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: empty-spin-rank1-dtn-state-jastrow-log-ratio, expression: np.log(with_state)}
+        reference: {role: full-rebuild-fp64-debug-whole-jastrow-log-ratio, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_ratio_empty_spin_zone.py::test_rank1_j12_jastrow_ratio_matches_full_precision_debug_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {empty: dn, step: 0.4}
+    - {empty: dn, step: 0.02}
+    - {empty: up, step: 0.4}
+    - {empty: up, step: 0.02}
+    - {empty: none, step: 0.4}
+    - {empty: none, step: 0.02}
+    executable_checks:
+      rank1-j12-jastrow-ratio:
+        site: tests/test_jqmc_kernel/test_jastrow_ratio_empty_spin_zone.py::test_rank1_j12_jastrow_ratio_matches_full_precision_debug_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rank1-j12-jastrow-log-ratio, expression: np.log(rank1)}
+        reference: {role: full-rebuild-fp64-debug-whole-jastrow-log-ratio, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+      split-spin-j12-jastrow-ratio:
+        site: tests/test_jqmc_kernel/test_jastrow_ratio_empty_spin_zone.py::test_rank1_j12_jastrow_ratio_matches_full_precision_debug_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: split-spin-j12-jastrow-log-ratio, expression: np.log(split)}
+        reference: {role: full-rebuild-fp64-debug-whole-jastrow-log-ratio, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_ratio]}

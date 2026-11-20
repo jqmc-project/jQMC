@@ -1,0 +1,22 @@
+id: IMPL-RS-DRIVER-LOOPS-RESIDUES-001
+kind: implementation
+name: Rust-on two-step ccECP SR updates and Rust CLI mcmc restart continuation
+plain_language: >-
+  With the shipped Rust backend active and native execution witnessed, two successive run_optimize SR steps on the
+  committed H2 ccECP cc-pVDZ Cartesian fixture, with exp J1+J2 and with J1+J2 plus an optimized Cartesian AO J3
+  matrix, fed the XLA proposal normals of their own keys, consume for each step the same weights, local energies and
+  log-derivative coordinates as the XLA run, solve and apply the same updates within the XLA-Rust consistency
+  tolerance, and end on byte-equal walkers and keys. A Rust CLI mcmc job of 80 measurements equals a Rust CLI job of
+  40 measurements resumed through restart = true for 40 more: walkers, keys and the measurement counter exactly, the
+  stored energies, weights and public energy at the same-mode restart tolerance. Perturbed values must fail each
+  check. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_driver_loops_rust_residues.py::test_run_optimize_two_sr_steps_h2_ecp_rust_equals_xla
+    required_parameter_cases: [{case: h2_ecp_exp_j12}, {case: h2_ecp_exp_j123}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_rs_kernel/test_driver_loops_rust_residues.py::test_rust_cli_mcmc_restart_equals_uninterrupted_rust_cli_run
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

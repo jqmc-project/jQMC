@@ -1,0 +1,41 @@
+id: IMPL-GFMC-INCREMENTAL-TWIN-001
+kind: implementation
+name: Incremental interval potential equals the full-recompute twin (Rust GFMC intervals)
+plain_language: 'The native GFMC_t/GFMC_n projection intervals with the carried incremental potential state (Ewald ee structure-factor
+  state plus per-electron ei and local-ECP rows, one-electron delta per hop) reproduce the full-recompute debug route on
+  the same backend: the walk (sub-step count, walker, threefry key) is byte-identical because the branching amplitude and
+  the hop cdf never touch the carried state, the diagonal e_L / w_L / V_diag agree at the tight absolute twin pin, and the
+  applied-update liveness counter proves the incremental route actually ran (nonzero on periodic cells, zero on the molecular
+  scope row and on the twin route). The periodic wavefunction-derivative fast path (per-basis candidate/derivative routes)
+  runs the chain_state in BOTH the production and the twin route (debug_full_recompute
+  gates only the potential), so this potential-twin walk byte-identity is preserved; the periodic WF fast-vs-full-recompute
+  equivalence is pinned separately by test_fast_state_equals_full_recompute, test_fast_state_equals_full_recompute_cart_pbc
+  and test_fast_state_equals_full_recompute_bspline_pbc at the single-config lockstep envelope, with route engagement counted
+  by gfmc_route_counters.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_incremental_twin.py::test_gfmc_t_incremental_twin
+    executable_checks:
+      interval-diagonal-observables:
+        iterations: {variable: k, required_values: [e_L, w_L]}
+        site: tests/test_rs_kernel/test_gfmc_incremental_twin.py::_assert_diag_close#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: incremental-interval-observable, expression: 'float(np.real(prod[k]))'}
+        reference: {role: full-recompute-interval-observable, expression: 'float(np.real(twin[k]))'}
+        precision:
+          full: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+          mixed: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+  - pytest_node: tests/test_rs_kernel/test_gfmc_incremental_twin.py::test_gfmc_n_incremental_twin
+    executable_checks:
+      interval-diagonal-observables:
+        iterations: {variable: k, required_values: [e_L, w_L, V_diag]}
+        site: tests/test_rs_kernel/test_gfmc_incremental_twin.py::_assert_diag_close#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: incremental-interval-observable, expression: 'float(np.real(prod[k]))'}
+        reference: {role: full-recompute-interval-observable, expression: 'float(np.real(twin[k]))'}
+        precision:
+          full: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+          mixed: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}

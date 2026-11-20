@@ -1,0 +1,26 @@
+id: IMPL-RS-TWIST-ECP-PARAM-NEAREST-001
+kind: implementation
+name: Complex-twist native J2 gradients differentiate the production ECP nearest-nucleus operator
+plain_language: >-
+  At the committed non-Gamma lithium wavefunction with widened nonlocal ECP
+  projectors, the native fast and reference meshes return the real nonlocal
+  ECP J2 derivative of the same default nearest-nucleus operator as XLA.
+  XLA differentiates the real part of its complex nonlocal energy at the
+  same electron coordinates and quadrature. The all-centres derivative must
+  be distinguishable under the existing backend-consistency budget.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_complex_twist_ecp_j2_gradient_uses_production_nearest_nuclei
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      nearest-nucleus-j2-gradient:
+        site: tests/test_rs_kernel/test_param_grad_el.py::test_complex_twist_ecp_j2_gradient_uses_production_nearest_nuclei#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-fast-and-rebuilt-nonlocal-j2-gradient, expression: actual}
+        reference: {role: xla-ad-production-nonlocal-j2-gradient, expression: reference}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}

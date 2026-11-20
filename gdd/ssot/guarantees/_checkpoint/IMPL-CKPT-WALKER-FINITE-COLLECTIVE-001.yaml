@@ -1,0 +1,22 @@
+id: IMPL-CKPT-WALKER-FINITE-COLLECTIVE-001
+kind: implementation
+name: Restored non-finite walker coordinates fail collectively
+plain_language: >-
+  MCMC, GFMC_t and GFMC_n reject restored walker coordinates containing NaN or either infinity before converting them
+  into runtime arrays. If only one sampling rank is poisoned, every rank raises the same collective failure identifying
+  the offending sampling rank, spin field, walker, electron and Cartesian component. No invalid walker is repaired,
+  excluded or allowed to enter a continuation kernel. The contract is exercised with two real MPI ranks in full and
+  mixed precision.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_components.py::TestRestoredWalkerShapes::test_nonfinite_coordinates_raise
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {spin: up, bad_value: {source_expression: numpy.nan}}
+    - {spin: up, bad_value: {source_expression: numpy.inf}}
+    - {spin: down, bad_value: {source_expression: -numpy.inf}}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_nonfinite_mpi.py::test_rank_local_nonfinite_coordinate_fails_collectively_for_all_drivers
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

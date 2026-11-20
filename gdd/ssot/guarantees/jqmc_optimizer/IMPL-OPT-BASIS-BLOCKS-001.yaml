@@ -1,0 +1,232 @@
+id: IMPL-OPT-BASIS-BLOCKS-001
+kind: implementation
+name: AO-basis variational block contracts
+plain_language: Basis exponents and coefficients are numpy-stored, propagate correctly into J3 and geminal properties and
+  updates, and the basis blocks are per shell without symmetrization.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_exponents_coefficients_storage_is_numpy
+  - pytest_node: tests/test_jqmc_kernel/test_basis_update_storage.py::test_basis_update_preserves_raw_fp64_storage
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {filename: H2_ae_ccpvdz_cart.h5, parameter: exp, owner: ao}
+    - {filename: H2_ae_ccpvdz_sphe.h5, parameter: exp, owner: ao}
+    - {filename: H2_ae_ccpvdz_cart.h5, parameter: coeff, owner: ao}
+    - {filename: H2_ae_ccpvdz_sphe.h5, parameter: coeff, owner: ao}
+    - {filename: H2_ae_ccpvdz_cart.h5, parameter: exp, owner: geminal}
+    - {filename: H2_ae_ccpvdz_sphe.h5, parameter: exp, owner: geminal}
+    - {filename: H2_ae_ccpvdz_cart.h5, parameter: coeff, owner: geminal}
+    - {filename: H2_ae_ccpvdz_sphe.h5, parameter: coeff, owner: geminal}
+    - {filename: H2_ae_ccpvdz_cart.h5, parameter: exp, owner: j3}
+    - {filename: H2_ae_ccpvdz_sphe.h5, parameter: exp, owner: j3}
+    - {filename: H2_ae_ccpvdz_cart.h5, parameter: coeff, owner: j3}
+    - {filename: H2_ae_ccpvdz_sphe.h5, parameter: coeff, owner: j3}
+    executable_checks:
+      raw-storage-dtypes:
+        site: tests/test_jqmc_kernel/test_basis_update_storage.py::_check_raw_storage#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: raw-model-array-kind-and-width, expression: actual_dtypes}
+        reference: {role: numpy-fp64-model-storage, expression: expected_dtypes}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      exact-publication:
+        site: tests/test_jqmc_kernel/test_basis_update_storage.py::_check_raw_storage#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: raw-published-basis-parameters, expression: actual_values}
+        reference: {role: supplied-optimizer-basis-parameters, expression: expected_values}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_basis_update_storage.py::test_basis_storage_contract_rejects_lossy_delegation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {parameter: exp, owner: ao}
+    - {parameter: coeff, owner: ao}
+    - {parameter: exp, owner: geminal}
+    - {parameter: coeff, owner: geminal}
+    - {parameter: exp, owner: j3}
+    - {parameter: coeff, owner: j3}
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_j3_ao_properties_with_ao_data
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_j3_ao_properties_with_mo_data
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_j3_with_updated_ao_exponents
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_geminal_ao_properties
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_geminal_with_updated_ao_exponents
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_get_variational_blocks_basis_flags
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_apply_block_update_j3_basis
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_apply_block_update_geminal_basis
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_j3_basis_block_is_per_shell_no_symmetrise
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_geminal_basis_block_is_per_shell_no_symmetrise
+  - pytest_node: tests/test_jqmc_kernel/test_cartesian_radial_ownership.py::test_cartesian_trexio_physical_shell_update
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {parameter: exp}
+    - {parameter: coeff}
+    - {parameter: combined}
+  - pytest_node: tests/test_rs_kernel/test_cartesian_radial_ownership.py::test_native_cartesian_trexio_physical_shell_pullback
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_j3_basis_updates.py::test_periodic_j3_physical_updates_and_derivatives
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - angular: cart
+      wrapper: ao
+      flags: matrix
+    - angular: cart
+      wrapper: ao
+      flags: exp
+    - angular: cart
+      wrapper: ao
+      flags: coeff
+    - angular: cart
+      wrapper: ao
+      flags: combined
+    - angular: cart
+      wrapper: mo
+      flags: matrix
+    - angular: cart
+      wrapper: mo
+      flags: exp
+    - angular: cart
+      wrapper: mo
+      flags: coeff
+    - angular: cart
+      wrapper: mo
+      flags: combined
+    - angular: sphe
+      wrapper: ao
+      flags: matrix
+    - angular: sphe
+      wrapper: ao
+      flags: exp
+    - angular: sphe
+      wrapper: ao
+      flags: coeff
+    - angular: sphe
+      wrapper: ao
+      flags: combined
+    - angular: sphe
+      wrapper: mo
+      flags: matrix
+    - angular: sphe
+      wrapper: mo
+      flags: exp
+    - angular: sphe
+      wrapper: mo
+      flags: coeff
+    - angular: sphe
+      wrapper: mo
+      flags: combined
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_j3_basis_updates.py::test_invalid_periodic_basis_candidate_is_atomic
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - angular: cart
+      wrapper: ao
+      parameter: exp
+      bad_case: zero
+    - angular: cart
+      wrapper: ao
+      parameter: exp
+      bad_case: negative
+    - angular: cart
+      wrapper: ao
+      parameter: exp
+      bad_case: nan
+    - angular: cart
+      wrapper: ao
+      parameter: exp
+      bad_case: infinity
+    - angular: cart
+      wrapper: ao
+      parameter: coeff
+      bad_case: nan
+    - angular: cart
+      wrapper: ao
+      parameter: coeff
+      bad_case: infinity
+    - angular: cart
+      wrapper: mo
+      parameter: exp
+      bad_case: zero
+    - angular: cart
+      wrapper: mo
+      parameter: exp
+      bad_case: negative
+    - angular: cart
+      wrapper: mo
+      parameter: exp
+      bad_case: nan
+    - angular: cart
+      wrapper: mo
+      parameter: exp
+      bad_case: infinity
+    - angular: cart
+      wrapper: mo
+      parameter: coeff
+      bad_case: nan
+    - angular: cart
+      wrapper: mo
+      parameter: coeff
+      bad_case: infinity
+    - angular: sphe
+      wrapper: ao
+      parameter: exp
+      bad_case: zero
+    - angular: sphe
+      wrapper: ao
+      parameter: exp
+      bad_case: negative
+    - angular: sphe
+      wrapper: ao
+      parameter: exp
+      bad_case: nan
+    - angular: sphe
+      wrapper: ao
+      parameter: exp
+      bad_case: infinity
+    - angular: sphe
+      wrapper: ao
+      parameter: coeff
+      bad_case: nan
+    - angular: sphe
+      wrapper: ao
+      parameter: coeff
+      bad_case: infinity
+    - angular: sphe
+      wrapper: mo
+      parameter: exp
+      bad_case: zero
+    - angular: sphe
+      wrapper: mo
+      parameter: exp
+      bad_case: negative
+    - angular: sphe
+      wrapper: mo
+      parameter: exp
+      bad_case: nan
+    - angular: sphe
+      wrapper: mo
+      parameter: exp
+      bad_case: infinity
+    - angular: sphe
+      wrapper: mo
+      parameter: coeff
+      bad_case: nan
+    - angular: sphe
+      wrapper: mo
+      parameter: coeff
+      bad_case: infinity
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_j3_audit_optimization.py::test_audit_ordinary_supercell_j3_update_and_restart
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}

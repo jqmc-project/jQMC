@@ -1,0 +1,39 @@
+id: NUM-TWIST-AGPN-REAL-EL-MIXED-FIDELITY-001
+kind: numerical
+name: Twisted real AGPn energy leaves retain Mixed Full-production fidelity
+plain_language: Both original paired/unpaired real-parameter e_L cases preserve the oxygen ccECP twist fixture,
+  four-up/two-down electrons, parameter seed431, electron seed41, no conditioning screen, original mask and fixed12-point
+  identity-rotation ECP. Independent Full/Mixed analytical models retain the original named nonzero control on both
+  reference and actual leaves. Matching finite nonempty shapes, identical coordinates, separate real/imaginary blocks
+  when present and isolated excess-budget rejection are required at the unchanged central parameter_derivative maximum-deviation
+  budget. Full strict primal AD remains in MATH-RS-AGPN-REAL-EL-REFERENCE-001. No new tolerance, seed, skip or production
+  path is introduced. Both arithmetic modes additionally retain the original conditional FP64 lambda mathematical
+  AD and every original precision-specific comparison band. Active-parameter forward/backward liveness of the primal,
+  reference AD and production source is FP64; low-precision orbital constants and discarded AO adjoints do not constitute
+  low-precision lambda arithmetic. This numerical guarantee is supplemental, not a replacement for those mathematical
+  checks.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_agpn_ecp_reference.py::test_open_shell_twist_agpn_real_el_analytic_matches_autodiff
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - block: paired
+    - block: unpaired
+    executable_checks:
+      mixed-analytical-vs-full-analytical:
+        site: tests/test_jqmc_kernel/test_agpn_ecp_reference.py::_twist_agpn_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-real-parameter-energy-leaf
+          expression: mixed_block
+        reference:
+          role: full-XLA-analytical-same-physical-source-leaf
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

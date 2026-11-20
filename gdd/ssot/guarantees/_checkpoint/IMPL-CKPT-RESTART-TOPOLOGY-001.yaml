@@ -1,0 +1,52 @@
+id: IMPL-CKPT-RESTART-TOPOLOGY-001
+kind: implementation
+name: Restart preserves the stored sampling-rank topology
+plain_language: >-
+  Public MCMC, conventional GFMC and load-balanced GFMC restart loaders reject a
+  changed sampling communicator size before reading rank state. All four CLI job
+  routes reject it before frozen-config loading. Stored rank groups must be HDF5
+  groups numbered contiguously and agree with positive integer mpi_size metadata.
+  Twist restarts use the sampling communicator, not the global world size.
+  These metadata and routing checks do not claim numerical MPI restart equivalence.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_rank_topology.py::test_matching_checkpoint_rank_topology_is_accepted
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{size: 1}, {size: 2}, {size: 3}]
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_rank_topology.py::test_driver_restart_validates_sampling_not_world_communicator
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver: MCMC}, {driver: GFMC_n}, {driver: GFMC_t}]
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_rank_topology.py::test_invalid_checkpoint_rank_topology_is_rejected
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {requested_size: 1, stored_size: 2, rank_names: [rank_0, rank_1], reason: Restart MPI size mismatch}
+    - {requested_size: 2, stored_size: 1, rank_names: [rank_0], reason: Restart MPI size mismatch}
+    - {requested_size: 2, stored_size: 2, rank_names: [rank_0], reason: metadata does not match}
+    - {requested_size: 2, stored_size: 2, rank_names: [rank_0, rank_2], reason: must be contiguous}
+    - {requested_size: 2, stored_size: 2, rank_names: [rank_0, rank_01], reason: must be contiguous}
+    - {requested_size: 2, stored_size: null, rank_names: [rank_0, rank_1], reason: mpi_size must be a positive integer}
+    - {requested_size: 2, stored_size: true, rank_names: [rank_0, rank_1], reason: mpi_size must be a positive integer}
+    - {requested_size: 2, stored_size: 2.0, rank_names: [rank_0, rank_1], reason: mpi_size must be a positive integer}
+    - {requested_size: 2, stored_size: '2', rank_names: [rank_0, rank_1], reason: mpi_size must be a positive integer}
+    - {requested_size: 2, stored_size: 0, rank_names: [rank_0, rank_1], reason: mpi_size must be a positive integer}
+    - {requested_size: 2, stored_size: 1000000000000, rank_names: [rank_0, rank_1], reason: metadata does not match}
+    - {requested_size: 0, stored_size: 2, rank_names: [rank_0, rank_1], reason: communicator size must be a positive integer}
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_rank_topology.py::test_checkpoint_rank_topology_rejects_non_group_entries
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{malformation: missing-meta}, {malformation: meta-dataset}, {malformation: rank-dataset}]
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_rank_topology.py::test_driver_restart_rejects_changed_rank_count_before_payload
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: MCMC, stored_size: 2, requested_size: 1}
+    - {driver: MCMC, stored_size: 1, requested_size: 2}
+    - {driver: GFMC_n, stored_size: 2, requested_size: 1}
+    - {driver: GFMC_n, stored_size: 1, requested_size: 2}
+    - {driver: GFMC_t, stored_size: 2, requested_size: 1}
+    - {driver: GFMC_t, stored_size: 1, requested_size: 2}
+  - pytest_node: tests/test_jqmc_kernel/test_checkpoint_rank_topology.py::test_cli_restart_rejects_rank_mismatch_before_config_read
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{job_type: mcmc}, {job_type: vmc}, {job_type: lrdmc-bra}, {job_type: lrdmc-tau}]

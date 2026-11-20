@@ -1,0 +1,40 @@
+id: PHY-WF-MANY-BODY-BLOCH-PHASE-001
+kind: physical
+name: Many-body Bloch phase under a one-electron lattice translation at a twist
+plain_language: >-
+  At a k != Gamma twist, translating one up or one down electron by an integer lattice vector
+  multiplies the signed complex wavefunction by that spin channel's Bloch phase, with modulus and
+  unit phase checked separately, and leaves the complex local energy unchanged. The channel k comes
+  from the fixture request: -k for a restricted or time-reversal down channel, +k otherwise.
+  Inputs are seven synthetic canonical complex patterns, including monoclinic, rhombohedral,
+  hexagonal and triclinic cells, pGTO, plane-wave, B-spline and composite leaves, SD, AGP and AGPn,
+  J1, J2, shared phase-free J3 and DTN, and a live non-local ECP, plus the committed H4 and Li twist files. Every chosen
+  translation has a phase that distinguishes +k from -k. Canonical three-body Jastrows remain active
+  on their shared phase-free bases, including complex storage. A dropped down-channel wrap phase
+  and a conjugated plane-wave k must each fail the phase check. Full and mixed are judged separately
+  at the strict zone policy.
+verdict_methods: [VM-PHY-INVARIANT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bloch_phase_hermiticity.py::test_many_body_bloch_phase_and_local_energy_invariance
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: WF-PATTERN-005}
+    - {case: WF-PATTERN-006}
+    - {case: WF-PATTERN-008}
+    - {case: WF-PATTERN-010}
+    - {case: WF-PATTERN-012}
+    - {case: WF-PATTERN-014}
+    - {case: WF-PATTERN-016}
+    - {case: h4_twist_j12}
+    - {case: li_twist_jdtn}
+  - pytest_node: tests/test_jqmc_kernel/test_bloch_phase_hermiticity.py::test_bloch_phase_activates_the_nonlocal_ecp_and_jastrow
+# Registered outside VM-PHY-INVARIANT-001: the test asserts no value agreement, so it is not invariant evidence. It asserts that the injected phase fault is rejected with a named phase failure (reviewed-contract is not legal for a physical guarantee).
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bloch_phase_hermiticity.py::test_bloch_phase_check_rejects_a_dropped_or_conjugated_channel_phase
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: drop-dn-restore-phase}
+    - {fault: conjugate-plane-wave-k}

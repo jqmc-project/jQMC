@@ -1,0 +1,71 @@
+id: IMPL-SWCT-CONTRACTION-EQUIVALENCE-001
+kind: implementation
+name: Contraction-route equivalence of omega dot
+plain_language: 'The optimized omega-dot contraction equals the materialised contraction, batched streaming equals plain
+  vmap, and the reviewed regression guard pins a shape known to trigger an XLA GEMM miscompile (registered
+  with this guarantee).'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_swct.py::TestSWCTOmegaDot::test_omega_dot_matches_materialised_contraction
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_swct.py::TestSWCTOmegaDot.test_omega_dot_matches_materialised_contraction#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+  - pytest_node: tests/test_jqmc_kernel/test_swct.py::TestSWCTOmegaDot::test_omega_dot_gemm_miscompile_shape
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_swct.py::TestSWCTOmegaDot.test_omega_dot_gemm_miscompile_shape#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+  - pytest_node: tests/test_jqmc_kernel/test_swct.py::TestSWCTOmegaDot::test_batched_streaming_matches_plain_vmap
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_swct.py::TestSWCTOmegaDot.test_batched_streaming_matches_plain_vmap#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: streamed
+        reference:
+          role: existing-test-reference
+          expression: unstreamed
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct

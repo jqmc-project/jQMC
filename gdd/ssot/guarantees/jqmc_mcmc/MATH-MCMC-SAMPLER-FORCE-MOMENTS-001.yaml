@@ -1,0 +1,37 @@
+id: MATH-MCMC-SAMPLER-FORCE-MOMENTS-001
+kind: mathematical
+name: Measured MCMC force buffers against primal derivatives
+plain_language: >-
+  Every walker energy, HF, Pulay and energy-times-Pulay value saved by two
+  successive production MCMC measurements equals independent primal AD at
+  the same sampled coordinates. The committed H2 AE Cartesian SD input has
+  one up/down electron and no Jastrow; seed 34 supplies three walkers and
+  two moves per measurement, Dt=0.7, AS=0 and identity quadrature rotation.
+  Require both XLA/Rust and SWCT off/on, with the latter differentiated
+  through an explicit coordinate map and Jacobian. Same-mode zone strict
+  (full) and medium (mixed) comparisons do not use statistical error bars.
+  This is sampler-to-buffer correctness, not a ground-state force,
+  SWCT/no-SWCT mean equality or an independent projection/aggregation law.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_sampler_force_reference.py::test_mcmc_sampler_force_buffers_match_primal_derivatives
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: xla, use_swct: false}
+    - {backend: xla, use_swct: true}
+    - {backend: rust, use_swct: false}
+    - {backend: rust, use_swct: true}
+    executable_checks:
+      walker-moments:
+        site: tests/test_jqmc_kernel/test_mcmc_sampler_force_reference.py::test_mcmc_sampler_force_buffers_match_primal_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-sampled-MCMC-force-buffer, expression: actual}
+        reference: {role: independent-same-mode-primal-derivative-moment, expression: reference}
+        iterations:
+          variable: label
+          required_values: [0/e_L, 0/force_HF, 0/force_PP, 0/E_L_force_PP, 1/e_L, 1/force_HF, 1/force_PP, 1/E_L_force_PP]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}

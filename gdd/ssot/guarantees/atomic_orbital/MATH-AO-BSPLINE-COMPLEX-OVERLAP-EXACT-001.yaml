@@ -1,0 +1,46 @@
+id: MATH-AO-BSPLINE-COMPLEX-OVERLAP-EXACT-001
+kind: mathematical
+name: Complex twisted B-spline AO overlap is the exact cell integral of conj(psi_a) psi_b
+plain_language: >-
+  For the complex B-spline AO leaf, whose AOs are psi_a(r) = exp(i k.r) u_a(r) with one leaf-level twist k
+  and a cell-periodic complex spline u_a, compute_overlap_matrix returns the complex Hermitian cell overlap
+  S_ab = integral over one cell of conj(psi_a) psi_b (bra conjugated), not an identity placeholder. It equals
+  an independent cell integral of the leaf's own AO values (compute_AOs, and for the cubic spline also the
+  plain-numpy debug evaluator) by a tensor Gauss-Legendre rule with order + 1 nodes on every knot interval of
+  every fractional axis, which is exact for the piecewise-polynomial integrand, on a lattice-translated copy
+  of the skewed triclinic cell, for three random complex bands on a (6, 7, 8) cubic or quintic spline grid,
+  at Gamma and at k = (0.27, -0.1, 0.13), within the strict ao_eval/det_eval zone policy. The same
+  comparison rejects the ket-conjugated overlap, the unconjugated bilinear integral, an integral with the
+  Bloch phase dropped from the bra, and the identity placeholder. Because the Bloch phase cancels, the
+  overlap of the complex leaf with real control points equals the exact cell Gram matrix of the real
+  B-spline leaf's AO values at Gamma and at the twist, and the time-reversal sibling (negated twist,
+  conjugated control points) has the overlap conj(S). Full and mixed are judged separately. This is the
+  overlap of the AO definition; it does not claim that projected bands are orthonormal or how QE-derived
+  bands are normalized.
+  Because the overlap is fp64 in both modes, the reference AO values are evaluated with every precision zone
+  at fp64 in both modes.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_complex_overlap.py::test_complex_bspline_overlap_matches_exact_cell_quadrature
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {order: 3, twist: gamma}
+    - {order: 3, twist: general-k}
+    - {order: 5, twist: gamma}
+    - {order: 5, twist: general-k}
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_complex_overlap.py::test_cell_quadrature_rejects_overlap_convention_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: ket-conjugated}
+    - {fault: no-conjugate}
+    - {fault: dropped-bloch-phase-on-bra}
+    - {fault: identity-placeholder}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_complex_overlap.py::test_complex_bspline_overlap_is_the_periodic_spline_gram
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {order: 3}
+    - {order: 5}

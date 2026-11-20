@@ -1,0 +1,18 @@
+id: IMPL-TA-GROUPED-MCMC-DECOMPOSITION-001
+kind: implementation
+name: Twist-averaged MCMC preserves two-rank sampling groups and the Brillouin-zone energy
+plain_language: >-
+  Two unequal-weight twists sampled by two MPI ranks each agree with standalone seeded MCMC chains
+  on independently constructed sampling communicators. Each of the four ranks receives both twist
+  energies and standard errors and the hand-computed weighted mean, combined standard error and
+  twist dispersion. The serial pytest driver launches the real four-rank calculation and requires
+  a result from every rank in each precision.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_grouped_sampling.py::test_twist_driver_matches_independently_grouped_chains
+    required_precision_modes: [full, mixed]
+    required_execution_profiles: [{name: serial, world_size: 1}]
+    required_parameter_cases:
+    - {ranks_per_twist: 2}

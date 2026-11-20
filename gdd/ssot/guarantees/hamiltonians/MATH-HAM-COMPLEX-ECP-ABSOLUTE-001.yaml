@@ -1,0 +1,43 @@
+id: MATH-HAM-COMPLEX-ECP-ABSOLUTE-001
+kind: mathematical
+name: VMC complex ECP energy equals independent primitive and quadrature formulas
+plain_language: >-
+  The lithium_k025.h5 Li SD twist fixture with active DTN retains the real and
+  imaginary nonlocal ECP contribution in both standard and fast VMC local energy.
+  Independent primitive Gaussian and Bloch sums, MO determinants, DTN polynomials,
+  Hessian kinetic energy, NumPy Ewald and explicit radial/Legendre quadrature
+  supply H Psi/Psi; no production ECP, AO, Jastrow or energy evaluator supplies
+  that reference. One up and one down electron use the existing seed7
+  image-offset configuration generator with cond(G)<1e4, fixed identity rotation,
+  NN=1 and Nv=12. Imaginary ECP and both signs of real candidate terms must be
+  active. Full and mixed each use their own zone arithmetic and existing strict
+  policy. This is a finite discrete-quadrature guarantee, not exact angular
+  integration, Monte Carlo convergence, or coverage of every wavefunction.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_policy.py::test_vmc_complex_ecp_matches_independent_absolute_energy
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/test_complex_ecp_policy.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'actual'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: standard}, {route: fast}]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_policy.py::test_vmc_absolute_oracle_rejects_complex_ecp_fault
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/test_complex_ecp_policy.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'actual'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'reference'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, jastrow_eval, jastrow_grad_lap, det_eval, wf_kinetic, coulomb, ewald, local_energy]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{fault: force-real}, {fault: conjugate}]

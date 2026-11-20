@@ -1,0 +1,39 @@
+id: NUM-RS-REAL-GAMMA-RECTANGULAR-COMPOSITE-J3-PUBLIC-MIXED-FIDELITY-001
+kind: numerical
+name: Native real-Gamma rectangular composite J3 public HF measurements retain mixed/full fidelity
+plain_language: For the rectangular two-row dense-MO composite J3, public MCMC and GFMC_t stored HF force and stress
+  at their final required step obey the central parameter-derivative mixed/full block infinity-norm budget against
+  independently rebuilt full native measurement kernels at the identical sampled positions. The fresh mixed kernels
+  are checked as well. Both policies load fresh Hamiltonians from the same FP64-converted physical input. There
+  is one walker, SWCT is off and the quadrature rotation is identity. MCMC stores raw dE_L/dR and dE_L/deps; GFMC_t's
+  normalized one-walker weight cancels. These are neither Pulay/energy-Pulay products nor volume-normalized stresses,
+  and no full/mixed trajectory agreement is required. All original stored-history shape checks and final-step coverage
+  remain. J3-on/off contributions remain live in both policies, every block is finite, and each case rejects an
+  out-of-budget mixed perturbation. Full retains its independent strict XLA AD comparison under MATH-RS-REAL-GAMMA-RECTANGULAR-COMPOSITE-J3-PUBLIC-FORCE-STRESS-001.
+  Both analytical policies retain the original mixed-entry medium nonzero and J3-contribution floors,
+  expected nuclear/strain shapes and finite outputs; these liveness budgets are separate from fidelity.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_real_gamma_rectangular_composite_j3_public_drivers.py::test_public_rectangular_composite_j3_hf_force_and_stress_match_ad
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - driver: MCMC
+    - driver: GFMC_t
+    executable_checks:
+      mixed-public-and-rebuilt-vs-full-measurement:
+        site: tests/test_rs_kernel/test_real_gamma_rectangular_composite_j3_public_drivers.py::test_public_rectangular_composite_j3_hf_force_and_stress_match_ad#helper-inequality-4
+        comparator: python.inequality
+        actual:
+          role: mixed-public-stored-and-rebuilt-native-HF-block
+          expression: mixed_block
+        reference:
+          role: full-native-same-configuration-HF-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

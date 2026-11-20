@@ -1,0 +1,16 @@
+id: IMPL-OPT-SOURCE-PUBLICATION-ISOLATION-001
+kind: implementation
+name: Published derivative sources stay isolated from writable buffers
+plain_language: >-
+  A BlockDerivativeSource built from a writable array, from a read-only view of writable memory, or from a
+  non-contiguous read-only view is published as a read-only array whose values do not change when the original
+  buffer is later overwritten; an already immutable dense NumPy stack is published read-only with unchanged values.
+  An OptimizationBatch built from such sources, its weights and its jackknife moments keep their published values
+  after the caller's buffers are overwritten.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_published_sources_stay_isolated_from_writable_buffers
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

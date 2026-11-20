@@ -1,0 +1,59 @@
+id: MATH-HAM-LOCAL-ENERGY-GRAD-001
+kind: mathematical
+name: Derivative consistency of the local energy
+plain_language: The gradient of the local energy through the custom VJP equals the gradient through fully automatic second-order
+  autodiff for all Hamiltonian pytree leaves.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyGrad::test_grad_compute_local_energy
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: H2_ecp_ccpvtz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyGrad.test_grad_compute_local_energy#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: e_custom
+        reference:
+          role: existing-test-reference
+          expression: e_auto
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      w11-strict-grad-leaves:
+        site: tests/test_jqmc_kernel/test_hamiltonian.py::_compare_grad_leaves#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: lt
+        reference:
+          role: existing-test-reference
+          expression: lr
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+            - jastrow_eval
+        iterations:
+          variable: leaf_path
+          required_values:
+          - .structure_data.positions
+          - .coulomb_potential_data.structure_data.positions
+          - .wavefunction_data.geminal_data.orb_data_up_spin.aos_data.structure_data.positions
+          - .wavefunction_data.geminal_data.orb_data_up_spin.aos_data.radial.exponents
+          - .wavefunction_data.geminal_data.orb_data_up_spin.aos_data.radial.coefficients
+          - .wavefunction_data.geminal_data.orb_data_up_spin.mo_coefficients
+          - .wavefunction_data.geminal_data.orb_data_dn_spin.aos_data.structure_data.positions
+          - .wavefunction_data.geminal_data.orb_data_dn_spin.aos_data.radial.exponents
+          - .wavefunction_data.geminal_data.orb_data_dn_spin.aos_data.radial.coefficients
+          - .wavefunction_data.geminal_data.orb_data_dn_spin.mo_coefficients

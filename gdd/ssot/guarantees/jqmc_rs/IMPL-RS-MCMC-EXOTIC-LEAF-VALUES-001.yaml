@@ -1,0 +1,35 @@
+id: IMPL-RS-MCMC-EXOTIC-LEAF-VALUES-001
+kind: implementation
+name: Deterministic Rust/XLA MCMC driver values on plane-wave, B-spline, composite and complex pGTO leaves
+plain_language: >-
+  The XLA proposal normals, and on the fused real chunk the XLA mesh rotations, are injected into the
+  unchanged native MCMC entry points. With Rust on and off, the production MCMC driver then walks the same
+  trajectory from one seed with two walkers, J1+J2, force, SWCT and stress on: accepted moves and threefry
+  keys exactly and final walkers byte-equal. Stored w_L, e_L, e_L^2, HF and Pulay force and HF and Pulay
+  stress buffers and the public energy, force and stress estimators agree at the medium XLA-Rust tier.
+  Leaves: real Gamma plane-wave, B-spline, pGTO+plane-wave and pGTO+B-spline from the committed Li QE
+  projection, the same four at the Li k025 twist (complex), and the complex spherical and Cartesian pGTO
+  twist files. A native e_L scaled by 1 + 10 rtol on the same walk must fail the e_L comparison on the real
+  and the complex B-spline leaf. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_exotic_leaf_value_parity.py::test_mcmc_rust_vs_xla_exotic_leaf_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture_id: gamma_pw, kind: gamma_pw, source: qe}
+    - {fixture_id: gamma_bspline, kind: gamma_bspline, source: qe}
+    - {fixture_id: gamma_pgto_pw, kind: gamma_pgto_pw, source: qe}
+    - {fixture_id: gamma_pgto_bspline, kind: gamma_pgto_bspline, source: qe}
+    - {fixture_id: twist_pw, kind: twist_pw, source: qe}
+    - {fixture_id: twist_bspline, kind: twist_bspline, source: qe}
+    - {fixture_id: twist_pgto_pw, kind: twist_pgto_pw, source: qe}
+    - {fixture_id: twist_pgto_bspline, kind: twist_pgto_bspline, source: qe}
+    - {fixture_id: twist_sphe_pgto, kind: lithium_k025.h5, source: trexio}
+    - {fixture_id: twist_cart_pgto, kind: H2_pbc_ae_k025_cart.h5, source: trexio}
+  - pytest_node: tests/test_rs_kernel/test_mcmc_exotic_leaf_value_parity.py::test_mcmc_exotic_leaf_value_parity_rejects_scaled_native_e_L
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture_id: gamma_bspline, kind: gamma_bspline}
+    - {fixture_id: twist_bspline, kind: twist_bspline}

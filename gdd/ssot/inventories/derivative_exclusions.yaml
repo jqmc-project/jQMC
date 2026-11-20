@@ -1,0 +1,322 @@
+{
+  "schema_version": 1,
+  "document": {
+    "id": "jqmc.inventories.derivative-exclusions",
+    "version": 1,
+    "title": "Reviewed derivative-matrix exclusions and realization aliases",
+    "lifecycle": "pre-cutover",
+    "purpose": "Declare the existing excluded-cell rules and builder aliases without changing their scope."
+  },
+  "axes": [
+    "ao",
+    "jas",
+    "ecp",
+    "bc",
+    "gem"
+  ],
+  "excluded_cell_rules": [
+    {
+      "rule_id": "DERIV-EXCL-BC-COMPLEX-LEAF-NOT-TWIST",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "bspline_complex",
+            "cart_pgto_complex",
+            "plane_wave_complex",
+            "sphe_pgto_complex"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "mol",
+            "pbc_gamma"
+          ]
+        }
+      ],
+      "expected_cells": 320,
+      "predicate": "_bc_allowed",
+      "reason": "A complex-Bloch AO leaf exists only at a twist k != 0; molecular and real-Gamma cells have no such leaf.",
+      "reviewer_note": "Physical domain restriction, not a coverage choice. The same families are covered at bc=twist."
+    },
+    {
+      "rule_id": "DERIV-EXCL-BC-COMPOSITE-MOLECULAR",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "composite"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "mol"
+          ]
+        }
+      ],
+      "expected_cells": 40,
+      "predicate": "_bc_allowed",
+      "reason": "The pGTO(+)PW composite leaf is a periodic QE projection; it has no molecular realization.",
+      "reviewer_note": "Physical domain restriction. The composite is covered at pbc_gamma and twist."
+    },
+    {
+      "rule_id": "DERIV-EXCL-BC-REAL-PERIODIC-LEAF-NOT-GAMMA",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "bspline",
+            "cart_pgto",
+            "plane_wave",
+            "sphe_pgto"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "mol",
+            "twist"
+          ]
+        }
+      ],
+      "expected_cells": 320,
+      "predicate": "_bc_allowed",
+      "reason": "Real pGTO / plane-wave / B-spline leaves are the Gamma-point periodic leaves; the twist uses their complex siblings and a molecular system uses cart/sphe GTO.",
+      "reviewer_note": "Physical domain restriction. Each family has a covered counterpart at the other boundary."
+    },
+    {
+      "rule_id": "DERIV-EXCL-BC-MOLECULAR-GTO-PERIODIC",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "cart_gto",
+            "sphe_gto"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "pbc_gamma",
+            "twist"
+          ]
+        }
+      ],
+      "expected_cells": 160,
+      "predicate": "_bc_allowed",
+      "reason": "Open-boundary cart/sphe GTO leaves are molecular; periodic Gaussians are the separate pGTO families.",
+      "reviewer_note": "Physical domain restriction. Periodic Gaussians are covered by cart_pgto / sphe_pgto (and complex)."
+    },
+    {
+      "rule_id": "DERIV-EXCL-AGP-BARE-PGTO-GAMMA",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "cart_pgto",
+            "sphe_pgto"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "pbc_gamma"
+          ]
+        },
+        {
+          "axis": "gem",
+          "tokens": [
+            "AGP"
+          ]
+        }
+      ],
+      "expected_cells": 20,
+      "predicate": "_agp_dense_constructible",
+      "reason": "Dense AO-AGP on a bare periodic pGTO basis: lattice-image truncation drives the AO overlap near-singular (min eig < 0), so the natural-orbital SVD both routes differentiate is not differentiable there.",
+      "reviewer_note": "Conditioning exclusion. Dense AO-AGP stays covered on molecular GTO and on the QE composite."
+    },
+    {
+      "rule_id": "DERIV-EXCL-AGP-BARE-PGTO-TWIST",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "cart_pgto_complex",
+            "sphe_pgto_complex"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "twist"
+          ]
+        },
+        {
+          "axis": "gem",
+          "tokens": [
+            "AGP"
+          ]
+        }
+      ],
+      "expected_cells": 20,
+      "predicate": "_agp_dense_constructible",
+      "reason": "Same near-singular image-truncated overlap as the Gamma bare pGTO, for the complex-twist leaves.",
+      "reviewer_note": "Conditioning exclusion, unrelated to the complex lambda dtype (the twist composite AGP is covered)."
+    },
+    {
+      "rule_id": "DERIV-EXCL-AGP-FLAT-LEAF-GAMMA",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "bspline",
+            "plane_wave"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "pbc_gamma"
+          ]
+        },
+        {
+          "axis": "gem",
+          "tokens": [
+            "AGP"
+          ]
+        }
+      ],
+      "expected_cells": 20,
+      "predicate": "_agp_dense_constructible",
+      "reason": "Flat plane-wave / B-spline leaves have no MOs_data fold for convert_from_MOs_to_AOs and no conditioning guarantee.",
+      "reviewer_note": "Builder and conditioning exclusion; SD, AGPn and the composite AGP cover these leaves' other geminals."
+    },
+    {
+      "rule_id": "DERIV-EXCL-AGP-FLAT-LEAF-TWIST",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "bspline_complex",
+            "plane_wave_complex"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "twist"
+          ]
+        },
+        {
+          "axis": "gem",
+          "tokens": [
+            "AGP"
+          ]
+        }
+      ],
+      "expected_cells": 20,
+      "predicate": "_agp_dense_constructible",
+      "reason": "Complex-twist plane-wave / B-spline leaves: same missing MOs_data fold and conditioning guarantee.",
+      "reviewer_note": "Builder and conditioning exclusion."
+    },
+    {
+      "rule_id": "DERIV-EXCL-AGPMO-FLAT-LEAF-GAMMA",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "bspline",
+            "plane_wave"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "pbc_gamma"
+          ]
+        },
+        {
+          "axis": "gem",
+          "tokens": [
+            "AGP_MO"
+          ]
+        }
+      ],
+      "expected_cells": 20,
+      "predicate": "_agp_mo_constructible",
+      "reason": "Dense MO-AGP on QE-projection leaves: the whitened fixture made de_L/dlambda 1e-9..1e-17 against a cell scale of ~1e2 (confirmed by analytic, autodiff and FD), so the cell certifies nothing about lambda.",
+      "reviewer_note": "Vacuity exclusion measured on the fixture; AGP_MO stays covered on the six Gaussian families."
+    },
+    {
+      "rule_id": "DERIV-EXCL-AGPMO-FLAT-LEAF-TWIST",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "bspline_complex",
+            "plane_wave_complex"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "twist"
+          ]
+        },
+        {
+          "axis": "gem",
+          "tokens": [
+            "AGP_MO"
+          ]
+        }
+      ],
+      "expected_cells": 20,
+      "predicate": "_agp_mo_constructible",
+      "reason": "Same lambda-blind whitened MO-AGP fixture on the complex-twist plane-wave / B-spline leaves.",
+      "reviewer_note": "Vacuity exclusion."
+    },
+    {
+      "rule_id": "DERIV-EXCL-AGPMO-COMPOSITE",
+      "pattern": [
+        {
+          "axis": "ao",
+          "tokens": [
+            "composite"
+          ]
+        },
+        {
+          "axis": "bc",
+          "tokens": [
+            "pbc_gamma",
+            "twist"
+          ]
+        },
+        {
+          "axis": "gem",
+          "tokens": [
+            "AGP_MO"
+          ]
+        }
+      ],
+      "expected_cells": 20,
+      "predicate": "_agp_mo_constructible",
+      "reason": "Same lambda-blind whitened MO-AGP fixture on the pGTO(+)PW composite at Gamma and at the twist.",
+      "reviewer_note": "Vacuity exclusion; the composite keeps SD, AGPn and dense AO-AGP cells."
+    }
+  ],
+  "realization_aliases": [
+    {
+      "alias_id": "DERIV-ALIAS-JASTROW-J1-J2",
+      "axis": "jas",
+      "tokens": [
+        "J1",
+        "J2"
+      ],
+      "realization": "J1 + J2 (exp) attached together by the committed _build_ham(with_jastrow=True)",
+      "reason": "No committed builder attaches an isolated J1 or J2 channel, so both tokens build the same Hamiltonian.",
+      "reviewer_note": "The declared 5-token Jastrow axis has 4 distinct realizations; J1 and J2 cells are the same physical wavefunction. The covering array still spans every (channel, *) pair."
+    }
+  ]
+}

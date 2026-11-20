@@ -1,0 +1,21 @@
+id: IMPL-CLI-INPUT-CONTRACTS-001
+kind: implementation
+name: TOML input tables reach the drivers as written
+plain_language: >-
+  A partial [vmc].optimizer_kwargs table overrides only the keys it names; every other key keeps the documented
+  shipped default, and the module-level defaults are not mutated. Unknown TOML sections, unknown [control] or
+  job-section keys, and job sections ignored by the selected job_type are reported as warnings instead of being
+  dropped silently, while a valid input produces no such warning. The twist-averaged mcmc and vmc routes forward
+  num_mcmc_per_measurement and the merged optimizer table to the drivers. The single-twist lrdmc-tau route rejects
+  a warmup, bin or collect count below the GFMC minimum before any sampling, as lrdmc-bra does.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_input_contracts.py::test_partial_optimizer_kwargs_merge_onto_documented_defaults
+  - pytest_node: tests/test_jqmc_kernel/test_cli_input_contracts.py::test_unknown_toml_keys_and_sections_warn
+  - pytest_node: tests/test_jqmc_kernel/test_cli_input_contracts.py::test_unknown_toml_keys_silent_for_valid_input
+  - pytest_node: tests/test_jqmc_kernel/test_cli_input_contracts.py::test_twist_dispatch_forwards_num_mcmc_per_measurement
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_input_contracts.py::test_single_twist_lrdmc_tau_enforces_gfmc_minima

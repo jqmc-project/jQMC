@@ -19,7 +19,7 @@ Dependencies between workflows are declared with FileFrom / ValueFrom.
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -45,7 +45,7 @@ from logging import getLogger
 
 from ._job import JobSubmission
 from ._phase import ScientificPhase, require_action
-from ._state import (
+from .state import (
     CompletionStatus,
     WorkflowStatus,
     _now_iso,
@@ -90,12 +90,13 @@ class FileFrom:
             Hamiltonian whose step number depends on convergence).
 
     Examples:
-        Static filename (step number known in advance)::
+        Static filename (known in advance; here the averaged hand-off of
+        ``VMC_Workflow(handoff_mode="average")``)::
 
             Container(
                 label="mcmc-run",
                 dirname="mcmc",
-                input_files=[FileFrom("vmc-opt", "hamiltonian_data_opt_step_9.h5")],
+                input_files=[FileFrom("vmc-opt", "hamiltonian_data_opt_averaged.h5")],
                 rename_input_files=["hamiltonian_data.h5"],
                 workflow=MCMC_Workflow(...),
             )
@@ -270,6 +271,33 @@ class Workflow:
         """Lazily resolve *project_dir* to CWD when not set explicitly."""
         if self.project_dir is None:
             self.project_dir = os.path.abspath(os.getcwd())
+
+    def _get_command(self, input_file: str) -> str:
+        """Return the executable + args substituted into the template's
+        ``_COMMAND_`` placeholder. The template line looks like::
+
+            mpirun -np <N> _COMMAND_ > <output> 2>&1
+
+        so the returned string must NOT include ``mpirun`` or the
+        output redirection (the template owns both). Concrete
+        Workflow subclasses that go through :meth:`_submit_and_wait`
+        MUST override this. Subclasses that run entirely via
+        ``subprocess.run`` (e.g. :class:`WF_Workflow`, which only
+        reads a local TREXIO file) leave it unimplemented.
+
+        Args:
+            input_file: Basename of the TOML input written by the
+                workflow's ``_generate_input`` (relative to ``work_dir``).
+                Workflows that take CLI args instead of a TOML still
+                receive this as a state-tracking key; they may ignore
+                it when constructing the command.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} does not implement _get_command(). "
+            "If this workflow needs to submit a job through the template "
+            "path, override _get_command(input_file). If it runs entirely "
+            "via subprocess.run (e.g. local-only), it should not reach this code."
+        )
 
     # Protected file basenames that ``_cleanup_files`` must never delete,
     # regardless of what the user puts in ``cleanup_patterns``.  Losing
@@ -523,6 +551,10 @@ class Workflow:
         * ``submitted`` -- resume waiting, then fetch
         * no record     -- submit a new job
 
+        A new submission that finds the queue's ``max_job_submit``
+        reached is retried every ``poll_interval`` seconds until a slot
+        frees; it does not fail the workflow.
+
         Args:
             input_file (str):
                 Basename of the input TOML file (relative to *work_dir*).
@@ -574,6 +606,8 @@ class Workflow:
             logger.info(f"  {input_file}: completed but not fetched. Fetching...")
             job = self._make_job(input_file, output_file, queue_label=queue_label, run_id=run_id)
             try:
+                # Named in the error raised when the output is missing.
+                job.job_number = recorded.get("job_id")
                 job.fetch_job(
                     from_objects=fetch_from_objects, exclude_patterns=[], work_dir=work_dir, optional_patterns=optional_fetch
                 )
@@ -614,12 +648,34 @@ class Workflow:
             submit_sh = self._submit_script_name(run_id)
             job.generate_script(submission_script=submit_sh, work_dir=work_dir)
 
-            from_objects = [input_file, self.hamiltonian_file, submit_sh]
+            # ``self.hamiltonian_file`` is the wfc/hamiltonian artifact:
+            # for MCMC/VMC/LRDMC it is the INPUT (must exist before
+            # submission), for QE_Workflow it is the OUTPUT (created
+            # by the job). Skip it from the upload list when missing
+            # locally so both directions work without per-subclass
+            # plumbing. Remote transfer of QE inputs (save_dir, UPF)
+            # is handed through ``extra_from_objects``.
+            from_objects = [input_file, submit_sh]
+            ham_path = os.path.join(work_dir, self.hamiltonian_file)
+            if os.path.exists(ham_path):
+                from_objects.append(self.hamiltonian_file)
             if extra_from_objects:
                 from_objects.extend(extra_from_objects)
-            submitted, job_number = job.job_submit(submission_script=submit_sh, from_objects=from_objects, work_dir=work_dir)
-            if not submitted:
-                raise RuntimeError("Job submission failed (queue limit or error).")
+            # ``job_submit`` returns (False, None) only when the queue's
+            # ``max_job_submit`` is reached; nothing was uploaded or
+            # submitted, so wait for a slot and try again.  Genuine
+            # submission errors raise and fail the workflow.
+            while True:
+                submitted, job_number = job.job_submit(
+                    submission_script=submit_sh, from_objects=from_objects, work_dir=work_dir
+                )
+                if submitted:
+                    break
+                logger.info(
+                    f"  {input_file}: max_job_submit={job.max_job_submit} reached on "
+                    f"{self.server_machine_name}; retrying in {self.poll_interval}s..."
+                )
+                await asyncio.sleep(self.poll_interval)
 
             logger.info(f"  Job submitted: {job_number}")
             add_job(
@@ -632,6 +688,7 @@ class Workflow:
                 run_id=run_id,
                 job_stdout=job.job_stdout if job.server_machine.queuing else "",
                 job_stderr=job.job_stderr if job.server_machine.queuing else "",
+                queue_label=queue_label or self.queue_label,
             )
 
             while job.jobcheck():
@@ -655,7 +712,9 @@ class Workflow:
         """Create a :class:`JobSubmission` with current workflow settings.
 
         Requires *self.server_machine_name*, *self.queue_label*, and
-        *self.jobname* to be set by the concrete subclass.
+        *self.jobname* to be set by the concrete subclass. The
+        ``_COMMAND_`` placeholder in the template is filled by
+        :meth:`_get_command` (which subclasses must override).
         """
         return JobSubmission(
             server_machine_name=self.server_machine_name,
@@ -664,6 +723,7 @@ class Workflow:
             queue_label=queue_label or self.queue_label,
             jobname=self.jobname,
             run_id=run_id,
+            command=self._get_command(input_file),
         )
 
 

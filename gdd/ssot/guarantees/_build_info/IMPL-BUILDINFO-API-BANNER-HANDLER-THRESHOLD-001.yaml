@@ -1,0 +1,30 @@
+id: IMPL-BUILDINFO-API-BANNER-HANDLER-THRESHOLD-001
+kind: implementation
+name: A Python API process whose INFO logger only has WARNING handlers still reports the version lines once
+plain_language: >-
+  A logger enabled for INFO with an existing handler does not mean an INFO record is
+  emitted: with the root logger at INFO and only a WARNING console handler, logger.info drops both lines. In a fresh
+  Python process configured that way, constructing an MCMC, GFMC_t or GFMC_n driver twice prints "version = ..." and
+  "git commit = ..." exactly once on stderr, equal to the lines resolved for the same checkout. The logger is used
+  only when a handler on its propagation chain accepts INFO.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_routes.py::test_python_api_driver_with_an_info_logger_and_warning_handler_reports_the_lines_once
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: MCMC}
+    - {driver: GFMC_t}
+    - {driver: GFMC_n}
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_logging.py::test_api_banner_uses_the_real_logging_route_or_stderr_once
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: disabled-info}
+    - {route: stopped-propagation}
+    - {route: parent-stops-propagation}
+    - {route: warning-handler}
+    - {route: enabled-parent-handler}
+    - {route: local-handler-stops-propagation}
+    - {route: local-warning-stops-propagation}
+    - {route: no-handlers}

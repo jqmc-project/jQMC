@@ -1,0 +1,51 @@
+id: IMPL-DET-BUILDER-CONTRACTS-001
+kind: implementation
+name: Geminal and SD builder contracts
+plain_language: 'The AGP, AGPn, and SD builders honor their reviewed contracts: time-reversal inference and
+  ROHF acceptance, default lambda diagonals, canonical SD form, variational-block exposure per shell occupancy, and imaginary-part
+  preservation; inconsistent or obsolete constructions are hard errors.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestParameterGradientAssembly::test_collect_param_grads_walker_shapes
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalDataTypes::test_geminal_data_alias_to_AGP_data
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPData::test_AGP_data_build_default_time_reversal_inferred
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPData::test_AGP_data_build_open_shell_time_reversal_True_accepts_ROHF
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnData::test_AGPn_data_build_defaults_lambda_diag
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnData::test_AGPn_data_build_auto_derives_mos_dn_under_time_reversal
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnData::test_AGPn_data_lambda_matrix_property_materialises_diag
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_complex_debug_determinant_preserves_imaginary_part
+    executable_checks:
+      d8-n-137:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_complex_debug_determinant_preserves_imaginary_part#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual
+        reference:
+          role: source-reference-value
+          expression: independent
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_canonical_form_keeps_only_occupied_rows_and_no_lambda
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_time_reversal_false_accepts_independent_down_coefficients
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_open_shell_time_reversal_gradient_pads_down_rows
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_build_defaults_and_sanity
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_build_fix_geminal_rank_warns_and_ignored
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestVariationalParameterBlock::test_real_gamma_agp_publishes_a_real_symmetric_lambda_tie
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestVariationalParameterBlock::test_get_variational_blocks_open_shell_exposes_mo_coefficients_dn
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestVariationalParameterBlock::test_get_variational_blocks_closed_shell_does_not_expose_mo_coefficients_dn
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnData::test_AGPn_data_build_open_shell_requires_explicit_mos_dn
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnData::test_AGPn_data_sanity_check_rejects_complex_lambda_diag
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_time_reversal_rejects_inconsistent_down_coefficients
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_rejects_obsolete_lambda_symmetrization

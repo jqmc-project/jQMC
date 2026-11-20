@@ -23,7 +23,7 @@ The central-limit-theorem scaling sigma prop 1/sqrtN is used:
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -182,8 +182,18 @@ def read_accumulated_measurement_steps(
     planned ``num_mcmc_steps`` -- in that case the planned step count
     over-estimates the actual samples on disk.
 
+    Twist-averaged runs write ``restart.h5`` as a checkpoint DIRECTORY
+    (``restart.h5/twist_000.h5 ... + shared_state.h5``); each member is a
+    merged per-twist checkpoint with its own ``mcmc_counter``.  Every twist
+    advances the same number of steps by construction, so the counter of any
+    member is the run's counter -- defensively, all members are read and the
+    MINIMUM is used (with a warning when they differ, which would indicate a
+    torn checkpoint).  A flat (single-twist) ``restart.h5`` file keeps the
+    original read byte-identically.
+
     Args:
-        restart_chk_path: Path to ``restart.h5`` (merged checkpoint).
+        restart_chk_path: Path to ``restart.h5`` (merged checkpoint file,
+            or a twist checkpoint directory).
         warmup: ``num_(gfmc_)mcmc_warmup_steps`` from the workflow.
         collect_steps: ``num_gfmc_collect_steps`` for LRDMC, 0 for MCMC.
 
@@ -196,6 +206,38 @@ def read_accumulated_measurement_steps(
     except ImportError as exc:
         logger.warning(f"jqmc not importable; cannot read mcmc_counter from {restart_chk_path}: {exc}")
         return None
+
+    if os.path.isdir(restart_chk_path):
+        # Twist-averaged checkpoint directory.
+        try:
+            from jqmc._twist_checkpoint import load_twist_checkpoint_manifest
+        except ImportError as exc:
+            logger.warning(f"jqmc not importable; cannot read twist manifest from {restart_chk_path}: {exc}")
+            return None
+        try:
+            manifest = load_twist_checkpoint_manifest(restart_chk_path)
+        except Exception as exc:
+            logger.warning(f"Cannot read twist checkpoint manifest from {restart_chk_path}: {exc}")
+            return None
+        counters = []
+        for member_path, _weight in manifest:
+            try:
+                cfg = load_driver_config_from_checkpoint(member_path, rank=0)
+            except Exception as exc:
+                logger.warning(f"Cannot read driver_config from twist member {member_path}: {exc}")
+                return None
+            if "mcmc_counter" not in cfg:
+                logger.warning(f"driver_config in twist member {member_path} has no 'mcmc_counter' key.")
+                return None
+            counters.append(int(cfg["mcmc_counter"]))
+        raw = min(counters)
+        if len(set(counters)) > 1:
+            logger.warning(
+                f"Twist members of {restart_chk_path} disagree on mcmc_counter "
+                f"({sorted(set(counters))}); using the minimum {raw}."
+            )
+        return max(raw - int(collect_steps) - int(warmup), 0)
+
     try:
         cfg = load_driver_config_from_checkpoint(restart_chk_path, rank=0)
     except Exception as exc:

@@ -1,0 +1,103 @@
+id: IMPL-RS-ECP-NONLOCAL-RADIAL-POWER-PARITY-001
+kind: implementation
+name: Rust/XLA parity of non-local ECP kernels at radial powers other than 2
+plain_language: >-
+  On the explicit one-centre input of MATH-RS-ECP-NONLOCAL-RADIAL-POWER-001 (single non-local l=0 term with
+  power n in 0, 1, 2 and 3), the native Sherman-Morrison non-local value kernel equals the same-mode XLA
+  nearest-neighbour evaluator, the native VMC local energy (fast and full recompute) equals the XLA local
+  energy of the same route, and the native LRDMC projection step (FAST and full-recompute mesh, T-move and
+  DLA, c = +-1.3) equals the production XLA _compute_V_elements_t e_L and b_L, in full and mixed
+  separately. Every committed ECP fixture stores n = 2, so these are the only Rust/XLA parity rows where
+  the non-local radial power is not the ccECP value.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_nonlocal_value_radial_power_matches_closed_form_and_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {power: 0}
+    - {power: 1}
+    - {power: 2}
+    - {power: 3}
+    executable_checks:
+      value-xla-parity:
+        site: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_nonlocal_value_radial_power_matches_closed_form_and_xla#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-nonlocal-ecp-value, expression: actual}
+        reference: {role: xla-nearest-neighbour-nonlocal-ecp, expression: xla}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}
+  - pytest_node: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_vmc_local_energy_radial_power_matches_closed_form_and_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {power: 0, fast: true}
+    - {power: 0, fast: false}
+    - {power: 1, fast: true}
+    - {power: 1, fast: false}
+    - {power: 2, fast: true}
+    - {power: 2, fast: false}
+    - {power: 3, fast: true}
+    - {power: 3, fast: false}
+    executable_checks:
+      local-energy-xla-parity:
+        site: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_vmc_local_energy_radial_power_matches_closed_form_and_xla#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-local-energy, expression: native}
+        reference: {role: xla-local-energy, expression: xla}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [wf_kinetic, ao_eval, det_eval, coulomb, det_ratio]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [wf_kinetic, ao_eval, det_eval, coulomb, det_ratio]}
+  - pytest_node: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_lrdmc_mesh_nonlocal_radial_power_matches_closed_form_and_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {power: 0, sign: 1, non_local_move: tmove, fast: true}
+    - {power: 0, sign: 1, non_local_move: tmove, fast: false}
+    - {power: 0, sign: 1, non_local_move: dltmove, fast: true}
+    - {power: 0, sign: 1, non_local_move: dltmove, fast: false}
+    - {power: 0, sign: -1, non_local_move: tmove, fast: true}
+    - {power: 0, sign: -1, non_local_move: tmove, fast: false}
+    - {power: 0, sign: -1, non_local_move: dltmove, fast: true}
+    - {power: 0, sign: -1, non_local_move: dltmove, fast: false}
+    - {power: 1, sign: 1, non_local_move: tmove, fast: true}
+    - {power: 1, sign: 1, non_local_move: tmove, fast: false}
+    - {power: 1, sign: 1, non_local_move: dltmove, fast: true}
+    - {power: 1, sign: 1, non_local_move: dltmove, fast: false}
+    - {power: 1, sign: -1, non_local_move: tmove, fast: true}
+    - {power: 1, sign: -1, non_local_move: tmove, fast: false}
+    - {power: 1, sign: -1, non_local_move: dltmove, fast: true}
+    - {power: 1, sign: -1, non_local_move: dltmove, fast: false}
+    - {power: 2, sign: 1, non_local_move: tmove, fast: true}
+    - {power: 2, sign: 1, non_local_move: tmove, fast: false}
+    - {power: 2, sign: 1, non_local_move: dltmove, fast: true}
+    - {power: 2, sign: 1, non_local_move: dltmove, fast: false}
+    - {power: 2, sign: -1, non_local_move: tmove, fast: true}
+    - {power: 2, sign: -1, non_local_move: tmove, fast: false}
+    - {power: 2, sign: -1, non_local_move: dltmove, fast: true}
+    - {power: 2, sign: -1, non_local_move: dltmove, fast: false}
+    - {power: 3, sign: 1, non_local_move: tmove, fast: true}
+    - {power: 3, sign: 1, non_local_move: tmove, fast: false}
+    - {power: 3, sign: 1, non_local_move: dltmove, fast: true}
+    - {power: 3, sign: 1, non_local_move: dltmove, fast: false}
+    - {power: 3, sign: -1, non_local_move: tmove, fast: true}
+    - {power: 3, sign: -1, non_local_move: tmove, fast: false}
+    - {power: 3, sign: -1, non_local_move: dltmove, fast: true}
+    - {power: 3, sign: -1, non_local_move: dltmove, fast: false}
+    executable_checks:
+      lrdmc-e-l-xla-parity:
+        site: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_lrdmc_mesh_nonlocal_radial_power_matches_closed_form_and_xla#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-lrdmc-e-l, expression: e_on}
+        reference: {role: xla-projection-e-l, expression: xla_e}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+      lrdmc-b-l-xla-parity:
+        site: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_lrdmc_mesh_nonlocal_radial_power_matches_closed_form_and_xla#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-lrdmc-b-l, expression: b_on}
+        reference: {role: xla-projection-b-l, expression: xla_b}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio]}

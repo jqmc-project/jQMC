@@ -1,0 +1,75 @@
+id: IMPL-RS-FAST-CUT-AO-VALUE-ABSOLUTE-SCREEN-001
+native_evidence:
+- jqmc_rs::atomic_orbital::tests::bloch_mesh_dot_matches_exact_folded_kernel
+- jqmc_rs::atomic_orbital::tests::single_fold_cutoff_drops_only_sub_bound_values
+- jqmc_rs::atomic_orbital::tests::single_f32_fast_screen_drops_only_bounded_values
+- jqmc_rs::atomic_orbital::tests::mesh_dot_prim_screen_changes_each_ao_below_bound
+- jqmc_rs::atomic_orbital::tests::wdot_family_matches_shell_kernel
+- jqmc_rs::atomic_orbital::tests::wdot_sphe_soa_matches_generic_bitwise
+- jqmc_rs::complex_det::mesh_wdot_tests::mesh_wdot_matches_candidate_batch_ratio
+kind: implementation
+name: FAST-mode Rust AO value screens drop only AO values that are negligible in absolute AO units
+plain_language: >-
+  The screened FAST-mode Rust AO value kernels used by the native energy chunk and the GFMC chunk (the per-move
+  determinant orbital evaluation compute_mo_single_cutoff_into and compute_mo_single_cutoff_cart_into, the ECP
+  non-local mesh AO contractions dot_aos_multi_cutoff_sphe, dot_aos_multi_cutoff_cart and dot_aos_single_cutoff_sphe,
+  the periodic FAST sweep value compute_aos_single_fold_cutoff_into, the per-move orbital evaluation of an fp32
+  ao_eval zone compute_aos_single_f32_into with its FAST screen (molecular and periodic; kept shells keep the
+  unscreened fp32 arithmetic bit for bit; reached in mixed precision through the single_f32 route of the binding),
+  and the GFMC molecular candidate AO batch) may skip a shell for a far point only where the value of every AO of
+  that shell is below FAST_AO_SCREEN_ABS_BOUND = 1e-12 (jqmc._setting) in absolute AO
+  units, normalization and contraction coefficients included; a cut relative to the shell's own peak factor is not
+  enough, because tight high-l shells then drop AO values up to about 1e-6. Inside a kept shell the ECP mesh contractions dot_aos_multi_cutoff_sphe and dot_aos_multi_cutoff_cart also drop single primitives (Shell::prim_val): each dropped primitive contributes less than 1e-12 divided by the shell's primitive count, so the dropped primitives of one AO change its value by less than 1e-12 in absolute AO units. On the committed ccECP inputs water_ccecp_ccpvqz.h5 (spherical, O cc-pVQZ up
+  to g) and CuBr_ecp_ccpvtz_cart.h5 (Cartesian, Cu cc-pVTZ up to g, Br up to f), at seeded points around every
+  nucleus with pz_min r^2 from 5 to 80 for every distinct shell exponent (beyond the radius of a shell-relative cut, where
+  the exact AO values exceed 1e-12), every AO value a kernel drops is at most 1e-12 in magnitude and
+  every value it keeps equals the exact XLA compute_AOs within the strict XLA-Rust consistency tolerance of the
+  ao_eval zone; the kernels are reached through the test-only binding compute_AOs_value_fast_cut. Full and mixed are
+  each required. The complex-twist FAST energy chunk contracts its ECP non-local mesh determinant ratio the same way
+  (ComplexOrb::mesh_wdot_into, gated by ComplexOrb::mesh_wdot_ok on an fp64 gto value zone; under an fp32 ao_eval
+  zone the plane-wave or B-spline child is contracted from its zone-local fp32 values): the inverse-geminal pairing row
+  is folded with the complex MO coefficients into one AO-space weight vector w per moved electron, and each mesh point
+  costs one screened Bloch dot dot_aos_multi_cutoff_bloch over the image-tiled Gaussian kernel (complex weight
+  w[home] times the image phase, home-cell wrap and wrap-restore phase as the complex AO), plus a plane-wave or
+  B-spline child contraction, so the det ratio is 1 + w.AO(mesh) - base without forming the AO or MO mesh. It uses the
+  same pz_val shell and prim_val primitive screens, so each dropped kernel AO value is below 1e-12 and the dot moves by
+  less than 1e-12 times the sum of the dropped terms' weight moduli. Native unit tests bound the Bloch dot against the
+  exact unscreened Bloch-folded kernel (sphe and cart, 1 and 6 images, meshes of 12 to 40 points) and the complete
+  contraction against the orbital-rank candidate table q.value(r) for pGTO, pGTO+PW (twist and real Gamma cos/sin),
+  pGTO+B-spline, pure B-spline and pure PW leaves, each within the screen bound plus the reduction-order class, under
+  the full policy and under a mixed policy (fp32 ao_eval, Bloch gto in the fp64 ao_bloch_eval zone). The native
+  complex FAST chunk endpoint energy on the QE Li k=(1/4,1/4,1/4) ccECP pGTO (J1+J2), pGTO+PW and B-spline fixtures
+  equals the XLA local energy rebuilt from scratch at the returned walkers in both precision modes.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_fast_cut_value_screen_bound.py::test_fast_value_screens_drop_only_negligible_absolute_ao_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: water_ccecp_ccpvqz.h5, kind: sphe}
+    - {trexio_file: CuBr_ecp_ccpvtz_cart.h5, kind: cart}
+    executable_checks:
+      fast-cut-ao-values-vs-exact-xla:
+        site: tests/test_rs_kernel/test_fast_cut_value_screen_bound.py::test_fast_value_screens_drop_only_negligible_absolute_ao_values#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-fast-cut-ao-values, expression: "got[kept]"}
+        reference: {role: exact-xla-ao-values, expression: "ref[kept]"}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval]}
+  - pytest_node: tests/test_rs_kernel/test_chain_modes.py::test_complex_twist_chunk_energy_matches_xla_at_returned_walkers
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_j12}
+    - {pattern: pgto_pw_twist_jnone}
+    - {pattern: bspline_twist_jnone}
+    executable_checks:
+      complex-twist-endpoint-energy:
+        site: tests/test_rs_kernel/test_chain_modes.py::_assert_value_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-complex-twist-chunk-energy, expression: rust_value}
+        reference: {role: xla-from-scratch-energy-at-native-endpoint, expression: xla_value}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}

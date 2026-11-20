@@ -1,0 +1,28 @@
+id: MATH-TOOL-AO-CONV-SPHE-PROJECTION-001
+kind: mathematical
+name: trexio convert-to --ao-conv-to sphe writes the S-metric projection and reports any discarded part
+plain_language: >-
+  jqmc-tool trexio convert-to --ao-conv-to sphe on a Cartesian source writes the projection of its occupied MOs onto
+  the pure-spherical subspace in the AO overlap metric. When the discarded part
+  of an occupied MO (the s/p-like trace of Cartesian d/f shells in a native Cartesian SCF) has a relative S-norm above
+  AO_SPHERICAL_PROJECTION_RESIDUAL_THRESHOLD, the command still exits 0 and writes the file, and logs one WARNING per
+  spin with the maximum residual and its MO index. The reported residual and index, and the written ln|Psi|, equal an
+  independent S-metric projection built from fitted NumPy-oracle AO values and the analytic overlap, for molecular,
+  periodic Gamma and complex-twist sources. Sources already in the spherical subspace (s/p-only bases, and d/f bases
+  whose MO coefficients lie on harmonic monomials) convert without a projection warning and give the same ln|Psi| as an
+  independent NumPy Slater-determinant evaluation of the Cartesian source MOs.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertToSphericalProjection::test_trexio_convert_to_sphe_warns_and_writes_s_metric_projection
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_filename: N2_ecp_ccpvtz_cart.h5}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_cart.h5}
+    - {trexio_filename: lithium_k025_cart.h5}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertToSphericalProjection::test_trexio_convert_to_sphe_lossless_source_keeps_ln_psi
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {source: H2_ae_ccpvdz_cart.h5}
+    - {source: N2_ecp_ccpvtz_cart.h5-harmonic}

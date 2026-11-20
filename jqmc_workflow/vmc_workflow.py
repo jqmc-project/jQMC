@@ -2,7 +2,10 @@
 
 Generates a VMC input TOML, submits the ``jqmc`` binary on a remote (or local)
 machine, monitors until completion, and fetches the results.  The optimized
-``hamiltonian_data_opt_step_N.h5`` files and checkpoint are collected as outputs.
+``hamiltonian_data_opt_step_N.h5`` files and the checkpoint are collected as
+outputs -- one code path for single-twist and twist-averaged runs, because jQMC
+dumps a complete combined (all twists) Hamiltonian for a twist-averaged
+optimisation.
 """
 
 # Copyright (C) 2024- Kosuke Nakano
@@ -20,7 +23,7 @@ machine, monitors until completion, and fetches the results.  The optimized
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -37,11 +40,17 @@ machine, monitors until completion, and fetches the results.  The optimized
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import asyncio
 import glob
 import os
 import re
+import shutil
+import subprocess
+import sys
 import time
 from logging import getLogger
+
+from jqmc.jqmc_miscs import cli_parameters
 
 from ._error_estimator import (
     _format_duration,
@@ -50,7 +59,7 @@ from ._error_estimator import (
 )
 from ._input_generator import generate_input_toml, resolve_with_defaults
 from ._job import get_num_mpi, load_queue_data
-from ._state import (
+from .state import (
     CompletionStatus,
     WorkflowStatus,
     get_estimation,
@@ -63,16 +72,21 @@ from .workflow import Workflow
 
 logger = getLogger("jqmc-workflow").getChild(__name__)
 
+#: Hand-off modes of :class:`VMC_Workflow`: average the last steps, or publish the last dump.
+HANDOFF_MODES = ("average", "last")
+#: Basename of the averaged Hamiltonian that ``handoff_mode="average"`` publishes.
+AVERAGED_HAMILTONIAN = "hamiltonian_data_opt_averaged.h5"
+_OPT_STEP_DUMP = re.compile(r"hamiltonian_data_opt_step_(\d+)\.h5")
+
 
 def _last_opt_energy_from_log(output_file: str) -> tuple[float | None, float | None]:
     """Return ``(energy, energy_error)`` of the last VMC opt step in *output_file*.
 
     Single source of truth shared by :meth:`VMC_Workflow._parse_output`
-    and :meth:`VMC_Workflow._parse_last_opt_energy`.  Both used to keep
-    their own copy of the ``E = ... +- ...`` regex, which drifted
-    independently and silently dropped ``nan``/``inf`` lines.  This
-    helper instead delegates to the canonical
-    :func:`_output_parser._parse_vmc_log_text` parser so any future
+    and :meth:`VMC_Workflow._parse_last_opt_energy`, so the two cannot drift
+    apart (a separate ``E = ... +- ...`` regex can silently drop
+    ``nan``/``inf`` lines).  This helper delegates to the canonical
+    :func:`output_parser._parse_vmc_log_text` parser so any future
     format change lives in exactly one place.
 
     A ``nan``/``inf`` energy is returned as a (non-finite) float -- not
@@ -84,7 +98,7 @@ def _last_opt_energy_from_log(output_file: str) -> tuple[float | None, float | N
             text = f.read()
     except OSError:
         return None, None
-    from ._output_parser import _parse_vmc_log_text
+    from .output_parser import _parse_vmc_log_text
 
     steps = _parse_vmc_log_text(text)
     # Prefer the last opt-step block that actually contains an ``E =``
@@ -101,8 +115,18 @@ class VMC_Workflow(Workflow):
     r"""VMC (Variational Monte Carlo) Jastrow / orbital optimisation workflow.
 
     Generates a ``job_type=vmc`` input TOML, submits ``jqmc``, monitors
-    until completion, and collects the optimised
-    ``hamiltonian_data_opt_step_N.h5`` files and checkpoint.
+    until completion, and collects the optimised Hamiltonian and checkpoint.
+    By default the published Hamiltonian is the uniform average of the
+    wavefunction parameters of the last ``handoff_average_steps`` (20)
+    optimization steps, written by ``jqmc-tool vmc average-wf`` from the
+    ``hamiltonian_data_opt_step_N.h5`` dumps with the largest step numbers
+    (``hamiltonian_data_opt_averaged.h5``).  With ``handoff_mode="last"`` the
+    published Hamiltonian is the last dump itself.  Single-twist and combined
+    twist-averaged runs share one publication path.  Under twist averaging
+    jQMC writes every dump as a COMPLETE combined file (the canonical shared Jastrow
+    plus every per-twist MO/lambda payload), and the average of such dumps is
+    a combined file too, so either is directly usable as the next step's
+    ``hamiltonian_h5``.
 
     The workflow supports two modes:
 
@@ -145,7 +169,7 @@ class VMC_Workflow(Workflow):
         Dt (float, optional):
             MCMC step size (bohr).  Default from ``jqmc_miscs``.
         epsilon_AS (float, optional):
-            Attacalite-Sorella regularization parameter.  Default from ``jqmc_miscs``.
+            Attaccalite-Sorella regularization parameter.  Default from ``jqmc_miscs``.
         num_mcmc_per_measurement (int, optional):
             MCMC updates per measurement.  Default from ``jqmc_miscs``.
         num_mcmc_warmup_steps (int, optional):
@@ -153,19 +177,28 @@ class VMC_Workflow(Workflow):
         num_mcmc_bin_blocks (int, optional):
             Binning blocks.  Default from ``jqmc_miscs``.
         wf_dump_freq (int, optional):
-            Wavefunction dump frequency.  Default from ``jqmc_miscs``.
+            Wavefunction dump frequency.  Default from ``jqmc_miscs`` (1,
+            every step).  With ``handoff_mode="average"`` every step of the
+            averaging window must be dumped, so any value other than 1 is
+            rejected at construction.
         opt_J1_param (bool, optional):
             Optimize J1 Jastrow parameters.  Default from ``jqmc_miscs``.
         opt_J2_param (bool, optional):
             Optimize J2 Jastrow parameters.  Default from ``jqmc_miscs``.
         opt_J3_param (bool, optional):
             Optimize J3 Jastrow parameters.  Default from ``jqmc_miscs``.
-        opt_JNN_param (bool, optional):
-            Optimize neural-network Jastrow parameters.  Default from ``jqmc_miscs``.
-        opt_lambda_param (bool, optional):
-            Optimize lambda (geminal) parameters.  Default from ``jqmc_miscs``.
-        opt_with_projected_MOs (bool, optional):
-            Optimize in a restricted MO space.  Default from ``jqmc_miscs``.
+        opt_geminal (bool, optional):
+            Optimize the geminal (lambda matrix for AGP_data, MO coefficients +
+            lambda_diag + lambda_unpaired for AGPn_data, MO coefficients
+            only for SD_data). Default from ``jqmc_miscs``.
+        fix_geminal_rank (int, optional):
+            Rank-control flag for the new direct MO-opt path. ``None``
+            runs the full-rank AGP-AO ambient opt. A positive ``int``
+            triggers ``to_AGPn`` auto-conversion at ``run_optimize``
+            entry when the current geminal is ``AGP_data``; the
+            optimisation loop then runs uniformly through
+            ``apply_block_update`` with S-Grassmannian retraction
+            built into ``AGPn_data`` / ``SD_data``. Default ``None``.
         opt_J3_basis_exp (bool, optional):
             Optimize J3 AO Gaussian exponents.  Default from ``jqmc_miscs``.
         opt_J3_basis_coeff (bool, optional):
@@ -174,17 +207,49 @@ class VMC_Workflow(Workflow):
             Optimize Geminal AO Gaussian exponents.  Default from ``jqmc_miscs``.
         opt_lambda_basis_coeff (bool, optional):
             Optimize Geminal AO contraction coefficients.  Default from ``jqmc_miscs``.
+        opt_JDTN_u_param (bool, optional):
+            Optimize the DTN polynomial e-e channel (``u`` block, ``alpha_indep``,
+            J2 analogue).  Default from ``jqmc_miscs`` (``True``).
+        opt_JDTN_chi_param (bool, optional):
+            Optimize the DTN polynomial e-N channel (``chi`` block, ``beta_indep``,
+            J1 analogue).  Default from ``jqmc_miscs`` (``True``).
+        opt_JDTN_f_param (bool, optional):
+            Optimize the DTN polynomial factorised e-e-N channel (``f`` block,
+            ``gamma_indep``, J3 analogue).  Default from ``jqmc_miscs`` (``True``).
         optimizer_kwargs (dict, optional):
             Optimizer configuration dict.  Default from ``jqmc_miscs``.
+        use_lm (bool, optional):
+            Convenience alias merged into a copy of ``optimizer_kwargs`` as
+            its ``use_lm`` key (enable the linear method).  A value that
+            conflicts with the same key in ``optimizer_kwargs`` raises
+            ``ValueError``.  Default *None* (not set).
+        num_opt_param (int, optional):
+            Convenience alias merged into a copy of ``optimizer_kwargs`` as
+            the optimizer's canonical ``lm_subspace_dim`` key.  Conflicting
+            values raise ``ValueError``.  Default *None* (not set).
+        delta (float, optional):
+            Convenience alias merged into a copy of ``optimizer_kwargs`` as
+            its ``delta`` key (prefactor of the SR update).  Conflicting
+            values raise ``ValueError``.  Default *None* (not set).
+        epsilon (float, optional):
+            Convenience alias merged into a copy of ``optimizer_kwargs`` as
+            its ``epsilon`` key (regularization strength added to S).
+            Conflicting values raise ``ValueError``.  Default *None* (not
+            set).
         mcmc_seed (int, optional):
             Random seed for MCMC.  Default from ``jqmc_miscs``.
         verbosity (str, optional):
             Verbosity level.  Default from ``jqmc_miscs``.
         poll_interval (int):
-            Seconds between job-status polls.
+            Seconds between job-status polls, and between
+            submission attempts while the queue's ``max_job_submit`` is reached.
         target_error (float):
             Target statistical error (Ha) per optimization step.  Ignored
             when *num_mcmc_steps* is set.
+        target_acceptance_ratio (float):
+            Target MCMC acceptance ratio for the ``Dt="auto"`` calibration,
+            which runs short plain MCMC sampling jobs and fits ``Dt`` to
+            this ratio.  Used only when ``Dt="auto"``.  Default 0.5.
         num_mcmc_steps (int, optional):
             Fixed number of MCMC measurement steps per optimisation step.
             When set, the pilot run is skipped and ``target_error`` is
@@ -210,11 +275,71 @@ class VMC_Workflow(Workflow):
             the signal-to-noise ratio for the convergence check.
             When there are fewer S/N values than this window, all
             available values are averaged.
+        energy_slope_sigma_threshold (float, optional):
+            Enables the energy-plateau convergence check: a linear fit of
+            energy vs. optimization step over the trailing window is
+            considered converged when ``slope >= -slope_std *
+            energy_slope_sigma_threshold``.  Default *None* (check
+            disabled).
+        energy_slope_window_size (int):
+            Number of trailing optimization steps used for the energy
+            slope fit.  Default 5.
         cleanup_patterns (list[str], optional):
             Glob patterns for files to delete after successful completion
             (e.g. ``["restart.h5", "hamiltonian_opt*.h5"]``).  Local files
             are always removed; remote files are removed only when the
             workflow targets a remote machine.  Default *None* (no cleanup).
+        handoff_mode (str):
+            What ``optimized_hamiltonian`` publishes.  ``"average"``
+            (default): the uniform average of the last
+            ``handoff_average_steps`` dumps, selected by step number and
+            averaged with ``jqmc-tool vmc average-wf`` into
+            ``hamiltonian_data_opt_averaged.h5``.  ``"last"``: the dump with
+            the largest step number, as before the averaged hand-off.
+        handoff_average_steps (int):
+            Number of last optimization steps to average (default 20, the
+            tutorials' standard).  Ignored with ``handoff_mode="last"``.
+            The selected dumps must be consecutive steps; fewer dumps than
+            this are refused (and, unless ``external_restart_chk`` is set,
+            ``num_opt_steps * max_continuation`` smaller than this is
+            refused at construction).  In automatic mode an early
+            convergence stop is deferred until enough dumps exist.
+        handoff_allow_fewer (bool):
+            Average all available dumps when fewer than
+            ``handoff_average_steps`` exist instead of refusing.  Default
+            *False*.
+        external_restart_chk (str, optional):
+            Basename of a checkpoint produced by an *earlier, unrelated*
+            run and staged into the project directory through
+            ``Container.input_files``.  It may be a single ``restart.h5``
+            file or a twist checkpoint DIRECTORY
+            (``restart.h5/{shared_state.h5,twist_NNN.h5}``).  When set,
+            production run 1 is emitted with ``restart = true`` /
+            ``restart_chk = <name>`` and the checkpoint is uploaded with
+            the job.  On a restart ``num_opt_steps`` counts *additional*
+            steps: the driver continues from the checkpoint's completed
+            step count and runs ``num_opt_steps`` more.
+            Because the checkpoint pins the keys that are *frozen on
+            restart* (``mcmc_seed``, ``number_of_walkers``,
+            ``num_mcmc_per_measurement``, ``Dt``, ``epsilon_AS``), the
+            workflow must be constructed with the same values the original
+            run used or the jqmc CLI restart guard rejects the input.
+            Default *None* (run 1 starts from scratch).
+        precision_mode (str):
+            Precision mode written to the ``[precision]`` section
+            (``mode``) of the generated TOML: ``"full"`` (all float64) or
+            ``"mixed"`` (mixed precision).  Default ``"full"``.
+        mpc (bool, optional):
+            Value of ``[coulomb] mpc`` in the generated TOML.  The ``vmc``
+            job (wavefunction optimization) does not publish a final MPC
+            estimate, so the jqmc CLI rejects ``True`` with a ``ValueError``;
+            enable MPC in a subsequent MCMC or LRDMC sampling job instead.
+            ``False`` writes the key, *None* (default) omits it.
+        mpc_cutoff (float, optional):
+            Reciprocal-space kinetic-energy cutoff (Ha) for the MPC
+            reciprocal-space sum (``[coulomb] mpc_cutoff``).  A convergence
+            parameter.  *None* (default) omits the key so the driver
+            default applies.
 
     Examples:
         Standalone launch (automatic mode)::
@@ -256,16 +381,29 @@ class VMC_Workflow(Workflow):
 
     Output Values:
         optimized_hamiltonian (str):
-            Basename of the last optimised Hamiltonian file
-            (e.g. ``"hamiltonian_data_opt_step_91.h5"``).
-            Use with ``ValueFrom("vmc", "optimized_hamiltonian")``
-            to pass the filename dynamically to downstream workflows.
+            Basename of the downstream optimised Hamiltonian:
+            ``"hamiltonian_data_opt_averaged.h5"`` with
+            ``handoff_mode="average"``, or the last opt-step file (for
+            example ``"hamiltonian_data_opt_step_91.h5"``) with
+            ``handoff_mode="last"``, for single-twist AND twist-averaged
+            runs alike -- under twist averaging jQMC dumps a complete
+            combined file holding every twist.  Use with
+            ``ValueFrom("vmc", "optimized_hamiltonian")`` to pass the
+            filename dynamically to downstream workflows.
+        optimized_hamiltonian_handoff (str):
+            The ``handoff_mode`` that produced ``optimized_hamiltonian``.
+        optimized_hamiltonian_sources (list[str]):
+            Basenames of the dumps behind ``optimized_hamiltonian``, in step
+            order (one file with ``handoff_mode="last"``).
+        optimized_hamiltonian_steps (list[int]):
+            Optimization step numbers of ``optimized_hamiltonian_sources``.
         checkpoint (str):
             Basename of the restart checkpoint file.
         num_mcmc_steps (int):
-            Estimated MCMC steps per optimisation step
-            (automatic mode).  In fixed-step mode this key is
-            ``estimated_mcmc_steps`` instead.
+            MCMC steps per optimisation step (fixed-step mode).  In
+            automatic mode this key is ``estimated_mcmc_steps`` instead.
+        estimated_mcmc_steps (int):
+            Estimated MCMC steps per optimisation step (automatic mode).
         energy (float):
             Energy from the last optimisation step (Ha).
         energy_error (float):
@@ -304,22 +442,24 @@ class VMC_Workflow(Workflow):
         number_of_walkers: int = 4,
         max_time: int = 86400,
         # -- [vmc] section parameters --
-        Dt: float | None = None,
+        Dt: float | str | None = None,
         epsilon_AS: float | None = None,
-        num_mcmc_per_measurement: int | None = None,
+        num_mcmc_per_measurement: int | str | None = None,
         num_mcmc_warmup_steps: int | None = None,
         num_mcmc_bin_blocks: int | None = None,
         wf_dump_freq: int | None = None,
         opt_J1_param: bool | None = None,
         opt_J2_param: bool | None = None,
         opt_J3_param: bool | None = None,
-        opt_JNN_param: bool | None = None,
-        opt_lambda_param: bool | None = None,
-        opt_with_projected_MOs: bool | None = None,
+        opt_geminal: bool | None = None,
+        fix_geminal_rank: int | None = None,
         opt_J3_basis_exp: bool | None = None,
         opt_J3_basis_coeff: bool | None = None,
         opt_lambda_basis_exp: bool | None = None,
         opt_lambda_basis_coeff: bool | None = None,
+        opt_JDTN_u_param: bool | None = None,
+        opt_JDTN_chi_param: bool | None = None,
+        opt_JDTN_f_param: bool | None = None,
         optimizer_kwargs: dict | None = None,
         # -- [control] section parameters --
         mcmc_seed: int | None = None,
@@ -327,6 +467,7 @@ class VMC_Workflow(Workflow):
         # -- workflow parameters --
         poll_interval: int = 60,
         target_error: float = 0.001,
+        target_acceptance_ratio: float = 0.5,
         num_mcmc_steps: int | None = None,
         pilot_mcmc_steps: int = 50,
         pilot_vmc_steps: int = 5,
@@ -337,8 +478,46 @@ class VMC_Workflow(Workflow):
         energy_slope_sigma_threshold: float | None = None,
         energy_slope_window_size: int = 5,
         cleanup_patterns: list | None = None,
+        # -- hand-off of the optimized wavefunction --
+        handoff_mode: str = "average",
+        handoff_average_steps: int = 20,
+        handoff_allow_fewer: bool = False,
+        # -- external continuation --
+        # Basename of a checkpoint that already exists in the project
+        # directory when the workflow starts (delivered through
+        # ``Container.input_files``), i.e. one produced by *some other* run.
+        # It may be a single ``restart.h5`` file or a twist checkpoint
+        # DIRECTORY (``restart.h5/{shared_state.h5,twist_NNN.h5}``).  When
+        # set, production run 1 is generated with ``restart = true`` /
+        # ``restart_chk = <name>`` instead of starting from scratch, and the
+        # checkpoint is uploaded alongside the job.  ``None`` (default):
+        # run 1 always starts fresh.
+        external_restart_chk: str | None = None,
         # -- [precision] section --
         precision_mode: str = "full",
+        # -- [coulomb] section --
+        # MPC (Model Periodic Coulomb) finite-size correction. Under the current
+        # design MPC is PASSIVE (``physical = no``): it is an energy-only
+        # observable. It does NOT enter the Hamiltonian, the branching weight,
+        # ``e_L``, ``aF`` or ``gF`` -- forces and parameter gradients stay on the
+        # Ewald channel. Only the REPORTED total energy is corrected
+        # (``E_MPC = E_Ewald + dE_mpc``).
+        #
+        # ``mpc``: True enables the correction, False explicitly disables it,
+        # None omits the key (and, with ``mpc_cutoff`` also None, the whole
+        # ``[coulomb]`` section) from the generated TOML -- the jqmc default.
+        mpc: bool | None = None,
+        # ``mpc_cutoff``: reciprocal-space kinetic-energy cutoff in HARTREE for
+        # the MPC reciprocal-space sum; default 30.0 (matching CASINO's
+        # ``mpc_cutoff`` and QMCPACK's ``cutoff``). This is a CONVERGENCE
+        # parameter, not a physical one: DOUBLE it until the correction stops
+        # changing. None omits the key from the TOML (driver default).
+        mpc_cutoff: float | None = None,
+        # -- optimizer convenience aliases (kept last for positional API stability) --
+        use_lm: bool | None = None,
+        num_opt_param: int | None = None,
+        delta: float | None = None,
+        epsilon: float | None = None,
     ):
         super().__init__(cleanup_patterns=cleanup_patterns)
         self.server_machine_name = server_machine_name
@@ -352,26 +531,54 @@ class VMC_Workflow(Workflow):
         self.Dt = Dt
         self.epsilon_AS = epsilon_AS
         self.num_mcmc_per_measurement = num_mcmc_per_measurement
+        # 'auto' -> 4 * total electrons, resolved once from
+        # the input h5 and cached (shared contract with MCMC_Workflow).
+        self._resolved_num_mcmc_per_measurement = None
         self.num_mcmc_warmup_steps = num_mcmc_warmup_steps
         self.num_mcmc_bin_blocks = num_mcmc_bin_blocks
         self.wf_dump_freq = wf_dump_freq
         self.opt_J1_param = opt_J1_param
         self.opt_J2_param = opt_J2_param
         self.opt_J3_param = opt_J3_param
-        self.opt_JNN_param = opt_JNN_param
-        self.opt_lambda_param = opt_lambda_param
-        self.opt_with_projected_MOs = opt_with_projected_MOs
+        self.opt_geminal = opt_geminal
+        self.fix_geminal_rank = fix_geminal_rank
         self.opt_J3_basis_exp = opt_J3_basis_exp
         self.opt_J3_basis_coeff = opt_J3_basis_coeff
         self.opt_lambda_basis_exp = opt_lambda_basis_exp
         self.opt_lambda_basis_coeff = opt_lambda_basis_coeff
-        self.optimizer_kwargs = optimizer_kwargs
+        self.opt_JDTN_u_param = opt_JDTN_u_param
+        self.opt_JDTN_chi_param = opt_JDTN_chi_param
+        self.opt_JDTN_f_param = opt_JDTN_f_param
+        # Convenience surface used by workflow clients.  The optimizer itself
+        # has one canonical dictionary contract; merge these aliases into a
+        # copy so callers can safely reuse their input dict.  ``num_opt_param``
+        # is the workflow name for LM's subspace dimension.
+        merged_optimizer_kwargs = dict(optimizer_kwargs or {})
+        convenience = {
+            "use_lm": use_lm,
+            "lm_subspace_dim": num_opt_param,
+            "delta": delta,
+            "epsilon": epsilon,
+        }
+        for key, value in convenience.items():
+            if value is None:
+                continue
+            if key in merged_optimizer_kwargs and merged_optimizer_kwargs[key] != value:
+                raise ValueError(
+                    f"optimizer_kwargs[{key!r}]={merged_optimizer_kwargs[key]!r} "
+                    f"conflicts with the explicit workflow argument value {value!r}."
+                )
+            merged_optimizer_kwargs[key] = value
+        self.optimizer_kwargs = merged_optimizer_kwargs or None
         # [control] section
         self.mcmc_seed = mcmc_seed
         self.verbosity = verbosity
         # workflow
         self.poll_interval = poll_interval
         self.target_error = target_error
+        # Dt='auto' calibrates to this acceptance (pilot_a).
+        # Driver asymmetry: for VMC pilot_a is a plain MCMC sampling run.
+        self.target_acceptance_ratio = target_acceptance_ratio
         self.num_mcmc_steps = num_mcmc_steps
         self.pilot_mcmc_steps = pilot_mcmc_steps
         self.pilot_vmc_steps = pilot_vmc_steps
@@ -381,10 +588,65 @@ class VMC_Workflow(Workflow):
         self.snr_avg_window = snr_avg_window
         self.energy_slope_sigma_threshold = energy_slope_sigma_threshold
         self.energy_slope_window_size = energy_slope_window_size
+        self.external_restart_chk = external_restart_chk
+        self.handoff_mode = handoff_mode
+        self.handoff_average_steps = handoff_average_steps
+        self.handoff_allow_fewer = handoff_allow_fewer
+        self._validate_handoff()
         # [precision] section
         self.precision_mode = precision_mode
+        # [coulomb] section (passive MPC energy-only observable)
+        self.mpc = mpc
+        self.mpc_cutoff = mpc_cutoff
+
+    def _validate_handoff(self):
+        """Reject hand-off settings that cannot produce the requested average.
+
+        Raising here, before any job is submitted, keeps a long optimization
+        from ending in a hand-off refusal that its settings made certain.
+        """
+        if self.handoff_mode not in HANDOFF_MODES:
+            raise ValueError(f"handoff_mode must be one of {HANDOFF_MODES}, got {self.handoff_mode!r}.")
+        steps = self.handoff_average_steps
+        if isinstance(steps, bool) or not isinstance(steps, int) or steps < 1:
+            raise ValueError(f"handoff_average_steps must be a positive integer, got {steps!r}.")
+        if self.handoff_mode != "average":
+            return
+        dump_freq = self.wf_dump_freq if self.wf_dump_freq is not None else cli_parameters["vmc"]["wf_dump_freq"]
+        if int(dump_freq) != 1:
+            raise ValueError(
+                f"handoff_mode='average' averages the last {steps} consecutive optimization steps, but "
+                f"wf_dump_freq={dump_freq} dumps only every {dump_freq}-th step. Set wf_dump_freq=1 (or leave it unset), "
+                "or pass handoff_mode='last' to publish the last dump only."
+            )
+        if self.external_restart_chk is None and not self.handoff_allow_fewer:
+            total = int(self.num_opt_steps) * int(self.max_continuation)
+            if total < steps:
+                raise ValueError(
+                    f"handoff_average_steps={steps} needs at least {steps} optimization steps, but num_opt_steps="
+                    f"{self.num_opt_steps} x max_continuation={self.max_continuation} gives at most {total}. Run more "
+                    "steps, lower handoff_average_steps, pass handoff_allow_fewer=True, or handoff_mode='last'."
+                )
 
     # -- Input generation ------------------------------------------
+    def _resolve_num_mcmc_per_measurement(self, input_file):
+        """Expand ``num_mcmc_per_measurement='auto'`` -> 4 * total electrons.
+
+        Shares the read-once/cache contract with
+        ``MCMC_Workflow`` via ``_auto_params.resolve_workflow_num_mcmc_per_measurement``.
+        For VMC the 'auto' Dt calibration is an MCMC pilot (driver
+        asymmetry), but the num_mcmc_per_measurement resolution itself only needs
+        the electron count from the input h5.
+        """
+        from ._auto_params import resolve_workflow_num_mcmc_per_measurement
+
+        resolved, self._resolved_num_mcmc_per_measurement = resolve_workflow_num_mcmc_per_measurement(
+            self.num_mcmc_per_measurement,
+            self._resolved_num_mcmc_per_measurement,
+            self.hamiltonian_file,
+            input_file,
+        )
+        return resolved
 
     def _generate_input(
         self,
@@ -428,20 +690,22 @@ class VMC_Workflow(Workflow):
                 "num_mcmc_steps": num_mcmc_steps,
                 "Dt": self.Dt,
                 "epsilon_AS": self.epsilon_AS,
-                "num_mcmc_per_measurement": self.num_mcmc_per_measurement,
+                "num_mcmc_per_measurement": self._resolve_num_mcmc_per_measurement(input_file),
                 "num_mcmc_warmup_steps": self.num_mcmc_warmup_steps,
                 "num_mcmc_bin_blocks": self.num_mcmc_bin_blocks,
                 "wf_dump_freq": self.wf_dump_freq,
                 "opt_J1_param": self.opt_J1_param,
                 "opt_J2_param": self.opt_J2_param,
                 "opt_J3_param": self.opt_J3_param,
-                "opt_JNN_param": self.opt_JNN_param,
-                "opt_lambda_param": self.opt_lambda_param,
-                "opt_with_projected_MOs": self.opt_with_projected_MOs,
+                "opt_geminal": (bool(self.opt_geminal) if self.opt_geminal is not None else False),
+                "fix_geminal_rank": int(self.fix_geminal_rank) if self.fix_geminal_rank is not None else 0,
                 "opt_J3_basis_exp": self.opt_J3_basis_exp,
                 "opt_J3_basis_coeff": self.opt_J3_basis_coeff,
                 "opt_lambda_basis_exp": self.opt_lambda_basis_exp,
                 "opt_lambda_basis_coeff": self.opt_lambda_basis_coeff,
+                "opt_JDTN_u_param": self.opt_JDTN_u_param,
+                "opt_JDTN_chi_param": self.opt_JDTN_chi_param,
+                "opt_JDTN_f_param": self.opt_JDTN_f_param,
                 "optimizer_kwargs": self.optimizer_kwargs,
             },
         )
@@ -451,6 +715,17 @@ class VMC_Workflow(Workflow):
         }
         # Add [precision] section
         overrides["precision"] = {"mode": self.precision_mode}
+        # Add [coulomb] keys only when explicitly set; a None value omits that
+        # key (and, when both are None, the whole section) -- bit-identical to
+        # a TOML with no MPC at all. MPC is energy-only (``physical = no``):
+        # nothing here changes e_L, the branching weight, aF or gF.
+        coulomb_ov = {}
+        if self.mpc is not None:
+            coulomb_ov["mpc"] = bool(self.mpc)
+        if self.mpc_cutoff is not None:
+            coulomb_ov["mpc_cutoff"] = float(self.mpc_cutoff)
+        if coulomb_ov:
+            overrides["coulomb"] = coulomb_ov
         generate_input_toml(
             job_type="vmc",
             overrides=overrides,
@@ -459,6 +734,10 @@ class VMC_Workflow(Workflow):
 
     # -- Submit / poll / fetch -------------------------------------
     # _submit_and_wait() and _make_job() are inherited from Workflow.
+
+    def _get_command(self, input_file: str) -> str:
+        """VMC reads a TOML; the script line is ``mpirun -np N jqmc <input>``."""
+        return f"jqmc {input_file}"
 
     # -- configure / run ------------------------------------------
 
@@ -479,6 +758,9 @@ class VMC_Workflow(Workflow):
             "pilot_mcmc_steps": self.pilot_mcmc_steps,
             "pilot_vmc_steps": self.pilot_vmc_steps,
             "max_continuation": self.max_continuation,
+            "handoff_mode": self.handoff_mode,
+            "handoff_average_steps": self.handoff_average_steps,
+            "handoff_allow_fewer": self.handoff_allow_fewer,
         }
 
     async def run(self) -> tuple:
@@ -514,12 +796,73 @@ class VMC_Workflow(Workflow):
         if n_reconciled:
             logger.info(f"  Reconciled {n_reconciled} job record(s) to 'fetched' from existing output.")
 
+        # -- Dt calibration (pilot_a, cross-driver MCMC) -----------
+        # For VMC the Dt calibration is a plain MCMC
+        # sampling pilot (Dt is a pure-sampling concept); pilot_b / production
+        # stay VMC. self.Dt becomes a concrete float afterwards.
+        if self.Dt == "auto":
+            await self._run_dt_calibration(_wd)
+
         # -- Fixed-step mode ---------------------------------------
         if self.num_mcmc_steps is not None:
             return await self._launch_fixed_steps(_wd)
 
         # -- Automatic mode (pilot + target_error) -----------------
         return await self._launch_auto(_wd)
+
+    async def _run_dt_calibration(self, _wd):
+        """pilot_a: calibrate ``Dt='auto'`` via a plain MCMC sampling pilot.
+
+        Driver asymmetry: for VMC the Dt calibration runs MCMC sampling jobs (not
+        VMC optimization), so pilot_a generates *mcmc-type* input while
+        pilot_b / production stay VMC. Uses the shared calibration orchestration.
+        """
+        from ._auto_params import run_dt_calibration
+
+        self.Dt = await run_dt_calibration(
+            self,
+            _wd,
+            self.hamiltonian_file,
+            self.pilot_mcmc_steps,
+            self.pilot_queue_label,
+            self.target_acceptance_ratio,
+            lambda sub_dir, inp_f, dt_v: self._write_mcmc_calibration_input(os.path.join(sub_dir, inp_f), dt_v),
+        )
+
+    def _write_mcmc_calibration_input(self, input_path, dt_v):
+        """Write an mcmc-type TOML for a VMC pilot_a Dt-calibration run.
+
+        Cross-driver: the calibration is plain MCMC sampling, so this
+        emits a ``job_type='mcmc'`` input at the trial ``Dt`` reusing the VMC's
+        walker count / seed / precision. Factored out of ``_run_dt_calibration``
+        so it can be unit-tested without the async job machinery.
+        """
+        from ._input_generator import generate_input_toml, resolve_with_defaults
+
+        control_ov = resolve_with_defaults(
+            "control",
+            {
+                "number_of_walkers": self.number_of_walkers,
+                "max_time": self.max_time,
+                "hamiltonian_h5": self.hamiltonian_file,
+                "mcmc_seed": self.mcmc_seed,
+                "verbosity": self.verbosity,
+            },
+        )
+        mcmc_ov = resolve_with_defaults(
+            "mcmc",
+            {
+                "num_mcmc_steps": self.pilot_mcmc_steps,
+                "Dt": dt_v,
+                "epsilon_AS": self.epsilon_AS,
+                "num_mcmc_per_measurement": self._resolve_num_mcmc_per_measurement(input_path),
+            },
+        )
+        generate_input_toml(
+            job_type="mcmc",
+            overrides={"control": control_ov, "mcmc": mcmc_ov, "precision": {"mode": self.precision_mode}},
+            filename=input_path,
+        )
 
     async def _launch_fixed_steps(self, _wd):
         """Fixed-step production: skip pilot, ignore target_error."""
@@ -552,10 +895,16 @@ class VMC_Workflow(Workflow):
                 input_i = self._input_filename(i, run_id_i)
                 output_i = self._output_filename(i, run_id_i)
                 if i == 1:
+                    # Run 1 normally starts from scratch; with
+                    # ``external_restart_chk`` it continues an optimisation
+                    # that some earlier run left in the staged checkpoint.
+                    restart_chk = self._resolve_external_restart_chk(_wd)
                     self._generate_input(
                         estimated_mcmc_steps,
                         self.num_opt_steps,
                         os.path.join(_wd, input_i),
+                        restart=restart_chk is not None,
+                        restart_chk=restart_chk,
                     )
                 else:
                     restart_chk = self._find_restart_chk(_wd)
@@ -572,7 +921,7 @@ class VMC_Workflow(Workflow):
                 logger.info(f"-- VMC Production run {i}/{self.max_continuation} " + "-" * 10)
                 logger.info(f"  {input_i}: {self.num_opt_steps} opt steps x {estimated_mcmc_steps} MCMC steps/step")
 
-            restart_chk = self._find_restart_chk(_wd) if i > 1 else None
+            restart_chk = self._find_restart_chk(_wd) if i > 1 else self._resolve_external_restart_chk(_wd)
             if i > 1 and restart_chk is None:
                 raise RuntimeError(f"No restart checkpoint found for continuation run {i}. Expected .h5 file in {_wd}")
             extra_from = [restart_chk] if restart_chk else []
@@ -593,7 +942,7 @@ class VMC_Workflow(Workflow):
             # Refresh output_values["energy"] from THIS iteration's log
             # before validating -- otherwise validate_completion sees a
             # stale or unset energy and the non-finite check at
-            # _state.py:387 silently passes for diverged runs.
+            # ``state.py`` silently passes for diverged runs.
             self._parse_output(os.path.join(_wd, output_i))
 
             # -- Abnormal-termination guard (single source of truth) --
@@ -612,13 +961,7 @@ class VMC_Workflow(Workflow):
         output_logs = sorted(os.path.basename(f) for f in glob.glob(os.path.join(_wd, "*.out")))
         self.output_files = h5_files + output_logs
 
-        def _h5_step_num(path: str) -> int:
-            m = re.search(r"hamiltonian_data_opt_step_(\d+)\.h5$", path)
-            return int(m.group(1)) if m else -1
-
-        opt_files = sorted(glob.glob(os.path.join(_wd, "hamiltonian_data_opt_step_*.h5")), key=_h5_step_num)
-        if opt_files:
-            self.output_values["optimized_hamiltonian"] = os.path.basename(opt_files[-1])
+        await self._publish_handoff(_wd)
         restart_chk = self._find_restart_chk(_wd)
         if restart_chk:
             self.output_values["checkpoint"] = restart_chk
@@ -635,7 +978,7 @@ class VMC_Workflow(Workflow):
 
     async def _launch_auto(self, _wd):
         """Automatic mode: pilot + target_error convergence."""
-        # -- Phase 0: pilot estimation (skip on continuation) ------
+        # -- Pilot estimation (skip on continuation) ---------------
         estimation = get_estimation(_wd)
 
         if estimation.get("estimated_mcmc_steps") is not None:
@@ -653,7 +996,12 @@ class VMC_Workflow(Workflow):
             h5_src = os.path.join(_wd, self.hamiltonian_file)
             h5_dst = os.path.join(pilot_dir, self.hamiltonian_file)
             if os.path.isfile(h5_src) and not os.path.exists(h5_dst):
-                os.symlink(h5_src, h5_dst)
+                try:
+                    os.symlink(h5_src, h5_dst)
+                except OSError:
+                    # Some shared filesystems don't support symlinks (EOPNOTSUPP);
+                    # fall back to a plain copy for the pilot staging.
+                    shutil.copy(h5_src, h5_dst)
 
             recorded_0 = get_job_by_step(pilot_dir, 0)
             status_0 = recorded_0.get("status")
@@ -675,7 +1023,7 @@ class VMC_Workflow(Workflow):
                     os.path.join(pilot_dir, input_0),
                 )
             logger.info("")
-            logger.info("-- VMC Phase 0: Pilot " + "-" * 28)
+            logger.info("-- VMC pilot estimation " + "-" * 27)
             logger.info(
                 f"  {input_0}: {self.pilot_vmc_steps} opt steps x {self.pilot_mcmc_steps} MCMC steps/step (queue: {self.pilot_queue_label})"
             )
@@ -706,12 +1054,22 @@ class VMC_Workflow(Workflow):
             walker_ratio = pilot_mpi / prod_mpi
 
             warmup = self.num_mcmc_warmup_steps or 0
+            # The CLI rejects an input with fewer measurement steps after
+            # warm-up than binning blocks, so the estimate must respect the
+            # bin-block count that will actually be written to the TOML: the
+            # explicit value, or the CLI default when none was given.
+            if self.num_mcmc_bin_blocks is not None:
+                bin_blocks = self.num_mcmc_bin_blocks
+            else:
+                from jqmc.jqmc_miscs import cli_parameters
+
+                bin_blocks = cli_parameters["mcmc"]["num_mcmc_bin_blocks"]
             estimated_mcmc_steps = estimate_required_steps(
                 self.pilot_mcmc_steps - warmup,
                 pilot_error,
                 self.target_error,
                 walker_ratio=walker_ratio,
-                min_steps=self.num_mcmc_bin_blocks or 0,
+                min_steps=bin_blocks,
             )
             # Add warmup back: production also discards warmup steps
             estimated_mcmc_steps += warmup
@@ -763,7 +1121,7 @@ class VMC_Workflow(Workflow):
                 net_pilot_sec=net_pilot_sec or 0,
             )
 
-        # -- Production runs (phase 1..N) --------------------------
+        # -- Production runs ---------------------------------------
         _has_convergence_criteria = self.target_snr is not None or self.energy_slope_sigma_threshold is not None
         last_run = 0
         step_files = {}  # {step: (input, output, run_id)}
@@ -792,7 +1150,7 @@ class VMC_Workflow(Workflow):
                         step_files,
                         last_run,
                     )
-                    if converged:
+                    if converged and self._early_stop_allowed(_wd):
                         logger.info(f"  Convergence already met after fetched runs (step {last_run}). No further runs needed.")
                         break
 
@@ -800,10 +1158,13 @@ class VMC_Workflow(Workflow):
                 input_i = self._input_filename(i, run_id_i)
                 output_i = self._output_filename(i, run_id_i)
                 if i == 1:
+                    restart_chk = self._resolve_external_restart_chk(_wd)
                     self._generate_input(
                         estimated_mcmc_steps,
                         self.num_opt_steps,
                         os.path.join(_wd, input_i),
+                        restart=restart_chk is not None,
+                        restart_chk=restart_chk,
                     )
                 else:
                     restart_chk = self._find_restart_chk(_wd)
@@ -817,10 +1178,10 @@ class VMC_Workflow(Workflow):
                         restart_chk=restart_chk,
                     )
                 logger.info("")
-                logger.info(f"-- VMC Phase 1: Production run {i}/{self.max_continuation} " + "-" * 10)
+                logger.info(f"-- VMC production run {i}/{self.max_continuation} " + "-" * 16)
                 logger.info(f"  {input_i}: {self.num_opt_steps} opt steps x {estimated_mcmc_steps} MCMC steps/step")
 
-            restart_chk = self._find_restart_chk(_wd) if i > 1 else None
+            restart_chk = self._find_restart_chk(_wd) if i > 1 else self._resolve_external_restart_chk(_wd)
             if i > 1 and restart_chk is None:
                 raise RuntimeError(f"No restart checkpoint found for continuation run {i}. Expected .h5 file in {_wd}")
             extra_from = [restart_chk] if restart_chk else []
@@ -859,7 +1220,7 @@ class VMC_Workflow(Workflow):
             # Refresh output_values["energy"] from THIS iteration's log
             # before validating -- otherwise validate_completion sees a
             # stale or unset energy and the non-finite check at
-            # _state.py:387 silently passes for diverged runs.
+            # ``state.py`` silently passes for diverged runs.
             self._parse_output(os.path.join(_wd, output_i))
 
             # -- Abnormal-termination guard (single source of truth) --
@@ -879,7 +1240,7 @@ class VMC_Workflow(Workflow):
                     step_files,
                     last_run,
                 )
-                if converged:
+                if converged and self._early_stop_allowed(_wd):
                     logger.info(f"  Convergence achieved at run {i}/{self.max_continuation}. Stopping early.")
                     break
 
@@ -888,13 +1249,7 @@ class VMC_Workflow(Workflow):
         output_logs = sorted(os.path.basename(f) for f in glob.glob(os.path.join(_wd, "*.out")))
         self.output_files = h5_files + output_logs
 
-        def _h5_step_num(path: str) -> int:
-            m = re.search(r"hamiltonian_data_opt_step_(\d+)\.h5$", path)
-            return int(m.group(1)) if m else -1
-
-        opt_files = sorted(glob.glob(os.path.join(_wd, "hamiltonian_data_opt_step_*.h5")), key=_h5_step_num)
-        if opt_files:
-            self.output_values["optimized_hamiltonian"] = os.path.basename(opt_files[-1])
+        await self._publish_handoff(_wd)
         restart_chk = self._find_restart_chk(_wd)
         if restart_chk:
             self.output_values["checkpoint"] = restart_chk
@@ -1006,6 +1361,33 @@ class VMC_Workflow(Workflow):
         converged = converged_snr and converged_slope
         return converged, converged_snr, converged_slope
 
+    def _resolve_external_restart_chk(self, work_dir: str) -> str | None:
+        """Return the externally supplied checkpoint basename, or ``None``.
+
+        ``external_restart_chk`` names a checkpoint that a *previous,
+        unrelated* run produced and that the ``Container`` has staged into
+        *work_dir* as an input.  It may be a plain ``restart.h5`` file or a
+        twist checkpoint DIRECTORY (``restart.h5/shared_state.h5`` plus
+        ``restart.h5/twist_NNN.h5``); the jqmc driver resumes from either,
+        skipping the optimisation steps already certified by the checkpoint.
+
+        Raises:
+            FileNotFoundError: the name was configured but nothing of that
+                name exists in *work_dir*.  Failing here means no 64-GPU job
+                is submitted that would silently restart from scratch.
+        """
+        if not self.external_restart_chk:
+            return None
+        name = os.path.basename(self.external_restart_chk)
+        path = os.path.join(work_dir, name)
+        if not os.path.exists(path):
+            raise FileNotFoundError(
+                f"external_restart_chk='{name}' was configured but is not present in {work_dir}. "
+                f"Add it to the Container's input_files (a twist checkpoint directory is copied "
+                f"recursively) so the continuation actually resumes."
+            )
+        return name
+
     def _find_restart_chk(self, work_dir: str) -> str | None:
         """Locate a VMC restart checkpoint file in *work_dir*."""
         for pattern in ["restart.h5", "vmc.h5", "*.h5"]:
@@ -1014,12 +1396,162 @@ class VMC_Workflow(Workflow):
                 return os.path.basename(matches[-1])
         return None
 
+    def _latest_optimized_hamiltonian(self, work_dir: str) -> str:
+        """Basename of the optimizer's newest wavefunction dump.
+
+        ONE path for every run: jQMC writes ``hamiltonian_data_opt_step_N.h5``
+        every ``wf_dump_freq`` steps, and under twist averaging that file is a
+        complete combined Hamiltonian holding every twist, so it is directly
+        usable as the next step's ``hamiltonian_h5`` either way.  Raises when no
+        dump exists -- there is nothing to hand downstream then, and guessing
+        (an input file, a single twist of a twist-averaged run) would corrupt
+        the next stage silently.
+        """
+
+        def _step_number(path: str) -> int:
+            m = re.search(r"hamiltonian_data_opt_step_(\d+)\.h5$", path)
+            return int(m.group(1)) if m else -1
+
+        opt_files = sorted(glob.glob(os.path.join(work_dir, "hamiltonian_data_opt_step_*.h5")), key=_step_number)
+        if not opt_files:
+            raise RuntimeError(
+                f"VMC in {work_dir} produced no hamiltonian_data_opt_step_*.h5: there is no optimized "
+                "Hamiltonian to publish. Check the jqmc output log for the cause."
+            )
+        return os.path.basename(opt_files[-1])
+
+    # -- Hand-off of the optimized wavefunction --------------------
+
+    @staticmethod
+    def _numbered_opt_dumps(work_dir: str) -> dict[int, str]:
+        """Basenames of the optimizer dumps in *work_dir*, keyed by step number."""
+        dumps: dict[int, str] = {}
+        for path in glob.glob(os.path.join(work_dir, "hamiltonian_data_opt_step_*.h5")):
+            name = os.path.basename(path)
+            match = _OPT_STEP_DUMP.fullmatch(name)
+            if not match or not os.path.isfile(path):
+                continue
+            step = int(match.group(1))
+            if step in dumps:
+                raise RuntimeError(f"Ambiguous dumps for optimization step {step} in {work_dir}: {dumps[step]} and {name}.")
+            dumps[step] = name
+        return dumps
+
+    def _select_handoff_dumps(self, work_dir: str) -> list[str]:
+        """The last ``handoff_average_steps`` dumps by step number, in step order.
+
+        Refuses (``RuntimeError``) when there are fewer dumps than requested
+        (unless ``handoff_allow_fewer``) and when the selected steps are not
+        consecutive (a dump frequency above 1 or deleted dumps): the average
+        is then not the one requested, and the workflow does not substitute
+        another hand-off.
+        """
+        dumps = self._numbered_opt_dumps(work_dir)
+        if not dumps:
+            raise RuntimeError(
+                f"VMC in {work_dir} produced no hamiltonian_data_opt_step_*.h5: there is no optimized "
+                "Hamiltonian to publish. Check the jqmc output log for the cause."
+            )
+        count = self.handoff_average_steps
+        steps = sorted(dumps)[-count:]
+        if len(steps) < count and not self.handoff_allow_fewer:
+            raise RuntimeError(
+                f"VMC in {work_dir} has only {len(steps)} hamiltonian_data_opt_step_*.h5 dump(s) (steps {steps[0]}-"
+                f"{steps[-1]}), but handoff_average_steps={count} averages the last {count} optimization steps. Run "
+                "more steps, pass handoff_allow_fewer=True to average the available dumps, or handoff_mode='last' "
+                "to publish the last dump only."
+            )
+        if steps[-1] - steps[0] + 1 != len(steps):
+            raise RuntimeError(
+                f"The last {len(steps)} dumps of {work_dir} are not consecutive optimization steps ({steps}): the "
+                "averaged hand-off needs every step of its window dumped (wf_dump_freq=1, no deleted dumps). Pass "
+                "handoff_mode='last' to publish the last dump only."
+            )
+        return [dumps[step] for step in steps]
+
+    def _average_handoff_dumps(self, work_dir: str, sources: list[str]) -> None:
+        """Run ``jqmc-tool vmc average-wf`` on *sources* (basenames in *work_dir*).
+
+        The command runs in *work_dir* with the interpreter of this process,
+        so the averaged file records the dump basenames as its provenance and
+        the jQMC installation that runs the workflow does the averaging.  A
+        refusal by the tool (inputs that are not steps of one optimization,
+        a non-finite parameter, an MO gauge jump, ...) is raised with the
+        tool's own message; nothing is published then.
+        """
+        if os.path.basename(self.hamiltonian_file) == AVERAGED_HAMILTONIAN:
+            raise RuntimeError(
+                f"hamiltonian_file={self.hamiltonian_file!r} is the averaged hand-off's output name; rename the input."
+            )
+        # A refused average must not leave an earlier average behind under the published name.
+        stale = os.path.join(work_dir, AVERAGED_HAMILTONIAN)
+        if os.path.isfile(stale):
+            os.remove(stale)
+        command = [sys.executable, "-m", "jqmc.jqmc_tool", "vmc", "average-wf", *sources, "-o", AVERAGED_HAMILTONIAN]
+        result = subprocess.run(command, cwd=work_dir, capture_output=True, text=True)
+        for line in result.stderr.splitlines():
+            if line.startswith("Warning:"):
+                logger.warning(f"  average-wf: {line}")
+        if result.returncode != 0:
+            message = "\n".join(line for line in result.stderr.splitlines() if line.startswith("Error:"))
+            raise RuntimeError(
+                f"jqmc-tool vmc average-wf refused the last {len(sources)} dumps of {work_dir} "
+                f"({sources[0]} .. {sources[-1]}), exit status {result.returncode}: "
+                f"{message or result.stderr.strip() or result.stdout.strip()}"
+            )
+
+    def _publish_optimized_hamiltonian(self, work_dir: str) -> str:
+        """Build the hand-off of *work_dir* and record it with its provenance in ``output_values``."""
+        if self.handoff_mode == "last":
+            sources = [self._latest_optimized_hamiltonian(work_dir)]
+            published = sources[0]
+        else:
+            sources = self._select_handoff_dumps(work_dir)
+            self._average_handoff_dumps(work_dir, sources)
+            published = AVERAGED_HAMILTONIAN
+        steps = [int(match.group(1)) if (match := _OPT_STEP_DUMP.fullmatch(name)) else -1 for name in sources]
+        if self.handoff_mode == "average":
+            logger.info(f"  Hand-off: {published} = average of {len(sources)} dumps (steps {steps[0]}-{steps[-1]}).")
+        else:
+            logger.info(f"  Hand-off: {published} (last dump).")
+        self.output_values["optimized_hamiltonian"] = published
+        self.output_values["optimized_hamiltonian_handoff"] = self.handoff_mode
+        self.output_values["optimized_hamiltonian_sources"] = sources
+        self.output_values["optimized_hamiltonian_steps"] = steps
+        return published
+
+    async def _publish_handoff(self, work_dir: str) -> None:
+        """Publish ``optimized_hamiltonian`` at the end of a run (off the event loop).
+
+        A failed averaged run publishes nothing: averaging a diverged
+        trajectory would only replace the failure message with a refusal.
+        """
+        if self.status == WorkflowStatus.FAILED and self.handoff_mode == "average":
+            logger.warning("  VMC failed: no averaged optimized Hamiltonian is published.")
+            return
+        published = await asyncio.to_thread(self._publish_optimized_hamiltonian, work_dir)
+        if published not in self.output_files:
+            self.output_files.append(published)
+
+    def _early_stop_allowed(self, work_dir: str) -> bool:
+        """Convergence may end the production runs early only once the averaged hand-off has its dumps."""
+        if self.handoff_mode != "average" or self.handoff_allow_fewer:
+            return True
+        available = len(self._numbered_opt_dumps(work_dir))
+        if available >= self.handoff_average_steps:
+            return True
+        logger.info(
+            f"  Converged, but only {available} of the {self.handoff_average_steps} dumps that the averaged "
+            "hand-off needs exist; running the next continuation."
+        )
+        return False
+
     # -- Output parsing --------------------------------------------
 
     def _parse_output(self, output_file=None):
         """Extract the last optimization step's energy from *output_file*.
 
-        Delegates to :func:`_output_parser._parse_vmc_log_text` so there
+        Delegates to :func:`output_parser._parse_vmc_log_text` so there
         is a single source of truth for VMC log parsing -- any future
         format change (or fix like nan/inf support) lives in one place.
         """
@@ -1037,14 +1569,14 @@ class VMC_Workflow(Workflow):
 
         Returns:
             list[float]:
-                All ``max(|f|/|std f|)`` values in order, one per
+                All maximum generalized-force signal-to-noise values in order, one per
                 optimization step.  Empty list if the file is missing
                 or contains no S/N lines.
         """
         if not os.path.isfile(output_file):
             return []
 
-        snr_pattern = re.compile(r"Max of signal-to-noise of f = max\(\|f\|/\|std f\|\) = ([-+]?\d+(?:\.\d+)?)")
+        snr_pattern = re.compile(r"Max generalized force signal-to-noise = ([-+]?\d+(?:\.\d+)?)")
         values = []
         try:
             with open(output_file) as f:
@@ -1073,7 +1605,7 @@ class VMC_Workflow(Workflow):
         try:
             with open(output_file, errors="replace") as f:
                 text = f.read()
-            from ._output_parser import _parse_vmc_log_text
+            from .output_parser import _parse_vmc_log_text
 
             steps = _parse_vmc_log_text(text)
             return [(s.energy, s.energy_error) for s in steps if s.energy is not None and s.energy_error is not None]

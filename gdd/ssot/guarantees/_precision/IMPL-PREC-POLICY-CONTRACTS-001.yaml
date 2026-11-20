@@ -1,0 +1,34 @@
+id: IMPL-PREC-POLICY-CONTRACTS-001
+kind: implementation
+name: Precision policy contracts
+plain_language: Zone casting preserves the number kind at the zone component width, the Jastrow ratio stays float64 in mixed
+  mode, reconfiguration invalidates the jit cache exactly when the policy effectively changes, and the medium tolerance
+  uses the strict fp32-to-fp64 scale.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::test_cast_to_zone_preserves_number_kind_and_uses_zone_component_width
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::test_mixed_jastrow_ratio_stays_float64
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::test_configure_invalidates_jit_cache_when_precision_policy_changes
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::test_configure_clears_cache_only_for_an_effective_policy_change
+  - pytest_node: tests/test_jqmc_kernel/test_mixed_precision.py::test_medium_tolerance_uses_strict_fp32_to_fp64_scale
+    executable_checks:
+      d8-n-001:
+        site: tests/test_jqmc_kernel/test_mixed_precision.py::test_medium_tolerance_uses_strict_fp32_to_fp64_scale#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: medium_scale
+        reference:
+          role: source-reference-value
+          expression: strict_scale
+        precision:
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-TIGHT-001
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_dltmove_jastrow_ratio_zone.py::test_one_move_mesh_j1_log_ratio_values_use_the_jastrow_ratio_zone
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}

@@ -1,0 +1,27 @@
+id: IMPL-RS-COMPLEX-PD-NATIVE-CTX-001
+kind: implementation
+name: Complex-twist Jastrow parameter derivatives from the once-built native context equal the free kernels
+plain_language: >-
+  A NativeObsCtx built with complex=True and want_param_deriv=True (the MCMC driver's context) parses the
+  complex Jastrow parameter-derivative tables (Jastrow, J3 orbital and j_matrix, ECP channels, sharing the
+  context's complex geminal) once per run and reports has_complex_param_deriv(); the complex-twist adapter
+  _RsComplexPdCtx then serves O_k for J3 j_matrix and dE_L/dc for J1, J2 and J3 j_matrix (kinetic and ECP
+  non-local) through NativeObsCtx.pd_*_complex instead of free kernels that re-parse the geminal, Jastrow, J3
+  orbital and ECP tables for every walker and family. On the twist lithium fixture with J1+J2+J3 and ECP the
+  native-context route equals the free-kernel route within the reduction-order tolerance
+  (get_tolerance_reduction_order); an adapter without such a context keeps the free kernels. Full and mixed are
+  judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_complex_pd_adapter_native_ctx_matches_free_kernels
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {method: el_ecp_j1}
+    - {method: el_ecp_j2}
+    - {method: el_ecp_j3}
+    - {method: el_j1}
+    - {method: el_j2}
+    - {method: el_j3}
+    - {method: ok_j3}

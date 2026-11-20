@@ -1,0 +1,76 @@
+id: MATH-DERIV-LOAD-BALANCED-ALGORITHM-001
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-REGIME-CONDITIONED-PROOF-001
+- VM-ERROR-DISPOSITION-001
+name: GFMC/LRDMC load-balanced-algorithm continuum-measurement derivatives
+kind: mathematical
+family: e_L_n
+plain_language: At novar=0, forces and strain derivatives used by the load-balanced GFMC/LRDMC algorithm are derivatives
+  of the continuum measurement local energy, not of the clipped lattice propagation energy, and must agree with same-precision
+  XLA automatic differentiation or the reviewed equality with the conventional-algorithm measurement local energy. The conditioned
+  one-nucleus R02 nuclear component uses translation invariance while every electron component remains checked against AD.
+statement: For every required load-balanced-algorithm GFMC/LRDMC continuum-measurement local-energy derivative obligation
+  at novar=0, the production analytical positions or strain output matches a direct JAX automatic-differentiation oracle
+  or the reviewed load-balanced measurement local energy equals the conventional-algorithm measurement local energy identity.
+  Propagation clipping, lattice mesh terms, and propagation S-prime are excluded from the differentiated estimator; required
+  output liveness, numerical regimes, and refusal behavior remain part of the contract.
+scope:
+  universe: derivatives.required_cases.v1
+  fixture_set: DERIV-FIX-AUTODIFF-ANALYTICAL-001
+  family_selector: e_L_n
+  expected_obligations: 89
+  axes:
+  - positions
+  - strain
+required_evidence:
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_analytic_coverage_evidence.py::test_gfmc_invalid_non_local_move
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_analytic_coverage_evidence.py::test_gfmc_numerical_regime_evidence
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_analytic_coverage_evidence.py::test_gfmc_output_liveness
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_equals_t_force_and_stress
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_equals_t_twist
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_force_analytic_vs_autograd
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_force_analytic_vs_autograd_ecp
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_force_analytic_vs_autograd_twist_dtn
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_force_analytic_vs_autograd_withJ
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_force_stress_dtn_equals_t
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_stress_analytic_vs_autograd
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_stress_analytic_vs_autograd_ecp
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_stress_analytic_vs_autograd_twist_dtn
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_force_analytic.py::test_gfmc_n_stress_analytic_vs_autograd_withJ
+  value_proofs:
+  - direct-ad
+  - identity
+  precision:
+  - full
+  - mixed
+  estimator_identity:
+    source_id: B31
+    require_precondition_witness: true
+  output_contract:
+    source_id: B24
+    required_outputs:
+    - dR
+    - dr_up
+    - dr_dn
+    - eps
+    require_liveness: true
+  numerical_regimes:
+    source_ids:
+    - R01
+    - R02
+    - R04
+    - R05
+    - R06
+    - R07
+    - R08
+    - R09
+    - R10
+  conditioned_R02:
+    electron-components: same-precision-direct-ad
+    nuclear-component: one-nucleus-uniform-translation-identity
+  validity:
+    source_id: C10
+    require_explicit_error: true

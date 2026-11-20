@@ -1,0 +1,54 @@
+id: IMPL-RS-THREAD-OBSERVABLES-001
+kind: implementation
+name: Fixed-input native observables across one and four Rayon threads
+plain_language: >-
+  Molecular H2 AE/water ECP and Gamma/non-Gamma Li ECP SD/MO with J2 exp
+  b=0.5 must preserve each of five fixed walkers' energy and nuclear/up/down
+  HF/Pulay derivatives across actual one-thread and four-thread native pools.
+  Periodic cases also require both full 3x3 stress tensors. PCG64 seed 2025
+  normal*0.5 positions plus five explicit linear offsets define one input
+  batch without cond(G) screening. Both spawned processes receive identical
+  rounded Hamiltonians, coordinates, dense inverses, a fixed unrotated
+  12-point ECP mesh and the active native precision policy. Verify the live
+  Rayon pool width after selecting JQMC_RS_NUM_THREADS=1/4. Compare every
+  output component at same-mode central strict tolerance; reversing walker
+  order must fail. Require full and mixed separately. This guarantees
+  numerical thread parity, not an independent physical energy/force oracle.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_native_thread_values.py::test_molecular_native_observables_match_across_thread_counts
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {filename: H2_ae_ccpvdz_cart.h5}
+    - {filename: water_ccecp_ccpvqz.h5}
+    executable_checks:
+      all-native-observable-fields:
+        site: tests/test_rs_kernel/test_native_thread_values.py::_compare_thread_batches#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: four-thread-native-batch, expression: actual_value}
+        reference: {role: one-thread-native-batch-on-identical-rounded-inputs, expression: expected_value}
+        iterations:
+          variable: field
+          required_values: [energy, force-R, force-up, force-down, pulay-R, pulay-up, pulay-down]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, wf_eval, wf_kinetic, coulomb, jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, wf_eval, wf_kinetic, coulomb, jastrow_eval]}
+  - pytest_node: tests/test_rs_kernel/test_native_thread_values.py::test_periodic_native_observables_match_across_thread_counts
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {filename: lithium.h5}
+    - {filename: lithium_k025.h5}
+    executable_checks:
+      all-native-observable-fields:
+        site: tests/test_rs_kernel/test_native_thread_values.py::_compare_thread_batches#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: four-thread-native-batch, expression: actual_value}
+        reference: {role: one-thread-native-batch-on-identical-rounded-inputs, expression: expected_value}
+        iterations:
+          variable: field
+          required_values: [energy, force-R, force-up, force-down, pulay-R, pulay-up, pulay-down, stress, stress-pulay]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, wf_eval, wf_kinetic, coulomb, jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval, wf_eval, wf_kinetic, coulomb, jastrow_eval]}

@@ -1,0 +1,46 @@
+id: IMPL-CLI-MCMC-PARAM-DERIV-CONTINUATION-001
+kind: implementation
+name: CLI mcmc parameter derivatives and their checkpoint continuations equal the retained-source reference
+plain_language: >-
+  The actual CLI mcmc job with parameter_derivatives = true stores the same local energies, weights and folded
+  per-block parameter derivatives d ln Psi / dc as the Python-API MCMC that keeps a separate copy of every exact
+  derivative source (retain_derivative_sources=True, the API default), saved and merged as the CLI does. This holds
+  after a fresh run of 8 measurements and after an mcmc restart for 8 more. A plain-SR (use_lm = false) J2-only vmc
+  job that continues that mcmc checkpoint produces the same optimized J2 parameter as the same continuation of the
+  reference checkpoint, so the optimizer still receives every stored derivative sample. Fixed inputs: H2 AE Cartesian
+  MO (real orbitals, open boundaries) and periodic H2 AE at twist k = (0.25, 0.25, 0.25) (complex orbitals), each
+  with Pade J2 parameter 1, two walkers and seed 12345. Both sides use the same route and precision mode, so every
+  comparison is exact. This makes no claim about memory use or checkpoint size.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_mcmc_parameter_derivatives_continue_unchanged
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{trexio_name: H2_ae_ccpvdz_cart.h5}, {trexio_name: H2_pbc_ae_k025_cart.h5}]
+    executable_checks:
+      measurement-history:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_mcmc_parameter_derivatives_continue_unchanged#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: cli-measurement-history, expression: "observed['observables'][name]"}
+        reference: {role: retained-source-api-measurement-history, expression: "expected['observables'][name]"}
+        iterations: {variable: name, required_values: [e_L, w_L]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      folded-parameter-derivatives:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_mcmc_parameter_derivatives_continue_unchanged#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: cli-folded-parameter-derivatives, expression: "observed_grads[block]"}
+        reference: {role: retained-source-api-folded-parameter-derivatives, expression: "expected_grads[block]"}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      sr-continuation-j2:
+        site: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_mcmc_parameter_derivatives_continue_unchanged#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: cli-checkpoint-sr-continuation-j2, expression: observed_j2}
+        reference: {role: retained-source-checkpoint-sr-continuation-j2, expression: expected_j2}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

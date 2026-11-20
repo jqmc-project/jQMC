@@ -1,0 +1,23 @@
+id: IMPL-RS-OPTIMIZER-SR-CG-ONE-PASS-001
+kind: implementation
+name: Native host wide-only SR CG reads its matrix once per operator application
+plain_language: >-
+  Under the production CPU dispatch (JQMC_FLAG_RUST_ON_CPU=1 on the JAX cpu backend) a wide-only SR system (fewer active
+  coordinates than twice the local samples) prepared by prepare_wide_sr_real_system from a real or complex
+  coordinate-major X_q equals the NumPy route's preconditioned matrix and right-hand side element for element, and the
+  jqmc_rs wide SR CG (solve_wide_sr_real_cg) makes exactly one pass over its matrix per operator application, so a real
+  wave function's X is not applied as two matrix-vector products. Complex wide matrices in C and Fortran storage and real
+  sample-major (Fortran) wide matrices handed to the CG directly also make one pass per application. The tall SR CG
+  (solve_tall_sr_real_cg) makes one pass per application plus the single final pass that forms the primal update.
+  jqmc_rs counts the operator applications and the full passes over the operator matrix; no timing is involved. This
+  pass-count check is an explicit exception to the rule that tests do not check which route ran.
+  Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_sr_cg_rust_operator_reads_its_matrix_once_per_application
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {regime: wide}
+    - {regime: tall}

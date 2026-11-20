@@ -1,0 +1,17 @@
+id: IMPL-RS-COMPLEX-J3-SQUARE-MO-GFMC-FORCE-STRESS-DRIVER-PARITY-001
+kind: implementation
+name: Complex-twist GFMC_t force and stress with a square non-identity MO-wrapped J3 preserve same-input parity
+plain_language: >-
+  The pgto_pw_twist_j123 cell of MATH-RS-COMPLEX-J3-SQUARE-MO-FORCE-STRESS-001 with its J3 MO replaced by a
+  seeded square orthogonal Q (j_matrix rotated so the wave function is unchanged) runs one-walker forty-step
+  fixed-mesh GFMC_t with seed 34356 and SWCT-enabled atomic force and stress through the shared force/stress
+  driver oracle: stored energies, weights, force, stress and SWCT buffers of the native backend agree with XLA
+  under the existing within-mode backend policy, final coordinates and RNG keys are exact, and the native
+  projection and carried-inverse Pulay route must engage. Full and mixed are separate same-mode verdicts.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_j3_square_mo_force_stress.py::test_complex_j3_square_nonidentity_mo_gfmc_t_force_stress_driver_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

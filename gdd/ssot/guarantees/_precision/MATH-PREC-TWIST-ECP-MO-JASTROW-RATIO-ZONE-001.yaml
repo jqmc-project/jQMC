@@ -1,0 +1,32 @@
+id: MATH-PREC-TWIST-ECP-MO-JASTROW-RATIO-ZONE-001
+kind: mathematical
+name: The complex-twist ECP dV_nl/dMO keeps its mesh Jastrow ratio in the fp64 jastrow_ratio zone
+plain_language: >-
+  On the committed twist_sphepgto_j12 fixture (lithium_k025.h5, bcc Li ccECP,
+  k = (1/4, 1/4, 1/4), complex sphe-pGTO single determinant, exp J1/J2), the three
+  _walker_batch(seed=0) walkers and the three production per-walker rotations of
+  test_batch_mesh_per_walker on the default Nv mesh, the ECP non-local derivative
+  dV_nl/dMO of the tied mo_coefficients_up block agrees, for the native Rust kernel
+  (complex_stress::grad_v_ecp_nonlocal_mo_complex through _RsComplexPdCtx.pd_el_ecp_mo, the
+  MCMC dE_L/dc ECP add) and for XLA (assemble._dV_ecp_dc), with the XLA route evaluated on an
+  independently loaded full-precision Hamiltonian of the same serialized input, elementwise in
+  Re and Im. The precision policy assigns the mesh Jastrow ratio exp(J(R')-J(R)) to the
+  jastrow_ratio zone (float64 in both modes); every other input of this derivative at a twist
+  (ao_bloch_eval, mo_eval, det_eval, det_ratio, coulomb) is float64 in both modes too, and J1/J2
+  enter only through the ratio, so the strict float64 tolerance of those zones applies in full
+  and mixed alike. Mixed electron configurations must equal the full ones exactly, the
+  derivative must be finite and live, and the full native and XLA values must agree at the
+  same budget. Full is a same-case consistency check. A ratio formed from two whole
+  jastrow_eval values (float32 in mixed) fails this budget on the native route.
+  This does not claim mixed fidelity of AO-reading Jastrow channels (J3), DTN, the kinetic
+  dT/dMO (whose Jastrow drift is jastrow_grad_lap, float32 in mixed), the other complex mesh
+  force/stress kernels, or the assembled per-walker dE_L/dc.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_ecp_mo_jastrow_ratio_zone.py::test_twist_ecp_mo_derivative_matches_full_precision_rebuild
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: native}
+    - {backend: xla}

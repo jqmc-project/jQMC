@@ -1,4 +1,4 @@
-# See https://pre-commit.com for more informatio
+# See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 
 # Restrict hooks to the pre-commit stage by default; only hooks with an
@@ -19,19 +19,86 @@ repos:
   - id: ruff
     name: ruff (ambiguous unicode only)
     args: ["--select", "RUF001,RUF002,RUF003", "--no-fix"]
+  # Correctness-only pyflakes gate. These codes flag code that is broken as
+  # written -- a name with no binding, a comparison that can never match, a
+  # statement in an illegal position -- as opposed to the cosmetic pyflakes
+  # codes (F401 unused import, F811 duplicate import, F841 unused variable),
+  # which the repository has not cleaned yet and which this hook deliberately
+  # does not select. The repository has no violation of any code listed here,
+  # so the hook carries no exemption list and no per-file ignores.
+  #
+  # Why it exists: deleting a parameter from a function such as
+  # Jastrow_three_body_data.init_jastrow_three_body_data while the function body
+  # still references it leaves the DTN suite, the derivative contract, the GDD
+  # preflight and every other hook green; the break surfaces only as a runtime
+  # TypeError when the function is called. F821 flags that edit at commit time.
+  # The ruff hook above cannot: it selects RUF001-003 only.
+  - id: ruff
+    name: ruff (pyflakes correctness)
+    alias: ruff-pyflakes-correctness
+    args: ["--select",
+           "F821,F632,F702,F706,F707,F501,F502,F522,F524,F601,F602,F631,F633,F634,F901",
+           "--no-fix"]
   - id: ruff-format
 
 - repo: local
+  # Run the GDD checks once when an input changes. The always-run
+  # deletion dispatcher also handles input deletions, which pre-commit normally
+  # omits from a hook's file list. Derived bindings are an ignored local cache.
   hooks:
   - id: ascii-only
     name: Reject non-ASCII bytes in source / config / docs
     entry: scripts/check_ascii.sh
     language: system
     types_or: [python, toml, yaml, markdown, shell]
-    exclude: '^(jqmc/obsolete/|prototypes/)'
     pass_filenames: true
   - id: ascii-only-commit-msg
     name: Reject non-ASCII bytes in commit message
     entry: scripts/check_ascii.sh
     language: system
     stages: [commit-msg]
+  - id: docs-examples-contract
+    name: Validate public docs and examples against current interfaces
+    entry: python scripts/check_docs_examples.py
+    language: python
+    language_version: python3
+    pass_filenames: false
+    always_run: false
+    files: '^(README\.md$|doc/[^/]+\.md$|doc/notes/|examples/|jqmc/|jqmc_workflow/|scripts/check_docs_examples\.py$|\.pre-commit-config\.yaml$|pyproject\.toml$)'
+  - id: rendered-examples-doc
+    name: Verify generated doc/examples.md is current
+    entry: python scripts/render_examples_doc.py --check
+    language: python
+    language_version: python3
+    pass_filenames: false
+    always_run: false
+    files: '^(examples/|doc/examples\.md$|scripts/render_examples_doc\.py$|\.pre-commit-config\.yaml$)'
+  - id: no-inline-tolerances-in-tests
+    name: Reject inline tolerance literals in tests and production
+    entry: python scripts/check_no_inline_tolerances.py
+    language: python
+    language_version: python3
+    # Rescan tests and explicit production comparison budgets whenever any
+    # covered source, the checker or this hook changes: the hook always checks
+    # the whole set, not only the changed files.
+    pass_filenames: false
+    always_run: false
+    files: '^(tests/|jqmc/|jqmc_workflow/|scripts/(check_no_inline_tolerances|rust_tolerance_lint)\.py$|\.pre-commit-config\.yaml$)'
+  # Cache preparation and the GDD checks run once, in check mode.
+  - id: gdd-contracts
+    name: Validate GDD mapping, required fixtures and authored contracts
+    entry: python scripts/gdd_sync.py --check
+    language: python
+    language_version: python3
+    additional_dependencies: ["PyYAML==6.0.2", "numpy>=1.26,<3"]
+    pass_filenames: false
+    always_run: false
+    files: '^(gdd/|tests/|jqmc/|scripts/|\.github/|\.pre-commit-config\.yaml$|pyproject\.toml$)'
+  - id: gdd-deleted-path-hooks
+    name: Check GDD inputs affected only by a staged deletion
+    entry: python scripts/run_gdd_deleted_path_hooks.py
+    language: python
+    language_version: python3
+    additional_dependencies: ["PyYAML==6.0.2", "numpy>=1.26,<3"]
+    pass_filenames: false
+    always_run: true

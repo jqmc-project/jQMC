@@ -1,0 +1,31 @@
+id: IMPL-RS-MCMC-PER-STEP-BATCH-MESH-001
+kind: implementation
+name: Native per-step MCMC batch entries evaluate each walker on its own rotated ECP mesh
+plain_language: >-
+  The production per-step MCMC route draws one Haar rotation per walker and step and hands the native
+  batch entries the stacked mesh base_mesh @ RT[w] of shape (walkers, grid, 3). On fixed configurations
+  of three walkers with three distinct production rotations (_jit_vmap_generate_RTs on split keys) in
+  one call, the native e_L_batch and e_L_complex_batch, the HF force entries grad_e_L_ecp_batch,
+  grad_e_L_pbc_batch and grad_e_L_pbc_complex_batch (dR, dr_up, dr_dn), the HF stress entries
+  grad_e_L_eps_pbc_batch and grad_e_L_eps_pbc_complex_batch, and the real dE_L/dc blocks of the
+  production assembler _rs_native_c_param_grads (pd_el_ecp_*_batch) equal XLA evaluated walker by
+  walker with that walker's own rotation, on the water ccECP molecule, the real Gamma periodic ccECP
+  cell and the complex Li ccECP twist k=(1/4,1/4,1/4). For every observable the XLA value with walker
+  0's rotation applied to all walkers differs from the per-walker reference at the comparison
+  tolerance, so a native entry that reads one walker's mesh for every walker fails. Full and mixed
+  precision are judged separately with the per-walker XLA-Rust consistency tiers of the observable
+  suite. For the dE_L/dc blocks, full precision compares native and XLA directly; mixed precision
+  compares each route, native and XLA separately, at the same tier with an independently rebuilt
+  full-precision reference (the XLA route on a Hamiltonian reloaded under the full policy from the
+  serialized full-precision input, at the same walkers and rotations), with the mixed values taken
+  from a Hamiltonian reloaded under the mixed policy from the same source.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_batch_mesh_per_walker.py::test_native_batch_entries_use_each_walkers_rotated_mesh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_sphe_j12}
+    - {pattern: pbc_gamma_sphepgto_j12}
+    - {pattern: twist_sphepgto_j12}

@@ -1,0 +1,40 @@
+id: MATH-JAS-J1-OFFGRID-NUCLEUS-CLOSED-FORM-001
+kind: mathematical
+name: J1 value, gradient and Laplacian at an fp32-unrepresentable nucleus against their closed forms
+plain_language: >-
+  For one hydrogen nucleus at (5.1, 5.2, 5.3) Bohr (not representable in fp32) and the electron at +h along x,
+  h in 2**-16, 2**-26 and 2**-38 Bohr, molecular and in the cubic 10 Bohr cell, Pade and exp, two dyadic
+  parameters: the production J1 value quotient J/s equals the closed form evaluated in the active jastrow_eval
+  dtype from s cast to that dtype within the jastrow_eval strict zone policy,
+  and the gradient and s times the Laplacian equal the closed-form chain-rule values evaluated in the active
+  jastrow_grad_lap dtype within the jastrow_grad_lap strict zone policy, where s = fl(fl(5.1 + h) - 5.1) is the exact separation the fp64 inputs
+  encode. Full and mixed are judged separately. In mixed this fails if the nuclear or electron coordinates are
+  rounded to the zone dtype before r - R is formed.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_offgrid_nucleus.py::test_jastrow_one_body_offgrid_nucleus_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, form: pade}
+    - {geometry: molecular, form: exp}
+    - {geometry: cubic_10bohr, form: pade}
+    - {geometry: cubic_10bohr, form: exp}
+    executable_checks:
+      closed-form-value:
+        site: tests/test_jqmc_kernel/test_jastrow_offgrid_nucleus.py::test_jastrow_one_body_offgrid_nucleus_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-value-quotient, expression: value_over_h}
+        reference: {role: zone-dtype-closed-form-value-quotient, expression: closed_value_over_h}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+      closed-form-grad-lap:
+        site: tests/test_jqmc_kernel/test_jastrow_offgrid_nucleus.py::test_jastrow_one_body_offgrid_nucleus_matches_closed_form#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-gradient-and-scaled-laplacian, expression: grad_lap}
+        reference: {role: zone-dtype-closed-form-gradient-and-scaled-laplacian, expression: closed_grad_lap}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}

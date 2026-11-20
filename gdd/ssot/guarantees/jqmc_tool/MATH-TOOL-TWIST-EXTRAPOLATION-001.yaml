@@ -1,0 +1,36 @@
+id: MATH-TOOL-TWIST-EXTRAPOLATION-001
+kind: mathematical
+name: Twist-averaged LRDMC continuum extrapolation
+plain_language: 'The public extrapolate-energy CLI accepts one complete twist checkpoint directory per lattice spacing. It first
+  forms independent per-twist real-energy jackknife estimates with the same collect/warmup/binning as compute-energy,
+  then applies the embedded normalized BZ weights to means and squared weights to variances, and only then fits versus
+  a^2. Synthetic unit-weight equal-size bins provide the independent sample-standard-deviation-over-sqrt-bin-count
+  oracle; the closed-form least-squares propagation pins the linear-intercept uncertainty exactly, with no random
+  draws. The required interaction cases include unequal BZ weights, one-twist directories, real and complex energy
+  histories, serial and rank-0-reduced multi-rank checkpoints, and MPC present or absent. The E series remains
+  uncorrected E, never silently relabelled E_MPC; when MPC is present a separate corrected series is also reported. A
+  separate nonuniform projection-weight case checks the history-dependent ratio estimator. Flat legacy checkpoints
+  retain real-energy behavior without requiring new twist metadata. Reindexing the same k points and weights does not
+  change the result. Missing, incomplete, unconverged or malformed twist metadata, differing twist sets or weights
+  across spacings, inconsistent alat across ranks or twists, nonpositive or nonfinite alat, duplicate a^2, mixed
+  file/directory inputs, undefined analysis controls, underdetermined polynomial order, and histories without finite
+  nonempty positive-weight jackknife samples are hard errors before a continuum value is printed. This is a finite
+  synthetic estimator contract, not proof of physical convergence, independence of real Monte Carlo runs, or an
+  adequate polynomial model. The continuum fit is the unweighted least-squares polynomial in a^2 with closed-form
+  error propagation for independent points; it is deterministic and carries no resampling noise.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_bz_points_and_intercept_match_analytic_statistics
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_nonuniform_projection_weights_match_the_weighted_reference
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_reindexed_twists_keep_the_same_bz_estimate
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_legacy_flat_complex_checkpoints_use_real_energy
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_inconsistent_twist_series_is_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_ambiguous_or_duplicate_spacing_inputs_are_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_invalid_histories_are_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCTwistExtrapolation::test_invalid_analysis_controls_are_rejected

@@ -1,0 +1,44 @@
+id: NUM-RS-COMPLEX-PW-BSPLINE-FIRST-HF-STRESS-MIXED-FIDELITY-001
+kind: numerical
+name: Native complex PW-first and B-spline-first HF stress retains mixed/full fidelity
+plain_language: The native complex GFMC continuum-measurement HF stress of the committed pGTO+PW cell, and the native
+  VMC/GFMC HF stresses of the pGTO+B-spline cell, obey the central parameter-derivative mixed/full infinity-norm
+  budget for both child orders. Each policy independently reloads a fresh Hamiltonian from the identical full-precision
+  physical source and uses the original deterministic coordinates, identity quadrature rotation, mesh, alat and
+  native kernel arguments. Every tensor is finite and each case rejects an out-of-budget mixed perturbation with
+  the full reference fixed. Original full AD correctness and its nonvacuity checks remain separately required at
+  strict under the mathematical guarantees. All four parameter cases and both scientific execution modes remain
+  required; no mixed production zone is promoted. The original active-mixed-policy medium tuple is captured before
+  either callback runs and is applied to every stress entry in both native results, preserving the original per-entry
+  liveness rather than only a block norm. All expected fields and their physical 3x3 shapes are required. The full
+  AD controls are unchanged.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_complex_pw_first_stress.py::test_gfmc_complex_composite_stress_matches_strain_ad_in_both_child_orders
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {order: gto_first}
+    - {order: pw_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_gfmc_complex_pw_first_stress.py::test_gfmc_complex_composite_stress_matches_strain_ad_in_both_child_orders#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-HF-stress-block, expression: mixed_block}
+        reference: {role: full-native-analytical-HF-stress-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_rs_kernel/test_complex_bspline_first_stress.py::test_complex_bspline_composite_hf_stress_matches_strain_ad_in_both_child_orders
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {order: gto_first}
+    - {order: bspline_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_complex_bspline_first_stress.py::test_complex_bspline_composite_hf_stress_matches_strain_ad_in_both_child_orders#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-HF-stress-block, expression: mixed_block}
+        reference: {role: full-native-analytical-HF-stress-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}

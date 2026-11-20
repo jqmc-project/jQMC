@@ -1,0 +1,12 @@
+id: MATH-PWP-BZ-BOUNDARY-CANONICALIZATION-001
+kind: mathematical
+name: Brillouin-zone boundary canonicalization of the PW handoff
+plain_language: At the +pi/-pi boundary, the production PW handoff selects the same physical wavevectors when k and every
+  Miller row are transported together so that G+k is unchanged. Changing k without the Miller transport is required to remain
+  different.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_pw_cutoff_is_invariant_at_plus_minus_pi_boundary

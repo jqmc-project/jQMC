@@ -1,0 +1,31 @@
+id: IMPL-RS-GFMC-DET-GRADLAP-CACHE-NEAR-SINGULAR-001
+kind: implementation
+name: Carried Rust GFMC determinant contraction weights equal their matrix-product twin through near-singular excursions
+plain_language: >-
+  Along the deterministic LRDMC-like walk of IMPL-RS-GFMC-DET-GRADLAP-CACHE-LONG-CHAIN-001 (300 hops)
+  with near-coincident same-spin excursions inserted every 50 hops (up electron 1 is moved to 1e-5 bohr of up
+  electron 0 and back, so the visited geminal has cond(G) >= 1e6, asserted per case), the per-electron grad and lap
+  of ln|Det| contracted from the carried Rust interval caches (real: winvup/winvdo rows advanced by the
+  Sherman-Morrison factors of G^-1; complex: the carried m kin_ginv and O_up kin_ginv^T weights) equal, after EVERY
+  hop, the matrix-product contraction of the same carried derivative tables with the same carried inverse and value
+  state (real contract_det_grad_lap_cache; complex contract_det_grad_lap_cache_complex_matmul), driven through
+  NativeObsCtx.debug_det_grad_lap_chain. Cases: every case of IMPL-RS-GFMC-DET-GRADLAP-CACHE-LONG-CHAIN-001 with two
+  or more up electrons, including the molecular raw-AO AGP (N, to_AGP). The det_grad_lap strict pair; full and mixed
+  are judged separately. The drift of the carried Sherman-Morrison inverse itself from a fresh inverse across such
+  excursions (the eps*cond(G) class) is not part of this guarantee.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_det_gradlap_long_chain_rust.py::test_rust_det_gradlap_cache_near_singular_excursions_match_twin
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp_complex_twist_open}
+    - {case: agp_mo_real_mol_open}
+    - {case: agp_real_mol_open}
+    - {case: agp_real_pbc_open}
+    - {case: sd_complex_twist_open}
+    - {case: sd_real_mol_open}
+    - {case: sd_real_pbc_open}
+    - {case: sd_complex_bspline_open}
+    - {case: sd_real_bspline_open}

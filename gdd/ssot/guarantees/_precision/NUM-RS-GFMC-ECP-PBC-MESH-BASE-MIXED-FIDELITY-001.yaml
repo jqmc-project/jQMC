@@ -1,0 +1,62 @@
+id: NUM-RS-GFMC-ECP-PBC-MESH-BASE-MIXED-FIDELITY-001
+kind: numerical
+name: Native periodic real-Gamma GFMC ECP force and stress without a supplied inverse retain Mixed Full fidelity
+plain_language: On the committed silicon cell (silicon.h5, Si8, ccECP with non-local s and p, real Gamma, J1+J2) in
+  its spherical AO form (exact geminal base) and converted exactly to Cartesian AOs with Geminal_data.to_cartesian
+  (FAST screened geminal base), with electrons scattered around the nuclei under a generic proper mesh rotation and,
+  separately, with one up electron exactly on a rotated quadrature direction (on_mesh), the native periodic GFMC HF
+  force (nuclear, electron-up, electron-down) and the native periodic GFMC stress are evaluated for tmove and
+  dltmove without a supplied geminal inverse. One full physical source is serialized and reloaded under each policy
+  with the native precision policy switched alongside. Each output array is a homogeneous block under the existing
+  central parameter_derivative budget, with an isolated excessive-error control. Without a supplied inverse the
+  native periodic geminal base builds G, its inverse and every moved-electron candidate column of the rank-one ECP
+  mesh det ratio from one fused value table (fp64 body, completed AO value rounded to ao_eval), the table whose fp64
+  derivative tables are contracted with that inverse, never from the zone-local fp32-arithmetic value kernels.
+  The AO value zone, budget, configuration and quadrature are unchanged.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_ecp_pbc_mesh_mixed_fidelity.py::test_gfmc_ecp_native_pbc_force_stress_keep_mixed_fidelity
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - ao_form: sphe
+      non_local_move: tmove
+      kind: generic
+    - ao_form: sphe
+      non_local_move: tmove
+      kind: on_mesh
+    - ao_form: sphe
+      non_local_move: dltmove
+      kind: generic
+    - ao_form: sphe
+      non_local_move: dltmove
+      kind: on_mesh
+    - ao_form: cart
+      non_local_move: tmove
+      kind: generic
+    - ao_form: cart
+      non_local_move: tmove
+      kind: on_mesh
+    - ao_form: cart
+      non_local_move: dltmove
+      kind: generic
+    - ao_form: cart
+      non_local_move: dltmove
+      kind: on_mesh
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_gfmc_ecp_pbc_mesh_mixed_fidelity.py::test_gfmc_ecp_native_pbc_force_stress_keep_mixed_fidelity#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-native-gfmc-ecp-pbc-hf-force-or-stress-block
+          expression: mixed_block
+        reference:
+          role: independent-full-native-gfmc-ecp-pbc-hf-force-or-stress-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

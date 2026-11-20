@@ -1,0 +1,86 @@
+schema_version: 1
+
+document:
+  id: jqmc.fixtures.input-bindings
+  version: 1
+  lifecycle: cutover
+  title: Guarantee-case input binding contract
+  purpose: >-
+    Every concrete guarantee case must declare whether its realized input comes
+    from explicitly specified parameter values or from a committed external
+    artifact; a pytest fixture name is not an input specification. This file
+    owns only the input origin; the boundary table in gdd/ssot/README.md says
+    which sibling contract owns electron positions, wavefunction physics, and
+    numerical comparison.
+
+# Who enforces each top-level section (see gdd/ssot/README.md for the legend).
+enforcement_map:
+  binding_contract: gdd.engine.evidence.InputBinding
+  source_policy: scripts/check_gdd_guarantee_fixtures.py
+  transformation_policy: gdd.engine.evidence.InputBinding
+  runtime_receipt: scripts/check_gdd_guarantee_fixtures.py
+  enforcement: scripts/check_gdd_guarantee_fixtures.py
+
+binding_contract:
+  notes: >-
+    One input binding per concrete guarantee case; an implicit default is
+    forbidden. Parameterized pytest functions register one binding per concrete
+    obligation, not one per Python function. The required fields per kind and
+    their cross-field rules are defined once, by the engine dataclass named in
+    enforcement_map, and are deliberately not duplicated in this file.
+  field: input_binding
+  cardinality: exactly-one
+  implicit_default: forbidden
+  kinds: [parameter-set, committed-artifact]
+
+source_policy:
+  registry: gdd/ssot/fixtures/sources.yaml
+  unknown-source-id: fail-certificate
+  developer-local-file: forbidden
+  parameter-set:
+    purpose: >-
+      Deterministic values selected to isolate a mathematical identity, branch,
+      edge case, or small unit-level production route. The exact values, or a
+      registered deterministic operation producing them, must be reachable from
+      the contract; a pytest fixture body is not the SSoT.
+    value-sources: [yaml-inline, registered-python-operation]
+    artifact-access: forbidden
+    certifies: [unit-mathematical, unit-numerical, targeted-route, targeted-error]
+    production-reader-route: not-certified
+  committed-artifact:
+    purpose: >-
+      A committed TREXIO, QE, or other reviewed artifact loaded through a
+      declared production or production-equivalent reader. A case assembled
+      from several artifacts lists every source in construction order.
+    source-ordering: construction-order
+    formats: [trexio, qe-save, registered-reader]
+    certifies: [production-reader, production-conversion, production-derived-wavefunction, integration]
+
+transformation_policy:
+  rule: >-
+    The input kind records the origin. Transformations record every subsequent
+    modification in order; they do not change or conceal that origin.
+  recorded: always
+  nondeterministic: forbidden-unless-seeded
+  unrecorded-transformation: fail-certificate
+
+runtime_receipt:
+  notes: >-
+    These input-receipt requirements apply to explicit receipt-producing
+    contracts, including analytical derivatives. Ordinary-module tests check
+    fixture construction and source use directly; their completion record
+    contains pytest outcomes, not automatically reconstructed input snapshots.
+    No whole-test tracing or evidence-policy gate is required.
+  missing-receipt: fail-certificate
+  skipped-builder: fail-certificate
+  unavailable-artifact: fail-certificate
+  signature-mismatch: fail-certificate
+
+
+enforcement:
+  static:
+    command: python scripts/check_gdd_guarantee_fixtures.py
+    pre_commit_hook: gdd-contracts
+  runtime:
+    state: explicit-test-checks-and-pytest-outcomes
+    adapter: gdd.engine.execution_records

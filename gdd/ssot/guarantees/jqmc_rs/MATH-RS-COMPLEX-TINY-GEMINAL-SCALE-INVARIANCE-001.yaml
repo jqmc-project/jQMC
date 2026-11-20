@@ -1,0 +1,40 @@
+id: MATH-RS-COMPLEX-TINY-GEMINAL-SCALE-INVARIANCE-001
+kind: mathematical
+name: Native complex local energies, chains and mesh ratios of a geminal below sqrt(tiny) equal the unscaled values
+plain_language: >-
+  A common factor c on both spin MO coefficient arrays maps the complex geminal G to c^2 G and leaves
+  every determinant ratio, every G^-1 dG and therefore the local energy unchanged, while ln|det G| moves by 2 n ln|c|.
+  The native complex Gauss-Jordan inverse, the LU elimination of the complex ln-det and the reference (non-fast)
+  mesh ratios det(G_mesh) / det(G_base) must therefore stay finite and scale invariant when the pivots and the
+  determinants fall below sqrt(f64::MIN_POSITIVE) ~ 1.5e-154 (their complex divisions are range safe). Evidence, at
+  c = 1e-85 (|G| ~ 1e-173) and a PCG64 seed 13 uniform start in the cell, without Jastrow: on the committed
+  lithium_k025 ccECP twist cell (one pair) and the H4_pbc_ae_k025_cart all-electron twist cell (two pairs) the native
+  compute_kinetic_det_complex, compute_ln_det_complex, compute_local_energy_fast_complex (a finite numpy inverse
+  passed; for Li also with JQMC_RS_ECP_COMPLEX_REFERENCE=1) and, for Li, compute_ecp_nonlocal_complex equal the
+  unscaled native values at the same configuration (ln-det shifted by 2 n ln c), the ln-det equals numpy slogdet and
+  the fast e_L equals the XLA compute_local_energy of the scaled input; the native complex energy chunk
+  (run_energy_chunk_batch, complex, native RNG, three walkers x five steps, epsilon_AS = 0) reproduces the unscaled
+  chunk's accept counts exactly and its e_L, final positions and c^2-rescaled inverse; on Li, MCMC.run (Rust, 20
+  steps) at epsilon_AS = 0 reproduces the unscaled e_L and acceptance ratio and at the default epsilon_AS gives finite
+  e_L, GFMC_n (Rust, default non_local_move) reproduces the unscaled e_L and bare weights, and the free
+  _gfmc_lrdmc_ecp_complex and _gfmc_lrdmc_ae_complex (reference and fast mesh), grad_V_ecp_nonlocal_wrt_R_complex,
+  grad_V_ecp_nonlocal_wrt_strain_complex and _gfmc_grad_e_L_ecp_pbc_complex reproduce the unscaled outputs. The
+  nested input is valid: G is nonsingular below sqrt(tiny) with a finite numpy inverse, G G^-1 = 1. The AS-factor
+  weights (chunk / MCMC w_L) are outside this guarantee. Full precision only; the mixed route has the
+  separate smoke guarantee NUM-RS-COMPLEX-TINY-GEMINAL-MIXED-FINITE-001.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_tiny_geminal_native.py::test_native_complex_local_energy_parts_are_finite_and_scale_invariant_for_a_tiny_geminal
+    required_precision_modes: [full]
+    required_parameter_cases: [{witness: li_k025_ccecp}, {witness: h4_k025_ae}]
+  - pytest_node: tests/test_rs_kernel/test_complex_tiny_geminal_native.py::test_native_complex_energy_chunk_is_finite_and_scale_invariant_for_a_tiny_geminal
+    required_precision_modes: [full]
+    required_parameter_cases: [{witness: li_k025_ccecp}, {witness: h4_k025_ae}]
+  - pytest_node: tests/test_rs_kernel/test_complex_tiny_geminal_native.py::test_native_complex_public_drivers_have_finite_scale_invariant_e_L_for_a_tiny_geminal
+    required_precision_modes: [full]
+    required_parameter_cases: [{driver: mcmc_default}, {driver: mcmc_eps0}, {driver: gfmc_n}]
+  - pytest_node: tests/test_rs_kernel/test_complex_tiny_geminal_native.py::test_native_complex_gfmc_force_stress_routes_are_finite_and_scale_invariant_for_a_tiny_geminal
+    required_precision_modes: [full]
+    required_parameter_cases: [{route: lrdmc_ecp_reference}, {route: lrdmc_ecp_fast}, {route: lrdmc_kinetic_reference}, {route: lrdmc_kinetic_fast}, {route: ecp_force}, {route: ecp_strain}, {route: gfmc_hf_force_stress}]

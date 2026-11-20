@@ -1,0 +1,71 @@
+id: IMPL-HAM-JASTROW-ECP-ASSEMBLY-001
+kind: implementation
+name: Fast local-energy assembly with active Jastrow and ECP
+plain_language: >-
+  Fast assembly preserves the full complex local energy on the seven specified
+  molecular/periodic Jastrow inputs, including nonzero ECP. Removing kinetic,
+  potential, or only nonlocal ECP from the real assembler must fail its same-input
+  full-recompute reference. This is route parity, not independent physics or a
+  guarantee for arbitrary inverse conditioning.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_fast_local_energy_assembly.py::test_fast_local_energy_assembles_jastrow_periodic_ecp_terms
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-002}
+    - {pattern: WF-PATTERN-004}
+    - {pattern: WF-PATTERN-006}
+    - {pattern: WF-PATTERN-008}
+    executable_checks:
+      assembled-energy:
+        site: tests/test_jqmc_kernel/test_fast_local_energy_assembly.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fast-assembled-local-energy, expression: actual}
+        reference: {role: full-recompute-local-energy, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, local_energy]
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, local_energy]
+  - pytest_node: tests/test_jqmc_kernel/test_fast_local_energy_assembly.py::test_committed_fast_energy_assembles_jastrow_and_ecp
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_j123}
+    - {pattern: pbc_gamma_sphepgto_j12}
+    - {pattern: twist_sphepgto_j12}
+    executable_checks:
+      assembled-energy:
+        site: tests/test_jqmc_kernel/test_fast_local_energy_assembly.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fast-assembled-local-energy, expression: actual}
+        reference: {role: full-recompute-local-energy, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, local_energy]
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, local_energy]
+  - pytest_node: tests/test_jqmc_kernel/test_fast_local_energy_assembly.py::test_fast_assembly_reference_rejects_missing_component
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {missing_term: kinetic}
+    - {missing_term: potential}
+    - {missing_term: nonlocal-ecp}
+    executable_checks:
+      passing-baseline:
+        site: tests/test_jqmc_kernel/test_fast_local_energy_assembly.py::_compare#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: unmodified-fast-assembled-local-energy, expression: actual}
+        reference: {role: full-recompute-local-energy, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, local_energy]
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, local_energy]

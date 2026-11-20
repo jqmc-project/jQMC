@@ -69,7 +69,7 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
+doc/_build/
 
 # PyBuilder
 .pybuilder/
@@ -167,3 +167,22 @@ _version.py
 
 # jqmc-workflow
 jqmc_setting_local/
+
+# Sphinx HTML build output
+docs_build/
+
+# MCMC / SR optimization debug artifacts
+hamiltonian_data_opt_step_*.h5
+
+# GDD bindings and audit views are disposable; authored SSoT remains tracked.
+/gdd/derived/
+/gdd-expected-cases/
+/gdd/ledger/
+/gdd/ssot/guarantees/README.md
+/doc/gdd_audit/
+
+# Scratch directory that the example14 commands write.
+/examples/jqmc-example14/work/
+
+# The reference Quantum ESPRESSO logs of the test fixtures are tracked.
+!tests/qe_example_files/**/*.log

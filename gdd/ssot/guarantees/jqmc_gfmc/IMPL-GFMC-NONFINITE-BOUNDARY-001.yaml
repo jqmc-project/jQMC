@@ -1,0 +1,16 @@
+id: IMPL-GFMC-NONFINITE-BOUNDARY-001
+kind: implementation
+name: GFMC restart and rank aggregation fail closed on non-finite walkers
+plain_language: >-
+  GFMC_t and GFMC_n reject a checkpoint whose rank-root stored energy is non-finite. At every production branching step,
+  each rank checks its walker local energies, squared energies and weights before weighted sums; GFMC_n also checks V_diag
+  minus E_scf, the branching denominator. The shared collective boundary makes every sampling rank raise with rank, step,
+  walker and field diagnostics when any rank fails, rather than reducing NaN or silently excluding a walker. Both precision
+  modes use the same host boundary; no numerical tolerance or statistical comparison is involved.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_restart_rejects_rank_local_nonfinite_energy_history
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver_kind: t}, {driver_kind: n}]

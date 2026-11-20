@@ -1,0 +1,44 @@
+id: MATH-PWP-INDEPENDENT-RESIDUAL-001
+kind: mathematical
+name: Committed Li projection residuals equal an independent Fourier and SVD reference
+plain_language: >-
+  The committed tests/qe_example_files/Li_gamma/out/li.save coefficients and Li.ccECP.upf
+  supply occupied bands and primitive exponent inputs. At alpha_min=None and 1.0, independent
+  Cartesian enumeration and Hermite Gaussian Fourier integrals followed by a rectangular
+  SVD projector determine nonzero per-band, occupation-weighted mean and maximum residuals.
+  The converter must match these values using its unchanged fp64 projection pair.
+  Both modes exercise fp64 IO arithmetic, not a mixed-versus-full oracle; no production
+  Fourier, overlap, projection function or saved production value supplies the reference.
+  The UPF exponent initializer and declared SVD cutoff remain shared inputs.
+verdict_methods: [VM-MATH-PW-PROJECTION-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-PW-PROJECTION-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_projection_absolute_reference.py::test_committed_li_pgto_residual_independent_svd
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{alpha_min: null}, {alpha_min: 1.0}]
+    executable_checks:
+      per-band:
+        site: tests/test_jqmc_kernel/test_projection_absolute_reference.py::test_committed_li_pgto_residual_independent_svd#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-projection-residual, expression: 'actual.residuals'}
+        reference: {role: independent-fourier-svd-residual, expression: 'expected'}
+        precision:
+          full: {policy: CMP-PW-PROJECTION-FP64-001}
+          mixed: {policy: CMP-PW-PROJECTION-FP64-001}
+      weighted-mean:
+        site: tests/test_jqmc_kernel/test_projection_absolute_reference.py::test_committed_li_pgto_residual_independent_svd#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-projection-residual, expression: 'actual.mean_residual'}
+        reference: {role: independent-fourier-svd-residual, expression: 'mean_expected'}
+        precision:
+          full: {policy: CMP-PW-PROJECTION-FP64-001}
+          mixed: {policy: CMP-PW-PROJECTION-FP64-001}
+      maximum:
+        site: tests/test_jqmc_kernel/test_projection_absolute_reference.py::test_committed_li_pgto_residual_independent_svd#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-projection-residual, expression: 'actual.max_residual'}
+        reference: {role: independent-fourier-svd-residual, expression: 'np.max(expected)'}
+        precision:
+          full: {policy: CMP-PW-PROJECTION-FP64-001}
+          mixed: {policy: CMP-PW-PROJECTION-FP64-001}

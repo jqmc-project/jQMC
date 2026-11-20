@@ -1,0 +1,90 @@
+id: MATH-HAM-SD-AGP-IDENTITY-001
+kind: mathematical
+name: SD equals identity-geminal AGP
+plain_language: The direct single-determinant local energy equals the AGP local energy with the identity geminal, exactly
+  as the algebra requires.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyFast::test_direct_sd_local_energy_matches_identity_geminal
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyFast.test_direct_sd_local_energy_matches_identity_geminal#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(e_sd)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(e_legacy)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyFast.test_direct_sd_local_energy_matches_identity_geminal#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(e_sd_fast)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(e_legacy_fast)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+            - local_energy
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyFast.test_direct_sd_local_energy_matches_identity_geminal#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(e_sd_fast)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(e_sd)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+            - local_energy

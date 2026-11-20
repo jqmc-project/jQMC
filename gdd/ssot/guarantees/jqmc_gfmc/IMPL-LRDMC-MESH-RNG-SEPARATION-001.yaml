@@ -1,0 +1,151 @@
+id: IMPL-LRDMC-MESH-RNG-SEPARATION-001
+kind: implementation
+name: Independent kinetic and ECP random-mesh streams
+plain_language: At finite lattice spacing, the kinetic lattice and the non-local ECP quadrature must not share one orientation.
+  The kinetic stream uses the interval rotation key itself, the ECP stream is a deterministic independent Threefry child,
+  and neither key is threaded back into the GFMC carry, so the move-key schedule does not depend on the split. Every conventional/load-balanced XLA call site is pinned to its designated
+  rotation, including dormant full-recompute branches; Rust conventional/load-balanced intervals must equal the corresponding
+  XLA reference on both tmove and dltmove, with a water ECP case that demonstrably changes when the two orientations are
+  incorrectly coupled.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::test_kinetic_and_ecp_rotation_streams_are_distinct_and_deterministic
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::test_xla_lrdmc_production_wires_kinetic_and_ecp_rotations_separately
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_n_rejects_shared_kinetic_ecp_rotation
+    executable_checks:
+      d8-n-183:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_n_rejects_shared_kinetic_ecp_rotation#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(got['r_up'])
+        reference:
+          role: source-reference-value
+          expression: ref['r_up']
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-184:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_n_rejects_shared_kinetic_ecp_rotation#comparison-5
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(got['r_dn'])
+        reference:
+          role: source-reference-value
+          expression: ref['r_dn']
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      gfmc-helper-comparison-1:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_n_rejects_shared_kinetic_ecp_rotation#helper-inequality-7
+        comparator: python.inequality
+        actual: {role: tested-gfmc-quantity, expression: 'float(got[''w_L''])'}
+        reference: {role: existing-gfmc-reference, expression: 'ref[''w_L'']'}
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - selector: {cell: mol_ecp_sphe}
+              zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - selector: {cell: mol_ecp_sphe}
+              zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+      gfmc-helper-comparison-2:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_n_rejects_shared_kinetic_ecp_rotation#helper-inequality-8
+        comparator: python.inequality
+        actual: {role: tested-gfmc-quantity, expression: 'float(got[''e_L''])'}
+        reference: {role: existing-gfmc-reference, expression: 'ref[''e_L'']'}
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - selector: {cell: mol_ecp_sphe}
+              zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - selector: {cell: mol_ecp_sphe}
+              zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+  - pytest_node: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_t_rejects_shared_kinetic_ecp_rotation
+    executable_checks:
+      d8-n-185:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_t_rejects_shared_kinetic_ecp_rotation#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(got['r_up'])
+        reference:
+          role: source-reference-value
+          expression: ref['r_up']
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-186:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_t_rejects_shared_kinetic_ecp_rotation#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(got['r_dn'])
+        reference:
+          role: source-reference-value
+          expression: ref['r_dn']
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      gfmc-helper-comparison-1:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_t_rejects_shared_kinetic_ecp_rotation#helper-inequality-6
+        comparator: python.inequality
+        actual: {role: tested-gfmc-quantity, expression: 'float(got[''w_L''])'}
+        reference: {role: existing-gfmc-reference, expression: 'ref[''w_L'']'}
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - selector: {cell: mol_ecp_sphe}
+              zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - selector: {cell: mol_ecp_sphe}
+              zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+      gfmc-helper-comparison-2:
+        site: tests/test_rs_kernel/test_gfmc_projection.py::test_native_projection_t_rejects_shared_kinetic_ecp_rotation#helper-inequality-7
+        comparator: python.inequality
+        actual: {role: tested-gfmc-quantity, expression: 'float(got[''e_L''])'}
+        reference: {role: existing-gfmc-reference, expression: 'ref[''e_L'']'}
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - selector: {cell: mol_ecp_sphe}
+              zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - selector: {cell: mol_ecp_sphe}
+              zones: [ao_eval, wf_kinetic, coulomb, local_energy, det_ratio, jastrow_eval, jastrow_grad_lap]

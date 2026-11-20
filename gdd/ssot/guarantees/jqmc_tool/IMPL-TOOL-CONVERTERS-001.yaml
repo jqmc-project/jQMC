@@ -1,0 +1,32 @@
+id: IMPL-TOOL-CONVERTERS-001
+kind: implementation
+name: Conversion command contracts
+plain_language: 'TREXIO conversion preserves the AO universe (full equals uncontracted, PBC J3 loads round-trip), AO selection
+  and QE conversion follow the reviewed contract including DTN and J3 Jastrow payloads (the converter tests
+  living in the DTN battery register here), the periodic DTN cutoff ratios exposed by ``jqmc-tool qe`` and by the QE TOML
+  fallback are the single shared default DTN_DEFAULT_CUTOFF_RATIO (0.95) with an explicit ratio winning over it, and DTN
+  with the Pade family is rejected.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestQEConvertTo::test_cli_dtn_cutoff_ratio_defaults_are_the_shared_constant
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestQEConvertTo::test_qe_toml_ratio_fallback_is_the_shared_constant
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertTo::test_ao_full_matches_uncontracted
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertTo::test_trexio_convert_to_pbc_j3_load_roundtrip
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertTo::test_ao_selection
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestQEConvertTo::test_cli_twist_average_flag_reaches_converter
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestQEConvertTo::test_qe_convert_to_with_ccecp
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNPhaseB::test_trexio_convert_to_with_dtn
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNPhaseB::test_qe_convert_to_with_dtn
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNPhaseB::test_qe_convert_to_with_j3_ao
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNPhaseB::test_qe_convert_to_rejects_dtn_with_pade_family

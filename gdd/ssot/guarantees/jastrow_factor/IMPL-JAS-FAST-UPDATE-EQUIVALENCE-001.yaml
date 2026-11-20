@@ -1,0 +1,1147 @@
+id: IMPL-JAS-FAST-UPDATE-EQUIVALENCE-001
+kind: implementation
+name: Fast-update equivalence of the Jastrow factor
+plain_language: Rank-1 and split-spin ratio updates, sweeps, the streaming DTN ratio state with reinitialization, and the
+  ragged nonuniform MO layout all equal the full recomputation.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState::TestStreamingJ1::test_streaming_J1_state_against_full_molecular
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - n_up: 5
+      n_dn: 4
+      j1b_type: exp
+    - n_up: 5
+      n_dn: 4
+      j1b_type: pade
+    - n_up: 1
+      n_dn: 0
+      j1b_type: exp
+    - n_up: 1
+      n_dn: 0
+      j1b_type: pade
+    - n_up: 3
+      n_dn: 3
+      j1b_type: exp
+    - n_up: 3
+      n_dn: 3
+      j1b_type: pade
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ1.test_streaming_J1_state_against_full_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-up
+          expression: np.asarray(state.grad_J1_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g_up_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ1.test_streaming_J1_state_against_full_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-down
+          expression: np.asarray(state.grad_J1_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g_dn_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ1.test_streaming_J1_state_against_full_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-up
+          expression: np.asarray(state.lap_J1_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l_up_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ1.test_streaming_J1_state_against_full_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-down
+          expression: np.asarray(state.lap_J1_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l_dn_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState::TestStreamingJ1::test_streaming_J1_state_against_full_periodic
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - n_up: 5
+      n_dn: 4
+      j1b_type: exp
+    - n_up: 5
+      n_dn: 4
+      j1b_type: pade
+    - n_up: 1
+      n_dn: 0
+      j1b_type: exp
+    - n_up: 1
+      n_dn: 0
+      j1b_type: pade
+    - n_up: 3
+      n_dn: 3
+      j1b_type: exp
+    - n_up: 3
+      n_dn: 3
+      j1b_type: pade
+    executable_checks:
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ1.test_streaming_J1_state_against_full_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-up
+          expression: np.asarray(state.grad_J1_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g_up_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ1.test_streaming_J1_state_against_full_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-down
+          expression: np.asarray(state.grad_J1_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g_dn_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ1.test_streaming_J1_state_against_full_periodic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-up
+          expression: np.asarray(state.lap_J1_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l_up_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ1.test_streaming_J1_state_against_full_periodic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-down
+          expression: np.asarray(state.lap_J1_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l_dn_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState::TestStreamingJ2::test_streaming_J2_state_against_full_molecular
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - n_up: 5
+      n_dn: 4
+      j2b_type: exp
+    - n_up: 5
+      n_dn: 4
+      j2b_type: pade
+    - n_up: 1
+      n_dn: 0
+      j2b_type: exp
+    - n_up: 1
+      n_dn: 0
+      j2b_type: pade
+    - n_up: 3
+      n_dn: 3
+      j2b_type: exp
+    - n_up: 3
+      n_dn: 3
+      j2b_type: pade
+    executable_checks:
+      coordinates-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-coordinates-up
+          expression: np.asarray(state.r_up_carts)
+        reference:
+          role: recorded-input
+          expression: np.asarray(r_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      coordinates-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-coordinates-down
+          expression: np.asarray(state.r_dn_carts)
+        reference:
+          role: recorded-input
+          expression: np.asarray(r_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-up
+          expression: np.asarray(state.grad_J2_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g_up_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-down
+          expression: np.asarray(state.grad_J2_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g_dn_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_molecular#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-up
+          expression: np.asarray(state.lap_J2_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l_up_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_molecular#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-down
+          expression: np.asarray(state.lap_J2_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l_dn_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState::TestStreamingJ2::test_streaming_J2_state_against_full_periodic
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - n_up: 5
+      n_dn: 4
+      j2b_type: exp
+    - n_up: 5
+      n_dn: 4
+      j2b_type: pade
+    - n_up: 1
+      n_dn: 0
+      j2b_type: exp
+    - n_up: 1
+      n_dn: 0
+      j2b_type: pade
+    - n_up: 3
+      n_dn: 3
+      j2b_type: exp
+    - n_up: 3
+      n_dn: 3
+      j2b_type: pade
+    executable_checks:
+      coordinates-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-coordinates-up
+          expression: np.asarray(state.r_up_carts)
+        reference:
+          role: recorded-input
+          expression: np.asarray(r_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      coordinates-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-coordinates-down
+          expression: np.asarray(state.r_dn_carts)
+        reference:
+          role: recorded-input
+          expression: np.asarray(r_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_periodic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-up
+          expression: np.asarray(state.grad_J2_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g_up_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_periodic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-down
+          expression: np.asarray(state.grad_J2_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g_dn_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_periodic#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-up
+          expression: np.asarray(state.lap_J2_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l_up_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ2.test_streaming_J2_state_against_full_periodic#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-down
+          expression: np.asarray(state.lap_J2_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l_dn_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        empty_cases:
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState::TestStreamingJ3::test_streaming_J3_state_against_full_molecular
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - trexio_file: water_ccecp_ccpvqz.h5
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    executable_checks:
+      fresh-gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-fresh-gradient-up
+          expression: np.asarray(state.grad_J3_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(fresh.grad_J3_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      fresh-gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-fresh-gradient-down
+          expression: np.asarray(state.grad_J3_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(fresh.grad_J3_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      fresh-laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-fresh-laplacian-up
+          expression: np.asarray(state.lap_J3_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(fresh.lap_J3_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      fresh-laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-fresh-laplacian-down
+          expression: np.asarray(state.lap_J3_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(fresh.lap_J3_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_molecular#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-up
+          expression: np.asarray(state.grad_J3_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g3u_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_molecular#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-down
+          expression: np.asarray(state.grad_J3_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g3d_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_molecular#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-up
+          expression: np.asarray(state.lap_J3_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l3u_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_molecular#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-down
+          expression: np.asarray(state.lap_J3_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l3d_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState::TestStreamingJ3::test_streaming_J3_state_against_full_periodic
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - j3b_type: sphe
+    executable_checks:
+      fresh-gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-fresh-gradient-up
+          expression: np.asarray(state.grad_J3_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(fresh.grad_J3_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      fresh-gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-fresh-gradient-down
+          expression: np.asarray(state.grad_J3_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(fresh.grad_J3_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      fresh-laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_periodic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-fresh-laplacian-up
+          expression: np.asarray(state.lap_J3_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(fresh.lap_J3_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      fresh-laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_periodic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-fresh-laplacian-down
+          expression: np.asarray(state.lap_J3_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(fresh.lap_J3_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      gradient-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_periodic#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-up
+          expression: np.asarray(state.grad_J3_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g3u_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      gradient-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_periodic#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-gradient-down
+          expression: np.asarray(state.grad_J3_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(g3d_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      laplacian-up:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_periodic#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-up
+          expression: np.asarray(state.lap_J3_up)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l3u_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+      laplacian-down:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestStreamingJastrowState.TestStreamingJ3.test_streaming_J3_state_against_full_periodic#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: carried-streaming-laplacian-down
+          expression: np.asarray(state.lap_J3_dn)
+        reference:
+          role: fresh-analytic-recompute
+          expression: np.asarray(l3d_full)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+            - ao_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowRank1FastUpdate::test_ratio_Jastrow_part_rank1_update_molecular
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowRank1FastUpdate.test_ratio_Jastrow_part_rank1_update_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_debug)
+        reference:
+          role: existing-test-reference
+          expression: np.ones_like(np.asarray(ratio_debug))
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowRank1FastUpdate.test_ratio_Jastrow_part_rank1_update_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_debug)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ratio_auto)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowRank1FastUpdate::test_ratio_Jastrow_part_rank1_update_periodic
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowRank1FastUpdate.test_ratio_Jastrow_part_rank1_update_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_debug)
+        reference:
+          role: existing-test-reference
+          expression: np.ones_like(np.asarray(ratio_debug))
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowRank1FastUpdate.test_ratio_Jastrow_part_rank1_update_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_debug)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ratio_auto)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNRatioConsistency::test_ratio_Jastrow_dtn_rank1_molecular_or_periodic
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNRatioConsistency.test_ratio_Jastrow_dtn_rank1_molecular_or_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_rank1)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ratio_brute)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNRatioConsistency::test_ratio_Jastrow_dtn_split_spin_molecular_or_periodic
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNRatioConsistency.test_ratio_Jastrow_dtn_split_spin_molecular_or_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_split)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ratio_brute)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNRatioConsistency::test_ratio_Jastrow_dtn_rank1_sweep_molecular
+    executable_checks:
+      dtn-rank1-comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_run_dtn_rank1_check#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_debug)
+        reference:
+          role: existing-test-reference
+          expression: np.ones((n_grid,), dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+      dtn-rank1-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_run_dtn_rank1_check#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_fast)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ratio_debug)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNRatioConsistency::test_ratio_Jastrow_dtn_rank1_sweep_periodic
+    executable_checks:
+      dtn-rank1-comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_run_dtn_rank1_check#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_debug)
+        reference:
+          role: existing-test-reference
+          expression: np.ones((n_grid,), dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+      dtn-rank1-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_run_dtn_rank1_check#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_fast)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ratio_debug)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNRatioConsistency::test_ratio_Jastrow_dtn_split_spin_sweep_molecular
+    executable_checks:
+      dtn-split-spin-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_run_dtn_split_spin_check#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_split)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ratio_brute)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNRatioConsistency::test_ratio_Jastrow_dtn_split_spin_sweep_periodic
+    executable_checks:
+      dtn-split-spin-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_run_dtn_split_spin_check#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ratio_split)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ratio_brute)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::test_dtn_ratio_streaming_state_matches_full_and_reinitialization
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody::TestMOBasis::test_Jastrow_threebody_part_with_MOs_data_periodic_ragged_nonuniform
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow.py::TestJastrowThreeBody.TestMOBasis.test_Jastrow_threebody_part_with_MOs_data_periodic_ragged_nonuniform#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: J3_debug
+        reference:
+          role: existing-test-reference
+          expression: J3_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh::test_candidate_cache_multihop_matches_numpy_full_oracle
+    executable_checks:
+      strict-context-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh.test_candidate_cache_multihop_matches_numpy_full_oracle.assert_full_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.log_delta)
+        reference:
+          role: existing-test-reference
+          expression: full_oracle_table(r_up, r_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_eval
+            - jastrow_ratio
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJ3MatrixUtilities::test_apply_block_update_does_not_infer_j3_policy_from_values

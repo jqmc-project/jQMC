@@ -1,0 +1,18 @@
+id: IMPL-RS-INACTIVE-COMPLEX-CHILD-J3-NATIVE-JMATRIX-DERIV-REFUSED-001
+kind: implementation
+name: The native real J3 j_matrix derivative of an all-zero-j_matrix complex-child J3 raises NotImplementedError
+plain_language: >-
+  The J3 j_matrix derivative of an all-zero j_matrix is not zero, and the real native kernels cannot evaluate a J3
+  orbital with a complex plane-wave child, so the native real route must refuse it with NotImplementedError naming
+  the complex native path, never panic and never omit the block; the JAX route (JQMC_FLAG_RUST_ON_CPU=0) serves it.
+  On the fixture of MATH-RS-INACTIVE-COMPLEX-CHILD-J3-NATIVE-MCMC-RUN-001 with a complex plane-wave child (nonzero G
+  or k = 0 constant), the parameter-derivative context methods pd_ok_j3, pd_el_j3, pd_el_ecp_j3 and their batch
+  forms, and the public native MCMC.run with parameter derivatives on, raise NotImplementedError; the same MCMC.run
+  on the JAX route stores a finite, nonzero j3_matrix O_k block. Full and mixed are judged separately.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_inactive_complex_j3_native_mcmc.py::test_native_j3_param_deriv_inactive_complex_child_j3_refused_not_panicking
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{child: complex_pw_G}, {child: complex_pw_0}]

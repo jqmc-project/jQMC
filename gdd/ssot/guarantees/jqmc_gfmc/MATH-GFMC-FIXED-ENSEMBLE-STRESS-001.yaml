@@ -1,0 +1,69 @@
+id: MATH-GFMC-FIXED-ENSEMBLE-STRESS-001
+kind: mathematical
+name: Fixed-ensemble stress and hydrostatic pressure with correlated jackknife errors
+plain_language: >-
+  Conventional and load-balanced GFMC stress and pressure accessors must match derivatives of
+  an independently normalized fixed-sample energy, for both mean and jackknife error.
+  Tensor AD applies symmetric strain and divides by the independently known cell volume;
+  separate scalar AD applies isotropic strain for pressure and keeps correlations between
+  diagonal stress components. Ten time slices with three unequal walker weights each exercise
+  real/complex energies, nonzero cross moments, unequal blocks, zero/two-step weight histories,
+  warmup and cell volumes 120/960 bohr^3. All four comparisons use the current precision mode's
+  central local_energy strict policy. These are deterministic buffer inputs on COMM_SELF,
+  not a physical energy-force identity, a sampling/SWCT/distributed test, or sigma-based agreement.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_stress_pressure_match_fixed_ensemble_strain_derivatives
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, complex_values: false, history: uniform, volume_scale: 1.0}
+    - {driver_kind: load-balanced, complex_values: false, history: uniform, volume_scale: 1.0}
+    - {driver_kind: conventional, complex_values: true, history: uniform, volume_scale: 1.0}
+    - {driver_kind: load-balanced, complex_values: true, history: uniform, volume_scale: 1.0}
+    - {driver_kind: conventional, complex_values: false, history: history-warmup, volume_scale: 1.0}
+    - {driver_kind: load-balanced, complex_values: false, history: history-warmup, volume_scale: 1.0}
+    - {driver_kind: conventional, complex_values: true, history: history-warmup, volume_scale: 1.0}
+    - {driver_kind: load-balanced, complex_values: true, history: history-warmup, volume_scale: 1.0}
+    - {driver_kind: conventional, complex_values: false, history: uniform, volume_scale: 2.0}
+    - {driver_kind: load-balanced, complex_values: false, history: uniform, volume_scale: 2.0}
+    - {driver_kind: conventional, complex_values: true, history: uniform, volume_scale: 2.0}
+    - {driver_kind: load-balanced, complex_values: true, history: uniform, volume_scale: 2.0}
+    - {driver_kind: conventional, complex_values: false, history: history-warmup, volume_scale: 2.0}
+    - {driver_kind: load-balanced, complex_values: false, history: history-warmup, volume_scale: 2.0}
+    - {driver_kind: conventional, complex_values: true, history: history-warmup, volume_scale: 2.0}
+    - {driver_kind: load-balanced, complex_values: true, history: history-warmup, volume_scale: 2.0}
+    executable_checks:
+      stress-mean:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_stress_pressure_match_fixed_ensemble_strain_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-stress-mean, expression: stress_mean}
+        reference: {role: independent-fixed-ensemble-stress-mean, expression: expected_stress}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      stress-error:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_stress_pressure_match_fixed_ensemble_strain_derivatives#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-stress-jackknife-error, expression: stress_error}
+        reference: {role: independent-fixed-ensemble-stress-error, expression: expected_stress_error}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      pressure-mean:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_stress_pressure_match_fixed_ensemble_strain_derivatives#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-hydrostatic-pressure-mean, expression: pressure_mean}
+        reference: {role: independent-fixed-ensemble-pressure-mean, expression: expected_pressure}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      pressure-error:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_stress_pressure_match_fixed_ensemble_strain_derivatives#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-hydrostatic-pressure-jackknife-error, expression: pressure_error}
+        reference: {role: independent-fixed-ensemble-pressure-error, expression: expected_pressure_error}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}

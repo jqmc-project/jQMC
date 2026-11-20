@@ -1,0 +1,14 @@
+id: IMPL-RS-GFMC-MOLECULAR-STRESS-EXPECTED-ZERO-001
+kind: implementation
+name: Molecular GFMC stress rows assert the exact-zero contract separately from Rust/XLA parity
+plain_language: >-
+  In the Rust versus XLA GFMC force/stress driver parity, every molecular row (stress requested on a non-periodic
+  structure) requires, for both backends, that the stored sigma_HF, sigma_PP and E_L sigma_PP buffers are exact zeros
+  of shape (steps, 1, 3, 3) and that get_aT, get_aP and get_P_hydrostatic return exact zeros of the documented shapes,
+  in addition to the parity. A single stored nonzero entry or a nonzero public mean must fail this check.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_chain_modes.py::test_molecular_stress_expected_zero_production_drivers
+  - pytest_node: tests/test_rs_kernel/test_gfmc_chain_modes.py::test_molecular_stress_expected_zero_contract_rejects_nonzero

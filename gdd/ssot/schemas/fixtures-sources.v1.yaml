@@ -1,0 +1,17 @@
+schema_format: 1
+schema_id: gdd.schema.fixtures-sources.v1
+match:
+  path: gdd/ssot/fixtures/sources.yaml
+document_schema_version: 1
+required_top_level:
+  - schema_version
+  - document
+  - enforcement_map
+  - roots
+  - sources
+  - rules
+optional_top_level: []
+document_block:
+  required_fields: [id, version, lifecycle, title, purpose]
+enforcement_map_required: true
+prose_keys_extra: []

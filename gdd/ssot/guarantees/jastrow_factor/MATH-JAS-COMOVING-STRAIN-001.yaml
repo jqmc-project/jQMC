@@ -1,0 +1,25 @@
+id: MATH-JAS-COMOVING-STRAIN-001
+kind: mathematical
+name: Comoving cutoff policy of the strained DTN Jastrow
+plain_language: '``Jastrow_data._apply_strain`` follows the comoving periodic DTN cutoff policy, so every derivative taken
+  THROUGH it reproduces the analytic stress kernels: ``cutoff_scale`` records det(F)^(1/3) (periodic DTN only; molecular
+  cutoffs are absolute and keep 1.0), the effective cutoffs are ``L * cutoff_scale``, and the transported full coefficients
+  ride the stored minimum-norm constraint tangent, so the e-e and e-N cusp constraints still hold at the SCALED cutoff to
+  second order in ln(cutoff_scale). The defining identity: the strain jacrev of J_DTN through _apply_strain equals the fixed-cutoff
+  jacrev plus the closed-form policy term dJ/dln(ell_V)/3 * I, and matches a central finite difference along an isotropic
+  strain. At rest (``cutoff_scale == 1``) cutoffs and inflation are bitwise the plain ones, and a non-positive cutoff_scale
+  is refused.'
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNComovingApplyStrain::test_strain_jacrev_equals_fixed_cutoff_plus_policy
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNComovingApplyStrain::test_strain_jacrev_matches_isotropic_finite_difference
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNComovingApplyStrain::test_apply_strain_scales_cutoffs_and_transports_coefficients
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNComovingApplyStrain::test_rest_state_is_bitwise_plain
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNComovingApplyStrain::test_molecular_apply_strain_keeps_cutoff_scale
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNComovingApplyStrain::test_sanity_check_rejects_bad_cutoff_scale

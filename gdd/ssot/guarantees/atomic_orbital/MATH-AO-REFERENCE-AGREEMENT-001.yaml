@@ -1,0 +1,274 @@
+id: MATH-AO-REFERENCE-AGREEMENT-001
+kind: mathematical
+name: Reference agreement and structural identities of AO data
+plain_language: Plane-wave and B-spline evaluators reproduce independent references and known functions; overlap matrices
+  match independent quadrature; storage transformations round-trip exactly; and unsupported constructions are rejected explicitly
+  instead of returning silent wrong numbers. The mixed complex pGTO+plane-wave Gram is the CONJUGATED form int conj(chi_mu)
+  chi_nu, pinned by Gram properties the unconjugated bilinear form lacks, namely a real positive diagonal equal to int |chi|^2
+  and a positive-definite spectrum. The pure-PW composite short-circuits before the quadrature and a Gamma pGTO leaf is
+  real, so dropping the conjugation was invisible and the final hermitization hid what remained.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_compute_AOs_matches_reference
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_compute_MOs_reproduces_known_function
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_compute_AOs_matches_numpy_evaluator
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_reproduces_smooth_bands
+    executable_checks:
+      d8-n-089:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf.test_bspline_reproduces_smooth_bands#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-INTERPOLATION-TIGHT-R-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-INTERPOLATION-TIGHT-R-BIT-EXACT-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix::test_overlap_matrix_analytic_vs_numerical_debug_molecular
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {"ao_kind":"cart"}
+    - {"ao_kind":"sphe"}
+    executable_checks:
+      overlap-check-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_analytic_vs_numerical_debug_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap_an'}
+        reference: {role: reference-overlap, expression: 'overlap_num'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+      overlap-check-2:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_analytic_vs_numerical_debug_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap_an'}
+        reference: {role: reference-overlap, expression: 'overlap_an.T'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix::test_overlap_matrix_analytic_vs_numerical_debug_periodic
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {"ao_kind":"cart"}
+    - {"ao_kind":"sphe"}
+    executable_checks:
+      overlap-check-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_analytic_vs_numerical_debug_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap_an'}
+        reference: {role: reference-overlap, expression: 'overlap_num'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval]}
+      overlap-check-2:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_analytic_vs_numerical_debug_periodic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap_an'}
+        reference: {role: reference-overlap, expression: 'overlap_an.T'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix::test_overlap_matrix_plane_wave_analytic_vs_grid
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {"grid_size":48}
+    executable_checks:
+      overlap-check-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_plane_wave_analytic_vs_grid#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'np.diag(overlap)'}
+        reference: {role: reference-overlap, expression: 'expected_diag'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+      overlap-check-2:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_plane_wave_analytic_vs_grid#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap - np.diag(np.diag(overlap))'}
+        reference: {role: reference-overlap, expression: 'np.zeros_like(overlap)'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+      overlap-check-3:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_plane_wave_analytic_vs_grid#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap'}
+        reference: {role: reference-overlap, expression: 'overlap.T'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+      overlap-check-4:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_plane_wave_analytic_vs_grid#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap'}
+        reference: {role: reference-overlap, expression: 'overlap_grid'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix::test_overlap_matrix_bspline_vs_independent_grid
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {"grid_size":64}
+    executable_checks:
+      overlap-check-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_bspline_vs_independent_grid#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap'}
+        reference: {role: reference-overlap, expression: 'overlap.T'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+      overlap-check-2:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_bspline_vs_independent_grid#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap'}
+        reference: {role: reference-overlap, expression: 'overlap_ref'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval]}
+      overlap-check-3:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_bspline_vs_independent_grid#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-overlap, expression: 'overlap'}
+        reference: {role: exact-knot-gauss-legendre-overlap, expression: 'overlap_exact'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::test_composite_complex_gram_is_conjugated_not_bilinear
+    required_parameter_cases: [{}]
+    executable_checks:
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::test_composite_complex_gram_is_conjugated_not_bilinear#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: S
+        reference:
+          role: existing-test-reference
+          expression: S.conj().T
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+    required_precision_modes: [full, mixed]
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ao_radial_shell.py::TestAORadialShell::test_expand_round_trips_byte_identical
+  - pytest_node: tests/test_jqmc_kernel/test_ao_radial_shell.py::TestAORadialShell::test_dedup_reduces_storage_and_maps_are_consistent
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs::test_pgto_image_indices_roundtrip
+    executable_checks:
+      d8-n-090:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs.test_pgto_image_indices_roundtrip#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: exp_np
+        reference:
+          role: source-reference-value
+          expression: exp_jnp
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_g_indices_roundtrip
+    executable_checks:
+      d8-n-091:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf.test_pw_g_indices_roundtrip#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: g_recovered
+        reference:
+          role: source-reference-value
+          expression: g_vectors_in
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      d8-n-092:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf.test_pw_g_indices_roundtrip#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: g_jnp
+        reference:
+          role: source-reference-value
+          expression: g_recovered
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout::test_ragged_h5_detile_round_trips
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout.test_ragged_h5_detile_round_trips#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(compute_AOs(aos_data=detiled, r_carts=r))
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(compute_AOs(aos_data=base, r_carts=r))
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPerAtomRaggedLayout.test_ragged_h5_detile_round_trips#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(compute_AOs(aos_data=leaf_B2, r_carts=r))
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(compute_AOs(aos_data=leaf_B, r_carts=r))
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_sanity_check_rejects_bad_shapes
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_sanity_check_requires_pbc
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_complex_flag_guard
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_g_indices_off_lattice_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_sanity_check_rejects_bad_shapes
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_sanity_check_requires_pbc
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_complex_flag_guard

@@ -1,0 +1,23 @@
+id: MATH-MCMC-AS-FACTOR-COMPLEX-TINY-GEMINAL-001
+kind: mathematical
+name: Native complex MCMC decisions with a valid tiny complex twist geminal are exact under AS guiding
+plain_language: >-
+  Complex path. The native complex sweep (ObsCtx.mcmc_sweep_complex) and its per-step walker batch
+  (ObsCtx.mcmc_sweep_complex_batch, the MCMC.run complex route) evaluate the Attaccalite-Sorella factor of a complex
+  geminal without an underflowing S or an overflowing F, so that a valid nonsingular complex geminal below sqrt(tiny)
+  keeps the exact single-move Metropolis decisions. Evidence: committed lithium ccECP twist cell (lithium_k025, one
+  pair, complex128 MOs, no Jastrow) with both spin MO coefficient arrays scaled by 1e-85 (|G| ~ 3.8e-173, finite
+  exact inverse 1/G; the scaled G equals 1e-170 times the unscaled G at the det_eval / det_ratio strict pair), PCG64
+  seed 13 uniform start in the cell, Dt 1.2, injected normal 0.1, threefry keys (777, 35), (0, 13) and (29, 63),
+  epsilon_AS 0 and 0.1. For a nonzero complex scalar S = |G|^2 and F = 1/|G|^2, so R_AS = 1 exactly and the decision
+  at epsilon_AS 0.1 equals that at 0. Reference: jax threefry draws in the sweep order, the Kato-width Gaussian
+  transition density in numpy and |det G'/det G|^2 of the unscaled geminal (the common MO scale cancels). Decisions
+  are exact for every key, single and batched. Full and mixed are judged separately. Fixed-input decision accuracy,
+  not a statistical test.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_as_factor_robust_native.py::test_native_complex_as_factor_tiny_twist_geminal_keeps_decisions
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{epsilon: 0.0}, {epsilon: 0.1}]

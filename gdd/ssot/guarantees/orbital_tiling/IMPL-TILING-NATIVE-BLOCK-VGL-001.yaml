@@ -1,0 +1,24 @@
+id: IMPL-TILING-NATIVE-BLOCK-VGL-001
+kind: implementation
+name: Native ragged block VGL equals XLA, including whole-orbital conjugation
+plain_language: >-
+  For PW, B-spline, Cartesian and spherical pGTO and PW+pGTO composite tiled blocks, the native ragged local
+  contractions return complex128 orbital values, gradients and Laplacians that equal the XLA values within the XLA/Rust
+  consistency tolerance of their zones, for the provider and for its whole-orbital conjugate partner at the negated
+  supertwist. Native VGL rejects an unsupported normalization convention before evaluation; no schema-version field is
+  required or used to decide provider validity. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_orbital_tiling.py::test_native_block_model_vgl_and_logical_conjugation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw}
+    - {backend: bspline}
+    - {backend: pgto_cart}
+    - {backend: pgto_sphe}
+    - {backend: composite_cart}
+    - {backend: composite_sphe}

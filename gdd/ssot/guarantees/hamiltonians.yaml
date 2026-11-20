@@ -1,0 +1,16 @@
+schema_version: 1
+document:
+  id: jqmc.hamiltonians
+  version: 1
+  lifecycle: cutover
+  title: Hamiltonian guarantees
+  purpose: 'Which test guarantees what, by which verdict method, for the Hamiltonian layer: local energy evaluation and HDF5
+    persistence.'
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - MATH-HAM-LOCAL-ENERGY-GRAD-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

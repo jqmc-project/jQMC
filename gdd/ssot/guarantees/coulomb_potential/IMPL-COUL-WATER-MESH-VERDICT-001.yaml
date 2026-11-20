@@ -1,0 +1,16 @@
+id: IMPL-COUL-WATER-MESH-VERDICT-001
+kind: implementation
+name: Water mesh verdict rejects corrupt contributions and duplicate rows
+plain_language: >-
+  A passing real water J123 all-pairs Nv=6 baseline must reject either
+  one changed mesh contribution with the total untouched or a duplicated
+  configuration. Both precisions retain the original element-wise policy.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_water_jastrow_mesh.py::test_water_mesh_verdict_rejects_incomplete_or_corrupt_rows
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: one-contribution}
+    - {fault: duplicate-row}

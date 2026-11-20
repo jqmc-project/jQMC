@@ -1,0 +1,23 @@
+schema_version: 1
+document:
+  id: jqmc._cli_entry
+  version: 1
+  lifecycle: cutover
+  title: Light console entry guarantees
+  purpose: Which test guarantees what, by which verdict method, for the jqmc / jqmc-tool console entries that answer --version and --help without MPI.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-CLIENTRY-NO-MPI-001
+  overrides:
+    jqmc._cli_entry.main:
+    - IMPL-CLIENTRY-NO-MPI-001
+    - IMPL-CLIENTRY-DELEGATION-001
+    - IMPL-CLIENTRY-DELEGATION-ARGV-001
+    jqmc._cli_entry.tool_main:
+    - IMPL-CLIENTRY-NO-MPI-001
+    - IMPL-CLIENTRY-DELEGATION-001
+    - IMPL-CLIENTRY-DELEGATION-ARGV-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

@@ -1,0 +1,60 @@
+id: MATH-ECP-CANONICAL-CONSUMPTION-001
+kind: mathematical
+name: Core ECP-target wavefunctions consume a nonzero nonlocal projector
+plain_language: >-
+  Every ECP-zero-target pattern in the core canonical suite evaluates the nonlocal forward projector
+  on its measured wavefunction and fixed electronic configuration. Each Nv=18, nearest-neighbour
+  s-projector grid contribution agrees with an independently assembled discrete sum using dense
+  wavefunction ratios, within each precision mode's existing Coulomb strict policy. Only nonlocal
+  coefficient removal must change that consumed output and produce zero. This does not certify the
+  AE-only core patterns as ECP evidence, other quadratures, holomorphic projection, or all ECP
+  wavefunction combinations; separate component references retain their own obligations.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_canonical_ecp.py::test_canonical_nonlocal_ecp_matches_direct_wavefunction_sum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern_id: WF-PATTERN-004}
+    - {pattern_id: WF-PATTERN-006}
+    - {pattern_id: WF-PATTERN-008}
+    - {pattern_id: WF-PATTERN-012}
+    - {pattern_id: WF-PATTERN-014}
+    canonical_fixture:
+      suite: WF-SUITE-CORE-001
+      selector: pattern_id
+      operation: jqmc.coulomb_potential.compute_ecp_non_local_parts_nearest_neighbors
+      comparison: per-grid-nonlocal
+      electron_configuration: {algorithm: numpy.random.PCG64.normal, seed: 864, scale: 0.6, configurations: 1, cond_G: finite-not-limited}
+    executable_checks:
+      proposed-configurations:
+        site: tests/test_jqmc_kernel/test_canonical_ecp.py::test_canonical_nonlocal_ecp_matches_direct_wavefunction_sum#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-proposed-electron-configurations, expression: actual_points}
+        reference: {role: independent-quadrature-electron-configurations, expression: reference_points}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+      per-grid-nonlocal:
+        site: tests/test_jqmc_kernel/test_canonical_ecp.py::test_canonical_nonlocal_ecp_matches_direct_wavefunction_sum#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: forward-nonlocal-per-grid-contributions, expression: actual}
+        reference: {role: independent-discrete-projector-dense-wavefunction-ratios, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+  - pytest_node: tests/test_jqmc_kernel/test_canonical_ecp.py::test_ecp_dense_reference_rejects_jastrow_mesh_assembly_fault
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: omit-jastrow}
+    - {fault: swap-jastrow-spin-blocks}
+    executable_checks:
+      undamaged-projector:
+        site: tests/test_jqmc_kernel/test_canonical_ecp.py::test_ecp_dense_reference_rejects_jastrow_mesh_assembly_fault#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-projector-before-fault, expression: actual}
+        reference: {role: independent-s-projector-dense-jastrow-weighted-ratios, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}

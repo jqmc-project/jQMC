@@ -1,0 +1,30 @@
+id: IMPL-UPF-PARSER-CONTRACTS-001
+kind: implementation
+name: UPF parsing and basis-initialization contracts
+plain_language: UPF v1 text, UPF v2 XML, and gaussinfo sections parse as reviewed; the exponent-init strategy caches, extends
+  the basis by default, and honors the shell cap; the hard-coded all-electron hydrogen basis keeps its exact contract; malformed
+  input, missing elements, missing sections, and non-hydrogen requests are hard errors.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_parse_upf_v1_text_li
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_parse_upf_v2_xml_synthetic
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_parse_gaussinfo_li_ccecp
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_upf_exponent_init_strategy_caches
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_ae_hardcoded_h_basis_is_ccpvdz_5s1p
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_ae_hardcoded_basis_ignores_g_target_and_upf_lmax
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_ae_hardcoded_basis_cell_warning_does_not_trim
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_ae_hardcoded_basis_no_warning_at_realistic_cell
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_even_tempered_strategy_shape
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_even_tempered_n1
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_upf_exponent_init_extends_basis_by_default
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_extend_shells_tight_max_per_shell_cap
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_upf_exponent_init_missing_element_raises
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_ae_hardcoded_basis_rejects_non_hydrogen
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_ae_hardcoded_basis_validates_inputs
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_parse_gaussinfo_missing_section_raises

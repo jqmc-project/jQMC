@@ -1,0 +1,33 @@
+id: MATH-MCMC-STRESS-IDENTITIES-001
+kind: mathematical
+name: Stress assembly identities
+plain_language: 'The aT/aP assembly satisfies its exact identities: diagonal consistency, molecular zeros, zero Hellmann-Feynman
+  buffers on molecular input, and linearity of strain-gradient accumulation.'
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressDefinition::test_aT_aP_diagonal_consistency_mcmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressDefinition::test_aT_aP_molecular_zeros_mcmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressDefinition::test_stress_HF_molecular_buffer_zero_mcmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressAD::test_accumulate_strain_grad_linearity
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressAD.test_accumulate_strain_grad_linearity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sigma_scaled
+        reference:
+          role: existing-test-reference
+          expression: scale * sigma_single
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald

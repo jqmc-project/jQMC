@@ -1,0 +1,15 @@
+id: IMPL-TA-BYTE-IDENTITY-001
+kind: implementation
+name: Single-twist byte identity
+plain_language: With one twist the twist-average drivers are byte identical to the plain MCMC and optimize runs, including
+  the file-path wrapper and the plan-B reductions.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageFromHamiltonians::test_run_twist_average_n_twist_1_byte_identity_to_plain_mcmc
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestFilePathWrapper::test_run_twist_average_file_path_wrapper_n_twist_1
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_n_twist_1_byte_identical_to_direct_run_optimize
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestSingleTwistShortCircuit::test_planb_reduce_matrix_single_twist_byte_identical
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_two_comm.py::TestSingleTwistShortCircuit::test_planb_reduce_vector_single_twist_byte_identical

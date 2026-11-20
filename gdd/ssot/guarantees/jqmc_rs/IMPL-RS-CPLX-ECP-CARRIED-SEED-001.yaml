@@ -1,0 +1,34 @@
+id: IMPL-RS-CPLX-ECP-CARRIED-SEED-001
+kind: implementation
+name: The complex FAST chunk seeds its ECP mesh state on the sweep's carried determinant base within the SM-carry floor
+plain_language: >-
+  In the complex-twist FAST energy chunk (run_energy_chunk with complex=True and the native random stream), each
+  local energy builds one ECP non-local mesh state (compute_ecp_nonlocal_withj_complex_fast). That state is seeded
+  on the walker's carried determinant base: the sweep's orbital tables (DetRatioStateC, advanced column by column
+  on every accepted move) and its running Sherman-Morrison inverse after the sweep's refresh check, which is the
+  same inverse the kinetic term of that local energy already uses (gfmc::mesh_fast_state_complex_from). It does
+  not evaluate every orbital column again, rebuild the geminal or invert it. The per-step dispatch, the per-call
+  wrappers and the native driver carry no base and still seed fresh. Both seeds describe the same determinant at
+  the same positions. They differ only by rounding: batch versus single-position orbital evaluation, and num_moves
+  rank-1 updates of an inverse that the chunk makes fresh at the start of every step. So this is a FAST-only
+  route and is not bit-identical to the fresh seed. The sweep never reads the ECP state, so walkers, PRNG keys
+  and w_L are unchanged. The test-only hook JQMC_RS_ECP_COMPLEX_FRESH_SEED restores the fresh seed for an A/B
+  comparison on identical walks. The production MCMC driver (two walkers, seven steps, seed 34356, random mesh)
+  runs on the QE Li k=(1/4,1/4,1/4) ccECP fixtures: pGTO with J1/J2, J1/J2/J3 or DTN, and pGTO+PW or B-spline
+  leaves without Jastrow. On these, the carried and fresh runs give byte-identical walkers, keys and w_L.
+  Every stored complex local energy agrees within ATOL/RTOL_CPLX_ECP_CARRIED_SEED, raised to the ao_eval zone
+  envelope in the mixed lane. The seeds are counted in jqmc_rs.route_predicate_counters indices 20 (carried) and
+  21 (fresh): the carried run gives exactly walkers times steps carried and none fresh, and the hooked run the
+  reverse. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_chunk_ecp_carried_seed.py::test_complex_chunk_ecp_carried_seed_matches_fresh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_j12}
+    - {pattern: twist_sphepgto_j123}
+    - {pattern: twist_sphepgto_jdtn}
+    - {pattern: pgto_pw_twist_jnone}
+    - {pattern: bspline_twist_jnone}

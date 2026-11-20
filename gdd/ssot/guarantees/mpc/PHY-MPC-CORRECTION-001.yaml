@@ -1,0 +1,12 @@
+id: PHY-MPC-CORRECTION-001
+kind: physical
+name: Physical behavior of the MPC correction
+plain_language: 'The MPC correction converges under cutoff refinement and is stable across equivalent grid sizes
+  (convergence of a physical quantity is physical).'
+verdict_methods:
+- VM-PHY-CONVERGENCE-001
+required_evidence:
+- verdict_method: VM-PHY-CONVERGENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestCorrection::test_correction_converges_in_cutoff
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestCorrection::test_correction_is_stable_across_grid_sizes

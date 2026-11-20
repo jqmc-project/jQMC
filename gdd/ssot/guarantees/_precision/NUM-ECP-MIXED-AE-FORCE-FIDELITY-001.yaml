@@ -1,0 +1,37 @@
+id: NUM-ECP-MIXED-AE-FORCE-FIDELITY-001
+kind: numerical
+name: Mixed ECP/AE electron and nuclear forces retain full analytical fidelity
+plain_language: For the two original ECP-nucleus layouts of the authored two-nucleus/two-electron mixed ECP/all-electron
+  molecule, the same analytical electron and nuclear ECP force routes are rebuilt independently under Full and Mixed.
+  Each r/R force array is a separate homogeneous geometric-parameter derivative block in Hartree per bohr; the existing
+  central parameter_derivative block norm budget applies without a new tolerance value. Positions, AO/ECP parameters,
+  empty down-spin shape, nearest-ECP selection, fixed identity rotation and Nv6 rule are unchanged. Full retains
+  the original ideal-float64 independent authored-potential AD proof. Exact coordinate equality, both original output
+  shapes, nonempty/finite blocks and an isolated excessive-error control remain required. This is a
+  math/fidelity partition, not a claim that the independent ideal-fp64 mathematical proof misses a large
+  physics fault.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_force_mixed_ecp_all_electron_matches_independent_derivative
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - ecp_atom: 0
+    - ecp_atom: 1
+    executable_checks:
+      mixed-analytical-vs-full-analytical:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_mixed_ecp_ae_force_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-ecp-electron-or-nuclear-force
+          expression: mixed_block
+        reference:
+          role: full-analytical-ecp-electron-or-nuclear-force
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

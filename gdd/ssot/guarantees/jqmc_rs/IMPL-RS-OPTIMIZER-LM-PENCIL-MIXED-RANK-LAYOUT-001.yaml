@@ -1,0 +1,30 @@
+# LM pencil over ranks with real- and complex-typed samples.
+id: IMPL-RS-OPTIMIZER-LM-PENCIL-MIXED-RANK-LAYOUT-001
+kind: implementation
+name: The LM pencil over ranks holding real- and complex-typed samples equals the sharded XLA pencil after the one route decision
+plain_language: >-
+  Ranks of one LM pencil reduction may publish real-typed (float64) samples on one rank and complex samples with a
+  nonzero imaginary part on another, as a real Gamma-point sampler next to a complex twist does in the shared scope of
+  the twist-decomposed optimizer. Every optimizer entry gives them one layout before any reduction: the collective
+  route decision collective_real_route (MIN over the ranks of the local all-real flag) selects the complex route, and
+  the real-typed arrays are cast to complex on every rank; _build_lm_real_pencil_from_coordinate_arrays then receives
+  arrays of one real/complex layout on all ranks and does not decide again. Under mpirun -np 2 with rank 0
+  real-typed and rank 1 complex in the local energies only (O and D complex on both ranks), in D and the local
+  energies (O real-typed on both ranks, the real-Jastrow twist pattern), or in O, D and the local energies, the
+  decision is complex on both ranks, and after it the pencil H, S, H_0 and conditioning metric of the jqmc_rs route
+  (JQMC_FLAG_RUST_ON_CPU=1) and of the NumPy route (JQMC_FLAG_RUST_ON_CPU=0), both with the real mpi4py reductions,
+  equal the XLA pencil (build_device_lm_pencil) sharded over the two processes on the same global samples, rank 0's
+  embedded as complex with a zero imaginary part, within the strict Rust/XLA tier of the fp64 zones that produce the
+  optimizer samples; both ranks return the identical H. Neither route may cast a complex reduced moment into a real
+  pencil (the test session promotes ComplexWarning to an error), hang, or reduce payloads of different length on the
+  two ranks. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_host_rust_mpi.py::test_two_rank_lm_pencil_with_real_and_complex_ranks_matches_sharded_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {complex_on_rank1: e}
+    - {complex_on_rank1: D-e}
+    - {complex_on_rank1: O-D-e}

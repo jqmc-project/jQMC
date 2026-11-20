@@ -1,0 +1,9 @@
+schema_version: 1
+document:
+  id: jqmc.documentation
+  version: 1
+  lifecycle: cutover
+  title: Published jQMC examples and documentation
+  purpose: Bind existing tests of published user interfaces and documentation to their guarantees.
+guarantees:
+  layout: one-file-per-guarantee

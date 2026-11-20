@@ -1,0 +1,32 @@
+id: MATH-TOOL-MPC-EXTRAPOLATION-001
+kind: mathematical
+name: Covariance-aware MPC continuum extrapolation
+plain_language: 'With complete MPC data, extrapolate-energy prints and fits both E and E_MPC and keeps the
+  uncorrected E output. The E_MPC uncertainty uses the paired energy-plus-correction jackknife before
+  independent-twist variance aggregation and the closed-form polynomial-fit error propagation. Equal-size unit-weight
+  bins independently pin the point uncertainty and the closed-form propagation pins the linear-intercept uncertainty
+  exactly, without random draws, including positive and negative energy/correction covariance and exact cancellation.
+  Required interactions include files and unequal-weight twist directories, real and complex histories, serial and
+  rank-0-reduced MPI layouts; a nonuniform projection-weight reference includes multiple contributing ranks and an
+  empty rank. A known quartic-in-a corrected energy reaches the default quadratic-in-a^2 fit and both labelled
+  saved-graph series. Legacy missing enable flags are allowed when histories and cutoff metadata identify MPC. Every
+  contributing rank needs a same-shape MPC history with finite retained samples, and every rank must record a common
+  positive finite cutoff across twists and spacings, consistent with any summary cutoff. Partial data, conflicting or
+  malformed enable flags, missing/inconsistent/invalid cutoffs, and malformed/nonfinite samples are errors before a
+  continuum estimate is printed. Default cutoff metadata with MPC disabled does not enable a corrected series. This
+  guarantees synthetic marginal estimates, not the joint covariance of the two fitted series, physical convergence,
+  independence of sampled runs, or polynomial model adequacy.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCMPCExtrapolation::test_covariance_aware_points_and_intercept
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCMPCExtrapolation::test_disabled_mpc_with_default_cutoff_is_energy_only
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCMPCExtrapolation::test_nonuniform_weights_and_multiple_contributing_ranks
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCMPCExtrapolation::test_quadratic_fit_and_saved_graph_include_both_energies
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCMPCExtrapolation::test_inconsistent_mpc_series_is_rejected
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestLRDMCMPCExtrapolation::test_enabled_mpc_cannot_lose_all_histories

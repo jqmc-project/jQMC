@@ -1,0 +1,10 @@
+id: PHY-MPC-TRANSLATION-INVARIANCE-001
+kind: physical
+name: Lattice-translation invariance of the MPC energy
+plain_language: The MPC energy is invariant under lattice translations of the electron coordinates.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestKernelInvariants::test_energy_is_invariant_under_lattice_translation

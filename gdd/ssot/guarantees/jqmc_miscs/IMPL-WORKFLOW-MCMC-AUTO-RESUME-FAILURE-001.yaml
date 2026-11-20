@@ -1,0 +1,17 @@
+id: IMPL-WORKFLOW-MCMC-AUTO-RESUME-FAILURE-001
+kind: implementation
+name: Automatic MCMC relaunch validates fetched continuation failures before using cached statistics
+plain_language: >-
+  When automatic MCMC is relaunched with a fetched continuation output containing
+  FloatingPointError and lacking Program ends, it reports FAILED before returning
+  cached convergence, calibrating automatic Dt, or submitting another continuation. Finite energy/error and
+  a readable checkpoint left by an earlier successful run do not override the
+  abnormal output. The check applies whether the cached target is already reached
+  or another production run would be needed. Normal fetched outputs retain both
+  behaviors: cached convergence completes with no submission, while an unmet target
+  permits the next continuation. Both explicit and automatic Dt exercise these four result/output combinations through the public run entry point. This is a precision-independent Python workflow contract, owned by the full precision lane.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_mcmc_auto_resume_failure.py::test_auto_relaunch_validates_fetched_continuation_before_reusing_checkpoint

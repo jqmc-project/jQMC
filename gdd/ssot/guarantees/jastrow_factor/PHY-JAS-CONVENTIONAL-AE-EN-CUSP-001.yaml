@@ -1,0 +1,59 @@
+id: PHY-JAS-CONVENTIONAL-AE-EN-CUSP-001
+kind: physical
+name: Conventional molecular AE J1 has the physical electron-nucleus cusp normalization
+plain_language: >-
+  For an all-electron molecular nucleus, both exp and Pade J1 must have the
+  radial normalization -Z in J1=-A*u(c*r), A=(2Z)^(3/4), c=(2Z)^(1/4).
+  Actual forward AD and analytical gradients must separately match independent
+  same-precision NumPy profiles -Z*exp(-b*c*r) or -Z/(1+b*c*r)^2 at all nine
+  fixed distance/direction pairs. These profiles have the required right
+  derivative -Z at coalescence; no Cartesian derivative is evaluated at r=0
+  and no finite-radius approximation to the limit or finite difference is used.
+  Inputs are synthetic H/O (Z=1/8), zero core electrons, one up or one down
+  electron, b=0.5/1.25, r=1e-7/1e-5/1e-3 Bohr and directions +x/-y/+z.
+  There are no files, RNG, orbitals, determinant or cond(G) screening.
+  Each scalar uses unchanged strict Jastrow zone tolerances in full and mixed.
+  This is a required contract, not a claim that current production has passed.
+  ECP, PBC, Rust and the complete-wavefunction cusp are not certified here.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_cusp_profiles.py::test_j1_ae_radial_profile_has_physical_cusp
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {form: exp, charge: 1, b: 0.5, spin: up}
+    - {form: pade, charge: 1, b: 0.5, spin: up}
+    - {form: exp, charge: 8, b: 0.5, spin: up}
+    - {form: pade, charge: 8, b: 0.5, spin: up}
+    - {form: exp, charge: 1, b: 1.25, spin: up}
+    - {form: pade, charge: 1, b: 1.25, spin: up}
+    - {form: exp, charge: 8, b: 1.25, spin: up}
+    - {form: pade, charge: 8, b: 1.25, spin: up}
+    - {form: exp, charge: 1, b: 0.5, spin: down}
+    - {form: pade, charge: 1, b: 0.5, spin: down}
+    - {form: exp, charge: 8, b: 0.5, spin: down}
+    - {form: pade, charge: 8, b: 0.5, spin: down}
+    - {form: exp, charge: 1, b: 1.25, spin: down}
+    - {form: pade, charge: 1, b: 1.25, spin: down}
+    - {form: exp, charge: 8, b: 1.25, spin: down}
+    - {form: pade, charge: 8, b: 1.25, spin: down}
+    executable_checks:
+      forward-ad-cusp-profile:
+        site: tests/test_jqmc_kernel/test_jastrow_cusp_profiles.py::test_j1_ae_radial_profile_has_physical_cusp#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: forward-ad-radial-slope, expression: ad_slope}
+        reference: {role: independently-cusp-normalized-radial-slope, expression: expected}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2', '3', '4', '5', '6', '7', '8']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+      analytical-cusp-profile:
+        site: tests/test_jqmc_kernel/test_jastrow_cusp_profiles.py::test_j1_ae_radial_profile_has_physical_cusp#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-radial-slope, expression: analytical_slope}
+        reference: {role: independently-cusp-normalized-radial-slope, expression: expected}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2', '3', '4', '5', '6', '7', '8']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}

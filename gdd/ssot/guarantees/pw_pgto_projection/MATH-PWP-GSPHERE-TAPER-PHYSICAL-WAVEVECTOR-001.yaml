@@ -1,0 +1,16 @@
+id: MATH-PWP-GSPHERE-TAPER-PHYSICAL-WAVEVECTOR-001
+kind: mathematical
+name: At a nonzero twist the taper window is a function of the physical wavevector |G+k|
+plain_language: >-
+  On the committed Li k025 save stretched to a vacuum cell, with the sphere edge placed just inside the
+  largest |G+k|, every coefficient column with |G+k| >= g_end vanishes and some column with
+  |G| >= g_end > |G+k| survives, while the vanished columns were not zero before the taper. Replacing the
+  production wavevector by |G| fails both assertions. Both modes exercise fp64 host
+  arithmetic.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_taper_uses_the_physical_wavevector_at_nonzero_twist
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

@@ -1,0 +1,213 @@
+id: PHY-SWCT-PERIODICITY-001
+kind: physical
+name: Lattice periodicity of the SWCT weights and force correction
+plain_language: Under PBC the SWCT weights, their electron-gradient sum and the SWCT force correction (omega-contracted field
+  plus half the domega term) are unchanged when electrons (kept unwrapped by the drivers) or nuclei are moved by lattice
+  vectors, on orthorhombic and oblique cells with nuclei near the cell faces.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_electron_lattice_translation_invariance
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_electron_lattice_translation_invariance#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: domega1
+        reference:
+          role: existing-test-reference
+          expression: domega0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_electron_lattice_translation_invariance#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: corr1
+        reference:
+          role: existing-test-reference
+          expression: corr0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_electron_lattice_translation_invariance#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: corr_b[1]
+        reference:
+          role: existing-test-reference
+          expression: corr_b[0]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_electron_lattice_translation_invariance#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: omega_dbg1
+        reference:
+          role: existing-test-reference
+          expression: omega_dbg0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-6:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_electron_lattice_translation_invariance#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: domega_dbg1
+        reference:
+          role: existing-test-reference
+          expression: domega_dbg0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_electron_lattice_translation_invariance#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: omega1
+        reference:
+          role: existing-test-reference
+          expression: omega0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+  - pytest_node: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_nucleus_image_invariance
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_nucleus_image_invariance#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: omega1
+        reference:
+          role: existing-test-reference
+          expression: omega0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_nucleus_image_invariance#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: domega1
+        reference:
+          role: existing-test-reference
+          expression: domega0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_nucleus_image_invariance#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: corr1
+        reference:
+          role: existing-test-reference
+          expression: corr0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_nucleus_image_invariance#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: omega_dbg
+        reference:
+          role: existing-test-reference
+          expression: omega0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_swct_pbc.py::test_swct_nucleus_image_invariance#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: domega_dbg
+        reference:
+          role: existing-test-reference
+          expression: domega0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct

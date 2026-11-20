@@ -1,0 +1,12 @@
+id: IMPL-CLI-MPC-ESTIMATOR-ROUTING-001
+kind: implementation
+name: CLI MPC estimators share explicit sampling windows
+plain_language: Single-twist MCMC, GFMC_n, and GFMC_t obtain both MPC estimators through one collector that forwards the
+  explicitly selected warmup and bin counts, preventing either LRDMC route from reading an unrelated MCMC local variable;
+  VMC optimization rejects MPC instead of silently computing an observable it cannot publish.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_mpc.py::test_shared_cli_mpc_collector_forwards_the_requested_gfmc_warmup

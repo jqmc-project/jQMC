@@ -1,0 +1,60 @@
+id: IMPL-DIFFMASK-SEMANTICS-001
+kind: implementation
+name: Parameter mask semantics matrix
+plain_language: 'For the individually exercised optimization flags and explicitly selected flag combinations, the mask freezes the
+  declared parameter families and lets the enabled channels flow. The registered evidence covers SD and AGPn, closed and open shell,
+  basis, J3 and DTN channels, and the variational-field inventory. It does not certify all combinations of optimization flags.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_dtn_only_freezes_everything_else
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_mo_coefficients_never_flow
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_lambda_only_freezes_geminal_basis
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_lambda_basis_opt_flows_geminal_exp_coeff_but_not_mo
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_j3_basis_opt_flows_j3_exp_coeff_but_freezes_geminal
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_each_channel_flows_only_when_enabled
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_print_grad_matrix
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_with_param_grad_mask_stops_basis_grads
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_with_param_grad_mask_allows_basis_grads
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_grad_mask_closed_shell_SD_opt_geminal_True_flows_up_only
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_grad_mask_closed_shell_SD_opt_geminal_False_stops_both
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_grad_mask_open_shell_SD_opt_geminal_True_flows_up_and_dn_independently
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_grad_mask_open_shell_SD_opt_geminal_False_stops_both
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_grad_mask_AGPn_opt_geminal_True_flows_lambda_diag
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_grad_mask_AGPn_opt_geminal_False_stops_lambda_diag
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_grad_mask_open_shell_AGPn_opt_geminal_True_flows_lambda_unpaired
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_grad_mask_open_shell_AGPn_opt_geminal_False_stops_lambda_unpaired
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric::test_parameter_masks_preserve_coordinate_gradients
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{kind: agp-all-channels}, {kind: sd-open}, {kind: agpn-open}]
+    executable_checks:
+      coordinate-leaf-flow:
+        site: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric.test_parameter_masks_preserve_coordinate_gradients#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: masked-nuclear-coordinate-cotangent, expression: 'actual_leaves[path]'}
+        reference: {role: unmasked-own-mode-coordinate-cotangent, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, jastrow_eval, det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, jastrow_eval, det_eval]}
+      coordinate-gradient-flow:
+        site: tests/test_jqmc_kernel/test_param_grad_mask_matrix.py::TestGeneric.test_parameter_masks_preserve_coordinate_gradients#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: masked-nuclear-position-gradient, expression: actual}
+        reference: {role: unmasked-own-mode-position-gradient, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, jastrow_eval, det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, jastrow_eval, det_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_t_force_same_input.py::test_gfmc_t_autograd_fallback_preserves_masked_position_forces
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      fallback-force-storage:
+        site: tests/test_jqmc_kernel/test_gfmc_t_force_same_input.py::_assert_close#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-masked-fallback-force, expression: actual}
+        reference: {role: independent-same-measurement-analytic-force, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_grad_lap, det_eval, coulomb, wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_grad_lap, det_eval, coulomb, wf_kinetic]}

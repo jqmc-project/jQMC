@@ -1,0 +1,26 @@
+id: MATH-JAS-SMOOTH-PERIODIC-DISTANCE-REFERENCE-001
+kind: mathematical
+name: Smooth periodic distance against its NumPy reference
+plain_language: >-
+  On the cubic, primitive FCC and triclinic CELL_FIXTURES cells and 40 seeded displacements each, the production
+  smooth periodic distance of the periodic J1/J2 (the direct route and the closed-form value/gradient/Laplacian route)
+  equals the fp64 NumPy reference _smooth_periodic_distance_debug within the jastrow_eval and jastrow_grad_lap strict
+  zone policies, and the closed-form gradient and Laplacian equal central finite differences of that reference within
+  the central finite-difference tolerance. A production distance scaled by ten times the mode tolerance must fail.
+  Full and mixed are judged separately.
+  Each mode is judged against a reference in its own precision: the
+  jastrow_grad_lap closed-form route is compared with the NumPy formula and its autodiff derivatives evaluated
+  in the jastrow_grad_lap zone dtype (whose fp64 evaluation reproduces _smooth_periodic_distance_debug bit for
+  bit, and whose fp64 autodiff derivatives equal central finite differences of it); the production-versus-
+  finite-difference comparison of the fp64 debug oracle is executed where that zone is fp64.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_declared_debug_oracles.py::test_smooth_periodic_distance_matches_numpy_debug_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: cubic_10bohr}
+    - {cell_name: primitive_fcc_si}
+    - {cell_name: triclinic_skewed}
+  - pytest_node: tests/test_jqmc_kernel/test_declared_debug_oracles.py::test_smooth_periodic_distance_oracle_rejects_a_scaled_distance

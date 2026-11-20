@@ -1,0 +1,24 @@
+id: IMPL-BUILDINFO-PRODUCTION-ROUTES-001
+kind: implementation
+name: The jqmc run header, the workflow-launcher header, a jqmc-tool subcommand and a merged checkpoint carry the version lines
+plain_language: >-
+  The output guarantee is exercised through the actual callers, not by calling the banner
+  helper directly. jqmc_cli._print_header and jqmc_workflow.launcher._print_header log the two lines; a real
+  jqmc-tool subcommand (trexio show-info) prints them on stderr and keeps them out of its stdout; and
+  merge_rank_checkpoints writes jqmc_version and jqmc_git_commit equal to the resolved lines into _meta.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_routes.py::test_jqmc_run_header_reports_the_version_lines
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_routes.py::test_workflow_launcher_header_reports_the_version_lines
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_routes.py::test_jqmc_tool_subcommand_reports_the_version_lines_on_stderr
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_routes.py::test_merged_checkpoint_records_the_code_version
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

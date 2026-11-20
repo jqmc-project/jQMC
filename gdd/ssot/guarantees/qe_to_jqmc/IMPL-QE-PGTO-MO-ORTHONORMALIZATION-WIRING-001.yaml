@@ -1,0 +1,39 @@
+id: IMPL-QE-PGTO-MO-ORTHONORMALIZATION-WIRING-001
+kind: implementation
+name: The pGTO MO orthonormalization is applied per (k, spin) block, only for kind pgto, and is threaded through the twist writer and CLI
+plain_language: >-
+  LSDA conversions evaluate compute_overlap_matrix once per k for the identical up and dn pGTO leaves
+  and each spin block equals the independent Cholesky transform of its own raw block (the up transform
+  applied to dn is rejected). The orthonormalize flag leaves pw, bspline, pgto+pw and pgto+bspline
+  bit-identical and equal to the plain packaging of the projection (PW coefficients, identity spline
+  block, pGTO coefficients divided by an independent normalization), so no part of a mixed basis is
+  orthonormalized. The combined twist writer orthonormalizes every stored per-twist spin block (O LSDA
+  k = 1/4 reloaded with load_twist; fp64 projection pair tolerance in full mode, strict ao_eval
+  tolerance in mixed mode where the HDF5 round trip stores the exponents at ao_eval width) and does not
+  with orthonormalize=False, and jqmc-tool qe forwards --orthonormalize (default) and
+  --no-orthonormalize to run_qe2jqmc. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_lsda_spins_share_one_overlap_and_are_orthonormalized_independently
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: o-lsda-gamma}
+    - {fixture: o-lsda-k025}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_orthonormalize_flag_does_not_touch_other_kinds
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pw}
+    - {kind: bspline}
+    - {kind: pgto+pw}
+    - {kind: pgto+bspline}
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_twist_average_writer_orthonormalizes_each_pgto_twist
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_qe_mo_orthonormalization.py::test_cli_orthonormalize_option_reaches_converter
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {flag: default}
+    - {flag: --orthonormalize}
+    - {flag: --no-orthonormalize}

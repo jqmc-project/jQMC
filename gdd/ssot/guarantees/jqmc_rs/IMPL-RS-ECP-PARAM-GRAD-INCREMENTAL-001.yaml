@@ -1,0 +1,55 @@
+id: IMPL-RS-ECP-PARAM-GRAD-INCREMENTAL-001
+kind: implementation
+name: Rust ECP parameter-gradient fast mesh and one-electron O_k increments equal the full-recompute reference
+plain_language: >-
+  Every ECP non-local quadrature candidate moves one electron. The complex-twist dV_ecp_nl/dc kernels
+  (J1, J2, J3 j_matrix, J3 radial, geminal radial, DTN) take their candidate weights from the rank-1 determinant /
+  incremental-Jastrow mesh of the native complex e_L (MeshFastStateC) instead of a full complex geminal LU plus a
+  full Jastrow value per candidate, and the J1, J2 and J3 j_matrix mesh reduces (real Gamma, molecular and twist)
+  apply the exact change of O_k under that one-electron move (J1/J2: the moved electron's own terms; J3: the
+  update linear in the moved orbital column) instead of the full O_k per candidate. On identical inputs the result
+  equals the pre-change reference selected by the test-only JQMC_ECP_PARAM_FORCE_REFERENCE hook within
+  RTOL_RS_ECP_PARAMETER_SM_REBUILD of the payload scale in full precision and within the strict ECP-zone budget in
+  mixed precision (the fast mesh evaluates its ratios in the active fp32 zones). Complexity: route-predicate
+  counters 12-15 show one fast mesh and zero reference-mesh candidates per twist call, and one incremental reduce
+  with zero full O_k evaluations per J1/J2/J3 call, while the forced reference shows one full-recompute candidate
+  per mesh point and n_candidates + 1 full O_k evaluations. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_ecp_param_grad_fast_vs_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: gamma_j1}
+    - {case: gamma_j2}
+    - {case: gamma_j3}
+    - {case: mol_j1}
+    - {case: mol_j2}
+    - {case: mol_j3}
+    - {case: twist_dtn}
+    - {case: twist_geminal_radial}
+    - {case: twist_j1}
+    - {case: twist_j2}
+    - {case: twist_j3}
+    - {case: twist_j3_radial}
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_ecp_param_grad_route_complexity
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: gamma_j1}
+    - {case: gamma_j2}
+    - {case: gamma_j3}
+    - {case: mol_j1}
+    - {case: mol_j2}
+    - {case: mol_j3}
+    - {case: twist_dtn}
+    - {case: twist_geminal_radial}
+    - {case: twist_j1}
+    - {case: twist_j2}
+    - {case: twist_j3}
+    - {case: twist_j3_radial}
+  - pytest_node: tests/test_rs_kernel/test_param_grad_el.py::test_ecp_param_grad_reference_mesh_lattice_translation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: twist_j2_lattice_shifted}
+    - {case: twist_lambda_lattice_shifted}

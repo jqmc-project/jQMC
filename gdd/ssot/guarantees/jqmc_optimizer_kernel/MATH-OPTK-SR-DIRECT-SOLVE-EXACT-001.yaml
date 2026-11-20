@@ -1,0 +1,98 @@
+id: MATH-OPTK-SR-DIRECT-SOLVE-EXACT-001
+kind: mathematical
+name: Direct SR solves reach the exact solution of their fp64 inputs on an ill-conditioned system
+plain_language: >-
+  Every direct SR solver factors an explicitly formed Gram operator: Re(X X^dagger) + epsilon I over coordinates
+  (wide) or Z^T Z + epsilon I over samples (tall). Forming that Gram matrix rounds each entry by O(u), and the solve
+  amplifies the rounding by cond ~ 1/epsilon, so a plain factor-and-solve has a forward error of about cond * u * |q|.
+  Two fixed synthetic systems with complex samples are used: a wide one (102 coordinates, 100 samples) and a tall one
+  (160 coordinates, 50 samples). Both are Jacobi preconditioned to a unit diagonal and have a geometric spectrum, with
+  epsilon = 1e-3 and cond about 2-3e4. On each, every direct route equals the exact solution of the same fp64 inputs
+  within the fixed-sample fp64 pair. The routes are the host wide and tall real solves; the device wide real solve
+  (sharded and sampler-local); and the device tall real solve (sharded from complex samples and
+  sampler-local). The exact solution comes from
+  double-double arithmetic: the moments, the Gram operators and the residuals are built from error-free fp64
+  transformations (TwoSum, Dekker TwoProd), and the fp64 LU only preconditions iterative refinement. This is the
+  same on every platform. The double-double kernel is itself checked against exact rational arithmetic
+  (fractions.Fraction) on random inputs: TwoSum and TwoProd are error free, and each operation, the SR moments and
+  the regularized SR solve round to the correctly rounded exact values. A witness shows that a plain fp64
+  Gram-plus-LU solve of the same system misses the budget, so the fixture stays
+  sensitive. This is the complex-twist AGP case that the Gram-plus-LU solve failed. The guarantee does not
+  claim the CG routes, the linear-method eigensolves, or any statistical accuracy of the SR step.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_sr_direct_solve_accuracy.py::test_direct_sr_solve_matches_exact_solution_of_its_inputs
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {regime: wide, route: host_wide_real}
+    - {regime: wide, route: device_wide_real_sharded}
+    - {regime: wide, route: local_device_wide_real}
+    - {regime: tall, route: host_tall_real}
+    - {regime: tall, route: device_tall_real_sharded}
+    - {regime: tall, route: local_device_tall_real}
+    executable_checks:
+      direct-sr-solve-equals-exact-solution:
+        site: tests/test_jqmc_kernel/test_sr_direct_solve_accuracy.py::test_direct_sr_solve_matches_exact_solution_of_its_inputs#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-direct-sr-solve, expression: actual}
+        reference: {role: extended-precision-exact-solution-of-the-same-inputs, expression: exact}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-FIXED-SAMPLE-FP64-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-FIXED-SAMPLE-FP64-001}
+  - pytest_node: tests/test_jqmc_kernel/test_sr_direct_solve_accuracy.py::test_unrefined_gram_solve_violates_the_budget_on_the_fixture
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {regime: wide}
+    - {regime: tall}
+  - pytest_node: tests/test_jqmc_kernel/test_exact_sr_reference.py::test_two_sum_and_two_prod_are_error_free
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_exact_sr_reference.py::test_double_double_arithmetic_rounds_to_the_exact_value
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {operation: add}
+    - {operation: sub}
+    - {operation: mul}
+    - {operation: div}
+    - {operation: matmul}
+    executable_checks:
+      double-double-arithmetic-rounds-to-exact:
+        site: tests/test_jqmc_kernel/test_exact_sr_reference.py::test_double_double_arithmetic_rounds_to_the_exact_value#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: double-double-result-rounded-to-fp64, expression: actual.to_float64()}
+        reference: {role: correctly-rounded-exact-rational-result, expression: _rounded(exact)}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_exact_sr_reference.py::test_double_double_sr_moments_and_solve_round_to_the_exact_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      double-double-metric-rounds-to-exact:
+        site: tests/test_jqmc_kernel/test_exact_sr_reference.py::test_double_double_sr_moments_and_solve_round_to_the_exact_values#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: double-double-sr-metric-rounded-to-fp64, expression: exact_reference.to_float64(S)}
+        reference: {role: correctly-rounded-exact-rational-sr-metric, expression: _rounded(S_exact)}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      double-double-force-rounds-to-exact:
+        site: tests/test_jqmc_kernel/test_exact_sr_reference.py::test_double_double_sr_moments_and_solve_round_to_the_exact_values#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: double-double-sr-force-rounded-to-fp64, expression: exact_reference.to_float64(f)}
+        reference: {role: correctly-rounded-exact-rational-sr-force, expression: _rounded(f_exact)}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      double-double-sr-solve-rounds-to-exact:
+        site: tests/test_jqmc_kernel/test_exact_sr_reference.py::test_double_double_sr_moments_and_solve_round_to_the_exact_values#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: double-double-sr-solution, expression: "exact_reference.exact_sr_solve(S, f, _EPSILON)"}
+        reference: {role: correctly-rounded-exact-rational-sr-solution, expression: _rounded(q_exact)}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

@@ -1,0 +1,65 @@
+id: NUM-DERIV-PERIODIC-PGTO-MIXED-FIDELITY-001
+kind: numerical
+name: Periodic pGTO parameter derivatives retain full-route fidelity in mixed precision
+plain_language: >-
+  On the committed ccECP Li Gamma fixture, each homogeneous parameter block produced by the analytical production route
+  in mixed precision stays within the registered parameter-derivative fidelity budget of the same analytical route built
+  and evaluated independently in full precision. The block infinity norm, rather than each possibly cancelling element,
+  sets the relative scale. The J1 + J2 and J1 + J2 + J3 radial-basis cases cover derivatives of ln|Psi| and local energy;
+  the wider c-axis case additionally covers the active J1 and J2 parameter blocks. Scaling only the mixed Jastrow-coupled
+  kinetic contribution by 1.05 must be rejected while the full reference remains unmodified.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_c_axis_vs_auto
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {stem: lithium.h5, quantity: ln_Psi}
+    - {stem: lithium.h5, quantity: e_L}
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_c_axis_vs_auto#helper-inequality-2
+        comparator: python.inequality
+        actual: {role: mixed-analytical-parameter-block, expression: 'da[k]'}
+        reference: {role: full-analytical-parameter-block, expression: 'db[k]'}
+        iterations:
+          variable: k
+          required_values: [j1_param, j2_param, lambda_basis_exp, lambda_basis_coeff]
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_pgto_basis_grads_with_jastrow_vs_auto
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {jastrow: J1J2, quantity: ln_Psi}
+    - {jastrow: J1J2, quantity: e_L}
+    - {jastrow: J1J2J3, quantity: ln_Psi}
+    - {jastrow: J1J2J3, quantity: e_L}
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_pgto_basis_grads_with_jastrow_vs_auto#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-parameter-block, expression: 'analytic[name]'}
+        reference: {role: full-analytical-parameter-block, expression: 'full_reference[name]'}
+        iterations:
+          variable: name
+          required_values: [lambda_basis_exp, lambda_basis_coeff]
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_real_pgto_basis_grads_reject_scaled_jastrow_kinetic_term
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{jastrow: J1J2}, {jastrow: J1J2J3}]
+    executable_checks:
+      mixed-mutant-rejection:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_assert_pbc_mutated_parameter_blocks#inequality-1
+        comparator: python.inequality
+        actual:
+          role: mutated-mixed-parameter-block
+          expression: mutated[name]
+        reference:
+          role: independently-rebuilt-full-parameter-block
+          expression: reference[name]
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

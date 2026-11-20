@@ -1,0 +1,18 @@
+id: IMPL-RS-FREE-ECP-NONLOCAL-COMPLEX-ONLY-J3-REJECTED-001
+kind: implementation
+name: The exported free real non-local ECP kernel rejects a complex-only J3
+plain_language: >-
+  Every exported real native entry point that reads the J3 of the parsed JastrowData rejects an active J3 that its
+  real parser cannot represent; jqmc_rs.compute_ecp_nonlocal_parts_all_pairs, whose wavefunction ratios include
+  the J3, is the representative further entry point. The fixture is the real Li_gamma determinant of MATH-RS-REAL-
+  DISPATCH-GAMMA-COMPLEX-PGTO-COMPOSITE-J3-ENERGY-001. Supported controls: the phase-free Gamma-complex pGTO child
+  and the identical real pGTO child are accepted and give the same finite value. Unsupported input: with the J3
+  constant child replaced by a phase-free (k = 0) complex plane wave it must raise NotImplementedError naming the
+  complex native path. Full and mixed are judged separately.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_real_gamma_complex_pgto_j3_composite.py::test_real_free_ecp_nonlocal_rejects_complex_only_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

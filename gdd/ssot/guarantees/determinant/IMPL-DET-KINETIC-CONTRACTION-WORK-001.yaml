@@ -1,0 +1,40 @@
+id: IMPL-DET-KINETIC-CONTRACTION-WORK-001
+kind: implementation
+name: Fast kinetic determinant contraction uses inverse-first work
+plain_language: >-
+  The value-only fast determinant gradient/Laplacian contracts its supplied inverse
+  before orbital derivatives, within the two paired-contraction work bound, without
+  constructing full electron derivative matrices. Real and complex bilinear values
+  and directional derivatives agree with independent dense matrix contractions for
+  SD, rectangular AGP and AGPn with closed, open and empty-down spins. Existing
+  strict det_grad_lap precision budgets remain unchanged. Orbital evaluation is
+  isolated in these local-jet algebra tests; the existing physical-orbital fast
+  versus debug and local-energy assembly tests remain applicable.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_kinetic_contraction_work.py::test_fast_determinant_contraction_work_bound
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_kinetic_contraction_work.py::test_fast_contractions_preserve_dense_values_and_directional_derivatives
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: sd, shell: closed, complex_values: false}
+    - {kind: agp, shell: closed, complex_values: false}
+    - {kind: agpn, shell: closed, complex_values: false}
+    - {kind: sd, shell: open, complex_values: false}
+    - {kind: agp, shell: open, complex_values: false}
+    - {kind: agpn, shell: open, complex_values: false}
+    - {kind: sd, shell: empty-down, complex_values: false}
+    - {kind: agp, shell: empty-down, complex_values: false}
+    - {kind: agpn, shell: empty-down, complex_values: false}
+    - {kind: sd, shell: closed, complex_values: true}
+    - {kind: agp, shell: closed, complex_values: true}
+    - {kind: agpn, shell: closed, complex_values: true}
+    - {kind: sd, shell: open, complex_values: true}
+    - {kind: agp, shell: open, complex_values: true}
+    - {kind: agpn, shell: open, complex_values: true}
+    - {kind: sd, shell: empty-down, complex_values: true}
+    - {kind: agp, shell: empty-down, complex_values: true}
+    - {kind: agpn, shell: empty-down, complex_values: true}

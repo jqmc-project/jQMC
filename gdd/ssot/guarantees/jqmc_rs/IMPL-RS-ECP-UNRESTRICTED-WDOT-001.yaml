@@ -1,0 +1,35 @@
+id: IMPL-RS-ECP-UNRESTRICTED-WDOT-001
+kind: implementation
+name: Molecular ECP w-dot uses the independent down-spin orbitals
+plain_language: >-
+  In the native molecular MCMC energy chunk, the determinant w-dot ECP fold
+  uses the occupied down-spin orbitals of an unrestricted real Slater
+  determinant. In the balanced and open-shell ccECP water cases with active
+  Jastrow and rotated quadrature, local energies agree with XLA recomputation
+  at the returned walker configurations in Full and Mixed. One returned
+  configuration per case also anchors the XLA non-local energy to full
+  determinant recomputation on the same mesh.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_unrestricted_wdot.py::test_unrestricted_ecp_wdot_uses_down_spin_orbitals
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{n_down: 4}, {n_down: 3}]
+    executable_checks:
+      unrestricted-full-determinant-reference:
+        site: tests/test_rs_kernel/test_ecp_unrestricted_wdot.py::test_unrestricted_ecp_wdot_uses_down_spin_orbitals#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-fast-update-nonlocal-energy, expression: v_fast}
+        reference: {role: full-determinant-nonlocal-energy, expression: v_full_det}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, jastrow_eval, jastrow_ratio, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, jastrow_eval, jastrow_ratio, det_eval, det_ratio]}
+      unrestricted-chunk-energy:
+        site: tests/test_rs_kernel/test_chain_modes.py::_assert_value_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-same-input, expression: rust_value}
+        reference: {role: xla-same-precision, expression: xla_value}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}

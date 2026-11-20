@@ -1,0 +1,39 @@
+id: MATH-RANDOM-MESH-HAAR-ROTATION-001
+kind: mathematical
+name: Haar-distributed MCMC and LRDMC mesh rotations
+plain_language: 'MCMC and LRDMC random mesh orientations implement the prescribed invariant Haar construction on SO(3),
+  not a uniform-pitch approximation. An independent NumPy formula pins the complete Rz(gamma) Ry(beta) Rx(alpha) map: alpha
+  and gamma are uniform modulo 2pi and sin(beta) is uniform on [-1,1]. Proper-rotation and deterministic isotropy moments
+  are checked, and the same fixed sample explicitly rejects the uniform-pitch law.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::test_random_mesh_rotation_is_haar_on_so3
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::test_mesh_rotation_exact_product_quadrature
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: mcmc, n_angle: 4}
+    - {driver: gfmc, n_angle: 4}
+    - {driver: mcmc, n_angle: 8}
+    - {driver: gfmc, n_angle: 8}
+    executable_checks:
+      finite-haar-grid: &finite-haar-grid-check
+        site: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::_compare_rotation_grid#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-driver-haar-map-and-moments, expression: actual}
+        reference: {role: independent-map-and-exact-product-quadrature, expression: reference}
+        iterations:
+          variable: quantity
+          required_values: [mapping, axis-mean, axis-second-moment]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_mesh_semantics.py::test_mesh_rotation_rejects_actual_uniform_pitch
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: mcmc}
+    - {driver: gfmc}
+    executable_checks:
+      finite-haar-grid: *finite-haar-grid-check

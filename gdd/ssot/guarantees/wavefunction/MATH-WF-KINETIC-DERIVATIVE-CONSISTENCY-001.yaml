@@ -1,0 +1,180 @@
+id: MATH-WF-KINETIC-DERIVATIVE-CONSISTENCY-001
+kind: mathematical
+name: Derivative consistency of the kinetic energy
+plain_language: The analytical kinetic energy equals the autodiff oracle for the molecular and periodic evaluators, in scalar
+  and all-elements form.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyConsistency::test_kinetic_energy_analytic_and_auto
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - trexio_file: water_ccecp_ccpvqz.h5
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyConsistency.test_kinetic_energy_analytic_and_auto#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: K_analytic
+        reference:
+          role: existing-test-reference
+          expression: K_auto
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyConsistency::test_auto_and_analytic_kinetic_energy_all_elements
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - trexio_file: water_ccecp_ccpvqz.h5
+    - trexio_file: H2_ae_ccpvdz_cart.h5
+    - trexio_file: N_ae_ccpvdz_cart.h5
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyConsistency.test_auto_and_analytic_kinetic_energy_all_elements#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: K_elements_up_auto
+        reference:
+          role: existing-test-reference
+          expression: K_elements_up_analytic
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyConsistency.test_auto_and_analytic_kinetic_energy_all_elements#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: K_elements_dn_auto
+        reference:
+          role: existing-test-reference
+          expression: K_elements_dn_analytic
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction::test_kinetic_energy_periodic_analytic_and_auto
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {kind: pw}
+    - {kind: bspline}
+    - {kind: pgto}
+    - {kind: pgto+pw}
+    - {kind: pgto+bspline}
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_kinetic_energy_periodic_analytic_and_auto#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: K_analytic
+        reference:
+          role: existing-test-reference
+          expression: K_auto
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction::test_kinetic_energy_all_elements_periodic_analytic_and_auto
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {kind: pw}
+    - {kind: bspline}
+    - {kind: pgto}
+    - {kind: pgto+pw}
+    - {kind: pgto+bspline}
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_kinetic_energy_all_elements_periodic_analytic_and_auto#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: K_up_auto
+        reference:
+          role: existing-test-reference
+          expression: K_up_an
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_kinetic_energy_all_elements_periodic_analytic_and_auto#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: K_dn_auto
+        reference:
+          role: existing-test-reference
+          expression: K_dn_an
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_canonical_wavefunction.py::test_canonical_kinetic_matches_wavefunction_ad
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - pattern_id: WF-PATTERN-001
+    - pattern_id: WF-PATTERN-002
+    - pattern_id: WF-PATTERN-003
+    - pattern_id: WF-PATTERN-004
+    - pattern_id: WF-PATTERN-005
+    - pattern_id: WF-PATTERN-006
+    - pattern_id: WF-PATTERN-007
+    - pattern_id: WF-PATTERN-008
+    - pattern_id: WF-PATTERN-009
+    - pattern_id: WF-PATTERN-010
+    - pattern_id: WF-PATTERN-011
+    - pattern_id: WF-PATTERN-012
+    - pattern_id: WF-PATTERN-013
+    - pattern_id: WF-PATTERN-014
+    - pattern_id: WF-PATTERN-015
+    - pattern_id: WF-PATTERN-016
+    - pattern_id: WF-PATTERN-017
+    canonical_fixture:
+      suite: WF-SUITE-CORE-001
+      selector: pattern_id
+      operation: jqmc.wavefunction.compute_kinetic_energy_all_elements
+      comparison: per-electron-kinetic
+      activation: kinetic-jastrow-component-ablation
+      orbital_activation: kinetic-composite-coefficient-ablation
+      electron_configuration: {algorithm: numpy.random.PCG64.normal, seed: 864, scale: 0.6, configurations: 1, cond_G: finite-not-limited}
+    executable_checks:
+      per-electron-kinetic:
+        site: tests/test_jqmc_kernel/test_canonical_wavefunction.py::test_canonical_kinetic_matches_wavefunction_ad#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-per-electron-kinetic, expression: actual}
+        reference: {role: phase-preserving-psi-hessian, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, jastrow_grad_lap, wf_kinetic]}

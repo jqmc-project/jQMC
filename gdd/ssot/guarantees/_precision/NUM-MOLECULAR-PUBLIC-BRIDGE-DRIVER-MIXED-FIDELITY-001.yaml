@@ -1,0 +1,182 @@
+id: NUM-MOLECULAR-PUBLIC-BRIDGE-DRIVER-MIXED-FIDELITY-001
+kind: numerical
+name: Molecular public, fresh bridge and legacy parameter-driver derivatives retain full analytical fidelity in mixed
+plain_language: The39 original cases retain committed H2 cartesian/spherical and open-shell N cartesian fixtures, seed0 electron
+  coordinates, J1/J2 construction, masks and rotations. Public gradients use the same eager flags route, bridge gradients
+  keep the original single-walker fresh-factorization convention, and legacy driver closures keep their raw J1/J2 leaves and
+  existing None-inverse signature. Full and Mixed each rebuild the original model and bridge closures under their own policy;
+  actual coordinates must match exactly. c-axis collector/filter reductions occur inside their own policy, and matching parameter
+  field sets/shapes remain required. Ion/strain and parameter derivatives use the existing parameter_derivative block norm,
+  separately for every homogeneous leaf and observable. Finite matching nonempty blocks and an excess-error rejection are
+  required. Full mathematical AD remains unchanged; joint-mask AD capability, finite differences, same-mode parity, traces,
+  flags and other nodes stay outside this numerical slice.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_analytic_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: c
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: R
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: eps
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: c
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: R
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: eps
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: c
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: R
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: eps
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: c
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: R
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: eps
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: ln_Psi
+      wrt: c
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: ln_Psi
+      wrt: R
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: ln_Psi
+      wrt: eps
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: e_L
+      wrt: c
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: e_L
+      wrt: R
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: e_L
+      wrt: eps
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_molecular_gradient_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_bridge_jit_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: c
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: R
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: eps
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: c
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: R
+    - stem: H2_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: eps
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: c
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: R
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: ln_Psi
+      wrt: eps
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: c
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: R
+    - stem: N_ae_ccpvdz_cart.h5
+      quantity: e_L
+      wrt: eps
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: ln_Psi
+      wrt: c
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: ln_Psi
+      wrt: R
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: ln_Psi
+      wrt: eps
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: e_L
+      wrt: c
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: e_L
+      wrt: R
+    - stem: H2_ae_ccpvdz_sphe.h5
+      quantity: e_L
+      wrt: eps
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_molecular_gradient_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_driver_param_closures_vs_production_autograd
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: H2_ae_ccpvdz_cart.h5
+    - stem: N_ae_ccpvdz_cart.h5
+    - stem: H2_ae_ccpvdz_sphe.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_molecular_gradient_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

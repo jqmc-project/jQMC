@@ -1,0 +1,11 @@
+id: PHY-WF-TIME-REVERSAL-001
+kind: physical
+name: Time-reversal pairing of the closed-shell singlet
+plain_language: 'In the closed-shell singlet the down-spin orbital is the time-reversal partner of the up-spin orbital
+  (physical, consistent with the determinant time-reversal guarantees).'
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestClosedShellIdentity::test_closed_shell_singlet_dn_orbital_is_TR_partner_of_up

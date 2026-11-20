@@ -1,0 +1,45 @@
+id: IMPL-TOOL-FORCE-DRIVER-PARITY-COMPLEX-TWIST-001
+kind: implementation
+name: Force CLI reports the driver's real force and real-part error at a complex Bloch twist
+plain_language: >-
+  For the committed periodic all-electron H2 Cartesian GTO/MO at the non-Gamma twist k=(0.25,0.25,0.25) (complex
+  MOs, so the stored local energy and E_L times Pulay product are complex) with Pade J2=1 and the same fixed-seed
+  settings as IMPL-TOOL-FORCE-DRIVER-PARITY-001, the real MCMC and both GFMC drivers write checkpoints whose
+  ordinary compute-force commands reproduce every driver force mean and standard-error component: the command
+  projects each force jackknife sample onto its real part before the mean and the error, as the drivers' get_aF do,
+  so it neither casts complex values to real when printing nor folds the imaginary fluctuation into the error. The
+  fixture must really carry a nonzero imaginary part, and removing the real-part projection (with the print cast
+  allowed) must fail the strict error comparison. The real-wavefunction route stays covered by
+  IMPL-TOOL-FORCE-DRIVER-PARITY-001. This is deterministic route equivalence, not an independent force law.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tool_force_driver_values.py::test_force_cli_matches_actual_driver_complex_twist
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: MCMC, collect_steps: 0}
+    - {driver_name: GFMC_t, collect_steps: 5}
+    - {driver_name: GFMC_t, collect_steps: 7}
+    - {driver_name: GFMC_n, collect_steps: 5}
+    - {driver_name: GFMC_n, collect_steps: 7}
+    executable_checks:
+      all-force-means-and-errors:
+        site: tests/test_jqmc_kernel/test_tool_force_driver_values.py::_assert_tool_force#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-cli-unrounded-force-or-error, expression: actual}
+        reference: {role: actual-driver-force-or-error, expression: expected}
+        iterations: {variable: field, required_values: [mean, error]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy, det_grad_lap, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy, det_grad_lap, coulomb]}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tool_force_driver_values.py::test_force_cli_complex_twist_oracle_rejects_complex_jackknife
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: MCMC, collect_steps: 0}
+    - {driver_name: GFMC_t, collect_steps: 5}
+    - {driver_name: GFMC_t, collect_steps: 7}
+    - {driver_name: GFMC_n, collect_steps: 5}
+    - {driver_name: GFMC_n, collect_steps: 7}

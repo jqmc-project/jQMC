@@ -1,0 +1,17 @@
+id: IMPL-TOOL-LRDMC-ANALYSIS-DEFAULTS-001
+kind: implementation
+name: The jqmc-tool LRDMC analysis defaults pass the commands' own floors
+plain_language: >-
+  jqmc-tool lrdmc compute-energy, compute-force and extrapolate-energy refuse a
+  warmup below GFMC_MIN_WARMUP_STEPS, fewer bin blocks than GFMC_MIN_BIN_BLOCKS
+  and fewer collect steps than GFMC_MIN_COLLECT_STEPS. Their -w, -b and -c
+  defaults are these minima, so each command runs without the flags. The
+  evidence reads each command's registered option defaults and passes them to
+  the shared floor check, which exits with status 1 for a value below a floor.
+  It does not read a checkpoint.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::test_lrdmc_analysis_defaults_pass_the_command_floors

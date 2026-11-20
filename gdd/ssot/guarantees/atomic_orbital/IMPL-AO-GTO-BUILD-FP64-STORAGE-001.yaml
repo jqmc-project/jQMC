@@ -1,0 +1,34 @@
+id: IMPL-AO-GTO-BUILD-FP64-STORAGE-001
+kind: implementation
+name: The molecular GTO build factories store the supplied fp64 basis exactly, like the TREXIO route
+plain_language: >-
+  AOs_cart_gto_data.build and AOs_sphe_gto_data.build store the given exponents and contraction coefficients as fp64
+  model storage, bit-equal to the inputs, in both precision modes (the fp64 basis storage of
+  IMPL-HAM-HDF5-BASIS-FP64-STORAGE-001 applied to in-memory construction). For a two-centre H basis with a
+  three-primitive s shell, an s shell and a p shell whose five exponents and five coefficients are not representable in
+  float32 (two coefficients, 1e40 and 1e-40, lie outside the float32 normal range), the raw radial leaf arrays are
+  float64 numpy arrays, the per-primitive exponents and coefficients equal the supplied arrays bit for bit, and every
+  radial array equals that of the leaf built from the same inputs by _from_full_basis (the TREXIO route). With ordinary
+  coefficients, the shared mixed/full fidelity helper rebuilds both leaves after each policy switch and evaluates XLA or
+  Rust compute_AOs, compute_AOs_grad and compute_AOs_laplacian at five seeded points: in full the build() leaf's value,
+  gradient and Laplacian are bit-identical to the TREXIO-route leaf's, and the mixed build() gradient and Laplacian (the
+  fp64 ao_grad_lap zone in both modes) are bit-identical to the full build() ones. No tolerance is involved; the mixed AO
+  value (fp32 ao_eval zone) is not compared and no same-precision cross-route comparison is made in mixed.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gto_build_fp64_storage.py::test_gto_build_stores_raw_fp64_basis_like_trexio_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {ao_kind: cart}
+    - {ao_kind: sphe}
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gto_build_fp64_storage.py::test_gto_build_aos_equal_trexio_route_in_full_and_fp64_zone_in_mixed
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {ao_kind: cart, backend: xla}
+    - {ao_kind: cart, backend: rust}
+    - {ao_kind: sphe, backend: xla}
+    - {ao_kind: sphe, backend: rust}

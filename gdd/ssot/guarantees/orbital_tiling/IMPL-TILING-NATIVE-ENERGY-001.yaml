@@ -1,0 +1,33 @@
+id: IMPL-TILING-NATIVE-ENERGY-001
+kind: implementation
+name: Native tiled SD determinant and energy with independent supercell J3
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  Direct Rust extension calls consume the common primitive k blocks without a
+  global coefficient matrix. Determinant matrices, kinetic and local energy
+  agree with XLA for PW, B-spline and Cartesian/spherical pGTO, restricted and
+  independent spins, with finite cross-cell J3 in an ordinary supercell basis.
+  XLA orbital evaluators are disabled during the native calls. This fixed-geometry
+  backend contract does not certify source conversion, force/stress or sampling.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_orbital_tiling.py::test_native_tiled_sd_energy_with_independent_supercell_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw, restricted: true}
+    - {backend: pw, restricted: false}
+    - {backend: bspline, restricted: true}
+    - {backend: bspline, restricted: false}
+    - {backend: pgto_cart, restricted: true}
+    - {backend: pgto_cart, restricted: false}
+    - {backend: pgto_sphe, restricted: true}
+    - {backend: pgto_sphe, restricted: false}
+    - {backend: composite_cart, restricted: true}
+    - {backend: composite_cart, restricted: false}
+    - {backend: composite_sphe, restricted: true}
+    - {backend: composite_sphe, restricted: false}

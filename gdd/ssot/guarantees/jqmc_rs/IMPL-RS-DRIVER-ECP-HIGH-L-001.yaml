@@ -1,0 +1,102 @@
+id: IMPL-RS-DRIVER-ECP-HIGH-L-001
+kind: implementation
+name: Deterministic Rust/XLA MCMC and GFMC driver values with a live non-local l >= 1 ECP channel
+plain_language: >-
+  On the committed Cl2 ccECP, whose non-local s and p coefficients are non-zero on both atoms, with J1+J2:
+  the production MCMC driver with Rust on and off (XLA normals and meshes injected into the native chunk,
+  two walkers, force and SWCT on) keeps accepted moves and keys exactly and final walkers within the fp64
+  walker pin, and its stored w_L, e_L, HF and Pulay force and public energy and force agree at the medium
+  XLA-Rust tier, e_L^2 at its squared-observable image. GFMC_t and GFMC_n with one walker, random mesh,
+  T-move and DLT-move keep keys exactly and walkers within the fp64 pin, and stored w_L, e_L, e_L^2 and
+  public energy agree at the same tier. With position derivatives and SWCT on, GFMC_t and GFMC_n with T-move
+  and DLT-move also agree in the stored HF and Pulay forces and the public force, every stored force finite on
+  both backends. At every final walker the l >= 1 non-local contribution exceeds the e_L envelope. A native
+  e_L scaled by 1 + 10 rtol must fail. The stored native MCMC e_L of the last step equals kinetic + bare
+  Coulomb + local ECP + a non-local reference built from the raw ECP arrays (terms selected from ang_moms and
+  max_ang_mom_plus_1, scipy Legendre, full determinant and Jastrow ratios, nearest-nucleus convention) at
+  each final walker and the rotation of its final key, and in every GFMC row the production non-local ECP
+  energy at the native final walker equals that reference, with the l >= 1 part of the reference outside
+  the envelope; a non-local term selection shared by both backends therefore cannot hide a dropped p
+  channel. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_ecp_high_l_rust.py::test_mcmc_rust_vs_xla_high_l_ecp_values
+  - pytest_node: tests/test_rs_kernel/test_mcmc_ecp_high_l_rust.py::test_mcmc_rust_vs_xla_high_l_ecp_rejects_scaled_native_e_L
+  - pytest_node: tests/test_rs_kernel/test_gfmc_ecp_high_l_rust.py::test_gfmc_rust_vs_xla_high_l_ecp_values
+    executable_checks:
+      d8-n-430:
+        site: tests/test_rs_kernel/test_gfmc_chain_modes.py::_assert_deterministic_driver_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: rust._latest_r_up_carts
+        reference:
+          role: source-reference-value
+          expression: xla._latest_r_up_carts
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-431:
+        site: tests/test_rs_kernel/test_gfmc_chain_modes.py::_assert_deterministic_driver_parity#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: rust._latest_r_dn_carts
+        reference:
+          role: source-reference-value
+          expression: xla._latest_r_dn_carts
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-432:
+        site: tests/test_rs_kernel/test_gfmc_chain_modes.py::_assert_product_buffer_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: rust_product
+        reference:
+          role: source-reference-value
+          expression: rust_e_l * rust_factor
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-TIGHT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-TIGHT-001
+      d8-n-433:
+        site: tests/test_rs_kernel/test_gfmc_chain_modes.py::_assert_product_buffer_parity#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: xla_product
+        reference:
+          role: source-reference-value
+          expression: xla_e_l * xla_factor
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-TIGHT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-TIGHT-001
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pos_deriv: false, driver: t, non_local_move: tmove}
+    - {pos_deriv: false, driver: t, non_local_move: dltmove}
+    - {pos_deriv: false, driver: n, non_local_move: tmove}
+    - {pos_deriv: false, driver: n, non_local_move: dltmove}
+    - {pos_deriv: true, driver: t, non_local_move: tmove}
+    - {pos_deriv: true, driver: t, non_local_move: dltmove}
+    - {pos_deriv: true, driver: n, non_local_move: tmove}
+    - {pos_deriv: true, driver: n, non_local_move: dltmove}

@@ -1,0 +1,43 @@
+id: IMPL-RS-COMPOSITE-SAME-FAMILY-REFUSAL-001
+kind: implementation
+name: Native orbitals refuse an AO composite whose children they cannot hold, before any evaluation
+plain_language: >-
+  The native real orbital holds one GTO/pGTO block plus at most one plane-wave or B-spline block, and the native
+  complex orbital holds exactly one GTO/pGTO child plus one plane-wave or B-spline child. Python accepts any
+  AOs_composite_data, for example a basis augmented with a second GTO set whose MO coefficient columns are
+  zero-padded. For every composite the native layout cannot hold, the native route must raise NotImplementedError
+  naming the unsupported composite and the XLA backend (JQMC_FLAG_RUST_ON_CPU=0) before evaluating anything; it must
+  never return a value computed from a subset of the children and never abort with a Rust panic. Checked on the free
+  binding compute_grads_and_laplacian_jastrow_three_body with a J3 orbital that is an MO over (cart GTO, the same
+  cart GTO with exponents x1.7) of the committed N atom, with zero-padded and with dense coefficients, over
+  (sphe pGTO, the same pGTO) of the committed Li Gamma cell with dense coefficients, and over (sphe pGTO, constant
+  plane wave, cos plane wave) of the same cell; and on the production drivers MCMC.run, GFMC_n.run and GFMC_t.run on
+  the native route with the N atom determinant MOs or its identity-MO J3 orbital rewritten over (cart GTO, cart GTO
+  x1.7) with zero coefficient columns, and with the complex Li k=1/4 determinant MOs rewritten over two and over
+  three copies of their complex pGTO leaf with zero coefficient columns. Full and mixed are judged separately.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_composite_same_family_children.py::test_free_j3_grads_laplacian_refuses_same_family_composite
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: mol_gto_gto_padded}
+    - {case: mol_gto_gto_dense}
+    - {case: pbc_pgto_pgto_dense}
+    - {case: pbc_pgto_pw_pw}
+  - pytest_node: tests/test_rs_kernel/test_composite_same_family_children.py::test_native_drivers_refuse_same_family_composite
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: mol_det_gto_gto, driver: MCMC}
+    - {case: mol_det_gto_gto, driver: GFMC_n}
+    - {case: mol_det_gto_gto, driver: GFMC_t}
+    - {case: mol_j3_gto_gto, driver: MCMC}
+    - {case: mol_j3_gto_gto, driver: GFMC_n}
+    - {case: mol_j3_gto_gto, driver: GFMC_t}
+    - {case: twist_det_pgto_pgto, driver: MCMC}
+    - {case: twist_det_pgto_pgto, driver: GFMC_n}
+    - {case: twist_det_pgto_pgto, driver: GFMC_t}
+    - {case: twist_det_pgto_x3, driver: MCMC}
+    - {case: twist_det_pgto_x3, driver: GFMC_n}
+    - {case: twist_det_pgto_x3, driver: GFMC_t}

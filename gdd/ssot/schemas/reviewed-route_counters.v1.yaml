@@ -1,0 +1,257 @@
+{
+  "schema_format": 1,
+  "schema_id": "reviewed-route_counters.v1",
+  "match": {
+    "path": "gdd/ssot/inventories/route_counters.yaml"
+  },
+  "document_schema_version": 1,
+  "required_top_level": [
+    "schema_version",
+    "vocabularies",
+    "counter_read_evidence",
+    "counter_unread",
+    "predicate_counter_read_evidence",
+    "predicate_counter_unread",
+    "document"
+  ],
+  "optional_top_level": [],
+  "runtime_schema": {
+    "type": "mapping",
+    "properties": {
+      "schema_version": {
+        "type": "integer",
+        "const": 1
+      },
+      "vocabularies": {
+        "type": "mapping",
+        "properties": {
+          "unread_statuses": {
+            "type": "sequence",
+            "items": {
+              "type": "string",
+              "min_length": 1
+            },
+            "min_items": 1,
+            "unique_items": true
+          }
+        },
+        "required": [
+          "unread_statuses"
+        ],
+        "additional_properties": false
+      },
+      "counter_read_evidence": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "symbol": {
+              "type": "string",
+              "min_length": 1
+            },
+            "pytest_node": {
+              "type": "string",
+              "min_length": 1
+            }
+          },
+          "required": [
+            "index",
+            "symbol",
+            "pytest_node"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 1,
+        "unique_by": [
+          "index",
+          "symbol"
+        ]
+      },
+      "counter_unread": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "symbol": {
+              "type": "string",
+              "min_length": 1
+            },
+            "status": {
+              "type": "string",
+              "min_length": 1,
+              "enum_from": "vocabularies.unread_statuses"
+            },
+            "reason": {
+              "type": "string",
+              "min_length": 1
+            }
+          },
+          "required": [
+            "index",
+            "symbol",
+            "status",
+            "reason"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 0,
+        "unique_by": [
+          "index",
+          "symbol"
+        ]
+      },
+      "predicate_counter_read_evidence": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "symbol": {
+              "type": "string",
+              "min_length": 1
+            },
+            "pytest_node": {
+              "type": "string",
+              "min_length": 1
+            }
+          },
+          "required": [
+            "index",
+            "symbol",
+            "pytest_node"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 1,
+        "unique_by": [
+          "index",
+          "symbol"
+        ]
+      },
+      "predicate_counter_unread": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "symbol": {
+              "type": "string",
+              "min_length": 1
+            },
+            "status": {
+              "type": "string",
+              "min_length": 1,
+              "enum_from": "vocabularies.unread_statuses"
+            },
+            "reason": {
+              "type": "string",
+              "min_length": 1
+            }
+          },
+          "required": [
+            "index",
+            "symbol",
+            "status",
+            "reason"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 0,
+        "unique_by": [
+          "index",
+          "symbol"
+        ]
+      },
+      "document": {
+        "type": "mapping",
+        "properties": {
+          "id": {
+            "type": "string",
+            "min_length": 1,
+            "const": "jqmc.inventories.route-counters"
+          },
+          "version": {
+            "type": "integer",
+            "const": 1
+          },
+          "title": {
+            "type": "string",
+            "min_length": 1
+          },
+          "lifecycle": {
+            "type": "string",
+            "min_length": 1,
+            "const": "pre-cutover"
+          },
+          "purpose": {
+            "type": "string",
+            "min_length": 1
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "title",
+          "lifecycle",
+          "purpose"
+        ],
+        "additional_properties": false
+      }
+    },
+    "required": [
+      "schema_version",
+      "vocabularies",
+      "counter_read_evidence",
+      "counter_unread",
+      "predicate_counter_read_evidence",
+      "predicate_counter_unread",
+      "document"
+    ],
+    "additional_properties": false,
+    "disjoint_sections": [
+      {
+        "sections": [
+          "counter_read_evidence",
+          "counter_unread"
+        ],
+        "fields": [
+          "index",
+          "symbol"
+        ]
+      },
+      {
+        "sections": [
+          "predicate_counter_read_evidence",
+          "predicate_counter_unread"
+        ],
+        "fields": [
+          "index",
+          "symbol"
+        ]
+      }
+    ]
+  },
+  "document_block": {
+    "required_fields": [
+      "id",
+      "version",
+      "title",
+      "lifecycle",
+      "purpose"
+    ]
+  }
+}

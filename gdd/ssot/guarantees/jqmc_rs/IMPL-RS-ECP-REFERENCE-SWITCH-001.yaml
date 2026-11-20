@@ -1,0 +1,88 @@
+id: IMPL-RS-ECP-REFERENCE-SWITCH-001
+kind: implementation
+name: Nonzero ECP cache versus recomputation with observed route switching
+plain_language: >-
+  Molecular and periodic GFMC ECP nuclear/electron gradients, and VMC periodic ECP
+  stress, must agree between cached and recomputed Jastrow candidates on identical
+  inputs under the same native precision policy. Committed water, Li atom and Gamma
+  lithium provide nonzero nonlocal ECP, molecular Cartesian/spherical or periodic
+  spherical orbitals, SD/MO, paired and single-spin sectors, Pade J1+J2 and optional
+  nonzero symmetric J3. Seed-zero electron configurations are not condition-screened.
+  Existing strict zone tolerances apply element-wise to every physical output entry;
+  flattening does not introduce a tensor-scale tolerance. Empty Li down-spin is a
+  shape requirement, not numerical evidence. Actual profiler call counts must show
+  cached candidates only on the fast side; profiling is confined to a child process
+  and elapsed time is never a verdict. The declared coupled cases and both precision
+  modes are required. Corrupted values, an unselected reference route and missing
+  output fields must be rejected after a passing baseline. This supplements, and
+  cannot replace, independent XLA AD or physical reference tests.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecpf_reference_switch.py::test_molecular_ecpf_fast_matches_recomputed
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: water_ccecp_ccpvqz.h5, with_j3: false, dltmove: false, seed: 0}
+    - {trexio_file: water_ccecp_ccpvqz.h5, with_j3: false, dltmove: true, seed: 0}
+    - {trexio_file: water_ccecp_ccpvqz.h5, with_j3: true, dltmove: false, seed: 0}
+    - {trexio_file: water_ccecp_ccpvqz.h5, with_j3: true, dltmove: true, seed: 0}
+    - {trexio_file: Li_ecp_ccpvdz_cart.h5, with_j3: true, dltmove: false, seed: 0}
+    - {trexio_file: Li_ecp_ccpvdz_cart.h5, with_j3: true, dltmove: true, seed: 0}
+    executable_checks:
+      every-force-component:
+        site: tests/test_rs_kernel/test_ecpf_reference_switch.py::test_molecular_ecpf_fast_matches_recomputed#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: cached-nuclear-up-down-gradient-vector, expression: actual}
+        reference: {role: recomputed-nuclear-up-down-gradient-vector, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, coulomb, jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, coulomb, jastrow_eval, jastrow_grad_lap]}
+  - pytest_node: tests/test_rs_kernel/test_ecpf_reference_switch.py::test_periodic_ecpf_fast_matches_recomputed
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {with_j3: false, dltmove: false, seed: 0}
+    - {with_j3: false, dltmove: true, seed: 0}
+    - {with_j3: true, dltmove: false, seed: 0}
+    - {with_j3: true, dltmove: true, seed: 0}
+    executable_checks:
+      every-force-component:
+        site: tests/test_rs_kernel/test_ecpf_reference_switch.py::test_periodic_ecpf_fast_matches_recomputed#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: cached-periodic-nuclear-up-down-gradient-vector, expression: actual}
+        reference: {role: recomputed-periodic-nuclear-up-down-gradient-vector, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, coulomb, jastrow_eval, jastrow_grad_lap, ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, coulomb, jastrow_eval, jastrow_grad_lap, ewald]}
+  - pytest_node: tests/test_rs_kernel/test_ecpf_reference_switch.py::test_vmc_ecp_stress_fast_matches_recomputed
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{with_j3: false, seed: 0}, {with_j3: true, seed: 0}]
+    executable_checks:
+      every-stress-component:
+        site: tests/test_rs_kernel/test_ecpf_reference_switch.py::test_vmc_ecp_stress_fast_matches_recomputed#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: cached-nine-component-stress, expression: actual}
+        reference: {role: recomputed-nine-component-stress, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, coulomb, jastrow_eval, jastrow_grad_lap, ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_kinetic, coulomb, jastrow_eval, jastrow_grad_lap, ewald]}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecpf_reference_switch.py::test_molecular_ecpf_verdict_rejects_corruption
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: water_ccecp_ccpvqz.h5, seed: 0, fault: value}
+    - {trexio_file: water_ccecp_ccpvqz.h5, seed: 0, fault: reference-route}
+    - {trexio_file: water_ccecp_ccpvqz.h5, seed: 0, fault: missing-field}
+  - pytest_node: tests/test_rs_kernel/test_ecpf_reference_switch.py::test_periodic_ecpf_verdict_rejects_corruption
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: lithium.h5, seed: 0, fault: value}
+    - {trexio_file: lithium.h5, seed: 0, fault: reference-route}
+    - {trexio_file: lithium.h5, seed: 0, fault: missing-field}
+  - pytest_node: tests/test_rs_kernel/test_ecpf_reference_switch.py::test_vmc_ecp_stress_verdict_rejects_corruption
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: lithium.h5, seed: 0, fault: value}
+    - {trexio_file: lithium.h5, seed: 0, fault: reference-route}
+    - {trexio_file: lithium.h5, seed: 0, fault: missing-field}

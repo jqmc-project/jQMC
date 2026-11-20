@@ -1,0 +1,226 @@
+id: MATH-HAM-COMPLEX-TWIST-VALUE-ORACLE-001
+kind: mathematical
+name: Complex quantities consumed by the drivers at k != Gamma equal an independent complex reference
+plain_language: On the all-electron H4 periodic twist H4_pbc_ae_k025_cart.h5 (k_frac=(0.25,0,0), J1+J2) with four
+  geminals (time-reversal SD, untied SD with time_reversal=False, dense AO AGP, four-MO AGPn with occupations 1, 1/2,
+  1/4, 1/8), the unit phase Psi/|Psi|, ln|Psi|, the complex local energy, the lattice kinetic elements
+  -1/(2 a^2) Psi(R')/Psi(R) and the rank-1 determinant ratios at three fixed configurations, and the complex e_L and
+  every geminal optimizer derivative source (Wirtinger pair, holomorphic, AGP ambient lambda, complex AGPn occupation
+  derivative) stored by a short production XLA MCMC run at its final walkers, equal an independent recomputation. The
+  reference writes the MO contraction, geminal assembly, determinant and Jastrow exponent from their defining formulas
+  over the production AO values and differentiates that complex ln Psi with XLA automatic differentiation; the
+  potential is the production real Coulomb/Ewald sum. Re and Im are compared together, strictly in each precision
+  mode, and the real-projected reference must be rejected by the same tolerance, so a real projection of Psi, the
+  geminal, the kinetic energy or a derivative fails. The AO leaf, ECP, J3 at a twist and the Rust route
+  are outside this claim.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_twist_value_oracle.py::test_twist_complex_values_match_independent_reference
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - case: sd_tr
+    - case: sd_untied
+    - case: agp
+    - case: agpn
+    executable_checks:
+      complex-reference-ln-abs:
+        site: tests/test_jqmc_kernel/test_complex_twist_value_oracle.py::test_twist_complex_values_match_independent_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-complex-actual
+          expression: ln_abs
+        reference:
+          role: independent-complex-reference
+          expression: np.log(abs(psi_ref))
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - wf_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - wf_eval
+      complex-reference-phases:
+        site: tests/test_jqmc_kernel/test_complex_twist_value_oracle.py::test_twist_complex_values_match_independent_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-complex-actual
+          expression: phases
+        reference:
+          role: independent-complex-reference
+          expression: phase_refs
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - wf_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - wf_eval
+      complex-reference-e-ls:
+        site: tests/test_jqmc_kernel/test_complex_twist_value_oracle.py::test_twist_complex_values_match_independent_reference#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-complex-actual
+          expression: e_ls
+        reference:
+          role: independent-complex-reference
+          expression: e_l_refs
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_grad_lap
+            - wf_kinetic
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_grad_lap
+            - wf_kinetic
+            - coulomb
+      complex-reference-kinetic-elements:
+        site: tests/test_jqmc_kernel/test_complex_twist_value_oracle.py::test_twist_complex_values_match_independent_reference#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-complex-actual
+          expression: kinetic_elements
+        reference:
+          role: independent-complex-reference
+          expression: kinetic_refs
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - det_ratio
+            - wf_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - det_ratio
+            - wf_ratio
+      complex-reference-det-ratios:
+        site: tests/test_jqmc_kernel/test_complex_twist_value_oracle.py::test_twist_complex_values_match_independent_reference#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-complex-actual
+          expression: det_ratios
+        reference:
+          role: independent-complex-reference
+          expression: det_ratio_refs
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - det_ratio
+            - wf_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - det_ratio
+            - wf_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_complex_twist_value_oracle.py::test_twist_driver_consumed_values_match_independent_reference
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_complex_twist_value_oracle.py::test_twist_driver_consumed_values_match_independent_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: stored_e_l
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(e_l_refs)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_grad_lap
+            - wf_kinetic
+            - coulomb
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_grad_lap
+            - wf_kinetic
+            - coulomb
+      complex-reference-values:
+        site: tests/test_jqmc_kernel/test_complex_twist_value_oracle.py::test_twist_driver_consumed_values_match_independent_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-complex-actual
+          expression: values
+        reference:
+          role: independent-complex-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - det_grad_lap
+            - wf_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - det_grad_lap
+            - wf_eval
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - case: sd_tr
+    - case: sd_untied
+    - case: agp
+    - case: agpn

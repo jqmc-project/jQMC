@@ -1,0 +1,40 @@
+id: MATH-COMPONENT-FAST-PARAMETER-PARITY-001
+kind: mathematical
+name: Provided-inverse and freshly inverted parameter gradients preserve same-policy parity
+plain_language: On the unchanged real/complex PCG64(7) matrix sources, analytical provided-inverse and nonfast parameter-gradient
+  matrices agree under the original strict det_eval same-precision pair. Full checks the original pair alongside its separate
+  directional JVP oracle. Mixed fidelity independently rebuilds both policies and checks this same-policy identity for each
+  pair, retaining the entry-mode strict det_eval budget. This is route parity, not mixed-versus-AD accuracy and not a mixed-fidelity
+  tolerance. This additional registration owns the mixed entry run only; its full same-policy comparison remains explicitly
+  bound in MATH-DERIVAPI-CONSISTENCY-001.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_derivatives_fast.py::test_fast_logdet_param_grad_matches_nonfast_and_autograd
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - complex_lambda: false
+    - complex_lambda: true
+    executable_checks:
+      same-policy-parity-mixed:
+        site: tests/test_jqmc_kernel/test_derivatives_fast.py::test_fast_logdet_param_grad_matches_nonfast_and_autograd#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: provided-inverse-analytical-parameter-gradient
+          expression: np.asarray(g_fast)
+        reference:
+          role: nonfast-analytical-parameter-gradient
+          expression: np.asarray(g_nonfast)
+        precision:
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+        iterations:
+          variable: route_precision
+          required_values:
+          - mixed
+          - full
