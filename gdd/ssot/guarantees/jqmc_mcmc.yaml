@@ -1,0 +1,16 @@
+schema_version: 1
+document:
+  id: jqmc.jqmc_mcmc
+  version: 1
+  lifecycle: cutover
+  title: MCMC driver guarantees
+  purpose: 'Which test guarantees what, by which verdict method, for the MCMC driver: production/debug parity, force sum rules,
+    stress anchors, checkpointing, and end-to-end smoke.'
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-MCMC-DEBUG-PRODUCTION-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

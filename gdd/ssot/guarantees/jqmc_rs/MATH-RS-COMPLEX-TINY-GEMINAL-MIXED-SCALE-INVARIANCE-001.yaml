@@ -1,0 +1,20 @@
+id: MATH-RS-COMPLEX-TINY-GEMINAL-MIXED-SCALE-INVARIANCE-001
+kind: mathematical
+name: Mixed native complex LRDMC, ECP force / strain and GFMC HF routes of a geminal below sqrt(tiny) equal the unscaled mixed values
+plain_language: >-
+  Mixed precision. On the Li twist witness of
+  MATH-RS-COMPLEX-TINY-GEMINAL-SCALE-INVARIANCE-001 (lithium_k025 ccECP, no Jastrow, both spin MO coefficient arrays
+  x 1e-85 so |G| ~ 1e-173, PCG64 seed 13 uniform start), the free native complex routes _gfmc_lrdmc_ecp_complex and
+  _gfmc_lrdmc_ae_complex (reference and fast mesh), grad_V_ecp_nonlocal_wrt_R_complex,
+  grad_V_ecp_nonlocal_wrt_strain_complex and _gfmc_grad_e_L_ecp_pbc_complex, evaluated under the mixed policy, equal the
+  same routes on the unscaled input under the same mixed policy at the same configuration, within the det_ratio zone
+  strict tolerance of the active policy; the unscaled outputs are finite and not all zero. The common MO scale is a
+  non-AD invariant of every mesh determinant ratio (det(c^2 G_mesh) / det(c^2 G_base) = det(G_mesh) / det(G_base)),
+  so a scale-dependent error in the range-safe complex division of these ratios is detected in mixed precision.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_tiny_geminal_native.py::test_native_complex_gfmc_force_stress_routes_are_finite_and_scale_invariant_for_a_tiny_geminal
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{route: lrdmc_ecp_reference}, {route: lrdmc_ecp_fast}, {route: lrdmc_kinetic_reference}, {route: lrdmc_kinetic_fast}, {route: ecp_force}, {route: ecp_strain}, {route: gfmc_hf_force_stress}]

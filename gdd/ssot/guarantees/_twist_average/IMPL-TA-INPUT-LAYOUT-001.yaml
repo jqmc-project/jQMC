@@ -1,0 +1,40 @@
+id: IMPL-TA-INPUT-LAYOUT-001
+kind: implementation
+name: Twist-average input layout
+plain_language: The twist-average input round-trips through writer and reader preserving independent complex SD spin channels,
+  per-twist Hamiltonians load, the single/combined layout is selected without version metadata, the incremental writer equals the batch entry point, and every
+  malformed payload (non-canonical SD, inconsistent time reversal, lambda payloads, extra MO rows, missing required content, incomplete
+  or duplicate twists) is rejected.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_twist_average_input_writer_reader_roundtrip
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_twist_roundtrip_preserves_independent_complex_sd_spin_channels
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_multi_twist_roundtrip_preserves_independent_complex_sd_spin_channels
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_load_twist_returns_per_twist_hamiltonian
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageWriterStreaming::test_incremental_writer_matches_batch_entry_point
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_is_twist_average_input_distinguishes_combined_and_single
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestCheckpointHelpers::test_cli_auto_dispatch_selects_combined_input
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_twist_writer_rejects_noncanonical_sd_mo_rows
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_twist_writer_rejects_inconsistent_time_reversal_sd
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_twist_loader_rejects_any_lambda_payload_in_canonical_sd
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_twist_loader_rejects_sd_with_extra_mo_rows
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageInputLayout::test_hamiltonian_data_load_from_hdf5_rejects_combined
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestTwistAverageWriterStreaming::test_writer_rejects_incomplete_and_duplicate_twists
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::test_combined_loaders_require_current_container
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {damage: meta}
+    - {damage: shared}
+    - {damage: twists}
+    - {damage: count}
+    - {damage: count-mismatch}
+    - {damage: twist-name}

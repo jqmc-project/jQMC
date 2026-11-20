@@ -1,0 +1,16 @@
+id: IMPL-GFMC-COMPILE-TAX-001
+kind: implementation
+name: GFMC compile-tax contracts
+plain_language: Each GFMC projection driver compiles at most once per run, a second run compiles nothing, and the comput_stress
+  opt-out skips the mesh-strain stream while keeping forces, as the reviewed resource contract requires.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_compile_tax.py::test_gfmc_t_comput_stress_false_skips_stress_and_keeps_force
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_compile_tax.py::test_gfmc_t_run_compiles_each_projection_driver_at_most_once
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_compile_tax.py::test_gfmc_n_second_run_compiles_nothing
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_compile_tax.py::test_gfmc_t_seed_inverse_reuses_executable_with_current_inputs
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

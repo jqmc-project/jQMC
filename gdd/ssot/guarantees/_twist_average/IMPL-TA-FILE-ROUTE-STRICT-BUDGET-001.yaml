@@ -1,0 +1,18 @@
+id: IMPL-TA-FILE-ROUTE-STRICT-BUDGET-001
+kind: implementation
+name: Twist-average file-route energy budget is strict and no test tolerance is resolved at import
+plain_language: >-
+  No statement that tests/test_jqmc_kernel/test_twist_average.py executes at
+  import time (module or class body, decorators, default arguments) calls a get_tol or get_tolerance resolver, because
+  import runs before the autouse precision fixture and would freeze the collection-time mode. After the precision
+  policy is switched to full and then to mixed, the helper that supplies the single-twist file-route versus in-memory
+  E_TA and E_TA_std budget returns the bit-exact budget (zero absolute and relative tolerance) in both modes, matching
+  the byte identity of IMPL-TA-BYTE-IDENTITY-001, and that budget is never looser than the mode's strict HDF5
+  round-trip budget.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestFilePathWrapper::test_file_route_energy_budget_is_strict_and_not_resolved_at_import
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

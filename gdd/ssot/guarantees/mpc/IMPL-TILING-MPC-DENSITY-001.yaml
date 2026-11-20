@@ -1,0 +1,32 @@
+id: IMPL-TILING-MPC-DENSITY-001
+kind: implementation
+name: MPC density from occupied tiled orbital values
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  MPC consumes final occupied k-block values directly without requesting
+  global natural-orbital coefficients or an identity matrix. Its density
+  tables, constant and off-grid energy agree with ordinary explicit-supercell
+  orbitals for PW, B-spline and both pGTO angular conventions, with restricted
+  and independent spin payloads.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_mpc.py::test_tiled_mpc_matches_explicit_supercell_without_global_coefficients
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw, restricted: true}
+    - {backend: pw, restricted: false}
+    - {backend: bspline, restricted: true}
+    - {backend: bspline, restricted: false}
+    - {backend: pgto_cart, restricted: true}
+    - {backend: pgto_cart, restricted: false}
+    - {backend: pgto_sphe, restricted: true}
+    - {backend: pgto_sphe, restricted: false}
+    - {backend: composite_cart, restricted: true}
+    - {backend: composite_cart, restricted: false}
+    - {backend: composite_sphe, restricted: true}
+    - {backend: composite_sphe, restricted: false}

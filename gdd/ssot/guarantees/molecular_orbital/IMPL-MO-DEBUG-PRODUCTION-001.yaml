@@ -1,0 +1,74 @@
+id: IMPL-MO-DEBUG-PRODUCTION-001
+kind: implementation
+name: Debug/production route parity of molecular-orbital evaluation
+plain_language: The optimized MO evaluators equal their straightforward debug twins on identical input, for the core and
+  periodic forward routes.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsCore::test_MOs_comparing_jax_and_debug_implemenetations
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsCore.test_MOs_comparing_jax_and_debug_implemenetations#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mo_ans_all_debug
+        reference:
+          role: existing-test-reference
+          expression: mo_ans_all_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+  - pytest_node: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic::test_MOs_periodic_forward_public_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic.test_MOs_periodic_forward_public_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mo_public
+        reference:
+          role: existing-test-reference
+          expression: mo_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_molecular_orbital.py::TestMOsPeriodic.test_MOs_periodic_forward_public_vs_debug#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mo_public
+        reference:
+          role: existing-test-reference
+          expression: mo_from_aos
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval

@@ -1,0 +1,64 @@
+id: IMPL-RS-AGPN-COMPLEX-SOURCE-PARITY-001
+kind: implementation
+name: Native AGPn optimizer sources retain complex lambda derivatives
+plain_language: >-
+  On exactly the closed-real, open-real and open-complex fixed inputs of
+  MATH-RS-AGPN-COMPLEX-SOURCE-REFERENCE-001, the native production parameter
+  assembler must publish the same complex ln(Psi) and e_L lambda sources as
+  the independently anchored XLA source provider. Occupation derivatives are
+  required in every case; nonempty unpaired derivatives are additionally
+  required in both open-shell cases. e_L includes both with-Jastrow kinetic
+  and nonlocal ECP contributions. The paired/unpaired source metadata and
+  imaginary components may not be replaced by real-only diagnostics. Each
+  case runs in full and mixed with the existing quantity-specific backend
+  consistency policy, without an added periodic absolute floor. This is
+  production source-assembly parity, not an independent physical proof or
+  a change to real-projected native free-kernel APIs. The compatibility
+  diagnostic dictionary still projects real-parameter leaves while keeping
+  genuinely complex unpaired leaves complex.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_agpn_complex_derivative_sources.py::test_native_agpn_complex_lambda_sources_match_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: closed-real, fixture_path: tests/trexio_example_files/H4_pbc_ae_k025_cart.h5, quantity: ln_Psi}
+    - {case: open-real, fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, quantity: ln_Psi}
+    - {case: open-complex, fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, quantity: ln_Psi}
+    - {case: closed-real, fixture_path: tests/trexio_example_files/H4_pbc_ae_k025_cart.h5, quantity: e_L}
+    - {case: open-real, fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, quantity: e_L}
+    - {case: open-complex, fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, quantity: e_L}
+    executable_checks:
+      native-complex-source:
+        site: tests/test_rs_kernel/test_agpn_complex_derivative_sources.py::test_native_agpn_complex_lambda_sources_match_xla#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-complex-optimizer-lambda-source, expression: value}
+        reference: {role: independently-anchored-xla-complex-source, expression: reference}
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - {selector: {quantity: ln_Psi}, zones: [ao_eval, det_eval]}
+            - {selector: {quantity: e_L}, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - {selector: {quantity: ln_Psi}, zones: [ao_eval, det_eval]}
+            - {selector: {quantity: e_L}, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}
+      diagnostic-compatibility:
+        site: tests/test_rs_kernel/test_agpn_complex_derivative_sources.py::test_native_agpn_complex_lambda_sources_match_xla#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: legacy-diagnostic-lambda-payload, expression: 'diagnostic[name]'}
+        reference: {role: xla-source-projected-only-for-real-parameter-diagnostics, expression: diagnostic_reference}
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - {selector: {quantity: ln_Psi}, zones: [ao_eval, det_eval]}
+            - {selector: {quantity: e_L}, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            case_zones:
+            - {selector: {quantity: ln_Psi}, zones: [ao_eval, det_eval]}
+            - {selector: {quantity: e_L}, zones: [ao_eval, mo_eval, mo_grad, mo_lap, det_grad_lap, wf_kinetic, jastrow_grad_lap]}

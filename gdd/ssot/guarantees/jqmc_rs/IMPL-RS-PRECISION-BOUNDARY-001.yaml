@@ -1,0 +1,83 @@
+id: IMPL-RS-PRECISION-BOUNDARY-001
+kind: implementation
+name: Native CPU dispatch and lossless precision-policy transport
+plain_language: >-
+  Native CPU selection admits both full and mixed precision and obeys the
+  explicit environment/default/backend truth table. NumPy and JAX leaves
+  widen float/complex storage without changing represented values or losing
+  imaginary components, while integer/bool leaves retain dtype and identity.
+  Actual MCMC, conventional GFMC and load-balanced GFMC contexts receive the
+  complete current zone policy and unchanged Hamiltonian leaf values from a
+  committed molecular H2 AE Cartesian/MO input with Pade J2. MCMC executes its
+  minimum run and GFMC resolves its real interval context. This is transport
+  and dispatch validation, not independent numerical accuracy or equality
+  between different precision modes.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_native_precision_boundary.py::test_native_cpu_predicate_does_not_exclude_mixed
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {env_flag: null, default_flag: true, backend: cpu, expected: true}
+    - {env_flag: null, default_flag: false, backend: cpu, expected: false}
+    - {env_flag: '1', default_flag: false, backend: cpu, expected: true}
+    - {env_flag: '0', default_flag: true, backend: cpu, expected: false}
+    - {env_flag: ' False ', default_flag: true, backend: cpu, expected: false}
+    - {env_flag: 'NO', default_flag: true, backend: cpu, expected: false}
+    - {env_flag: 'off', default_flag: true, backend: cpu, expected: false}
+    - {env_flag: '', default_flag: true, backend: cpu, expected: false}
+    - {env_flag: '1', default_flag: true, backend: gpu, expected: false}
+  - pytest_node: tests/test_rs_kernel/test_native_precision_boundary.py::test_native_leaf_transport_preserves_values_and_backend
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: numpy, dtype: float32}
+    - {backend: numpy, dtype: float64}
+    - {backend: numpy, dtype: complex64}
+    - {backend: numpy, dtype: complex128}
+    - {backend: numpy, dtype: int64}
+    - {backend: numpy, dtype: bool}
+    - {backend: jax, dtype: float32}
+    - {backend: jax, dtype: float64}
+    - {backend: jax, dtype: complex64}
+    - {backend: jax, dtype: complex128}
+    - {backend: jax, dtype: int64}
+    - {backend: jax, dtype: bool}
+    executable_checks:
+      unchanged-value:
+        site: tests/test_rs_kernel/test_native_precision_boundary.py::test_native_leaf_transport_preserves_values_and_backend#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: native-transport-value, expression: np.asarray(actual)}
+        reference: {role: original-literal-values-at-declared-transport-dtype, expression: reference}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      source-unchanged:
+        site: tests/test_rs_kernel/test_native_precision_boundary.py::test_native_leaf_transport_preserves_values_and_backend#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: source-after-transport, expression: np.asarray(source)}
+        reference: {role: original-literal-array, expression: original}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_rs_kernel/test_native_precision_boundary.py::test_native_context_receives_current_policy_and_unchanged_input
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver: MCMC}, {driver: GFMC_n}, {driver: GFMC_t}]
+    executable_checks:
+      unchanged-hamiltonian-leaf:
+        site: tests/test_rs_kernel/test_native_precision_boundary.py::test_native_context_receives_current_policy_and_unchanged_input#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: native-context-hamiltonian-leaf, expression: np.asarray(packed)}
+        reference: {role: built-hamiltonian-values-at-declared-transport-dtype, expression: reference}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_rs_kernel/test_native_precision_boundary.py::test_native_policy_verdict_rejects_wrong_driver_policy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver: MCMC}, {driver: GFMC_n}, {driver: GFMC_t}]
+  - pytest_node: tests/test_rs_kernel/test_native_precision_boundary.py::test_native_predicate_verdict_rejects_forced_off_cpu
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{env_flag: '1'}]
+  - pytest_node: tests/test_rs_kernel/test_native_precision_boundary.py::test_native_transport_verdict_rejects_corrupted_leaf
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{fault: value-change}, {fault: integer-cast}]

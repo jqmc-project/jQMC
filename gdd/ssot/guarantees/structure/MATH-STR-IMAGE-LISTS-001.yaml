@@ -1,0 +1,143 @@
+id: MATH-STR-IMAGE-LISTS-001
+kind: mathematical
+name: Image-list structure
+plain_language: Primitive image lists contain the origin image, grow monotonically with diffuse exponents and higher angular
+  momentum, return int64 indices, and the per-atom lists keep exactly the locality-consistent subsets (center, corner, face,
+  diffuse recovery).
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList::test_primitive_image_list_contains_T0
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - cell_name: cubic_10bohr
+    - cell_name: primitive_fcc_si
+    - cell_name: triclinic_skewed
+    executable_checks:
+      origin-membership:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_primitive_image_list_contains_T0#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: nearest-production-image
+          expression: origin
+        reference:
+          role: origin-image
+          expression: expected_origin
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList::test_primitive_image_list_grows_with_diffuse_exponent
+    executable_checks:
+      compact:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_primitive_image_list_grows_with_diffuse_exponent#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: complete-production-image-set
+          expression: sorted_indices(images_compact)
+        reference:
+          role: independent-active-set-enumeration
+          expression: independent_image_indices(cell, 5.0, 0, AO_IMAGE_TRUNCATION_ATOL) @ np.asarray(cell)
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      diffuse:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_primitive_image_list_grows_with_diffuse_exponent#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: complete-production-image-set
+          expression: sorted_indices(images_diffuse)
+        reference:
+          role: independent-active-set-enumeration
+          expression: independent_image_indices(cell, 0.1, 0, AO_IMAGE_TRUNCATION_ATOL) @ np.asarray(cell)
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList::test_primitive_image_list_grows_with_higher_L
+    executable_checks:
+      moderate-s:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_primitive_image_list_grows_with_higher_L#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: complete-production-image-set
+          expression: sorted_indices(images_l0_mod)
+        reference:
+          role: independent-active-set-enumeration
+          expression: independent_image_indices(cell, 1.0, 0, AO_IMAGE_TRUNCATION_ATOL) @ np.asarray(cell)
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      moderate-p:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_primitive_image_list_grows_with_higher_L#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: complete-production-image-set
+          expression: sorted_indices(images_l1_mod)
+        reference:
+          role: independent-active-set-enumeration
+          expression: independent_image_indices(cell, 1.0, 1, AO_IMAGE_TRUNCATION_ATOL) @ np.asarray(cell)
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      diffuse-s:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_primitive_image_list_grows_with_higher_L#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: complete-production-image-set
+          expression: sorted_indices(images_l0_diff)
+        reference:
+          role: independent-active-set-enumeration
+          expression: independent_image_indices(cell, 0.05, 0, ATOL_PYTHON_FP64_LOOSE) @ np.asarray(cell)
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      diffuse-p:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_primitive_image_list_grows_with_higher_L#exact-comparison-4
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: complete-production-image-set
+          expression: sorted_indices(images_l1_diff)
+        reference:
+          role: independent-active-set-enumeration
+          expression: independent_image_indices(cell, 0.05, 1, ATOL_PYTHON_FP64_LOOSE) @ np.asarray(cell)
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList::test_primitive_image_list_indices_returns_int64_and_contains_origin
+    executable_checks:
+      origin-index-membership:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_primitive_image_list_indices_returns_int64_and_contains_origin#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: nearest-production-image-index
+          expression: origin
+        reference:
+          role: origin-image-index
+          expression: expected_origin
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestPerAtomImageList::test_localized_center_atom_keeps_only_T0
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestPerAtomImageList::test_localized_corner_atom_keeps_interior_octant
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestPerAtomImageList::test_localized_face_atom_keeps_T0_plus_one_neighbor
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestPerAtomImageList::test_contains_T0_and_subset_of_cellcell
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestPerAtomImageList::test_diffuse_center_atom_recovers_full_cellcell_set

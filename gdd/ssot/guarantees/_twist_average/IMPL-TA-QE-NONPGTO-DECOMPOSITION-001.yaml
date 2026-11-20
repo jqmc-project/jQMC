@@ -1,0 +1,49 @@
+id: IMPL-TA-QE-NONPGTO-DECOMPOSITION-001
+kind: implementation
+name: QE plane-wave, B-spline and composite twists decompose into per-twist chains plus the BZ weighted sum
+plain_language: 'For each QE projection kind pw, bspline, pgto+pw and pgto+bspline, the committed Li_gamma and Li_k025 saves
+  converted by convert_qe_to_twist_average_input and loaded by load_twist (twist 0 at Gamma, twist 1 at non-Gamma k with the complex plane-wave,
+  B-spline or composite leaf at k025) run under a two-rank world through run_twist_average_from_hamiltonians with the
+  non-uniform raw weights 0.75 and 0.25; the driver per-twist energies and error bars equal standalone MCMC chains with
+  the same seeds on the same intra communicators, and E_TA, E_TA_std and s_twist equal the weighted arithmetic on those
+  per-twist values. The two twist energies are asserted to separate the true combine from the reversed weight vector by
+  more than the pin.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_twist_decomposition_nonpgto_mpi.py::test_qe_nonpgto_twist_driver_decomposes_into_per_twist_chains
+    executable_checks:
+      d8-n-073:
+        site: tests/test_jqmc_kernel/test_qe_twist_decomposition_nonpgto_mpi.py::test_qe_nonpgto_twist_driver_decomposes_into_per_twist_chains#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_E
+        reference:
+          role: source-reference-value
+          expression: E_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-074:
+        site: tests/test_jqmc_kernel/test_qe_twist_decomposition_nonpgto_mpi.py::test_qe_nonpgto_twist_driver_decomposes_into_per_twist_chains#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_E_std
+        reference:
+          role: source-reference-value
+          expression: sigma_manual
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001

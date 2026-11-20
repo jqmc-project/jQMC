@@ -1,0 +1,11 @@
+id: IMPL-HAM-DTYPE-INTEGRITY-001
+kind: implementation
+name: Complex dtype integrity of the local energy
+plain_language: 'compute_local_energy raises no ComplexWarning at fixed walker positions: every silent complex-to-real cast
+  in the kinetic, Coulomb, and ECP chain is promoted to a failure.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_complex_contamination.py::TestComplexBlochPath::test_no_complex_truncation_compute_local_energy

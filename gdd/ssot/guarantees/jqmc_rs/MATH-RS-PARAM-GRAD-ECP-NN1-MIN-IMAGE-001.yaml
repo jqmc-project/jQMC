@@ -1,0 +1,21 @@
+id: MATH-RS-PARAM-GRAD-ECP-NN1-MIN-IMAGE-001
+kind: mathematical
+name: The periodic real-Gamma ECP parameter derivatives dE_L/dc select the minimum-image nearest ECP nucleus (NN = 1)
+plain_language: >-
+  param_grad_ecp.rs collect_mesh serves the linear-method e_L parameter derivatives of the ECP non-local term
+  (grad_eL_ecp_wrt_mo_coeff, grad_eL_ecp_wrt_lambda, grad_eL_ecp_wrt_jastrow_2b_param, ...). With the nearest-nucleus filter
+  NN = 1 its closure nearest_set must rank the ECP nuclei by their minimum-image distance, because the e_L derivative
+  electrons are not wrapped into the home cell. On the committed lithium cell (Li bcc, two ECP nuclei, real Gamma; SD without
+  Jastrow, SD with J1/J2, and AGP), one up and one down electron, the home-cell copy Xw puts each electron within about 1 bohr
+  of a home-cell nucleus and X = Xw + lattice vectors (four shift pairs) puts each electron next to an image of that nucleus;
+  the brute-force image search of tests/_ecp_min_image_reference.py shows that the minimum-image nearest nucleus at X is the one
+  at Xw and that the raw Cartesian distance ranks the other nucleus first for every electron (input validity). The derivative
+  at X equals the derivative at Xw (lattice-translation invariance of dE_L/dc for a real-Gamma wavefunction). Full and mixed are
+  judged separately, each at the existing zone tolerances of its own policy (no mixed-vs-full comparison).
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_param_grad_ecp_nn1_min_image.py::test_param_grad_ecp_nn1_selects_min_image_nearest_nucleus
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: sd_mo_jnone, shift: shift0}, {route: sd_mo_jnone, shift: shift1}, {route: sd_mo_jnone, shift: shift2}, {route: sd_mo_jnone, shift: shift3}, {route: sd_mo_j12, shift: shift0}, {route: sd_mo_j12, shift: shift1}, {route: sd_mo_j12, shift: shift2}, {route: sd_mo_j12, shift: shift3}, {route: sd_j2_j12, shift: shift0}, {route: sd_j2_j12, shift: shift1}, {route: sd_j2_j12, shift: shift2}, {route: sd_j2_j12, shift: shift3}, {route: agp_lambda, shift: shift0}, {route: agp_lambda, shift: shift1}, {route: agp_lambda, shift: shift2}, {route: agp_lambda, shift: shift3}]

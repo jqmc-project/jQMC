@@ -1,0 +1,65 @@
+id: MATH-MCMC-ONLY-UP-MULTI-ELECTRON-CARRIED-STATE-001
+kind: mathematical
+name: The XLA only-up MCMC kernel keeps G, G^-1 and ln|det| equal to a from-scratch Slater rebuild for two or more up electrons
+plain_language: >-
+  For a system with no down-spin electron and two or more up-spin electrons, the XLA only-up MCMC
+  transition kernel (_update_electron_positions_only_up_electron, the __only_up_electron branch of MCMC.run)
+  keeps its carried geminal, its carried Sherman-Morrison inverse and the log-determinant equal to the Slater
+  matrix rebuilt from scratch at the current electron positions, its numpy inverse and its numpy slogdet, after a
+  chain of accepted moves of every up electron (not only electron 0). Evidence: committed all-electron N atom
+  (cc-pVDZ, Cartesian), no Jastrow, n_dn = 0 and n_up in (2, 3, 4), as a single determinant of the first n_up MOs and
+  as the same determinant converted to AGP. Four segments of 25 proposals (Dt 1.2, PRNGKey(5), start at 0.7 times
+  PCG64 seed-3 normals) carry the walker, key, G, G^-1 and streaming determinant state; after every segment the
+  carried G equals compute_MOs(orb_up, r_up).T, G^-1 its numpy inverse, the carried G times G^-1 the identity, and
+  -ln|det G^-1| equals ln|det G_ref| with equal signs. The reference uses no rank-1 update or streaming cache.
+  Every up electron must have moved by the end of the chain. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_only_up_multi_electron_mcmc.py::test_only_up_kernel_multi_electron_matches_rebuilt_slater
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {num_up: 2, kind: sd}
+    - {num_up: 3, kind: sd}
+    - {num_up: 4, kind: sd}
+    - {num_up: 2, kind: agp}
+    - {num_up: 3, kind: agp}
+    - {num_up: 4, kind: agp}
+    executable_checks:
+      carried-geminal:
+        site: tests/test_jqmc_kernel/test_only_up_multi_electron_mcmc.py::test_only_up_kernel_multi_electron_matches_rebuilt_slater#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-geminal, expression: g_carried}
+        reference: {role: slater-matrix-rebuilt-from-compute-mos, expression: g_ref}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+        iterations: {variable: segment_label, required_values: ['0', '1', '2', '3']}
+      carried-inverse:
+        site: tests/test_jqmc_kernel/test_only_up_multi_electron_mcmc.py::test_only_up_kernel_multi_electron_matches_rebuilt_slater#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-sherman-morrison-inverse, expression: x_carried}
+        reference: {role: numpy-inverse-of-rebuilt-slater-matrix, expression: g_ref_inv}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+        iterations: {variable: segment_label, required_values: ['0', '1', '2', '3']}
+      inverse-identity:
+        site: tests/test_jqmc_kernel/test_only_up_multi_electron_mcmc.py::test_only_up_kernel_multi_electron_matches_rebuilt_slater#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-geminal-times-carried-inverse, expression: g_carried @ x_carried}
+        reference: {role: identity, expression: np.eye(num_up)}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+        iterations: {variable: segment_label, required_values: ['0', '1', '2', '3']}
+      log-determinant:
+        site: tests/test_jqmc_kernel/test_only_up_multi_electron_mcmc.py::test_only_up_kernel_multi_electron_matches_rebuilt_slater#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: minus-log-abs-det-of-carried-inverse, expression: -logabs_x}
+        reference: {role: numpy-slogdet-of-rebuilt-slater-matrix, expression: logabs_ref}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, det_ratio]}
+        iterations: {variable: segment_label, required_values: ['0', '1', '2', '3']}

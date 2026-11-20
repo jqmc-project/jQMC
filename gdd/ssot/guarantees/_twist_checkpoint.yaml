@@ -1,0 +1,36 @@
+schema_version: 1
+document:
+  id: jqmc._twist_checkpoint
+  version: 1
+  lifecycle: cutover
+  title: Twist-checkpoint guarantees
+  purpose: Which test guarantees what, by which verdict method, for twist checkpointing and resume.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-TWCKPT-RESUME-001
+  overrides:
+    jqmc._twist_checkpoint.is_twist_complete:
+    - IMPL-TWCKPT-RESUME-001
+    - IMPL-TWCKPT-MPC-SUMMARY-001
+    - IMPL-TWCKPT-COMPLETENESS-001
+    - IMPL-TWCKPT-ANALYSIS-IDENTITY-001
+    jqmc._twist_checkpoint.reject_twist_checkpoints_beyond:
+    - IMPL-TWCKPT-COMPLETENESS-001
+    jqmc._twist_checkpoint.invalidate_twist_checkpoints:
+    - IMPL-TWCKPT-COMPLETENESS-001
+    jqmc._twist_checkpoint.load_twist_checkpoint_summary:
+    - IMPL-TWCKPT-RESUME-001
+    - IMPL-TWCKPT-MPC-SUMMARY-001
+    - IMPL-TWCKPT-COMPLETENESS-001
+    jqmc._twist_checkpoint.load_twist_checkpoint_manifest:
+    - IMPL-TWCKPT-COMPLETENESS-001
+    jqmc._twist_checkpoint.write_twist_optimized_hamiltonian:
+    - IMPL-TWCKPT-DUMP-001
+    jqmc._twist_checkpoint.save_twist_checkpoint:
+    - IMPL-TWCKPT-RESUME-001
+    - IMPL-TWCKPT-MPC-SUMMARY-001
+    - IMPL-TWCKPT-ANALYSIS-IDENTITY-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

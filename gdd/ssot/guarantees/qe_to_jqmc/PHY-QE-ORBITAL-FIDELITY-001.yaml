@@ -1,0 +1,16 @@
+id: PHY-QE-ORBITAL-FIDELITY-001
+kind: physical
+name: Orbital fidelity against the QE plane-wave reference
+plain_language: At the electron grids and fixtures named below, converted jQMC orbitals agree with independently loaded
+  QE plane-wave bands after the explicitly declared per-band uniform rescaling and within each test's recorded residual
+  bound. Coverage includes PW, each LSDA spin channel, and both channels at a non-Gamma k point. This claim does not assert
+  bit-exact conversion or fidelity outside those sampled grids and tolerances.
+verdict_methods:
+- VM-PHY-REFERENCE-001
+required_evidence:
+- verdict_method: VM-PHY-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCOrbitalFidelity::test_jqmc_orbital_matches_pw_reference
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQEToJQMCWavefunction::test_build_wavefunction_pw_reproduces_pw_band
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEToJQMCUnrestricted::test_pw_mos_reproduce_each_spin_channel
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQELSDANonGamma::test_single_k_uks_pw_orbitals_reproduce_both_channels

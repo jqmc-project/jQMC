@@ -1,0 +1,32 @@
+id: MATH-RS-INACTIVE-COMPLEX-CHILD-J3-FREE-REAL-WRAPPERS-001
+kind: mathematical
+name: The free real native wrappers with an all-zero-j_matrix complex-child J3 equal the J3-free calls
+plain_language: >-
+  An all-zero j_matrix makes the three-body Jastrow factor identically zero, so every free real native
+  wrapper that consumes the J3 only through the wavefunction (values, kinetic and ECP energies, forces, strains
+  and non-J3 parameter derivatives) must return exactly the result of the same call with
+  jastrow_three_body_data=None, also when the J3 orbital is an MO over a composite of a real pGTO and a complex
+  plane-wave child that the real orbital parser cannot represent (it must never be parsed or evaluated). On the
+  committed Li Gamma ccECP cell (rs_ham pbc_gamma_sphepgto_jdtn: spherical pGTO single determinant with J1, J2 and
+  DTN, and its to_AGP form for the lambda wrappers) with an identity-MO-wrapped (pGTO s, plane-wave) composite J3
+  orbital, for a complex plane-wave child with a nonzero G vector, a complex constant (k = 0) child and a real
+  constant child as the control, at one fixed electron configuration (seed 7) and the MCMC driver's default non-
+  local mesh: the wrappers grad_T_dtn_pbc_wrt_strain, grad_T_pbc_wrt_R, grad_T_pbc_wrt_strain,
+  grad_eL_dtn_kinetic_params, grad_eL_ecp_dtn_params, grad_eL_ecp_wrt_jastrow_1b_param,
+  grad_eL_ecp_wrt_jastrow_2b_param, grad_eL_ecp_wrt_lambda, grad_eL_ecp_wrt_lambda_diag, grad_eL_ecp_wrt_mo_coeff,
+  grad_eL_ecp_wrt_radial, grad_eL_wrt_jastrow_1b_param, grad_eL_wrt_jastrow_2b_param, grad_eL_wrt_lambda,
+  grad_eL_wrt_mo_coeff, grad_eL_wrt_radial agree exactly with the J3-free call, whose result is finite and
+  nonzero; compute_grads_and_laplacian_jastrow_three_body returns exact zeros of shapes (n_up, 3), (n_dn, 3),
+  (n_up,), (n_dn,) and refuses an active complex-child J3 with NotImplementedError. Full and mixed are judged
+  separately; each session compares within its own precision mode (the identities are same-mode
+  comparisons).
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_inactive_complex_j3_free_wrappers.py::test_free_real_wrapper_inactive_complex_child_j3_equals_j3_free
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{child: complex_pw_G, route: grad_T_dtn_pbc_wrt_strain}, {child: complex_pw_G, route: grad_T_pbc_wrt_R}, {child: complex_pw_G, route: grad_T_pbc_wrt_strain}, {child: complex_pw_G, route: grad_eL_dtn_kinetic_params}, {child: complex_pw_G, route: grad_eL_ecp_dtn_params}, {child: complex_pw_G, route: grad_eL_ecp_wrt_jastrow_1b_param}, {child: complex_pw_G, route: grad_eL_ecp_wrt_jastrow_2b_param}, {child: complex_pw_G, route: grad_eL_ecp_wrt_lambda}, {child: complex_pw_G, route: grad_eL_ecp_wrt_lambda_diag}, {child: complex_pw_G, route: grad_eL_ecp_wrt_mo_coeff}, {child: complex_pw_G, route: grad_eL_ecp_wrt_radial}, {child: complex_pw_G, route: grad_eL_wrt_jastrow_1b_param}, {child: complex_pw_G, route: grad_eL_wrt_jastrow_2b_param}, {child: complex_pw_G, route: grad_eL_wrt_lambda}, {child: complex_pw_G, route: grad_eL_wrt_mo_coeff}, {child: complex_pw_G, route: grad_eL_wrt_radial}, {child: complex_pw_0, route: grad_T_dtn_pbc_wrt_strain}, {child: complex_pw_0, route: grad_T_pbc_wrt_R}, {child: complex_pw_0, route: grad_T_pbc_wrt_strain}, {child: complex_pw_0, route: grad_eL_dtn_kinetic_params}, {child: complex_pw_0, route: grad_eL_ecp_dtn_params}, {child: complex_pw_0, route: grad_eL_ecp_wrt_jastrow_1b_param}, {child: complex_pw_0, route: grad_eL_ecp_wrt_jastrow_2b_param}, {child: complex_pw_0, route: grad_eL_ecp_wrt_lambda}, {child: complex_pw_0, route: grad_eL_ecp_wrt_lambda_diag}, {child: complex_pw_0, route: grad_eL_ecp_wrt_mo_coeff}, {child: complex_pw_0, route: grad_eL_ecp_wrt_radial}, {child: complex_pw_0, route: grad_eL_wrt_jastrow_1b_param}, {child: complex_pw_0, route: grad_eL_wrt_jastrow_2b_param}, {child: complex_pw_0, route: grad_eL_wrt_lambda}, {child: complex_pw_0, route: grad_eL_wrt_mo_coeff}, {child: complex_pw_0, route: grad_eL_wrt_radial}, {child: real_pw, route: grad_T_dtn_pbc_wrt_strain}, {child: real_pw, route: grad_T_pbc_wrt_R}, {child: real_pw, route: grad_T_pbc_wrt_strain}, {child: real_pw, route: grad_eL_dtn_kinetic_params}, {child: real_pw, route: grad_eL_ecp_dtn_params}, {child: real_pw, route: grad_eL_ecp_wrt_jastrow_1b_param}, {child: real_pw, route: grad_eL_ecp_wrt_jastrow_2b_param}, {child: real_pw, route: grad_eL_ecp_wrt_lambda}, {child: real_pw, route: grad_eL_ecp_wrt_lambda_diag}, {child: real_pw, route: grad_eL_ecp_wrt_mo_coeff}, {child: real_pw, route: grad_eL_ecp_wrt_radial}, {child: real_pw, route: grad_eL_wrt_jastrow_1b_param}, {child: real_pw, route: grad_eL_wrt_jastrow_2b_param}, {child: real_pw, route: grad_eL_wrt_lambda}, {child: real_pw, route: grad_eL_wrt_mo_coeff}, {child: real_pw, route: grad_eL_wrt_radial}]
+  - pytest_node: tests/test_rs_kernel/test_inactive_complex_j3_free_wrappers.py::test_free_real_j3_grads_and_laplacian_inactive_j3_zero_active_complex_refused
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{child: complex_pw_G}, {child: complex_pw_0}, {child: real_pw}]

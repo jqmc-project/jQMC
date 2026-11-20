@@ -1,0 +1,48 @@
+id: NUM-OPT-COMPLEX-ECP-LM-FD-001
+kind: numerical
+name: Full-precision reduced LM agrees with independently displaced complex inputs
+plain_language: >-
+  On exactly the actual samples and conditioned coordinate subset of
+  MATH-OPT-COMPLEX-ECP-LM-001, separately displaced complex energy and
+  wavefunction values provide Richardson FD O/D columns. Production inputs,
+  nonsymmetric H/S, root and update must agree with dense FD-input reference
+  algebra using the unchanged central tight FD tolerance. FD is full-only;
+  the blocking AD-input LM guarantee independently covers mixed. The fixed
+  subset is deliberate conditioning, not a precision-dependent case selection.
+verdict_methods: [VM-NUM-COMPLEX-ECP-FD-001]
+required_evidence:
+- verdict_method: VM-NUM-COMPLEX-ECP-FD-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_reduced_lm_inputs_match_independent_fd
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_fd#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+    required_precision_modes: [full]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_reduced_lm_matrices_match_independent_fd_reference
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_fd#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+    required_precision_modes: [full]
+  - pytest_node: tests/test_jqmc_kernel/test_complex_ecp_optimizer_contract.py::test_reduced_lm_update_matches_independent_fd_reference
+    required_parameter_cases: [{}]
+    executable_checks:
+      complex-ecp-value:
+        site: tests/test_jqmc_kernel/_complex_ecp_optimizer_harness.py::assert_fd#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-complex-ecp-quantity, expression: 'part(actual)'}
+        reference: {role: independently-defined-complex-ecp-reference, expression: 'part(reference)'}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+    required_precision_modes: [full]

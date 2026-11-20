@@ -1,0 +1,52 @@
+id: MATH-PREC-DTN-SHARED-COEFFICIENT-ZONE-001
+kind: mathematical
+name: The shared native DTN coefficient set follows only the jastrow_grad_lap zone and the DTN carry coefficients only the jastrow_grad_lap_carry zone
+plain_language: >-
+  The native DTN Jastrow (JastrowDtnData) inflates its shared coefficient tensors
+  (_dtn_inflate_alpha|beta|gamma and the cutoff-policy derivatives), which the gradient /
+  Laplacian, drift, Pulay (grad_J_dtn_wrt_R) and strain (_dtn_value_strain) kernels read, in
+  the jastrow_grad_lap dtype only. The value kernel compute_dtn_value reads a copy inflated in
+  the jastrow_eval dtype, the single-move ratio kernels a copy in the jastrow_ratio dtype and the
+  carried grad/lap (DtnGradLapCache) a copy in the jastrow_grad_lap_carry dtype whenever those
+  dtypes differ, so a zone that does not consume the shared set never lowers it and the shared
+  set never lowers another zone. The XLA carry contract
+  (_dtn_carry_coefficient_dtype) mirrors it: the carried DTN grad/lap coefficients have the
+  jastrow_grad_lap_carry dtype (float64 in both modes). Zone-isolation policy: every zone float64 except jastrow_eval
+  float32, independent of the active mode. Actual and reference are built from independently
+  loaded copies of the same serialized full input under the full Python policy; only the zone
+  policy differs. (1) On mol_ecp_cart_jdtn (H2 ccECP), pbc_gamma_sphepgto_jdtn (bcc Li ccECP at
+  Gamma) and twist_sphepgto_jdtn (bcc Li ccECP, k = (1/4, 1/4, 1/4)), two _walker_batch(seed=0)
+  walkers: under the isolation policy the native DTN grad/lap, Pulay and strain equal the
+  all-float64 native evaluation elementwise to reduction order (ATOL/RTOL_REDUCTION_ORDER); the
+  native value equals, bit for bit, the value under jastrow_eval and jastrow_grad_lap float32 and
+  differs from the float64 value (the value stays in its float32 eval zone); the float64 native
+  value and grad/lap equal the XLA truth at the strict float64 budget. (2) On the same fixtures
+  and walkers, _dtn_carry_coefficient_dtype is float64 under full, mixed and jastrow_eval,
+  jastrow_ratio or jastrow_grad_lap alone float32; under the carry isolation policy (every zone
+  float64 except jastrow_eval and jastrow_grad_lap float32, Python and native) the XLA carry seed
+  _compute_grads_and_laplacian_Jastrow_DTN_carry and the native carry
+  (jqmc_rs._dtn_grad_lap_carry_probe: the DtnGradLapCache seed and its state after two seeded
+  single-electron hops per walker, default_rng(781), sigma = 0.4 bohr) each equal the same
+  backend's all-float64 evaluation to reduction order, and the float64 native seed equals the XLA
+  one at the strict float64 jastrow_grad_lap_carry budget. Values must be finite and live. With
+  the shared set lowered by jastrow_eval check (1) fails in both modes; with the carry
+  coefficients lowered by jastrow_grad_lap check (2) fails in both modes. In the full
+  and mixed policies jastrow_eval and jastrow_grad_lap have the same dtype, so the shared set does
+  not change their results; it does not claim mixed fidelity of any DTN field; the parameter
+  leaves' storage dtype is MATH-PREC-JASTROW-ZONE-SWEEP-001.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_dtn_shared_coefficient_zone.py::test_native_dtn_shared_coefficient_consumers_ignore_jastrow_eval
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_jdtn}
+    - {pattern: pbc_gamma_sphepgto_jdtn}
+    - {pattern: twist_sphepgto_jdtn}
+  - pytest_node: tests/test_rs_kernel/test_dtn_shared_coefficient_zone.py::test_dtn_carry_coefficients_follow_the_carry_zone
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_jdtn}
+    - {pattern: pbc_gamma_sphepgto_jdtn}
+    - {pattern: twist_sphepgto_jdtn}

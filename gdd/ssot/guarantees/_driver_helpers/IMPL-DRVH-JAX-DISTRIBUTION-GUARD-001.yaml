@@ -1,0 +1,20 @@
+id: IMPL-DRVH-JAX-DISTRIBUTION-GUARD-001
+kind: implementation
+name: Production driver entry points reject mismatched MPI and JAX rank counts
+plain_language: >-
+  In a two-rank MPI world without JAX distributed initialization, each rank sees only one JAX process.
+  MCMC sampling, GFMC_t sampling, GFMC_n sampling and MCMC's shared optimizer entry point each raise
+  RuntimeError identifying the MPI/JAX rank-count mismatch before starting sampling or configuring
+  optimization. The guard checks the world topology even when the driver samples on a rank-local communicator.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_driver_mpi_jax_mismatch.py::test_driver_rejects_mpi_jax_rank_mismatch
+    required_precision_modes: [full, mixed]
+    required_execution_profiles: [{name: mpi, world_size: 2}]
+    required_parameter_cases:
+    - {entry_point: mcmc}
+    - {entry_point: gfmc-t}
+    - {entry_point: gfmc-n}
+    - {entry_point: optimize}

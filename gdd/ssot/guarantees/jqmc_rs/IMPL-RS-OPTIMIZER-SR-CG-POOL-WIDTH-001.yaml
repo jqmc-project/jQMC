@@ -1,0 +1,21 @@
+id: IMPL-RS-OPTIMIZER-SR-CG-POOL-WIDTH-001
+kind: implementation
+name: Native host SR CG solutions are bit-identical across Rayon pool widths
+plain_language: >-
+  Under the production CPU dispatch (JQMC_FLAG_RUST_ON_CPU=1 on the JAX cpu backend) the jqmc_rs wide SR CG
+  (solve_wide_sr_real_cg) and tall SR CG (solve_tall_sr_real_cg) return the same iteration count, the same residual
+  norm and a bitwise identical solution on actual one-thread and four-thread Rayon pools. The inputs cover real,
+  complex and complex-with-zero-imaginary wide sample matrices and the tall matrix, each in C and Fortran storage,
+  on shapes whose operator passes span many fixed row chunks; a generic spectrum runs the CG for many iterations.
+  Each width runs in its own spawned process, which must report the requested live pool width. The operator works
+  on fixed chunks determined by the shape and sums their partial vectors in chunk order, so only the placement of
+  the chunks on the workers depends on the pool width. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_sr_cg_rust_is_bit_identical_across_pool_widths
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {regime: wide}
+    - {regime: tall}

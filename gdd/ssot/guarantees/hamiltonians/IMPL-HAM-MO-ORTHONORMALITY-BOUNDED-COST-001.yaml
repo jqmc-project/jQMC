@@ -1,0 +1,32 @@
+id: IMPL-HAM-MO-ORTHONORMALITY-BOUNDED-COST-001
+kind: implementation
+name: The MO orthonormality check never forms a dense plane-wave overlap and runs once per orbital object
+plain_language: >-
+  The check run by Hamiltonian_data.sanity_check (build, load_from_hdf5, MCMC and GFMC initialization) does not
+  form the num_ao x num_ao overlap, which for 303,144 plane waves needs 1.34 TiB. Each of the following holds in a
+  fresh process, measured with tracemalloc.
+  - For a 16^3 plane-wave basis (real half-space at Gamma, complex at k = (1/4, 1/4, 1/4), and the latter beside
+    the H2 pGTO leaf in a composite), the Gram matrix allocates less than a sixteenth of one dense overlap.
+  - For 97,336 complex plane waves (151 GB as a dense overlap), the leaf first forms a one-MO Gram matrix without
+    requesting a dense overlap. The check of a four-MO SD then peaks below eight coefficient arrays and still warns
+    for non-orthonormal MOs.
+  - A sqrt(Omega)-scaled periodic Hamiltonian loaded from HDF5 and checked again on the same object (as MCMC / GFMC
+    initialization does) calls compute_overlap_matrix only during the first check. The second check emits the same
+    two warnings, one per spin channel.
+  Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_structured_overlap.py::test_plane_wave_mo_gram_allocates_no_dense_overlap
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {leaf: pw-gamma}
+    - {leaf: pw-twist}
+    - {leaf: composite-pw-twist}
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_structured_overlap.py::test_large_plane_wave_hamiltonian_check_is_memory_bounded
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_structured_overlap.py::test_second_check_of_the_same_orbitals_reuses_the_metrics_and_still_warns
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

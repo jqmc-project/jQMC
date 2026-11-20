@@ -1,0 +1,70 @@
+id: MATH-DTN-DISTANCE-COINCIDENCE-ZERO-001
+kind: mathematical
+name: DTN minimum-image distance has a zero extension at coincidence
+plain_language: At coincident displacement, the production scalar distance, gradient and Laplacian are exactly zero under the existing strict zone policy in full and mixed. This is the implemented guard extension, not a derivative of the unextended Euclidean norm at its singular point. It remains independent of AD or mixed/full agreement.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLaplacian::test_analytic_and_auto_scalar_dist_with_derivs_pbc_coincident
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      value:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_coincident_zero#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-zero-extension-value
+          expression: float(value)
+        reference:
+          role: independent-zero-anchor
+          expression: '0.0'
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_coincident_zero#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-zero-extension-gradient
+          expression: np.asarray(gradient)
+        reference:
+          role: independent-zero-anchor
+          expression: np.zeros(3)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      laplacian:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_coincident_zero#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: analytical-zero-extension-laplacian
+          expression: float(laplacian)
+        reference:
+          role: independent-zero-anchor
+          expression: '0.0'
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap

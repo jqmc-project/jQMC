@@ -1,0 +1,24 @@
+id: IMPL-GFMC-DEBUG-ECP-HIGH-L-001
+kind: implementation
+name: GFMC_t and GFMC_n production/debug parity with a live non-local l >= 1 ECP channel
+plain_language: >-
+  On the committed Cl2 ccECP, whose non-local s and p coefficients are non-zero on both atoms, with J1+J2,
+  two walkers, random mesh and force on, for T-move and DLT-move, the production GFMC_t and GFMC_n drivers
+  and their _debug twins keep keys (and GFMC_t projection counters) exactly and final walkers within the
+  fp64 walker pin; stored w_L and e_L, the public energy and the public force agree at the tier the
+  existing GFMC debug rows use (GFMC_t medium, GFMC_n strict in full and medium in mixed). Stored e_L,
+  HF and Pulay force buffers and the public force are finite on both sides. At every final walker the
+  l >= 1 non-local contribution exceeds the e_L envelope. At every final walker the production non-local
+  ECP energy equals a reference built from the raw ECP arrays (terms selected from ang_moms and
+  max_ang_mom_plus_1, scipy Legendre, full determinant and Jastrow ratios, nearest-nucleus convention), with
+  the l >= 1 part of the reference outside the envelope. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_driver_ecp_high_l.py::test_gfmc_t_high_l_ecp_production_matches_debug
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{non_local_move: tmove}, {non_local_move: dltmove}]
+  - pytest_node: tests/test_jqmc_kernel/test_driver_ecp_high_l.py::test_gfmc_n_high_l_ecp_production_matches_debug
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{non_local_move: tmove}, {non_local_move: dltmove}]

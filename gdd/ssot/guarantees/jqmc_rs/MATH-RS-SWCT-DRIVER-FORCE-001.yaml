@@ -1,0 +1,39 @@
+id: MATH-RS-SWCT-DRIVER-FORCE-001
+kind: mathematical
+name: Native sampler force buffers retain the SWCT coordinate transformation
+plain_language: >-
+  Actual native MCMC and conventional/load-balanced GFMC measurements
+  preserve the SWCT-corrected HF, Pulay and energy-Pulay force buffers on
+  committed H2 all-electron molecular and Li ccECP Gamma/twist SD fixtures
+  with one up and one down electron and no Jastrow. Seed 34, one walker,
+  one measurement and fixed meshes make the check deterministic; numerical
+  expectations use the actual sampled coordinates, not an energy confidence
+  interval. A separate NumPy geometric reference supplies the SWCT weights
+  and their derivatives. Raw energy and coordinate derivatives remain
+  observed production inputs and their physical correctness is not independently established
+  here. Full and mixed use their respective existing force-zone budgets;
+  no cross-precision comparison or cond(G) bound is claimed. This is a
+  numerical force guarantee, not a SWCT-specific forbidden-call contract.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_swct_native_routing.py::test_native_swct_driver_force_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: mcmc, trexio_file: H2_ae_ccpvdz_cart.h5}
+    - {driver_name: mcmc, trexio_file: lithium_k025.h5}
+    - {driver_name: gfmc-t, trexio_file: H2_ae_ccpvdz_cart.h5}
+    - {driver_name: gfmc-t, trexio_file: lithium.h5}
+    - {driver_name: gfmc-n, trexio_file: H2_ae_ccpvdz_cart.h5}
+    - {driver_name: gfmc-n, trexio_file: lithium.h5}
+    executable_checks:
+      stored-force-reference:
+        site: tests/test_rs_kernel/test_swct_native_routing.py::test_native_swct_driver_force_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-sampler-stored-force, expression: actual}
+        reference: {role: actual-derivative-inputs-with-independent-swct-reassembly, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, ao_grad_lap, det_eval, wf_eval, wf_kinetic, coulomb, swct]}
+        iterations: {variable: field, required_values: [force_HF, force_PP, E_L_force_PP]}

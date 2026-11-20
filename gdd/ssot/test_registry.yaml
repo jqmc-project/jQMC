@@ -1,0 +1,40 @@
+schema_version: 1
+
+document:
+  id: jqmc.test-registry
+  version: 1
+  lifecycle: cutover
+  title: Test registry and orphan policy
+  purpose: 'Every test function must be registered in a guarantee ledger, exempt for a declared reason, or on the reviewed shrink-only pending backlog; the orphan gate enforces this and rejects stale declarations.'
+
+# Who enforces each top-level section (see gdd/ssot/README.md for the legend).
+enforcement_map:
+  exempt_roots: scripts/check_gdd_orphan_tests.py
+  exempt_files: scripts/check_gdd_orphan_tests.py
+  pending_unregistered: scripts/check_gdd_orphan_tests.py
+
+exempt_roots:
+- root: tests/test_jqmc_workflow
+  reason: 'Out-of-scope jqmc_workflow package (symbol_ownership out_of_scope_packages); files with registered evidence stay governed regardless.'
+- root: tests/test_gdd_simplification
+  reason: 'GDD framework self-tests (the isolated framework suite that the GDD preflight runs); not scientific evidence.'
+
+exempt_files:
+- path: tests/test_jqmc_kernel/test_gdd_medium_inventory_ssot.py
+  reason: 'Medium-tolerance site gate self-test on the real tree; not scientific kernel evidence.'
+- path: tests/test_jqmc_kernel/test_gdd_bound_comparisons.py
+  reason: 'Bound-comparison gate self-test on the real tree (a numerical verdict reduced to a finiteness check must turn it red); not numerical kernel evidence.'
+- path: tests/test_jqmc_kernel/test_gdd_derivatives_contract.py
+  reason: 'GDD framework self-test'
+- path: tests/test_jqmc_kernel/test_gdd_fd_comparison_contract.py
+  reason: 'GDD case-scoped finite-difference comparison contract self-test'
+- path: tests/test_jqmc_kernel/test_gdd_symbol_ownership.py
+  reason: 'GDD framework self-test'
+- path: tests/test_jqmc_kernel/test_gdd_ledger.py
+  reason: 'Representative real-numerics GDD failure-mechanism sentinels'
+- path: tests/test_jqmc_kernel/test_gdd_module_contract_inventory.py
+  reason: 'GDD framework self-test (module contract inventory of every registered guarantee/node edge)'
+
+# Reviewed shrink-only backlog: tests that exist but are registered nowhere.
+# It is empty; the orphan gate keeps it empty.
+pending_unregistered: []

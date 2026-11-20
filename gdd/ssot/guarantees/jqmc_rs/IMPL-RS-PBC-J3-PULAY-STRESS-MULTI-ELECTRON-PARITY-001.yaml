@@ -1,0 +1,24 @@
+id: IMPL-RS-PBC-J3-PULAY-STRESS-MULTI-ELECTRON-PARITY-001
+kind: implementation
+name: Native real-Gamma periodic Pulay stress with an active J3 equals XLA when each spin has more than one electron
+plain_language: >-
+  The native real-Gamma periodic Pulay stress dln|Psi|/d(eps) (vmc_grad_ln_psi_eps_pbc) adds the three-body Jastrow
+  value strain through stress_pbc::j3_pbc_value_strain, whose J3 value cotangent on the AO values carries a same-spin
+  pair term built from the strict lower-triangular pair matrix of each spin channel. With one electron per spin that
+  matrix is zero and the pair term vanishes, so only an input with several electrons per spin checks it. On the
+  committed QE O-lsda_gamma save (real Gamma, triplet oxygen, ccECP, 4 up and 2 down electrons, independent up/down
+  orbitals) converted by the production run_qe2jqmc (kind=pgto, J1 + J2) with the generated-matrix pGTO J3 attached
+  on its AO leaf, at fixed well-conditioned configurations the native vmc_grad_ln_psi_eps_pbc equals the XLA
+  assemble.compute_grad_ln_Psi(wrt="eps") on the same geminal inverse, all nine components, within the strict
+  Rust/XLA tier. The fixture is checked to have at least two electrons in each spin channel and unequal spin counts,
+  and the J3 is checked to change the XLA Pulay stress by more than 1e3 times the tolerance. Every other J3-bearing
+  periodic stress parity fixture has one electron per spin. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_periodic_multi_electron_j3_stress.py::test_pulay_stress_pbc_multi_electron_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 7}
+    - {seed: 3}

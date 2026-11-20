@@ -1,0 +1,511 @@
+schema_version: 1
+document:
+  id: jqmc.fixtures.wavefunctions
+  version: 2
+  lifecycle: cutover
+  title: Wavefunction case contract
+  purpose: >-
+    Define the wavefunction and Hamiltonian configurations that reusable fixture
+    suites must cover. This file describes required physics only; the boundary
+    table in gdd/ssot/README.md says which sibling contract owns input origin,
+    electron positions, and numerical comparison.
+
+# Who enforces each top-level section (see gdd/ssot/README.md for the legend).
+enforcement_map:
+  shared_contracts: scripts/check_gdd_guarantee_fixtures.py
+  production_bindings: scripts/check_gdd_wavefunction_fixtures_contract.py
+  orbital_signatures: scripts/check_gdd_wavefunction_fixtures_contract.py
+  vocabularies: scripts/check_gdd_wavefunction_fixtures_contract.py
+  validity_rules: scripts/check_gdd_wavefunction_fixtures_contract.py
+  cell_metric_classifier: gdd.engine.wavefunction_fixtures.classify_cell_metric
+  canonical_suite: scripts/check_gdd_wavefunction_fixtures_contract.py
+  evidence_required_from_each_subscribing_feature: scripts/materialize_gdd_case_bindings.py
+  enforcement: scripts/check_gdd_wavefunction_fixtures_contract.py
+
+shared_contracts:
+  concrete_input_binding: gdd/ssot/fixtures/input_bindings.yaml
+  electron_configuration_binding: gdd/ssot/fixtures/electron_configurations.yaml
+  executable_comparison_policy: gdd/ssot/verdicts.yaml
+
+production_bindings:
+  orbital_module: jqmc/atomic_orbital.py
+  determinant_module: jqmc/determinant.py
+  determinant_classes: {SD: SD_data, AGPn: AGPn_data, AGP: AGP_data}
+  jastrow_module: jqmc/jastrow_factor.py
+  jastrow_container: Jastrow_data
+  jastrow_fields:
+    - jastrow_one_body_data
+    - jastrow_two_body_data
+    - jastrow_three_body_data
+    - jastrow_dtn_data
+
+# An orbital signature describes the evaluator that is actually consumed. Composite
+# order is significant: [pGTO, PW] and [PW, pGTO] are different signatures.
+orbital_signatures:
+  gto-cartesian-real:
+    evaluator: AOs_cart_gto_data
+    family: gto
+    angular_representation: cartesian
+    scalar_field: real
+  gto-spherical-real:
+    evaluator: AOs_sphe_gto_data
+    family: gto
+    angular_representation: spherical
+    scalar_field: real
+  pgto-cartesian-real:
+    evaluator: AOs_cart_pgto_data
+    family: pgto
+    angular_representation: cartesian
+    scalar_field: real
+  pgto-spherical-real:
+    evaluator: AOs_sphe_pgto_data
+    family: pgto
+    angular_representation: spherical
+    scalar_field: real
+  pgto-cartesian-complex:
+    evaluator: AOs_cart_pgto_complex_data
+    family: pgto
+    angular_representation: cartesian
+    scalar_field: complex
+  pgto-spherical-complex:
+    evaluator: AOs_sphe_pgto_complex_data
+    family: pgto
+    angular_representation: spherical
+    scalar_field: complex
+  plane-wave-real:
+    evaluator: AOs_plane_wave_data
+    family: plane-wave
+    angular_representation: not-applicable
+    scalar_field: real
+  plane-wave-complex:
+    evaluator: AOs_plane_wave_complex_data
+    family: plane-wave
+    angular_representation: not-applicable
+    scalar_field: complex
+  bspline-real:
+    evaluator: AOs_bspline_data
+    family: bspline
+    angular_representation: not-applicable
+    scalar_field: real
+  bspline-complex:
+    evaluator: AOs_bspline_complex_data
+    family: bspline
+    angular_representation: not-applicable
+    scalar_field: complex
+  bspline-tiled-complex:
+    evaluator: AOs_bspline_tiled_complex_data
+    family: bspline
+    angular_representation: not-applicable
+    scalar_field: complex
+  pgto-plane-wave-real:
+    evaluator: AOs_composite_data
+    family: composite
+    angular_representation: not-applicable
+    scalar_field: real
+    children: [pgto-cartesian-real, plane-wave-real]
+  pgto-plane-wave-complex:
+    evaluator: AOs_composite_data
+    family: composite
+    angular_representation: not-applicable
+    scalar_field: complex
+    children: [pgto-cartesian-complex, plane-wave-complex]
+  pgto-bspline-real:
+    evaluator: AOs_composite_data
+    family: composite
+    angular_representation: not-applicable
+    scalar_field: real
+    children: [pgto-cartesian-real, bspline-real]
+  pgto-bspline-complex:
+    evaluator: AOs_composite_data
+    family: composite
+    angular_representation: not-applicable
+    scalar_field: complex
+    children: [pgto-cartesian-complex, bspline-complex]
+
+# These are the only independent categorical values stored in a case. In
+# particular, scalar_field and Jastrow composition are derived and are not axes.
+vocabularies:
+  determinant_kind: [SD, AGPn, AGP]
+  determinant_representation: [AO, MO]
+  j1_form: ["off", exp, pade]
+  j2_form: ["off", exp, pade]
+  j3_representation: ["off", AO, MO]
+  dtn_channel_mask: ["off", u, chi, f, u_chi, u_f, chi_f, u_chi_f]
+  dtn_en_cusp_target: [not-applicable, ecp-zero, ae-nonzero]
+  shell_structure: [closed-shell, open-shell]
+  spin_restriction: [not-applicable, spin-restricted, spin-unrestricted]
+  periodicity: [open, periodic]
+  bloch_k_regime: [not-applicable, gamma, non-gamma]
+  cell_metric_family:
+    - not-applicable
+    - cubic
+    - tetragonal
+    - orthorhombic
+    - hexagonal
+    - rhombohedral
+    - monoclinic
+    - triclinic
+
+# Rules below define validity, not coverage preferences.
+validity_rules:
+  determinant_representation_by_kind:
+    SD: [MO]
+    AGPn: [MO]
+    AGP: [AO, MO]
+
+  j3:
+    "off":
+      orbital_signature: [not-applicable]
+    AO:
+      allowed_orbital_families: [gto, pgto]
+    MO:
+      allowed_orbital_families: [gto, pgto, plane-wave, bspline, composite]
+
+  dtn:
+    "off":
+      en_cusp_target: [not-applicable]
+    enabled:
+      channel_masks: [u, chi, f, u_chi, u_f, chi_f, u_chi_f]
+      en_cusp_target: [ecp-zero, ae-nonzero]
+    physical_targets:
+      ae-nonzero:
+        notes: all-electron nucleus; required chi slope at the origin is -Z_eff
+      ecp-zero:
+        notes: pseudized nucleus; required chi slope at the origin is zero
+      identity_source:
+        notes: explicit ECP records per species, including zero-core ECPs; never Z_eff < Z
+      mixed_species:
+        notes: each species has its own target; neither homogeneous canonical label describes a mixed system
+      inactive_chi:
+        notes: target describes the nuclear potential even if chi is off; it is not evidence of chi activation
+    constraint_guard:
+      apply_en_cusp: true
+      unsafe_unconstrained_data: rejected
+      guarantee_ref: IMPL-JAS-DTN-CUSP-VALIDATION-001
+
+  electron_structure:
+    shell_structure:
+      closed-shell:
+        condition: N_up == N_dn and N_dn > 0
+        down_orbital_signature: required
+        spin_restriction: [spin-restricted, spin-unrestricted]
+      open-shell:
+        condition: N_up != N_dn and N_up > 0 and N_dn >= 0
+        down_orbital_signature: optional
+        spin_restriction: [not-applicable, spin-restricted, spin-unrestricted]
+    spin_restriction:
+      not-applicable:
+        down_orbital_signature: [not-applicable]
+      spin-restricted:
+        down_orbital_signature: required-and-same-evaluator-as-up
+      spin-unrestricted:
+        down_orbital_signature: required
+    global_condition: N_up > 0 and 0 <= N_dn <= N_up
+
+  boundary_conditions:
+    open:
+      bloch_k_regime: [not-applicable]
+      cell_metric_family: [not-applicable]
+      allowed_orbital_families: [gto]
+    periodic:
+      bloch_k_regime: [gamma, non-gamma]
+      cell_metric_family:
+        - cubic
+        - tetragonal
+        - orthorhombic
+        - hexagonal
+        - rhombohedral
+        - monoclinic
+        - triclinic
+      allowed_orbital_families: [pgto, plane-wave, bspline, composite]
+
+cell_metric_classifier:
+  applies_when: periodicity == periodic
+  input: rows [a, b, c] of Structure_data.cell
+  derived_quantities:
+    lengths: [norm(a), norm(b), norm(c)]
+    angle_cosines: [cos(a,b), cos(a,c), cos(b,c)]
+  precedence:
+    - cubic
+    - tetragonal
+    - orthorhombic
+    - hexagonal
+    - rhombohedral
+    - monoclinic
+    - triclinic
+  classes:
+    cubic:
+      length_multiplicity: [3]
+      right_angle_count: 3
+    tetragonal:
+      length_multiplicity: [2, 1]
+      right_angle_count: 3
+    orthorhombic:
+      right_angle_count: 3
+      exclude_preceding_classes: true
+    hexagonal:
+      length_multiplicity: [2, 1]
+      right_angle_count: 2
+      remaining_angle_absolute_cosine: 0.5
+    rhombohedral:
+      length_multiplicity: [3]
+      all_angle_cosines_equal: true
+      right_angle_count: 0
+    monoclinic:
+      right_angle_count: 2
+      exclude_preceding_classes: true
+    triclinic:
+      fallback_after_preceding_classes: true
+  terminology: >-
+    This is the metric family of the stored simulation cell, not the crystal
+    system of the material. For example, a BCC primitive cell can have a
+    rhombohedral metric.
+  tolerance_symbols:
+    length_rtol: gdd.engine.wavefunction_fixtures.CELL_METRIC_LENGTH_RTOL
+    length_atol: gdd.engine.wavefunction_fixtures.CELL_METRIC_LENGTH_ATOL
+    cosine_atol: gdd.engine.wavefunction_fixtures.CELL_METRIC_COSINE_ATOL
+  implementation_state: statically-verified
+
+canonical_suite:
+  id: WF-SUITE-CORE-001
+  version: 3
+  lifecycle: cutover
+  coverage:
+    each_vocabulary_value_at_least_once: true
+    each_orbital_signature_as_up_once: true
+    targeted_cases:
+      - no-jastrow-component
+      - j1-j2-j3-without-dtn
+      - dtn-without-j1-j2-j3
+      - j1-j2-j3-and-dtn-together
+    full_cartesian_product: forbidden
+    feature_rule: >-
+      A feature adds only interactions that can change its production route or
+      numerical oracle. It must not silently claim the full Cartesian product.
+    required_interactions:
+      - id: determinant-representation
+        axes: [determinant.kind, determinant.representation]
+        tuples: [[SD, MO], [AGPn, MO], [AGP, AO], [AGP, MO]]
+      - id: shell-restriction
+        axes: [electrons.shell_structure, electrons.spin_restriction]
+        tuples:
+          - [closed-shell, spin-restricted]
+          - [closed-shell, spin-unrestricted]
+          - [open-shell, not-applicable]
+          - [open-shell, spin-unrestricted]
+      - id: boundary-bloch-cell
+        axes: [periodicity, bloch_k_regime, cell_metric_family]
+        tuples:
+          - [open, not-applicable, not-applicable]
+          - [periodic, gamma, cubic]
+          - [periodic, gamma, tetragonal]
+          - [periodic, non-gamma, orthorhombic]
+          - [periodic, non-gamma, monoclinic]
+          - [periodic, gamma, hexagonal]
+          - [periodic, non-gamma, rhombohedral]
+          - [periodic, gamma, triclinic]
+          - [periodic, non-gamma, cubic]
+          - [periodic, gamma, monoclinic]
+          - [periodic, non-gamma, hexagonal]
+          - [periodic, gamma, rhombohedral]
+          - [periodic, non-gamma, triclinic]
+      - id: j3-dtn-interaction
+        axes: [jastrow.j3_representation, jastrow.dtn_channel_mask]
+        tuples:
+          - [AO, "off"]
+          - [AO, u]
+          - [AO, chi]
+          - [AO, f]
+          - [AO, u_chi]
+          - [MO, u_f]
+          - [MO, chi_f]
+          - [MO, u_chi_f]
+          - [MO, "off"]
+          - ["off", u]
+          - ["off", f]
+          - ["off", u_chi]
+          - ["off", "off"]
+  selection:
+    method: reviewed-constrained-set-cover
+    rows_are_requirements_not_evidence: true
+    snapshot:
+      algorithm: sha256-canonical-json
+      value: e541d8a70d3ef828896bf50f4484fd255fff634bf85e050b5504cda321f73495
+  cases:
+    - id: WF-PATTERN-001
+      signature:
+        determinant: {kind: AGP, representation: AO, orbitals: {up: gto-cartesian-real, down: gto-cartesian-real}}
+        jastrow: {j1_form: "off", j2_form: "off", j3_representation: AO, j3_orbital_signature: gto-cartesian-real, dtn_channel_mask: "off", dtn_en_cusp_target: not-applicable}
+        electrons: {shell_structure: closed-shell, spin_restriction: spin-restricted}
+        periodicity: open
+        bloch_k_regime: not-applicable
+        cell_metric_family: not-applicable
+    - id: WF-PATTERN-002
+      signature:
+        determinant: {kind: SD, representation: MO, orbitals: {up: gto-spherical-real, down: gto-spherical-real}}
+        jastrow: {j1_form: exp, j2_form: "off", j3_representation: AO, j3_orbital_signature: gto-spherical-real, dtn_channel_mask: "off", dtn_en_cusp_target: not-applicable}
+        electrons: {shell_structure: open-shell, spin_restriction: spin-unrestricted}
+        periodicity: open
+        bloch_k_regime: not-applicable
+        cell_metric_family: not-applicable
+    - id: WF-PATTERN-003
+      signature:
+        determinant: {kind: AGPn, representation: MO, orbitals: {up: pgto-cartesian-real, down: not-applicable}}
+        jastrow: {j1_form: pade, j2_form: exp, j3_representation: AO, j3_orbital_signature: pgto-cartesian-real, dtn_channel_mask: u, dtn_en_cusp_target: ae-nonzero}
+        electrons: {shell_structure: open-shell, spin_restriction: not-applicable}
+        periodicity: periodic
+        bloch_k_regime: gamma
+        cell_metric_family: cubic
+    - id: WF-PATTERN-004
+      signature:
+        determinant: {kind: SD, representation: MO, orbitals: {up: pgto-spherical-real, down: pgto-cartesian-real}}
+        jastrow: {j1_form: exp, j2_form: pade, j3_representation: AO, j3_orbital_signature: pgto-spherical-real, dtn_channel_mask: chi, dtn_en_cusp_target: ecp-zero}
+        electrons: {shell_structure: open-shell, spin_restriction: spin-unrestricted}
+        periodicity: periodic
+        bloch_k_regime: gamma
+        cell_metric_family: tetragonal
+    - id: WF-PATTERN-005
+      signature:
+        determinant: {kind: SD, representation: MO, orbitals: {up: pgto-cartesian-complex, down: pgto-cartesian-complex}}
+        jastrow: {j1_form: pade, j2_form: pade, j3_representation: AO, j3_orbital_signature: pgto-cartesian-complex, dtn_channel_mask: f, dtn_en_cusp_target: ae-nonzero}
+        electrons: {shell_structure: closed-shell, spin_restriction: spin-restricted}
+        periodicity: periodic
+        bloch_k_regime: non-gamma
+        cell_metric_family: orthorhombic
+    - id: WF-PATTERN-006
+      signature:
+        determinant: {kind: AGPn, representation: MO, orbitals: {up: pgto-spherical-complex, down: pgto-cartesian-complex}}
+        jastrow: {j1_form: exp, j2_form: exp, j3_representation: AO, j3_orbital_signature: pgto-spherical-complex, dtn_channel_mask: u_chi, dtn_en_cusp_target: ecp-zero}
+        electrons: {shell_structure: closed-shell, spin_restriction: spin-unrestricted}
+        periodicity: periodic
+        bloch_k_regime: non-gamma
+        cell_metric_family: monoclinic
+    - id: WF-PATTERN-007
+      signature:
+        determinant: {kind: AGP, representation: AO, orbitals: {up: plane-wave-real, down: plane-wave-real}}
+        jastrow: {j1_form: exp, j2_form: pade, j3_representation: MO, j3_orbital_signature: plane-wave-real, dtn_channel_mask: u_f, dtn_en_cusp_target: ae-nonzero}
+        electrons: {shell_structure: open-shell, spin_restriction: spin-unrestricted}
+        periodicity: periodic
+        bloch_k_regime: gamma
+        cell_metric_family: hexagonal
+    - id: WF-PATTERN-008
+      signature:
+        determinant: {kind: SD, representation: MO, orbitals: {up: plane-wave-complex, down: not-applicable}}
+        jastrow: {j1_form: "off", j2_form: exp, j3_representation: MO, j3_orbital_signature: plane-wave-complex, dtn_channel_mask: chi_f, dtn_en_cusp_target: ecp-zero}
+        electrons: {shell_structure: open-shell, spin_restriction: not-applicable}
+        periodicity: periodic
+        bloch_k_regime: non-gamma
+        cell_metric_family: rhombohedral
+    - id: WF-PATTERN-009
+      signature:
+        determinant: {kind: AGPn, representation: MO, orbitals: {up: bspline-real, down: bspline-real}}
+        jastrow: {j1_form: pade, j2_form: "off", j3_representation: MO, j3_orbital_signature: bspline-real, dtn_channel_mask: u_chi_f, dtn_en_cusp_target: ae-nonzero}
+        electrons: {shell_structure: closed-shell, spin_restriction: spin-restricted}
+        periodicity: periodic
+        bloch_k_regime: gamma
+        cell_metric_family: triclinic
+    - id: WF-PATTERN-010
+      signature:
+        determinant: {kind: SD, representation: MO, orbitals: {up: bspline-complex, down: plane-wave-complex}}
+        jastrow: {j1_form: exp, j2_form: exp, j3_representation: MO, j3_orbital_signature: bspline-complex, dtn_channel_mask: "off", dtn_en_cusp_target: not-applicable}
+        electrons: {shell_structure: open-shell, spin_restriction: spin-unrestricted}
+        periodicity: periodic
+        bloch_k_regime: non-gamma
+        cell_metric_family: cubic
+    - id: WF-PATTERN-011
+      signature:
+        determinant: {kind: AGP, representation: MO, orbitals: {up: pgto-plane-wave-real, down: pgto-plane-wave-real}}
+        jastrow: {j1_form: pade, j2_form: pade, j3_representation: MO, j3_orbital_signature: pgto-plane-wave-real, dtn_channel_mask: "off", dtn_en_cusp_target: not-applicable}
+        electrons: {shell_structure: closed-shell, spin_restriction: spin-restricted}
+        periodicity: periodic
+        bloch_k_regime: gamma
+        cell_metric_family: tetragonal
+    - id: WF-PATTERN-012
+      signature:
+        determinant: {kind: SD, representation: MO, orbitals: {up: pgto-plane-wave-complex, down: pgto-cartesian-complex}}
+        jastrow: {j1_form: "off", j2_form: "off", j3_representation: "off", j3_orbital_signature: not-applicable, dtn_channel_mask: u, dtn_en_cusp_target: ecp-zero}
+        electrons: {shell_structure: open-shell, spin_restriction: spin-unrestricted}
+        periodicity: periodic
+        bloch_k_regime: non-gamma
+        cell_metric_family: orthorhombic
+    - id: WF-PATTERN-013
+      signature:
+        determinant: {kind: AGP, representation: AO, orbitals: {up: pgto-bspline-real, down: pgto-bspline-real}}
+        jastrow: {j1_form: "off", j2_form: "off", j3_representation: "off", j3_orbital_signature: not-applicable, dtn_channel_mask: u_chi, dtn_en_cusp_target: ae-nonzero}
+        electrons: {shell_structure: closed-shell, spin_restriction: spin-restricted}
+        periodicity: periodic
+        bloch_k_regime: gamma
+        cell_metric_family: monoclinic
+    - id: WF-PATTERN-014
+      signature:
+        determinant: {kind: AGPn, representation: MO, orbitals: {up: pgto-bspline-complex, down: bspline-complex}}
+        jastrow: {j1_form: "off", j2_form: "off", j3_representation: "off", j3_orbital_signature: not-applicable, dtn_channel_mask: f, dtn_en_cusp_target: ecp-zero}
+        electrons: {shell_structure: open-shell, spin_restriction: spin-unrestricted}
+        periodicity: periodic
+        bloch_k_regime: non-gamma
+        cell_metric_family: hexagonal
+    - id: WF-PATTERN-015
+      signature:
+        determinant: {kind: SD, representation: MO, orbitals: {up: pgto-cartesian-real, down: pgto-cartesian-real}}
+        jastrow: {j1_form: "off", j2_form: "off", j3_representation: "off", j3_orbital_signature: not-applicable, dtn_channel_mask: "off", dtn_en_cusp_target: not-applicable}
+        electrons: {shell_structure: closed-shell, spin_restriction: spin-unrestricted}
+        periodicity: periodic
+        bloch_k_regime: gamma
+        cell_metric_family: rhombohedral
+    - id: WF-PATTERN-016
+      signature:
+        determinant: {kind: AGP, representation: MO, orbitals: {up: pgto-spherical-complex, down: pgto-spherical-complex}}
+        jastrow: {j1_form: pade, j2_form: exp, j3_representation: MO, j3_orbital_signature: pgto-bspline-complex, dtn_channel_mask: "off", dtn_en_cusp_target: not-applicable}
+        electrons: {shell_structure: closed-shell, spin_restriction: spin-restricted}
+        periodicity: periodic
+        bloch_k_regime: non-gamma
+        cell_metric_family: triclinic
+    - id: WF-PATTERN-017
+      signature:
+        determinant: {kind: SD, representation: MO, orbitals: {up: bspline-tiled-complex, down: bspline-tiled-complex}}
+        jastrow: {j1_form: "off", j2_form: "off", j3_representation: "off", j3_orbital_signature: not-applicable, dtn_channel_mask: "off", dtn_en_cusp_target: not-applicable}
+        electrons: {shell_structure: closed-shell, spin_restriction: spin-restricted}
+        periodicity: periodic
+        bloch_k_regime: gamma
+        cell_metric_family: cubic
+
+evidence_required_from_each_subscribing_feature:
+  registration_fields:
+    - guarantee-id
+    - canonical-suite-id
+    - canonical-pattern-id
+    - pytest-node-id
+    - input-binding-kind
+    - input-binding-id
+    - electron-configuration-binding
+    - required-precision
+    - executable-check-ids
+    - comparison-policy-ids-by-precision
+  realized_case_receipt:
+    operation: wavefunction_fixtures.observe_case.v2
+    comparison: exact-requested-versus-observed-signature
+    failures:
+      - extra-active-component
+      - missing-active-component
+      - signature-mismatch
+      - unavailable-input
+      - skip
+      - xfail
+      - zero-collection
+  activation_rule: >-
+    A component counts as active only when the production evaluation route consumes
+    it on nontrivial input. Merely storing it in a container is insufficient.
+
+enforcement:
+  static:
+    command: python scripts/check_gdd_wavefunction_fixtures_contract.py
+    pre_commit_hook: gdd-contracts
+  runtime:
+    state: explicit-fixture-checks-and-pytest-outcomes
+    adapter: gdd.engine.execution_records
+    notes: >-
+      Fixture signatures and activation conditions are checked by the subscribing
+      tests and explicit fixture helpers. Ordinary-module completion checks
+      required collected cases and their pytest outcomes; it does not reconstruct
+      fixture facts or scientific assertions from traced Python frames.
+    required_before_cutover: true

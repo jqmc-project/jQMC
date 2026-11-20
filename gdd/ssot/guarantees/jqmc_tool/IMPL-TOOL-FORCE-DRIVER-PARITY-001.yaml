@@ -1,0 +1,36 @@
+id: IMPL-TOOL-FORCE-DRIVER-PARITY-001
+kind: implementation
+name: Force CLI from actual sampler checkpoints
+plain_language: For the declared fixed-seed H2 AE Cartesian MO/J2 input, the real MCMC and both GFMC drivers write checkpoints whose ordinary compute-force commands reproduce every driver force mean and standard-error component at the same warmup, bin and weight-window settings. The unrounded comparison uses the same precision's strict zone policy; the displayed table uses the specified uncertainty formatting. Pulay coefficient and HF sign faults must be rejected. This is deterministic route equivalence, not an independent force law or statistical convergence claim.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tool_force_driver_values.py::test_force_cli_matches_actual_driver
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: MCMC, collect_steps: 0}
+    - {driver_name: GFMC_t, collect_steps: 5}
+    - {driver_name: GFMC_t, collect_steps: 7}
+    - {driver_name: GFMC_n, collect_steps: 5}
+    - {driver_name: GFMC_n, collect_steps: 7}
+    executable_checks:
+      all-force-means-and-errors:
+        site: tests/test_jqmc_kernel/test_tool_force_driver_values.py::_assert_tool_force#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-cli-unrounded-force-or-error, expression: actual}
+        reference: {role: actual-driver-force-or-error, expression: expected}
+        iterations: {variable: field, required_values: [mean, error]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy, det_grad_lap, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy, det_grad_lap, coulomb]}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tool_force_driver_values.py::test_force_cli_oracle_rejects_wrong_coefficients
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: MCMC, collect_steps: 0}
+    - {driver_name: GFMC_t, collect_steps: 5}
+    - {driver_name: GFMC_t, collect_steps: 7}
+    - {driver_name: GFMC_n, collect_steps: 5}
+    - {driver_name: GFMC_n, collect_steps: 7}

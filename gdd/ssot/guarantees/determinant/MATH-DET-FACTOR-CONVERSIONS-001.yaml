@@ -1,0 +1,297 @@
+id: MATH-DET-FACTOR-CONVERSIONS-001
+kind: mathematical
+name: Geminal factor conversions and projections
+plain_language: 'AO/MO geminal conversions and projections are exact: closed- and open-shell projections, complex bilinear
+  round trips, SVD absorption preserving the dense geminal spectrum, and rank-truncation preconditions; out-of-universe
+  conversions are rejected explicitly.'
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOConversion::test_convert_from_MOs_to_AOs_closed_shell
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOConversion.test_convert_from_MOs_to_AOs_closed_shell#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: geminal_mo_debug
+        reference:
+          role: existing-test-reference
+          expression: geminal_mo_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOConversion.test_convert_from_MOs_to_AOs_closed_shell#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: geminal_ao_debug
+        reference:
+          role: existing-test-reference
+          expression: geminal_ao_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOConversion.test_convert_from_MOs_to_AOs_closed_shell#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: geminal_ao
+        reference:
+          role: existing-test-reference
+          expression: geminal_mo
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOConversion.test_convert_from_MOs_to_AOs_closed_shell#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: det_geminal_mo_debug
+        reference:
+          role: existing-test-reference
+          expression: det_geminal_mo_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOConversion.test_convert_from_MOs_to_AOs_closed_shell#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: det_geminal_ao_debug
+        reference:
+          role: existing-test-reference
+          expression: det_geminal_ao_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+      comparison-6:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOConversion.test_convert_from_MOs_to_AOs_closed_shell#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: det_geminal_ao
+        reference:
+          role: existing-test-reference
+          expression: det_geminal_mo
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOProjection::test_convert_from_AOs_to_MOs_full_projection_closed_shell
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOProjection.test_convert_from_AOs_to_MOs_full_projection_closed_shell#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(geminal_ao_back.lambda_matrix)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(geminal_ao.lambda_matrix)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOProjection::test_convert_from_AOs_to_MOs_full_projection_open_shell
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOProjection.test_convert_from_AOs_to_MOs_full_projection_open_shell#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(geminal_ao_back.lambda_matrix)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(geminal_ao.lambda_matrix)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOProjection::test_convert_from_AOs_to_MOs_truncated_mode_closed_shell
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOProjection::test_convert_from_AOs_to_MOs_truncated_mode_open_shell
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestGeminalAOMOProjection.test_convert_from_AOs_to_MOs_truncated_mode_open_shell#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: restored_unpaired
+        reference:
+          role: existing-test-reference
+          expression: lambda_matrix_unpaired
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion::test_independent_complex_bilinear_round_trip_with_unpaired
+    executable_checks:
+      d8-n-124:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion.test_independent_complex_bilinear_round_trip_with_unpaired#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: round_trip.lambda_matrix
+        reference:
+          role: source-reference-value
+          expression: source.lambda_matrix
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion::test_truncated_open_shell_retains_spectrum_and_orthogonal_unpaired_rows
+    executable_checks:
+      d8-n-125:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion.test_truncated_open_shell_retains_spectrum_and_orthogonal_unpaired_rows#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: C_up.conj() @ C_up.T
+        reference:
+          role: source-reference-value
+          expression: np.eye(4)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+      d8-n-126:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion.test_truncated_open_shell_retains_spectrum_and_orthogonal_unpaired_rows#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: occupations
+        reference:
+          role: source-reference-value
+          expression: np.array([5.0, 4.0, 3.0, 0.0])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion::test_independent_complex_svd_absorption_preserves_dense_geminal
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion::test_real_gamma_indefinite_core_and_first_update_keep_signed_occupations
+    executable_checks:
+      d8-n-127:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion.test_real_gamma_indefinite_core_and_first_update_keep_signed_occupations#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: converted.lambda_diag
+        reference:
+          role: source-reference-value
+          expression: expected_occupations
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+      d8-n-128:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion.test_real_gamma_indefinite_core_and_first_update_keep_signed_occupations#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: _represented_ao(converted)
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+      signed-lambda-diag-step-stored:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion.test_real_gamma_indefinite_core_and_first_update_keep_signed_occupations#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: stored-lambda-diag-after-signed-step, expression: stepped.lambda_diag}
+        reference: {role: signed-post-step-occupations, expression: stepped_occupations}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      signed-lambda-diag-step-geminal:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion.test_real_gamma_indefinite_core_and_first_update_keep_signed_occupations#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: source-computed-value, expression: _represented_ao(stepped)}
+        reference: {role: numpy-mo-factor-product-with-signed-occupations, expression: C_stepped.T @ np.diag(stepped_occupations) @ C_stepped}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion::test_rank_truncation_preconditions
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion::test_ao_factorization_rejects_ambiguous_magnitude_cutoff
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion::test_rank_below_electron_count_is_rejected

@@ -1,0 +1,46 @@
+id: MATH-DERIV-REAL-COMPOSITE-BASIS-JASTROW-LIVE-001
+kind: mathematical
+name: Real composite J1J2J3 geminal radial derivatives are live and agree with autodiff
+plain_language: 'The committed Li Gamma ccECP pGTO+PW source with J1exp, J2Pade and seeded real MOJ3 retains finite
+  nonzero lambda_basis_exp/lambda_basis_coeff fields at seed0 positions without condition screening. Both original
+  Full ln_Psi/e_L analytical fields agree with independent AD under the original strict4zone comparison, and removal
+  of Jastrow changes energy fields beyond the original floor. Positive Mixed agreement is separately required by
+  NUM-REAL-COMPOSITE-BASIS-JASTROW-MIXED-FIDELITY-001. The original dropped-Jastrow kinetic fault detector remains
+  unchanged in BOTH precisions: its independent AD reference is materialized before injecting the same analytical
+  provider fault, and the original rejection band must reject it. That expected-rejection capability is not ordinary
+  Mixed numerical agreement or new NUM primary credit.'
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_composite_basis_jastrow_liveness.py::test_real_composite_lambda_basis_is_live_and_matches_autodiff
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    executable_checks:
+      retained-full-independent-AD:
+        site: tests/test_jqmc_kernel/test_composite_basis_jastrow_liveness.py::_assert_live_composite_blocks#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-composite-basis-field
+          expression: actual
+        reference:
+          role: independent-full-AD-composite-basis-field
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_composite_basis_jastrow_liveness.py::test_real_composite_basis_check_rejects_dropped_jastrow_kinetic_term
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+    - mixed

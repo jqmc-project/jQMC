@@ -1,0 +1,12 @@
+id: NUM-MPC-SANITY-001
+kind: numerical
+name: MPC sanity smoke checks
+plain_language: The built MPC data fields are finite with the declared shapes and the correction is finite and small on
+  reviewed systems; this is a smoke check, never a correctness oracle.
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestKernelInvariants::test_build_mpc_data_fields_are_finite_and_shaped
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestCorrection::test_correction_is_finite_and_small

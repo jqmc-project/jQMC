@@ -1,0 +1,13 @@
+id: IMPL-PGTOOPT-CONTRACTS-001
+kind: implementation
+name: Optimizer objective and fallback contracts
+plain_language: The optimizer handles the mixed pGTO+PW objective and the fixed-cutoff FFT overlap, and a failed production
+  condition audit restores the seed basis instead of publishing a degraded one.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_exponent_only_optimizer_handles_mixed_pgto_pw_objective
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_exponent_only_optimizer_handles_fixed_cutoff_fft_overlap
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_failed_production_condition_audit_restores_seed_basis

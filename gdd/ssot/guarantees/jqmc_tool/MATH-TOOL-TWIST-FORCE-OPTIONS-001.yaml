@@ -1,0 +1,35 @@
+id: MATH-TOOL-TWIST-FORCE-OPTIONS-001
+kind: mathematical
+name: Twist-directory compute-force analyses every twist with the requested options
+plain_language: >-
+  mcmc compute-force and lrdmc compute-force on a twist checkpoint directory estimate the force of every twist from
+  that twist's stored samples with the requested -b/-w (and LRDMC -c) options and combine the per-twist forces and
+  errors with the embedded normalized BZ weights. Requested options that differ from the driver's own settings give the
+  combination of an independent delete-one-replica jackknife of each twist at the requested options, never the force
+  summaries the driver stored at its settings. The hydrostatic pressure combines the per-twist pressure summaries
+  stored by the run. Options that leave a twist with fewer measurements than bins, a non-finite force sample in a
+  twist's analysed window, and a non-finite stored per-twist pressure or pressure error exit non-zero with an explicit
+  reason and print neither a force table nor a pressure value.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_twist_force_honours_analysis_options
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {command: mcmc, args: {"-b": 4, "-w": 10}}
+    - {command: mcmc, args: {"-b": 2, "-w": 0}}
+    - {command: lrdmc, args: {"-b": 10, "-w": 30, "-c": 5}}
+    - {command: lrdmc, args: {"-b": 10, "-w": 25, "-c": 7}}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeForce::test_twist_force_refuses_unusable_window_or_nonfinite_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {command: mcmc, args: ["-b", "1000", "-w", "1000"], defect: null, message: fewer than num_mcmc_bin_blocks}
+    - {command: mcmc, args: ["-b", "3", "-w", "5"], defect: nan-force_HF, message: non-finite atomic force estimate}
+    - {command: mcmc, args: ["-b", "3", "-w", "5"], defect: inf-P_hydro, message: non-finite per-twist hydrostatic pressure}
+    - {command: mcmc, args: ["-b", "3", "-w", "5"], defect: nan-sigma_P_hydro, message: non-finite per-twist hydrostatic pressure}
+    - {command: lrdmc, args: ["-b", "10", "-w", "40", "-c", "5"], defect: null, message: too few measurements after collect/warmup}
+    - {command: lrdmc, args: ["-b", "10", "-w", "25", "-c", "5"], defect: nan-force_HF, message: non-finite atomic force estimate}
+    - {command: lrdmc, args: ["-b", "10", "-w", "25", "-c", "5"], defect: inf-P_hydro, message: non-finite per-twist hydrostatic pressure}

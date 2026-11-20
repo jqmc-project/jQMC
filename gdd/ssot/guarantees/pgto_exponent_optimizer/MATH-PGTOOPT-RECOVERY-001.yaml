@@ -1,0 +1,16 @@
+id: MATH-PGTOOPT-RECOVERY-001
+kind: mathematical
+name: Known-solution recovery and constraint identities
+plain_language: The exponent-only optimizer recovers a known Gaussian while keeping the fit coefficient, and its condition
+  constraint is exactly the raw full overlap of the emitted AO basis.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_exponent_only_optimizer_recovers_gaussian_and_keeps_fit_coefficient
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_mixed_constraint_is_generated_ao_full_overlap_condition
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_periodic_pgto_overlap_matches_emitted_ao_leaf

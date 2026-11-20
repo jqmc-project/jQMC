@@ -1,0 +1,22 @@
+id: PHY-AO-COMPLEX-BSPLINE-OFF-CPU-FAR-CELL-BLOCH-001
+kind: physical
+name: The off-CPU route of the complex B-spline leaf keeps the Bloch law far from the home cell
+plain_language: >-
+  The complex B-spline leaf (AOs_bspline_complex_data._eval_u_core) selects its stencil and weights from fractional
+  coordinates that are formed and wrapped in fp64 before any fp32 cast, on every backend; casting the Cartesian
+  positions to fp32 first breaks the Bloch law by 5e-3 in mixed precision for an unwrapped walker 1e5 bohr out on a
+  GPU. With the non-CPU route selected (jax.default_backend reporting gpu
+  while the leaf is evaluated), the quintic complex B-spline leaf at k_frac = (0.25, -0.1, 0.4) satisfies
+  chi(r + n.cell) = exp(2 pi i k_frac.n) chi(r) for n = (101, -37, 63) and (10001, -7003, 4005) on the cubic
+  and the monoclinic cell, under the ao_eval strict zone policy of the active mode. The expected phase is
+  written from k_frac and the integer n. Full and mixed are judged separately; the fp32 route is the one taken
+  in mixed.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_complex_gpu_geometry.py::test_gpu_route_complex_bspline_keeps_the_bloch_law_far_from_the_home_cell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: cubic_10bohr}
+    - {cell_name: monoclinic}

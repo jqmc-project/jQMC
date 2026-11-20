@@ -1,0 +1,18 @@
+id: IMPL-RS-MIXED-FULL-POLICY-RESTORATION-001
+kind: implementation
+name: Mixed/full fidelity helper restores each backend policy independently
+plain_language: >-
+  The shared mixed/full fidelity helper saves the Python and standalone native entry policies independently and restores
+  both after successful evaluation and evaluator failure. The contract covers initially divergent Python-full/native-mixed
+  and Python-mixed/native-full states in both CI precision lanes, so a fidelity check cannot alter later native execution.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_precision_policy_contract.py::test_mixed_vs_full_restores_python_and_native_entry_policies
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {python_mode: full, native_mode: mixed, outcome: success}
+    - {python_mode: full, native_mode: mixed, outcome: error}
+    - {python_mode: mixed, native_mode: full, outcome: success}
+    - {python_mode: mixed, native_mode: full, outcome: error}

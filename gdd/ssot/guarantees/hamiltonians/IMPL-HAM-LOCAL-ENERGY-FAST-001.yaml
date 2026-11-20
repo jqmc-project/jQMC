@@ -1,0 +1,10 @@
+id: IMPL-HAM-LOCAL-ENERGY-FAST-001
+kind: implementation
+name: Fast local-energy route parity
+plain_language: The fast local-energy route equals the reference local-energy evaluation on identical input.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hamiltonian.py::TestLocalEnergyFast::test_compute_local_energy_fast

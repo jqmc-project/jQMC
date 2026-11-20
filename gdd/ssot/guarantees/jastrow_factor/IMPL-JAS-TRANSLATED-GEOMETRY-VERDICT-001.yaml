@@ -1,0 +1,16 @@
+id: IMPL-JAS-TRANSLATED-GEOMETRY-VERDICT-001
+kind: implementation
+name: Translated J1 verdict rejects coordinate pre-rounding
+plain_language: >-
+  A passing fixed translated-nucleus baseline must reject a reintroduced
+  fp32 coordinate pre-cast in either the analytical or autodiff helper.
+  The original numerical tolerances and all baseline comparisons remain.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_translated_geometry.py::test_translated_j1_contract_rejects_coordinate_precast
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: analytical}
+    - {route: automatic}

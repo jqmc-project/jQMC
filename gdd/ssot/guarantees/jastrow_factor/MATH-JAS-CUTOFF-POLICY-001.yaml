@@ -1,0 +1,58 @@
+id: MATH-JAS-CUTOFF-POLICY-001
+kind: mathematical
+name: Cutoff policy values of the DTN Jastrow
+plain_language: 'The DTN cutoff policy reproduces the known geometry: the Wigner-Seitz inscribed radius, geometry-derived
+  molecular cutoffs, and periodic defaults at the single shared ratio DTN_DEFAULT_CUTOFF_RATIO (0.95) of each channel-specific
+  safe maximum, with an explicitly supplied ratio honoured verbatim.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_default_cutoff_ratio_constant
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_build_explicit_cutoff_ratio_overrides_default
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_ws_inscribed_radius_cubic
+    executable_checks:
+      cubic-inscribed-radius:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy.test_ws_inscribed_radius_cubic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-wigner-seitz-inscribed-radius, expression: sd._wigner_seitz_inscribed_radius()}
+        reference: {role: cubic-half-cell-length, expression: '5.0'}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-FP64-LOOSE-ZERO-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-FP64-LOOSE-ZERO-001}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_default_cutoffs_molecular
+    executable_checks:
+      molecular-u-cutoff:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy.test_default_cutoffs_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-two-body-cutoff, expression: L_u}
+        reference: {role: absolute-cutoff-cap, expression: '8.0'}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-FP64-LOOSE-ZERO-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-FP64-LOOSE-ZERO-001}
+      molecular-chi-cutoff:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy.test_default_cutoffs_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-one-body-cutoff, expression: L_chi}
+        reference: {role: nearest-nucleus-distance-times-2.5, expression: '3.5'}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-FP64-LOOSE-ZERO-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-FP64-LOOSE-ZERO-001}
+      molecular-f-cutoff:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy.test_default_cutoffs_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: computed-three-body-cutoff, expression: L_f}
+        reference: {role: nearest-nucleus-distance-times-2.5, expression: '3.5'}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-FP64-LOOSE-ZERO-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-PYTHON-FP64-LOOSE-ZERO-001}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_default_cutoffs_pbc
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_build_auto_cutoffs_applied
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_full_coefficient_policy_tangent_matches_projected_manifold_fd
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_policy_value_grad_lap_matches_comoving_rebuild_fd
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_full_strain_tensor_is_fixed_geometry_plus_isotropic_policy
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_periodic_absolute_cutoff_is_rejected

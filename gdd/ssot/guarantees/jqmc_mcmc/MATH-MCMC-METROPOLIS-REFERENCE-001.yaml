@@ -1,0 +1,139 @@
+id: MATH-MCMC-METROPOLIS-REFERENCE-001
+kind: mathematical
+name: Fixed-input Metropolis probabilities and carried states
+plain_language: >-
+  Four consecutive actual XLA Metropolis moves must match independent
+  full-recomputed determinant/J2 weights, SVD-based AS factors and nuclear
+  image enumeration for forward/reverse proposal densities. Require both
+  spins on molecular H2 AE, water ECP and non-Gamma Li ECP, plus the empty-down
+  H AE kernel. Two additional Li inputs must cross a periodic cell face.
+  PCG64 seed 2025 supplies one normal*0.5 configuration, without cond(G)
+  screening or reselection; the face inputs set the moved electron's first
+  fractional coordinate to -0.01. J2 exp parameter is 0.5. Fixed normal
+  draws have magnitude 0.4, signs +,-,+,+ and axes 0,1,2,0; H begins outward.
+  Uniform draws alternate 0.2/0.8; require both starting draws and AS 0/1.
+  Compare probabilities, positions, saved G and its carried inverse at
+  same-mode det_eval/wf_eval strict tolerances. The independent full-pair
+  J2 formula uses the active jastrow_ratio zone, not jastrow_eval totals
+  or a different precision configuration. Decisions and observer-on/off
+  state values must be exact. Dropping proposal, Jastrow, AS or conjugation
+  factors must fail after a passing baseline. This is deterministic
+  fixed-input composition and finite-chain state accuracy, not a
+  statistical distribution test or arbitrary-condition stability proof.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_acceptance_reference.py::test_xla_acceptance_and_carried_state_match_full_recompute
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {filename: H2_ae_ccpvdz_cart.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.2}
+    - {filename: H2_ae_ccpvdz_cart.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.2}
+    - {filename: water_ccecp_ccpvqz.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.2}
+    - {filename: water_ccecp_ccpvqz.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.2}
+    - {filename: lithium_k025.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.2}
+    - {filename: lithium_k025.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.2}
+    - {filename: H_ae_ccpvdz_cart.h5, spin: up, normal: -0.4, cell_face: false, epsilon: 0.0, draw: 0.2}
+    - {filename: lithium_k025.h5, spin: up, normal: 0.4, cell_face: true, epsilon: 0.0, draw: 0.2}
+    - {filename: lithium_k025.h5, spin: down, normal: 0.4, cell_face: true, epsilon: 0.0, draw: 0.2}
+    - {filename: H2_ae_ccpvdz_cart.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.2}
+    - {filename: H2_ae_ccpvdz_cart.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.2}
+    - {filename: water_ccecp_ccpvqz.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.2}
+    - {filename: water_ccecp_ccpvqz.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.2}
+    - {filename: lithium_k025.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.2}
+    - {filename: lithium_k025.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.2}
+    - {filename: H_ae_ccpvdz_cart.h5, spin: up, normal: -0.4, cell_face: false, epsilon: 1.0, draw: 0.2}
+    - {filename: lithium_k025.h5, spin: up, normal: 0.4, cell_face: true, epsilon: 1.0, draw: 0.2}
+    - {filename: lithium_k025.h5, spin: down, normal: 0.4, cell_face: true, epsilon: 1.0, draw: 0.2}
+    - {filename: H2_ae_ccpvdz_cart.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.8}
+    - {filename: H2_ae_ccpvdz_cart.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.8}
+    - {filename: water_ccecp_ccpvqz.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.8}
+    - {filename: water_ccecp_ccpvqz.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.8}
+    - {filename: lithium_k025.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.8}
+    - {filename: lithium_k025.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 0.0, draw: 0.8}
+    - {filename: H_ae_ccpvdz_cart.h5, spin: up, normal: -0.4, cell_face: false, epsilon: 0.0, draw: 0.8}
+    - {filename: lithium_k025.h5, spin: up, normal: 0.4, cell_face: true, epsilon: 0.0, draw: 0.8}
+    - {filename: lithium_k025.h5, spin: down, normal: 0.4, cell_face: true, epsilon: 0.0, draw: 0.8}
+    - {filename: H2_ae_ccpvdz_cart.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.8}
+    - {filename: H2_ae_ccpvdz_cart.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.8}
+    - {filename: water_ccecp_ccpvqz.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.8}
+    - {filename: water_ccecp_ccpvqz.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.8}
+    - {filename: lithium_k025.h5, spin: up, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.8}
+    - {filename: lithium_k025.h5, spin: down, normal: 0.4, cell_face: false, epsilon: 1.0, draw: 0.8}
+    - {filename: H_ae_ccpvdz_cart.h5, spin: up, normal: -0.4, cell_face: false, epsilon: 1.0, draw: 0.8}
+    - {filename: lithium_k025.h5, spin: up, normal: 0.4, cell_face: true, epsilon: 1.0, draw: 0.8}
+    - {filename: lithium_k025.h5, spin: down, normal: 0.4, cell_face: true, epsilon: 1.0, draw: 0.8}
+    executable_checks:
+      acceptance-probability:
+        site: tests/test_jqmc_kernel/test_mcmc_acceptance_reference.py::test_xla_acceptance_and_carried_state_match_full_recompute#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-metropolis-probability, expression: actual_probability}
+        reference: {role: independent-full-recompute-weight-and-transition, expression: expected_probability}
+        iterations:
+          variable: label
+          required_values: [move-0, move-1, move-2, move-3]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, wf_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, wf_eval]}
+      observer-neutrality:
+        site: tests/test_jqmc_kernel/test_mcmc_acceptance_reference.py::test_xla_acceptance_and_carried_state_match_full_recompute#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: observed-production-state, expression: observed_state}
+        reference: {role: unobserved-production-state, expression: ordinary_state}
+        iterations:
+          variable: label
+          required_values: [move-0, move-1, move-2, move-3]
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      acceptance-decision:
+        site: tests/test_jqmc_kernel/test_mcmc_acceptance_reference.py::test_xla_acceptance_and_carried_state_match_full_recompute#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-accepted-rejected-counts, expression: actual_decision}
+        reference: {role: fixed-draw-independent-probability-decision, expression: expected_decision}
+        iterations:
+          variable: label
+          required_values: [move-0, move-1, move-2, move-3]
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      endpoint-positions:
+        site: tests/test_jqmc_kernel/test_mcmc_acceptance_reference.py::test_xla_acceptance_and_carried_state_match_full_recompute#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-endpoint-positions, expression: actual_positions}
+        reference: {role: independently-proposed-or-unchanged-positions, expression: expected_positions}
+        iterations:
+          variable: label
+          required_values: [move-0, move-1, move-2, move-3]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, wf_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, wf_eval]}
+      saved-geminal:
+        site: tests/test_jqmc_kernel/test_mcmc_acceptance_reference.py::test_xla_acceptance_and_carried_state_match_full_recompute#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-geminal, expression: actual_matrix}
+        reference: {role: full-recomputed-geminal-at-actual-endpoint, expression: expected_matrix}
+        iterations:
+          variable: label
+          required_values: [move-0, move-1, move-2, move-3]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, wf_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, wf_eval]}
+      carried-inverse:
+        site: tests/test_jqmc_kernel/test_mcmc_acceptance_reference.py::test_xla_acceptance_and_carried_state_match_full_recompute#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-inverse, expression: actual_inverse}
+        reference: {role: dense-inverse-of-verified-identical-saved-geminal, expression: expected_inverse}
+        iterations:
+          variable: label
+          required_values: [move-0, move-1, move-2, move-3]
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, wf_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval, wf_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_acceptance_reference.py::test_acceptance_reference_rejects_actual_formula_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {filename: water_ccecp_ccpvqz.h5, epsilon: 0.0, fault: transition}
+    - {filename: water_ccecp_ccpvqz.h5, epsilon: 0.0, fault: jastrow}
+    - {filename: water_ccecp_ccpvqz.h5, epsilon: 1.0, fault: regularizer}
+    - {filename: lithium_k025.h5, epsilon: 0.0, fault: conjugation}

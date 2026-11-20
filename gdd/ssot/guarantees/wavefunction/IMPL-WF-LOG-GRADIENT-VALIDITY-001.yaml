@@ -1,0 +1,17 @@
+id: IMPL-WF-LOG-GRADIENT-VALIDITY-001
+kind: implementation
+name: Electron log-gradient output validity in both spin blocks
+plain_language: The electron-coordinate gradient of ln(abs(Psi)) has the expected coordinate shape and dtype, finite entries, and a nonzero entry in each spin block on the fixed inputs, in each precision mode. This output contract does not replace numerical-accuracy evidence.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction::test_periodic_log_gradient_shape_and_finiteness_both_precisions
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pw}
+    - {kind: bspline}
+    - {kind: pgto}
+    - {kind: pgto+pw}
+    - {kind: pgto+bspline}

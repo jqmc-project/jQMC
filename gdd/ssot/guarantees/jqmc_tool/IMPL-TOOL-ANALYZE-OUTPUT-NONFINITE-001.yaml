@@ -1,0 +1,27 @@
+id: IMPL-TOOL-ANALYZE-OUTPUT-NONFINITE-001
+kind: implementation
+name: VMC analyze-output keeps every step aligned and refuses diverged or step-less logs
+plain_language: >-
+  vmc analyze-output prints one row per Optimization step header, with the energy, max generalized force and
+  signal-to-noise printed under that header, including exponent-notation values, across a run and its restarts. A
+  non-finite energy or force keeps its row, is named on stderr, writes no graph and makes the command exit non-zero;
+  a step without its lines is shown with a dash and reported on stderr; input without any optimization step exits
+  non-zero without a table.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestVmcAnalyzeOutput::test_analyze_output_reports_nonfinite_steps_aligned
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: nan-force-step-2}
+    - {case: nan-energy-last-step}
+    - {case: diverged-restart}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestVmcAnalyzeOutput::test_analyze_output_refuses_input_without_steps
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: empty-file}
+    - {case: mcmc-log}
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestVmcAnalyzeOutput::test_analyze_output_keeps_exponent_and_unfinished_steps_aligned
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

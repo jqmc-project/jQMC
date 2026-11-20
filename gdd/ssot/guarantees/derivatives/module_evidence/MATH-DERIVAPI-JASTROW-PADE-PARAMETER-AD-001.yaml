@@ -1,0 +1,56 @@
+id: MATH-DERIVAPI-JASTROW-PADE-PARAMETER-AD-001
+kind: mathematical
+name: Pade J1/J2 parameter derivatives retain the H16 float64 mathematical reference in both modes
+plain_language: 'A thin Pade-fixed wrapper executes the original test and its two original analytical-versus-Full-AD
+  comparisons for both molecular and periodic stems in Full and Mixed. Actual operand/JAXpr qualification shows
+  float64 Pade parameter arithmetic in both modes, unlike the Exp parameter-only denominator. Original stored-parameter
+  reference evaluation, deterministic seed, field setup and both nonzero controls remain unchanged. Original Full
+  all-four-form/stem cases remain in MATH-DERIVAPI-CONSISTENCY-001; the Exp-fixed Mixed wrapper is numerical fidelity.
+  Required parameter cases are minima, not filters: distinct concrete wrapper nodes define the actual form partition
+  without skips or removed original executions.'
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j1_j2_pade_parameter_math_partition
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - stem: Li_ae_ccpvdz_cart.h5
+    - stem: lithium.h5
+    executable_checks:
+      retained-math-1:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j1_j2_param_grad_functional_forms_vs_auto#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: retained-analytical-mathematical-result
+          expression: ana1
+        reference:
+          role: retained-independent-full-mathematical-reference
+          expression: ref1
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id001
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id001
+      retained-math-2:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j1_j2_param_grad_functional_forms_vs_auto#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: retained-analytical-mathematical-result
+          expression: ana2
+        reference:
+          role: retained-independent-full-mathematical-reference
+          expression: ref2
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id001
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: *id001

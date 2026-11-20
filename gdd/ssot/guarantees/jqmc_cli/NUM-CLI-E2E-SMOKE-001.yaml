@@ -1,0 +1,15 @@
+id: NUM-CLI-E2E-SMOKE-001
+kind: numerical
+name: CLI end-to-end smoke
+plain_language: 'The installed CLI completes subprocess runs on the reviewed fixtures: combined auto dispatch, resume skipping
+  completed twists, and MCMC, VMC, and LRDMC runs; this is a smoke check, never a correctness oracle.'
+verdict_methods:
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli_twist_dispatch.py::TestCLITwistDispatchSubprocess::test_cli_auto_dispatch_routes_combined_input_to_twist_average
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli_twist_dispatch.py::TestCLITwistDispatchSubprocess::test_cli_resume_skips_completed_twists_end_to_end
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli.py::TestCLI::test_jqmc_cli_run_mcmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli.py::TestCLI::test_jqmc_cli_run_vmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli.py::TestCLI::test_jqmc_cli_run_lrdmc

@@ -1,0 +1,16 @@
+id: IMPL-QE-PW-TAPER-TWIST-CHANNEL-ATTRS-001
+kind: implementation
+name: The twist-average file records the taper summaries of every (twist, spin) channel under its own label
+plain_language: >-
+  convert_qe_to_twist_average_input on the committed O LSDA k025 save stretched to a vacuum cell records,
+  in /_meta, pw_taper_spectral_loss_mean_occupied_ik1, _max_occupied_ik1 and _per_band_ik1 for the up
+  channel and the same three keys with _ik1_dn for the down channel; each equals taper_qe_reference of
+  that channel's reference exactly, the two channels differ, no unlabeled summary key exists, and the
+  channel-independent pw_taper_g_end agrees, so no channel's summary overwrites another's.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_twist_average_records_labeled_taper_summaries_per_channel
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

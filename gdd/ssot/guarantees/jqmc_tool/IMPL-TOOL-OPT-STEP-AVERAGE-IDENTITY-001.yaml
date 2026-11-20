@@ -1,0 +1,20 @@
+id: IMPL-TOOL-OPT-STEP-AVERAGE-IDENTITY-001
+kind: implementation
+name: vmc average-wf on one file is the bitwise identity and records its provenance
+plain_language: >-
+  jqmc-tool vmc average-wf with a single molecular, periodic-Gamma or combined twist input writes a file whose every
+  dataset and attribute equals the input bitwise, plus root provenance attributes that the loaders ignore
+  (opt_step_average_sources with the given path, opt_step_average_steps with the N of _opt_step_N.h5, an empty
+  opt_step_average_leaves); the output loads through Hamiltonian_data.load_from_hdf5 or, for combined inputs, load_twist for every
+  twist. With several inputs the provenance names the inputs in order, their step numbers, their count and the uniform
+  weighting.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_average_wf_single_input_is_bitwise_identity
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {layout: molecular-sd}
+    - {layout: pbc-gamma-sd}
+    - {layout: twist-combined}

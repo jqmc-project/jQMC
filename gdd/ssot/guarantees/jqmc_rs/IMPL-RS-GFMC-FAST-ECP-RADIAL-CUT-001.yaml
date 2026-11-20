@@ -1,0 +1,36 @@
+id: IMPL-RS-GFMC-FAST-ECP-RADIAL-CUT-001
+kind: implementation
+name: The real FAST GFMC ECP mesh drops only pairs below the radial cut and moves each local energy by at most their own bound
+plain_language: >-
+  On the real FAST GFMC projection mesh (gfmc::compute_ecp_nonlocal_mesh_fast, the GFMC_t / GFMC_n interval chains),
+  an (electron, non-local term) pair whose radial factor |v_t(r)| = |c r^(p-2) exp(-e r^2)| at the distance from the
+  electron to its nearest ECP nucleus is below FAST_ECP_NONLOCAL_RADIAL_CUT = 1e-12 Ha (jqmc._setting; the same
+  constant and rule as the VMC FAST route, IMPL-RS-FAST-ECP-NONLOCAL-RADIAL-CUT-001) contributes v_t = 0 to its
+  quadrature amplitudes. The mesh therefore evaluates exactly the truncated Hamiltonian H' whose semilocal radial
+  functions are zero where |v_t| < EPS, in both the tmove and the dltmove (FN plus SP) treatment. An electron whose
+  amplitudes all become zero is then skipped exactly (IMPL-RS-GFMC-ECP-ZERO-GROUP-SKIP-001), which is where the time
+  is saved: in water clusters about a tenth of all electrons are oxygen-nearest beyond the cut radius of the O
+  s-channel (about 1.6 bohr). Pointwise |delta v_t| <= EPS. Per configuration the change of e_L and of the rate b_L is
+  at most the a-posteriori bound B = sum over dropped pairs of |v_t| (2l+1) sum_v w_v |P_l(cos_v)| |Psi(r'_v)/Psi(r)|,
+  which is at most EPS times the same sum without |v_t|; it is not bounded by EPS alone because the wavefunction
+  ratio on the mesh is unbounded near nodes. In expectation, with the rotation-averaged quadrature equal to the
+  angular projector (norm at most 1), ||V_nl - V'_nl|| <= N_e n_t EPS (n_t = non-local terms per nucleus); the
+  T-move / locality-approximated effective Hamiltonian splits each matrix element by sign, so its change is bounded
+  by twice that, and the fixed-node LRDMC energy moves by at most 2 N_e n_t EPS (water 20, 160 electrons, one
+  non-zero non-local term per O: 3.2e-10 Ha). The exact (non-FAST) mesh never cuts. The test-only hook
+  JQMC_RS_GFMC_ECP_NO_RADIAL_CUT disables the cut for an A/B comparison. Evidence: on the water ccECP fixture, six
+  seeded wide configurations with random mesh rotations, the single-configuration FAST LRDMC local energy with and
+  without the cut (tmove and dltmove): the kept and dropped pair counts (jqmc_rs.gfmc_route_counters indices 70 and
+  71) equal those of an independent NumPy evaluation of |v_t| and the uncut run counts none; for tmove, |delta e_L|
+  and |delta b_L| are within B (wavefunction ratios evaluated independently by jqmc.wavefunction) plus the central
+  reduction-order pair, and B is within the EPS bound; pairs with 0 < |v_t| < EPS are dropped and pairs are kept.
+  Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_fast_ecp_radial_cut.py::test_gfmc_fast_ecp_radial_cut_within_a_posteriori_bound
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_sphe_j12, dltmove: false}
+    - {pattern: mol_ecp_sphe_j12, dltmove: true}

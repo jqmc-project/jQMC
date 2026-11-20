@@ -1,0 +1,44 @@
+id: IMPL-PREC-ECP-DEBUG-NONLOCAL-BLOCH-PHASE-001
+kind: implementation
+name: The debug nearest-neighbour ECP non-local oracle equals the production routes at a Bloch twist
+plain_language: >-
+  On the five canonical ECP-target wavefunctions WF-PATTERN-004 (real Gamma control), 006, 008, 012 and 014 (complex
+  twists; pGTO, plane-wave and pGTO+B-spline leaves, SD and AGPn, polarized and unpolarized spins), at one PCG64 seed-5
+  normal(scale 0.9) configuration with nearest neighbour NN=1, Nv=12 and the identity rotation, the debug oracle
+  coulomb_potential._compute_ecp_non_local_parts_nearest_neighbors_debug is compared in the active precision mode with
+  production. Its holomorphic sum must equal compute_ecp_non_local_parts_nearest_neighbors_holomorphic, and the real part of
+  each per-grid term must equal the fixed-phase compute_ecp_non_local_parts_nearest_neighbors, under the strict ao_eval,
+  jastrow_eval, det_eval and coulomb budget. At least one quadrature point lies outside the home cell. The oracle must pass
+  quadrature points to Psi unwrapped: the home-cell wrap is centralised in compute_AOs, which restores the Bloch phase of
+  the removed lattice vector; a second wrap outside compute_AOs would add a spurious exp(-i k.T) at a twist. The
+  holomorphic return convention of the oracle is pinned by a nonzero imaginary sum at a twist. This does not claim the full
+  mesh all-pairs oracle, the discretized kinetic oracle or native routes.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_debug_nonlocal_bloch_phase.py::test_debug_nonlocal_ecp_matches_production_routes
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern_id: WF-PATTERN-004}
+    - {pattern_id: WF-PATTERN-006}
+    - {pattern_id: WF-PATTERN-008}
+    - {pattern_id: WF-PATTERN-012}
+    - {pattern_id: WF-PATTERN-014}
+    executable_checks:
+      debug-holomorphic-sum:
+        site: tests/test_jqmc_kernel/test_ecp_debug_nonlocal_bloch_phase.py::test_debug_nonlocal_ecp_matches_production_routes#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: debug-ecp-nonlocal-holomorphic-sum, expression: debug_sum_value}
+        reference: {role: production-holomorphic-ecp-nonlocal-sum, expression: holomorphic_sum_value}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb]}
+      debug-fixed-phase-grid:
+        site: tests/test_jqmc_kernel/test_ecp_debug_nonlocal_bloch_phase.py::test_debug_nonlocal_ecp_matches_production_routes#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: debug-ecp-nonlocal-real-grid-terms, expression: debug_real_grid}
+        reference: {role: production-fixed-phase-ecp-nonlocal-grid-terms, expression: fixed_phase_grid}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb]}

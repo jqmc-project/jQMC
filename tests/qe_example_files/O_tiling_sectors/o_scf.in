@@ -1,0 +1,45 @@
+&CONTROL
+    calculation   = 'scf'
+    prefix        = 'o_tiling'
+    outdir        = './out'
+    pseudo_dir    = './'
+    verbosity     = 'high'
+    tstress       = .false.
+    tprnfor       = .false.
+    disk_io       = 'medium'
+/
+&SYSTEM
+    ! Single O atom in a 10 Bohr cubic box at k=(0.25,0.25,0.25): non-Gamma
+    ! LSDA fixture (complex Bloch path) for the QE -> jQMC UKS conversion.
+    ! nosym + noinv keep the single general k-point unfolded.
+    ! O.ccECP: Z_valence = 6 -> triplet ground state: n_up = 4, n_dn = 2.
+    ibrav         = 1
+    celldm(1)     = 10.0
+    nat           = 1
+    ntyp          = 1
+    ! nbnd > n_occ_up so the fixture also exercises the per-spin band
+    ! truncation (n_keep = 4 < nbnd = 6).
+    nbnd          = 6
+    ecutwfc       = 35.0
+    ecutrho       = 140.0
+    occupations   = 'fixed'
+    nspin         = 2
+    tot_magnetization = 2.0
+    ! LDA: Slater exchange + Perdew-Zunger 1981 correlation.
+    input_dft     = 'pz'
+    nosym         = .true.
+    noinv         = .true.
+/
+&ELECTRONS
+    conv_thr      = 1.0d-8
+    mixing_beta   = 0.4
+    electron_maxstep = 200
+/
+ATOMIC_SPECIES
+    O   15.999  O.ccECP.upf
+
+ATOMIC_POSITIONS {bohr}
+    O   5.0  5.0  5.0
+
+K_POINTS automatic
+    2 2 2 1 1 1

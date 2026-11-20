@@ -1,0 +1,15 @@
+schema_version: 1
+document:
+  id: jqmc.trexio_wrapper
+  version: 1
+  lifecycle: cutover
+  title: TREXIO wrapper guarantees
+  purpose: Which test guarantees what, by which verdict method, for TREXIO reading and twist decomposition.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-TREXIO-READ-CONTRACTS-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

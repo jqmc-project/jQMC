@@ -1,0 +1,32 @@
+id: PHY-WF-SKEWED-TWIST-PERIODIC-INVARIANTS-001
+kind: physical
+name: Periodic translation invariants and the many-body Bloch phase hold on a triclinic twist AGP
+plain_language: >-
+  The canonical triclinic pattern WF-PATTERN-016 (k = (0.25, 0.125, 0), spin-restricted complex spherical
+  pGTO AGP, J1/J2, its complex-Bloch J3 removed because that J3 is not lattice periodic) is a pattern
+  of the JAX periodic-invariant suite: translating one electron by an integer lattice vector leaves the
+  complex e_L, ln|Psi| and the HF and Pulay forces unchanged, the per-configuration translation sum rules
+  hold, and the forced close pair keeps J2 non-vacuous. On every twist pattern of that suite (cubic H4
+  J1/J2, cubic Li ccECP J1/J2/DTN and the triclinic AGP) moving the first up or first dn electron by one of
+  five lattice shifts multiplies the complex Psi by exp(2 pi i k_s.n) with k_up from the fixture request
+  and k_dn = -k_up, at the far-image configuration recipe of the suite. Replacing inv_cell by its transpose
+  in the pGTO wrap-restore phase gives a phase (not a modulus) violation on the triclinic pattern and no
+  violation on the cubic H4 pattern, whose cell matrix is symmetric. The triclinic rows of the three
+  existing translation, sum-rule and J2 nodes are bound through their whole-node registration in
+  PHY-WF-TRANSLATION-INVARIANCE-001; this guarantee binds the two Bloch-phase nodes. Full and mixed are
+  judged separately.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_invariants.py::test_many_body_bloch_phase_on_twist_patterns
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: h4_twist_j12}
+    - {pattern: li_twist_jdtn}
+    - {pattern: triclinic_agp_twist_j12}
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_invariants.py::test_many_body_bloch_phase_rejects_a_transposed_inverse_cell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: h4_twist_j12}
+    - {pattern: triclinic_agp_twist_j12}

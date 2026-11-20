@@ -1,0 +1,28 @@
+id: IMPL-PGTOOPT-EXP-TAIL-SPREAD-001
+kind: implementation
+name: Coincident clipped seed exponents are spread on a deterministic ladder below the bound
+plain_language: >-
+  When two or more seed primitives of one element shell exceed alpha_max(l, exp_tail_eps), optimize_pgto_exponents
+  does not clip them all to the same value (which made the Li ccECP seed exactly singular, cond 6.2e16) but places
+  them, largest original exponent first, on the ladder ln(alpha_max) - PGTO_EXP_TAIL_CLIP_MARGIN - k ln(r),
+  r = PGTO_EXP_TAIL_CLIP_SPREAD_RATIO, skipping a rung within half a ladder step of an unclipped exponent of that
+  shell. On the Li_gamma ccECP seed at a 10 Ry handoff (s 190.08 and 5.938 above alpha_max(0) = 5.2203) the two
+  land exactly on the second and third rungs (the top rung is next to the unclipped 3.866), identically on repeated
+  calls and for both equivalent atoms, every exponent of every shell stays distinct, within the bound and above the
+  exponent floor, the unclipped exponents are untouched, and the seed passed to SLSQP and to the deployed audit has
+  a finite condition number below 1 / svd_rcond. A single clipped primitive per shell keeps the plain clip; a
+  spread that would reach exponent_floor raises ValueError (IMPL-PGTOOPT-EXP-TAIL-INFEASIBLE-001). Full and mixed
+  are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_coincident_clipped_li_seed_is_spread_on_the_geometric_ladder
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_spread_li_seed_is_nonsingular_within_the_condition_constraint
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_tail_bound.py::test_spread_rung_next_to_an_unclipped_exponent_is_skipped
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

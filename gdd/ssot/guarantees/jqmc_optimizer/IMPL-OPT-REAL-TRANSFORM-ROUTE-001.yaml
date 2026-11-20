@@ -1,0 +1,25 @@
+# Real wave-function host transform route.
+id: IMPL-OPT-REAL-TRANSFORM-ROUTE-001
+kind: implementation
+name: A real wave function's host optimizer transform is real and equals the complex route's real part
+plain_language: >-
+  OptimizationCoordinateMap.transform_derivatives takes its real route when every block is real structure (real field,
+  real tie coefficients, real S-Stiefel coefficients and metric factors) and every derivative source is real with no
+  d_pbar. The route is decided once (_transform_derivatives_dtype) for the NumPy and the jqmc_rs routes alike; it
+  returns float64 columns and never forms the identically zero imaginary covector branch, so the S-Stiefel adjoint
+  runs in float64. Every other input (complex fields, complex tangent data, complex or Wirtinger sources) keeps the
+  complex128 route unchanged. For N2 ccECP J2 (Euclidean) + J3 (symmetric linear tie) + SD MO (S-Stiefel rows) on 37
+  sample rows (two Rust row chunks, and more than one NumPy tie row block), the real route is float64 and equals the
+  real part of the complex route forced by the same sources cast to complex128 with a zero imaginary part: exactly on
+  the Rust route, which runs the same real-linear adjoint on both routes, and within the host coordinate-map pair on
+  the NumPy route, whose complex route runs the S-Stiefel products in complex BLAS. The downstream host SR/LM
+  preparation consumes the real array without promoting it to complex. This is route parity on one realized
+  wave function, not an independent proof of the transform (the coordinate-map dense references and the Rust/XLA
+  parity cover that); it carries no memory or timing assertion.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_transform_jackknife_rust.py::test_real_wavefunction_host_transform_is_float64_and_equals_complex_route_real_part
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: numpy}, {route: rust}]

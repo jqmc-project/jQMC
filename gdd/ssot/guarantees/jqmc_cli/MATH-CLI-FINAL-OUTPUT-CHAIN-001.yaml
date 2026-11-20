@@ -1,0 +1,26 @@
+id: MATH-CLI-FINAL-OUTPUT-CHAIN-001
+kind: mathematical
+name: Final CLI output equals the estimator values it reports
+plain_language: 'Every number the CLI prints as a final output equals the estimator value it claims to report, with the
+  stated unit: the energy and variance are pinned exactly against fixed estimator returns, and the atomic-force and BZ-averaged
+  pressure tables are read back through the production downstream parser so the emitted text is validated by its real consumer.
+  The hydrostatic pressure is always published WITH its covariance-aware error bar; a missing replicate set is a loud refusal,
+  never a bare value, because a P_hydro row without val(err) makes the parser drop the ENTIRE pressure record (Px/Py/Pz
+  included) while the run is still recorded as completed. Before this, the only check on the final emission was finiteness,
+  so a sign flip on the headline energy passed every registered test.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli.py::TestCLIFinalOutputMapping::test_mcmc_final_output_fields_match_the_estimator_values
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli.py::TestCLIFinalOutputMapping::test_lrdmc_final_output_fields_match_the_checkpoint_recomputation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {job_type: lrdmc-bra}
+    - {job_type: lrdmc-tau}
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::test_twist_averaged_pressure_row_survives_the_production_parser
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::test_stress_section_refuses_to_publish_pressure_without_an_error_bar

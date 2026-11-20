@@ -1,0 +1,17 @@
+id: IMPL-OPTK-SR-CG-BREAKDOWN-FLAG-001
+kind: implementation
+name: Every SR CG route flags a breakdown and does not count the broken-down iteration
+plain_language: >-
+  Every SR CG route (host NumPy and Rust wide and tall CGs; XLA sampler-local, chunked and sharded-chunked wide
+  and tall CGs) returns (x, residual, iterations, breakdown). breakdown is True when the loop
+  stopped on a non-finite or |p^T A p| <= tiny denominator, so a caller tells it apart from reaching cg_max_iter.
+  The broken-down iteration takes no step and is not counted, on every route alike. Evidence: a zero operator
+  (X = 0, epsilon = 0) breaks down at the first step on every wide and tall route: breakdown is True, zero
+  iterations are counted, the residual is the nonzero initial one and the update is the zero start.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_sr_cg_breakdown_is_flagged_and_not_counted_on_every_route
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{regime: wide}, {regime: tall}]

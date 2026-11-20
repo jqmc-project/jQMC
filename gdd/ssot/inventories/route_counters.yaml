@@ -1,0 +1,532 @@
+{
+  "schema_version": 1,
+  "vocabularies": {
+    "unread_statuses": [
+      "unread-by-design",
+      "pending"
+    ]
+  },
+  "counter_read_evidence": [
+    {
+      "index": 0,
+      "symbol": "GFMC_DTN_CACHE_HITS",
+      "pytest_node": "tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_rust_real_path_derivative_caches_engage"
+    },
+    {
+      "index": 1,
+      "symbol": "GFMC_DET_FAST_INTERVALS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 2,
+      "symbol": "GFMC_REDUCED_STATE_INTERVALS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 3,
+      "symbol": "GFMC_CAND_BUILD_MOL",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 4,
+      "symbol": "GFMC_CAND_REFRESH_MOL",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 5,
+      "symbol": "GFMC_CAND_BUILD_PGTO",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 6,
+      "symbol": "GFMC_CAND_REFRESH_PGTO",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 7,
+      "symbol": "GFMC_CAND_BUILD_BSPLINE",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 8,
+      "symbol": "GFMC_CAND_REFRESH_BSPLINE",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 9,
+      "symbol": "GFMC_CAND_BUILD_PGTOPW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 10,
+      "symbol": "GFMC_CAND_REFRESH_PGTOPW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 11,
+      "symbol": "GFMC_CAND_DET_SLOW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 12,
+      "symbol": "GFMC_J3_SLOW_FALLBACKS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_n_parity"
+    },
+    {
+      "index": 13,
+      "symbol": "GFMC_DET_GRAD_GENERIC_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 14,
+      "symbol": "GFMC_CPLX_STATE_INTERVALS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 15,
+      "symbol": "GFMC_CPLX_CAND_BUILD_PGTO",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 16,
+      "symbol": "GFMC_CPLX_CAND_REFRESH_PGTO",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 17,
+      "symbol": "GFMC_CPLX_CAND_BUILD_BSPLINE",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 18,
+      "symbol": "GFMC_CPLX_CAND_REFRESH_BSPLINE",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 19,
+      "symbol": "GFMC_CPLX_CAND_BUILD_PGTOPW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 20,
+      "symbol": "GFMC_CPLX_CAND_REFRESH_PGTOPW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 21,
+      "symbol": "GFMC_CPLX_CAND_DET_SLOW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 22,
+      "symbol": "GFMC_CPLX_J3_SLOW_FALLBACKS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 23,
+      "symbol": "GFMC_CPLX_STATE_GATE_MISS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 24,
+      "symbol": "GFMC_CPLX_DERIV_BUILD_PGTO",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 25,
+      "symbol": "GFMC_CPLX_DERIV_REFRESH_PGTO",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 26,
+      "symbol": "GFMC_CPLX_DERIV_BUILD_BSPLINE",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 27,
+      "symbol": "GFMC_CPLX_DERIV_REFRESH_BSPLINE",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 28,
+      "symbol": "GFMC_CPLX_DERIV_BUILD_PGTOPW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 29,
+      "symbol": "GFMC_CPLX_DERIV_REFRESH_PGTOPW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 30,
+      "symbol": "GFMC_CPLX_DERIV_DET_SLOW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 31,
+      "symbol": "GFMC_CPLX_DTN_GRAD_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 32,
+      "symbol": "GFMC_CPLX_DTN_GRAD_REFRESHES",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 33,
+      "symbol": "GFMC_CPLX_DTN_GRAD_SLOW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 34,
+      "symbol": "GFMC_CPLX_DTN_MESH_HITS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 35,
+      "symbol": "GFMC_CPLX_J12_GRAD_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 36,
+      "symbol": "GFMC_CPLX_J12_GRAD_REFRESHES",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 37,
+      "symbol": "GFMC_CPLX_J12_GRAD_SLOW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 38,
+      "symbol": "GFMC_CPLX_J3_GRAD_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 39,
+      "symbol": "GFMC_CPLX_J3_GRAD_REFRESHES",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 40,
+      "symbol": "GFMC_CPLX_J3_GRAD_SLOW",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 41,
+      "symbol": "GFMC_DET_GRAD_SLOW",
+      "pytest_node": "tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_rust_real_path_derivative_caches_engage"
+    },
+    {
+      "index": 42,
+      "symbol": "GFMC_J12_GRAD_SLOW",
+      "pytest_node": "tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_rust_real_path_derivative_caches_engage"
+    },
+    {
+      "index": 43,
+      "symbol": "GFMC_J3_GRAD_SLOW",
+      "pytest_node": "tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_rust_real_path_derivative_caches_engage"
+    },
+    {
+      "index": 44,
+      "symbol": "GFMC_DTN_GRAD_SLOW",
+      "pytest_node": "tests/test_jqmc_kernel/test_integration_mesh_cache_routes.py::test_rust_real_path_derivative_caches_engage"
+    },
+    {
+      "index": 45,
+      "symbol": "GFMC_DTN_TABPIP_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 46,
+      "symbol": "GFMC_DTN_TABPIP_ADVANCES",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 47,
+      "symbol": "GFMC_DTN_TABPIP_HITS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 48,
+      "symbol": "GFMC_J12_TABPIP_KIN_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 49,
+      "symbol": "GFMC_J12_TABPIP_KIN_ADVANCES",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 50,
+      "symbol": "GFMC_J12_TABPIP_KIN_HITS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 51,
+      "symbol": "GFMC_J12_TABPIP_KIN_FALLBACKS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 52,
+      "symbol": "GFMC_J12_TABPIP_ECP_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 53,
+      "symbol": "GFMC_J12_TABPIP_ECP_ADVANCES",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 54,
+      "symbol": "GFMC_J12_TABPIP_ECP_HITS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 55,
+      "symbol": "GFMC_J12_TABPIP_ECP_FALLBACKS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 56,
+      "symbol": "GFMC_WINV_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 57,
+      "symbol": "GFMC_WINV_ADVANCES",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 58,
+      "symbol": "GFMC_WINV_KIN_HITS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 59,
+      "symbol": "GFMC_WINV_ECP_HITS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 60,
+      "symbol": "GFMC_WINV_FALLBACKS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 61,
+      "symbol": "GFMC_DTN_TABPIP_ECP_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 62,
+      "symbol": "GFMC_DTN_TABPIP_ECP_ADVANCES",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_multistep_projection_complex_twist_parity"
+    },
+    {
+      "index": 63,
+      "symbol": "GFMC_DTN_TABPIP_ECP_HITS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_complex_twist_rust_vs_jax_energy"
+    },
+    {
+      "index": 64,
+      "symbol": "GFMC_FORCE_GINV_HANDOFFS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_rust_vs_xla_end_to_end_force_stress"
+    },
+    {
+      "index": 65,
+      "symbol": "GFMC_FORCE_GINV_FALLBACKS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_rust_vs_xla_end_to_end_force_stress"
+    },
+    {
+      "index": 66,
+      "symbol": "GFMC_CAND_MO_TILED",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 67,
+      "symbol": "GFMC_CAND_MO_DENSE",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types"
+    },
+    {
+      "index": 68,
+      "symbol": "GFMC_ECP_LIVE_GROUPS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_ecp_zero_group_skip.py::test_gfmc_ecp_zero_group_skip_is_bitwise"
+    },
+    {
+      "index": 69,
+      "symbol": "GFMC_ECP_ZERO_GROUPS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_ecp_zero_group_skip.py::test_gfmc_ecp_zero_group_skip_is_bitwise"
+    },
+    {
+      "index": 70,
+      "symbol": "GFMC_ECP_CUT_KEPT_PAIRS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_fast_ecp_radial_cut.py::test_gfmc_fast_ecp_radial_cut_within_a_posteriori_bound"
+    },
+    {
+      "index": 71,
+      "symbol": "GFMC_ECP_CUT_DROPPED_PAIRS",
+      "pytest_node": "tests/test_rs_kernel/test_gfmc_fast_ecp_radial_cut.py::test_gfmc_fast_ecp_radial_cut_within_a_posteriori_bound"
+    },
+    {
+      "index": 72,
+      "symbol": "GFMC_DTN_FAR_ROWS",
+      "pytest_node": "tests/test_rs_kernel/test_dtn_tabpip_far_row_skip.py::test_dtn_tabpip_far_row_skip_is_bitwise"
+    }
+  ],
+  "counter_unread": [],
+  "predicate_counter_read_evidence": [
+    {
+      "index": 0,
+      "symbol": "RS_ECP_WDOT_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 1,
+      "symbol": "RS_ECP_WDOT_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 2,
+      "symbol": "RS_ECP_J3_WDOT_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 3,
+      "symbol": "RS_ECP_J3_WDOT_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 4,
+      "symbol": "RS_MCMC_DET_CARRY_STEPS",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 5,
+      "symbol": "RS_MCMC_DET_CARRY_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 6,
+      "symbol": "RS_MCMC_J3_CARRY_STEPS",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 7,
+      "symbol": "RS_MCMC_J3_CARRY_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 8,
+      "symbol": "RS_ECP_PARAM_SM_INCREMENTS",
+      "pytest_node": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_mo_sm_vs_rebuild_ab"
+    },
+    {
+      "index": 9,
+      "symbol": "RS_ECP_PARAM_SM_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_mo_sm_vs_rebuild_near_coincident"
+    },
+    {
+      "index": 10,
+      "symbol": "RS_INTERVAL_GINV_CARRIES",
+      "pytest_node": "tests/test_rs_kernel/test_lrdmc_mesh_chain_rust.py::test_rust_lrdmc_chain_inverse_winv_and_mesh_match_fresh"
+    },
+    {
+      "index": 11,
+      "symbol": "RS_INTERVAL_GINV_CARRY_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_lrdmc_mesh_chain_rust.py::test_rust_lrdmc_chain_inverse_winv_and_mesh_match_fresh"
+    },
+    {
+      "index": 12,
+      "symbol": "RS_ECP_PARAM_FAST_MESHES",
+      "pytest_node": "tests/test_rs_kernel/test_param_grad_el.py::test_ecp_param_grad_route_complexity"
+    },
+    {
+      "index": 13,
+      "symbol": "RS_ECP_PARAM_REF_MESH_CANDIDATES",
+      "pytest_node": "tests/test_rs_kernel/test_param_grad_el.py::test_ecp_param_grad_route_complexity"
+    },
+    {
+      "index": 14,
+      "symbol": "RS_ECP_PARAM_OK_INCREMENTAL",
+      "pytest_node": "tests/test_rs_kernel/test_param_grad_el.py::test_ecp_param_grad_route_complexity"
+    },
+    {
+      "index": 15,
+      "symbol": "RS_ECP_PARAM_OK_FULL_EVALS",
+      "pytest_node": "tests/test_rs_kernel/test_param_grad_el.py::test_ecp_param_grad_route_complexity"
+    },
+    {
+      "index": 16,
+      "symbol": "RS_ECP_CPLX_WDOT_BUILDS",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_driver_complex_ecp_wdot_route_counters"
+    },
+    {
+      "index": 17,
+      "symbol": "RS_ECP_CPLX_WDOT_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_driver_complex_ecp_wdot_route_counters"
+    },
+    {
+      "index": 18,
+      "symbol": "RS_ECP_RADIAL_CUT_KEPT",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 19,
+      "symbol": "RS_ECP_RADIAL_CUT_DROPPED",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_route_predicate_counters"
+    },
+    {
+      "index": 20,
+      "symbol": "RS_ECP_CPLX_SEED_CARRIED",
+      "pytest_node": "tests/test_rs_kernel/test_complex_chunk_ecp_carried_seed.py::test_complex_chunk_ecp_carried_seed_matches_fresh"
+    },
+    {
+      "index": 21,
+      "symbol": "RS_ECP_CPLX_SEED_FRESH",
+      "pytest_node": "tests/test_rs_kernel/test_complex_chunk_ecp_carried_seed.py::test_complex_chunk_ecp_carried_seed_matches_fresh"
+    },
+    {
+      "index": 22,
+      "symbol": "RS_CPLX_KIN_CARRY_STEPS",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_complex_carry_route_counters"
+    },
+    {
+      "index": 23,
+      "symbol": "RS_CPLX_KIN_CARRY_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_complex_carry_route_counters"
+    },
+    {
+      "index": 24,
+      "symbol": "RS_CPLX_KIN_CARRY_SEEDS",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_complex_carry_route_counters"
+    },
+    {
+      "index": 25,
+      "symbol": "RS_CPLX_KIN_CARRY_ADVANCES",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_complex_carry_route_counters"
+    },
+    {
+      "index": 26,
+      "symbol": "RS_CPLX_KIN_GINV_CARRY_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_complex_carry_route_counters"
+    },
+    {
+      "index": 27,
+      "symbol": "RS_CPLX_DET_BASE_CARRY_STEPS",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_complex_carry_route_counters"
+    },
+    {
+      "index": 28,
+      "symbol": "RS_CPLX_DET_BASE_CARRY_DECLINES",
+      "pytest_node": "tests/test_rs_kernel/test_rust_route_predicate_counters.py::test_mcmc_chunk_complex_carry_route_counters"
+    }
+  ],
+  "predicate_counter_unread": [],
+  "document": {
+    "id": "jqmc.inventories.route-counters",
+    "version": 1,
+    "title": "Reviewed route-counter evidence inventory",
+    "lifecycle": "pre-cutover",
+    "purpose": "Record required counter readers and reviewed unread dispositions without changing route engagement semantics."
+  }
+}

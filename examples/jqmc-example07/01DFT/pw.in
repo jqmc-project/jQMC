@@ -1,0 +1,56 @@
+&CONTROL
+    calculation   = 'scf'
+    prefix        = 'silicon'
+    outdir        = './'
+    pseudo_dir    = './'
+    verbosity     = 'high'
+    tstress       = .false.
+    tprnfor       = .false.
+    disk_io       = 'medium'
+/
+&SYSTEM
+    ! Silicon, diamond structure, 2-atom primitive FCC cell.
+    ! a_cubic = 5.381 Ang (a test geometry, not the equilibrium lattice constant).
+    ! Primitive vectors a/2 * (0,1,1), (1,0,1), (1,1,0) given explicitly
+    ! below via ibrav=0 + CELL_PARAMETERS.
+    ibrav         = 0
+    nat           = 2
+    ntyp          = 1
+    ! ccECP valence: Si = 4. Total valence = 2*4 = 8 -> 4 occupied bands
+    ! (nspin=1). Carry a few extra unoccupied bands so the pGTO / pGTO+PW
+    ! projector has headroom.
+    nbnd          = 8
+    ! ccECP-Si is moderately hard; 100 Ry (50 Ha kinetic-energy cutoff) is
+    ! sufficient for SCF on this tiny cell and keeps wfc1.hdf5 small for
+    ! fast pGTO projection.
+    ecutwfc       = 100.0
+    ecutrho       = 400.0
+    ! Insulating cell sampled at Gamma only: the 4 occupied bands are
+    ! separated from the empty ones, so fixed occupations work.
+    occupations   = 'fixed'
+    nspin         = 1
+    ! LDA: Slater exchange + Perdew-Zunger 1981 correlation
+    ! (SLA-PZ-NOGX-NOGC). Matches pyscf xc='lda,pz'.
+    input_dft     = 'pz'
+/
+&ELECTRONS
+    conv_thr         = 1.0d-9
+    mixing_beta      = 0.5
+    electron_maxstep = 200
+/
+ATOMIC_SPECIES
+    Si  28.085  Si.ccECP.upf
+
+CELL_PARAMETERS {angstrom}
+    0.000000   2.690500   2.690500
+    2.690500   0.000000   2.690500
+    2.690500   2.690500   0.000000
+
+ATOMIC_POSITIONS {crystal}
+    Si  0.000000   0.000000   0.000000
+    Si  0.250000   0.250000   0.250000
+
+! Gamma point only: jqmc-example07 converts a single-determinant Gamma state.
+! For a production silicon SCF, replace with e.g. K_POINTS automatic with
+! a 4 4 4 grid and read the Gamma wavefunction afterwards.
+K_POINTS {gamma}

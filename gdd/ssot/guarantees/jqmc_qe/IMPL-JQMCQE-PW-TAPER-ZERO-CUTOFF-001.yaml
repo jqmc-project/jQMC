@@ -1,0 +1,15 @@
+id: IMPL-JQMCQE-PW-TAPER-ZERO-CUTOFF-001
+kind: implementation
+name: run_qe2jqmc with ecutwfc = 0 converts a vacuum cell to the constant plane wave without a taper edge
+plain_language: >-
+  A pw conversion with ecutwfc = 0 retains only the constant plane wave. taper_qe_reference with g_end = 0
+  returns the reference object unchanged (there is no edge to smooth), run_qe2jqmc completes on the Li gamma
+  save stretched to a vacuum cell, the written file carries no pw_taper_* attribute, and the loaded
+  Hamiltonian has exactly one plane-wave AO; the zero edge never reaches the positive-width window.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWGSphereTaper::test_pw_zero_cutoff_conversion_keeps_the_constant_plane_wave
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

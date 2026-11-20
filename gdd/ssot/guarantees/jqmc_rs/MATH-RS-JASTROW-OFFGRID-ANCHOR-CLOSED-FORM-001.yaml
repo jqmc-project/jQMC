@@ -1,0 +1,51 @@
+id: MATH-RS-JASTROW-OFFGRID-ANCHOR-CLOSED-FORM-001
+kind: mathematical
+name: Rust J1 value and J1/J2 gradient and Laplacian at an fp32-unrepresentable anchor against their closed forms
+plain_language: >-
+  With the fixtures of MATH-JAS-J1-OFFGRID-NUCLEUS-CLOSED-FORM-001 (nucleus, or for J2 the up electron, at
+  (5.1, 5.2, 5.3) Bohr and the moved electron at +h along x), the native compute_Jastrow_one_body value quotient
+  equals the closed form evaluated in the active jastrow_eval dtype from s cast to that dtype within the jastrow_eval strict zone policy, and the native
+  compute_grads_and_laplacian_jastrow_part gradient and s times Laplacian of the moved electron (and for J2 of its
+  partner) equal the closed-form chain-rule values, evaluated in the active jastrow_grad_lap dtype, within the jastrow_grad_lap strict zone policy, at the exact
+  separation s the fp64 inputs encode. The f32 native kernels run in mixed; full runs the f64 kernels. In mixed
+  this fails if the native kernels round the nuclear or electron coordinates to f32 before forming the difference.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_jastrow_offgrid_anchor.py::test_rust_jastrow_one_body_value_offgrid_nucleus_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, form: pade}
+    - {geometry: molecular, form: exp}
+    - {geometry: cubic_10bohr, form: pade}
+    - {geometry: cubic_10bohr, form: exp}
+    executable_checks:
+      closed-form:
+        site: tests/test_rs_kernel/test_jastrow_offgrid_anchor.py::test_rust_jastrow_one_body_value_offgrid_nucleus_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-value-quotient, expression: value_over_h}
+        reference: {role: zone-dtype-closed-form-value-quotient, expression: closed_value_over_h}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+  - pytest_node: tests/test_rs_kernel/test_jastrow_offgrid_anchor.py::test_rust_jastrow_grad_lap_offgrid_anchor_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, kind: J1, form: pade}
+    - {geometry: molecular, kind: J1, form: exp}
+    - {geometry: molecular, kind: J2, form: pade}
+    - {geometry: molecular, kind: J2, form: exp}
+    - {geometry: cubic_10bohr, kind: J1, form: pade}
+    - {geometry: cubic_10bohr, kind: J1, form: exp}
+    - {geometry: cubic_10bohr, kind: J2, form: pade}
+    - {geometry: cubic_10bohr, kind: J2, form: exp}
+    executable_checks:
+      closed-form:
+        site: tests/test_rs_kernel/test_jastrow_offgrid_anchor.py::test_rust_jastrow_grad_lap_offgrid_anchor_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-gradient-and-scaled-laplacian, expression: grad_lap}
+        reference: {role: zone-dtype-closed-form-gradient-and-scaled-laplacian, expression: closed_grad_lap}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}

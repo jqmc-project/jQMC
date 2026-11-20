@@ -1,0 +1,17 @@
+id: IMPL-JAS-DTN-FORCE-MESH-DELTA-EQUIVALENCE-001
+kind: implementation
+name: The rank-one DTN Pulay-force mesh delta equals the dense per-config recompute
+plain_language: >-
+  For every one-electron-moved mesh configuration, derivatives.dtn.dtn_force_mesh_delta returns the DTN Pulay
+  force of the moved configuration minus that of the base, built only from the chi leg and the f triples of the
+  moved electron. It equals the dense grad_dtn_wrt_R of each moved configuration minus the base at
+  the jastrow_grad_lap strict zone policy for molecular and periodic H2 with the u_chi_f, u_chi and u_f presets on
+  a six-point lattice mesh around every electron, and for an f pair whose electrons sit on opposite faces of the
+  periodic cell. The nuclear channels are checked to be non-vacuous. Full and mixed are judged separately.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_dtn_force_mesh_delta.py::test_force_mesh_delta_matches_dense_per_config_oracle
+  - pytest_node: tests/test_jqmc_kernel/test_dtn_force_mesh_delta.py::test_force_mesh_delta_matches_dense_across_the_cell_boundary

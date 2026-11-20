@@ -1,0 +1,50 @@
+id: PHY-COUL-ETA-INVARIANCE-001
+kind: physical
+name: Ewald splitting-parameter invariance
+plain_language: 'The total Ewald energy is invariant under the eta splitting parameter (the physics does not
+  depend on the computational split), in the bulk box and in the slab geometry.'
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldPhysical::test_compute_ewald_potential_total_energy_eta_invariance_h2_box
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldPhysical.test_compute_ewald_potential_total_energy_eta_invariance_h2_box#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_total_alt
+        reference:
+          role: existing-test-reference
+          expression: E_total_default
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum::test_compute_ewald_potential_total_energy_eta_invariance_slab
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEwaldSlabVacuum.test_compute_ewald_potential_total_energy_eta_invariance_slab#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: E_total_alt
+        reference:
+          role: existing-test-reference
+          expression: E_total_default
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald

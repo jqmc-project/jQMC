@@ -1,0 +1,90 @@
+id: IMPL-OPT-PARAM-GRAD-MASK-001
+kind: implementation
+name: Parameter-gradient mask semantics
+plain_language: The production gradient masks freeze exactly the declared parameter families (geminal, Jastrow, basis, positions)
+  for ln psi and e_L across molecular and PBC fixtures.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisLight::test_mol_sd_ln_psi_and_e_L_geminal_only
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::test_mo_and_radial_mask_flags_are_independent
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisLight::test_mol_sd_jastrow_only_freezes_geminal
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisLight::test_mol_sd_closed_shell_real_tie_publishes_one_full_direct_column
+    executable_checks:
+      d8-n-324:
+        site: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisLight.test_mol_sd_closed_shell_real_tie_publishes_one_full_direct_column#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: source.direct[0]
+        reference:
+          role: source-reference-value
+          expression: gu + gd
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+      d8-n-325:
+        site: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisLight.test_mol_sd_closed_shell_real_tie_publishes_one_full_direct_column#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.real(source.direct[0])
+        reference:
+          role: source-reference-value
+          expression: np.asarray(flat['mo_coefficients_up'])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisLight::test_pbc_agp_geminal_only
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisProductionPath::test_geminal_only_freezes_orbital_basis_ln_psi
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisProductionPath::test_geminal_only_freezes_orbital_basis_e_L
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisProductionPath::test_jastrow_only_freezes_geminal_and_basis
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisProductionPath::test_lambda_basis_flows_gto_exp_coeff_keeps_mo_frozen
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisProductionPath::test_joint_geminal_basis_flows_all_requested_blocks
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisProductionPath::test_dtn_only_freezes_orbital_basis_e_L_single_fixture
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisProductionPath::test_closed_shell_mo_tie_publishes_exact_direct_source
+    executable_checks:
+      d8-n-326:
+        site: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisProductionPath.test_closed_shell_mo_tie_publishes_exact_direct_source#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.real(source.direct[0])
+        reference:
+          role: source-reference-value
+          expression: np.asarray(flat['mo_coefficients_up'])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+      d8-n-327:
+        site: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestCAxisProductionPath.test_closed_shell_mo_tie_publishes_exact_direct_source#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: source.direct[0]
+        reference:
+          role: source-reference-value
+          expression: gu + gd
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-MEDIUM-BITZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestPositionGradProductionPath::test_position_grad_mask_freezes_wf_params_e_L
+  - pytest_node: tests/test_jqmc_kernel/test_param_grad_mask_production_path.py::TestPositionGradProductionPath::test_position_grad_mask_freezes_wf_params_ln_psi

@@ -1,0 +1,29 @@
+id: IMPL-XLA-DLTMOVE-ECP-CANDIDATES-001
+kind: implementation
+name: DLT-move XLA ECP projection consumes and reports its active candidate caches
+plain_language: >-
+  In Full and Mixed, the real GFMC_n and GFMC_t dltmove projection paths
+  consume J1/J2/J3 or J1/J2/DTN candidate states on the tested molecular ECP
+  fixtures whenever they carry a candidate mesh. Independent argument spies
+  and complete ECP route counters must both observe the active channels;
+  dropping a J3 candidate must fail the route gate. The initial state-building
+  substep is allowed to run without a carried mesh. On the live nitrogen ccECP
+  fixture, carried J1 ratios agree with same-input coordinate recomputation
+  under the existing precision-specific propagation tolerances.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_xla_dltmove_cache_routes.py::test_dltmove_ecp_consumes_active_candidate_states
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: n, pattern: mol_ecp_cart_j123}
+    - {driver: t, pattern: mol_ecp_cart_j123}
+    - {driver: n, pattern: mol_ecp_cart_jdtn}
+    - {driver: t, pattern: mol_ecp_cart_jdtn}
+  - pytest_node: tests/test_jqmc_kernel/test_xla_dltmove_cache_routes.py::test_dltmove_ecp_gate_rejects_missing_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver: n}, {driver: t}]
+  - pytest_node: tests/test_jqmc_kernel/test_xla_dltmove_cache_routes.py::test_dltmove_carried_j1_matches_recomputed_ratio
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver: n}, {driver: t}]

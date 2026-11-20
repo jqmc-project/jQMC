@@ -1,0 +1,16 @@
+id: MATH-LRDMC-STRESS-IDENTITIES-001
+kind: mathematical
+name: LRDMC stress assembly identities
+plain_language: The LRDMC aT/aP assembly satisfies diagonal consistency, molecular zeros, and zero Hellmann-Feynman buffers
+  on molecular input, for both the tau and bra drivers.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCTStress::test_aT_aP_diagonal_consistency_lrdmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCTStress::test_aT_aP_molecular_zeros_lrdmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCTStress::test_stress_HF_molecular_buffer_zero_lrdmc
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCNStress::test_aT_aP_diagonal_consistency_lrdmc_n
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCNStress::test_aT_aP_molecular_zeros_lrdmc_n
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_stress.py::TestGFMCNStress::test_stress_HF_molecular_buffer_zero_lrdmc_n

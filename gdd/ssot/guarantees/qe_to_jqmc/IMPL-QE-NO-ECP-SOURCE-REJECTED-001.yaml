@@ -1,0 +1,24 @@
+id: IMPL-QE-NO-ECP-SOURCE-REJECTED-001
+kind: implementation
+name: A pseudopotential QE conversion without an ECP source is rejected, never converted with a placeholder
+plain_language: >-
+  When no UPF/ECP record is resolved and sum(Z) differs from the electron count (core electrons removed), the QE
+  Coulomb builder raises ValueError naming the species instead of averaging one core charge over the atoms and
+  writing zero-coefficient ECP terms; it never assigns an averaged core charge to differing species. For Na/Cl
+  (Z 11, 17) in a 6 Bohr CsCl cell, n_electron 16 (an averaged z_cores (6, 6)) and 15 (a non-neutral
+  all-electron block) both raise, while the neutral all-electron case n_electron 28 is still built. On the committed
+  Li_gamma save, build_hamiltonian_from_projection without ECP arguments and convert_qe_to_twist_average_input with
+  an empty UPF map raise, and the latter writes no file. A UPF map that misses a species of the structure is
+  rejected by run_qe2jqmc and by convert_qe_to_twist_average_input with ValueError naming the species and the --upf
+  option, before any output is written. Full and mixed are each required.
+verdict_methods:
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQENoUPFECPGuard::test_cored_structure_without_ecp_source_is_rejected
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_qe_to_jqmc.py::TestQENoUPFECPGuard::test_upf_map_missing_a_species_is_rejected_by_name
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

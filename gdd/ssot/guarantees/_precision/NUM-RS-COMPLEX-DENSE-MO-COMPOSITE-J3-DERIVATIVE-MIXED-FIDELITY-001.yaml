@@ -1,0 +1,34 @@
+id: NUM-RS-COMPLEX-DENSE-MO-COMPOSITE-J3-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: Native converter complex dense-MO composite J3 derivatives retain mixed/full fidelity
+plain_language: All original converter complex J3 native VMC free/context Pulay force and drift, HF nuclear and
+  electron forces, GFMC T-move HF forces, and VMC Pulay/HF and GFMC HF stresses obey the central parameter-derivative
+  mixed/full homogeneous-block infinity-norm budget for the pGTO+PW and pGTO+B-spline dense-MO composites in both
+  J3 child orders. Each policy reloads fresh Hamiltonian leaves from identical serialized full physical input. Full
+  conversion bypasses the mode-agnostic H5 cache while ordinary callers keep their cached source behavior. Seeded
+  coordinates/J matrix, child permutations, native kernel arguments, XLA inverse compatibility inputs, identity
+  rotation, mesh and alat are unchanged. All sixteen expected fields have physical nuclear/electron/3x3 shapes and
+  finite values. Original block liveness uses the same active-mixed-policy medium tuple captured before both callbacks.
+  Every mixed case rejects an out-of-budget isolated perturbation with the full reference fixed, using a source-qualified
+  module-local comparison. Original full independent AD formulas remain at strict. All four cases and both scientific
+  modes remain; ordinary MCMC energy parity and route/movement controls remain separately required. No production
+  zone is promoted.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_converter_mo_j3_composite.py::test_converter_dense_mo_composite_j3_complex_forces_and_stress_match_ad
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {kind: pgto+pw, order: gto_first}
+    - {kind: pgto+pw, order: extra_first}
+    - {kind: pgto+bspline, order: gto_first}
+    - {kind: pgto+bspline, order: extra_first}
+    executable_checks:
+      native-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_complex_converter_mo_j3_composite.py::test_converter_dense_mo_composite_j3_complex_forces_and_stress_match_ad#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-native-analytical-derivative-block, expression: mixed_block}
+        reference: {role: full-native-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}

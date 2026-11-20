@@ -1,0 +1,359 @@
+id: MATH-DET-SD-IDENTITIES-001
+kind: mathematical
+name: Single-determinant algebraic identities
+plain_language: The direct SD determinant equals the independent spin-determinant product and the debug identity-geminal
+  construction (real, complex, and open shell), and polar retraction returns block updates exactly to the Stiefel manifold
+  with invariant overlap.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_direct_determinant_matches_independent_spin_determinant_product
+    executable_checks:
+      d8-n-138:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_determinant_matches_independent_spin_determinant_product#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual
+        reference:
+          role: source-reference-value
+          expression: independent
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_direct_closed_shell_matches_debug_identity_geminal
+    executable_checks:
+      d8-n-141:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_closed_shell_matches_debug_identity_geminal#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(actual)
+        reference:
+          role: source-reference-value
+          expression: np.asarray(expected)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+      d8-n-142:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_closed_shell_matches_debug_identity_geminal#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(actual)
+        reference:
+          role: source-reference-value
+          expression: np.asarray(expected)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+      d8-n-139:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_closed_shell_matches_debug_identity_geminal#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(G_sd)
+        reference:
+          role: source-reference-value
+          expression: np.asarray(G_reference)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+      d8-n-140:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_closed_shell_matches_debug_identity_geminal#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(compute_det_geminal_all_elements(sd, r_up, r_dn))
+        reference:
+          role: source-reference-value
+          expression: np.asarray(compute_det_geminal_all_elements(reference, r_up, r_dn))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_direct_complex_matches_identity_geminal
+    executable_checks:
+      d8-n-145:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_complex_matches_identity_geminal#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(actual)
+        reference:
+          role: source-reference-value
+          expression: np.asarray(expected)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+      d8-n-146:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_complex_matches_identity_geminal#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(actual)
+        reference:
+          role: source-reference-value
+          expression: np.asarray(expected)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+      d8-n-143:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_complex_matches_identity_geminal#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(G_sd)
+        reference:
+          role: source-reference-value
+          expression: np.asarray(G_reference)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+      d8-n-144:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_complex_matches_identity_geminal#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(compute_det_geminal_all_elements(sd, r_up, r_dn))
+        reference:
+          role: source-reference-value
+          expression: np.asarray(compute_det_geminal_all_elements(reference, r_up, r_dn))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestSDData::test_SD_data_direct_open_shell_matches_debug_selector
+    executable_checks:
+      d8-n-148:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_open_shell_matches_debug_selector#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(actual)
+        reference:
+          role: source-reference-value
+          expression: np.asarray(expected)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+      d8-n-149:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_open_shell_matches_debug_selector#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(actual)
+        reference:
+          role: source-reference-value
+          expression: np.asarray(expected)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+      d8-n-147:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestSDData.test_SD_data_direct_open_shell_matches_debug_selector#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(G_sd)
+        reference:
+          role: source-reference-value
+          expression: np.asarray(G_reference)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-SD-DIRECT-FACTOR-ORACLE-R-SD-DIRECT-FACTOR-ORACLE-001
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_smetric_polar_retraction_complex_overlap_invariant
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration.test_smetric_polar_retraction_complex_overlap_invariant#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: C_new.conj() @ S @ C_new.T
+        reference:
+          role: existing-test-reference
+          expression: np.eye(C.shape[0])
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_AGPn_data_apply_block_update_polar_retracts_to_Stiefel
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration.test_AGPn_data_apply_block_update_polar_retracts_to_Stiefel#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: M
+        reference:
+          role: existing-test-reference
+          expression: np.eye(C_new.shape[0])
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration.test_AGPn_data_apply_block_update_polar_retracts_to_Stiefel#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: C_dn
+        reference:
+          role: existing-test-reference
+          expression: np.conj(C_new)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_SD_data_apply_block_update_polar_retracts_to_Stiefel
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration.test_SD_data_apply_block_update_polar_retracts_to_Stiefel#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: M
+        reference:
+          role: existing-test-reference
+          expression: np.eye(C_new.shape[0])
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_eval
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_SD_data_open_shell_apply_block_update_matches_numpy_retraction
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{case: rohf_up}, {case: uhf_dn}]
+    executable_checks:
+      open-shell-up-rows:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration.test_SD_data_open_shell_apply_block_update_matches_numpy_retraction#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: stored-up-coefficients-after-block-update, expression: C_up}
+        reference: {role: numpy-loewdin-retraction-or-unchanged-up-rows, expression: expected_up}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+      open-shell-dn-rows:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration.test_SD_data_open_shell_apply_block_update_matches_numpy_retraction#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: stored-dn-coefficients-after-block-update, expression: C_dn}
+        reference: {role: numpy-loewdin-retraction-dn-rows-or-first-n-dn-up-rows, expression: expected_dn}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+      open-shell-ln-det:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration.test_SD_data_open_shell_apply_block_update_matches_numpy_retraction#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-ln-abs-det, expression: actual}
+        reference: {role: numpy-spin-slater-product-slogdet, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}

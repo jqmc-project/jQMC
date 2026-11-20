@@ -5,9 +5,9 @@ Each QMC workflow session progresses through a sequence of scientific phases
 the allowed phase transitions and the actions permitted in each phase/status
 combination.
 
-The transition graph and action lists are consumed by:
-  - *jqmc-workflow* itself (guard-rail enforcement via :func:`require_action`)
-  - *jqmc-mcp* (to expose ``allowed_actions`` as an MCP resource)
+The transition graph and action lists are consumed by *jqmc-workflow* itself
+(guard-rail enforcement via :func:`require_action`) and are available to
+higher-level tools through ``allowed_actions``.
 """
 # Copyright (C) 2024- Kosuke Nakano
 # All rights reserved.
@@ -24,7 +24,7 @@ The transition graph and action lists are consumed by:
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -45,7 +45,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from ._state import WorkflowStatus
+from .state import WorkflowStatus
 
 # ---------------------------------------------------------------------------
 # Scientific phases

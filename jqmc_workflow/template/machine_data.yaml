@@ -10,7 +10,9 @@
 #                     "bash" or "sh"; for a scheduler use "qsub" / "sbatch")
 #
 # Required additionally when queuing: true:
-#   jobcheck        : command that lists jobs in the queue (e.g. "qstat")
+#   jobcheck        : command that lists jobs in the queue (e.g. "qstat");
+#                     a job is running while its ID appears as a word in
+#                     the output (the column layout does not matter)
 #   jobdel          : command that cancels a job by id (e.g. "qdel")
 #   jobnum_index    : 0-based token index of the job-id field in
 #                     jobsubmit's stdout (qsub prints "1234.host" -> 0;

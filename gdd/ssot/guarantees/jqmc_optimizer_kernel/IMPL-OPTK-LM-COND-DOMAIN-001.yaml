@@ -1,0 +1,21 @@
+id: IMPL-OPTK-LM-COND-DOMAIN-001
+kind: implementation
+name: lm_cond outside the open interval (0, 1) is rejected
+plain_language: >-
+  lm_cond is the smallest eigenvalue kept in the LM correlation matrix. A value that is not a finite number in the
+  open interval (0, 1) is rejected with a ValueError naming lm_cond and the interval: by the LM solver, by
+  run_optimize before any sampling (the wavefunction parameters stay unchanged), and by the jqmc VMC TOML route
+  before the Hamiltonian is loaded (no checkpoint is written).
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_lm_solver_rejects_condition_cutoff_outside_open_unit_interval
+    required_parameter_cases: [{condition_cutoff: 0.0}, {condition_cutoff: -0.001}, {condition_cutoff: {source_expression: numpy.nan}}, {condition_cutoff: {source_expression: numpy.inf}}, {condition_cutoff: 1.0}, {condition_cutoff: 1.5}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_run_optimize_rejects_lm_condition_cutoff_outside_open_unit_interval
+    required_parameter_cases: [{lm_cond: 0.0}, {lm_cond: -0.001}, {lm_cond: {source_expression: numpy.nan}}, {lm_cond: 1.0}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_cli_input_contracts.py::test_vmc_rejects_lm_condition_cutoff_outside_open_unit_interval
+    required_parameter_cases: [{lm_cond: '0.0'}, {lm_cond: '-0.001'}, {lm_cond: '1.0'}, {lm_cond: '2.5'}]
+    required_precision_modes: [full, mixed]

@@ -1,0 +1,55 @@
+id: PHY-WF-FERMION-EXCHANGE-001
+kind: physical
+name: Fermionic antisymmetry under same-spin exchange
+plain_language: Exchanging two up-spin electrons sends the signed full wavefunction to its negative and leaves the local
+  energy invariant, on an open-shell molecular J1+J2 wavefunction and on real-Gamma and non-Gamma periodic J1+J2 wavefunctions.
+  Every configuration is explicitly kept away from an exact node and the periodic configurations are condition-screened.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::test_molecular_wavefunction_is_fermion_antisymmetric_under_same_spin_exchange
+    executable_checks:
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::test_molecular_wavefunction_is_fermion_antisymmetric_under_same_spin_exchange#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: exchanged_local_energy
+        reference:
+          role: existing-test-reference
+          expression: local_energy
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - wf_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - wf_eval
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_invariants.py::test_periodic_wavefunction_is_fermion_antisymmetric_under_same_spin_exchange
+    executable_checks:
+      d8-n-469:
+        site: tests/test_jqmc_kernel/test_periodic_invariants.py::test_periodic_wavefunction_is_fermion_antisymmetric_under_same_spin_exchange#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: exchanged_local_energy
+        reference:
+          role: source-reference-value
+          expression: local_energy
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001

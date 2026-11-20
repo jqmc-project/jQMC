@@ -1,0 +1,18 @@
+id: IMPL-RS-GFMC-NATIVE-CHUNK-ROUTE-WITNESS-001
+kind: implementation
+name: The native GFMC chunk resolver records engaged, Rust-inactive and refused outcomes
+plain_language: >-
+  For GFMC_t and GFMC_n, _resolve_native_gfmc_chunk engages the native chunk on the complex twist cell
+  twist_sphepgto_j12 energy-only, with position derivatives, with position derivatives and stress, and with
+  MPC, and on the periodic lithium cell with MPC with and without position derivatives; each engaged call
+  returns the requested complex, want_force and want_stress flags and records _native_gfmc_chunk_route as
+  native. With JQMC_FLAG_RUST_ON_CPU=0 it returns None and records jax:rust-inactive. With Rust active and
+  a complex AO leaf on a non-periodic structure (reached by setting the driver's complex flag on a
+  molecular H2 ccECP run, since no builder creates such a leaf) it raises RuntimeError and records
+  native-refused:complex-aos-without-pbc without switching to XLA, and the same driver engages once the flag is restored. Full and
+  mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_chain_modes.py::test_gfmc_native_chunk_route_witness_complex_mpc_and_refusal

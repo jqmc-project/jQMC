@@ -1,0 +1,59 @@
+id: MATH-JAS-SMALL-SEPARATION-CLOSED-FORM-001
+kind: mathematical
+name: J1/J2 at a tiny separation from a large common coordinate against their closed forms
+plain_language: >-
+  For one hydrogen nucleus (J1) or one up electron (J2) at (5, 5, 5) Bohr and the partner electron at
+  +h along x, h in 2**-16, 2**-26 and 2**-38 Bohr, molecular and in the cubic 10 Bohr cell, Pade and exp forms,
+  two dyadic parameters each: the production value quotient J(h)/h equals the closed form (Cartesian
+  distance, or the Williamson smooth periodic distance) evaluated in the active jastrow_eval dtype from the
+  fp64-reconstructed separation cast to that dtype, within the jastrow_eval strict zone policy, and the
+  production gradient of the displaced electron, its partner's gradient (J2), and h times their Laplacians
+  equal the closed-form chain-rule values evaluated in the active jastrow_grad_lap dtype within the
+  jastrow_grad_lap strict zone policy. The references use expm1 and share no code with jqmc beyond the zone
+  dtype lookup; mixed output is never judged against an fp64 reference. Full and mixed are judged separately in their own precision, never
+  against each other. In mixed this fails if r - R or r_i - r_j is formed after rounding the absolute
+  coordinates to the zone dtype, and in both modes it fails if 1 - exp(-x) is evaluated by subtraction.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_small_displacement.py::test_jastrow_value_small_displacement_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, kind: J1, form: pade}
+    - {geometry: molecular, kind: J1, form: exp}
+    - {geometry: molecular, kind: J2, form: pade}
+    - {geometry: molecular, kind: J2, form: exp}
+    - {geometry: cubic_10bohr, kind: J1, form: pade}
+    - {geometry: cubic_10bohr, kind: J1, form: exp}
+    - {geometry: cubic_10bohr, kind: J2, form: pade}
+    - {geometry: cubic_10bohr, kind: J2, form: exp}
+    executable_checks:
+      closed-form:
+        site: tests/test_jqmc_kernel/test_jastrow_small_displacement.py::test_jastrow_value_small_displacement_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-value-quotient, expression: value_over_h}
+        reference: {role: zone-dtype-closed-form-value-quotient, expression: closed_value_over_h}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_small_displacement.py::test_jastrow_grad_lap_small_displacement_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, kind: J1, form: pade}
+    - {geometry: molecular, kind: J1, form: exp}
+    - {geometry: molecular, kind: J2, form: pade}
+    - {geometry: molecular, kind: J2, form: exp}
+    - {geometry: cubic_10bohr, kind: J1, form: pade}
+    - {geometry: cubic_10bohr, kind: J1, form: exp}
+    - {geometry: cubic_10bohr, kind: J2, form: pade}
+    - {geometry: cubic_10bohr, kind: J2, form: exp}
+    executable_checks:
+      closed-form:
+        site: tests/test_jqmc_kernel/test_jastrow_small_displacement.py::test_jastrow_grad_lap_small_displacement_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-gradient-and-scaled-laplacian, expression: grad_lap}
+        reference: {role: zone-dtype-closed-form-gradient-and-scaled-laplacian, expression: closed_grad_lap}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}

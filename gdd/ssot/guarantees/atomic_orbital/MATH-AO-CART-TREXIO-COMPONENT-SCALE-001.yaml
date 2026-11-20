@@ -1,0 +1,67 @@
+id: MATH-AO-CART-TREXIO-COMPONENT-SCALE-001
+kind: mathematical
+name: Cartesian TREXIO AO evaluation preserves each component's contraction scale
+plain_language: >-
+  For molecular Cartesian TREXIO leaves with nonunit component scales, each radial contraction
+  coefficient is multiplied by the corresponding component scale. XLA AO values, gradients and
+  Laplacians, whether evaluated separately or together, agree with the independently differentiated
+  normalized Gaussian monomial sum for N all-electron cc-pVDZ and N2 ccECP cc-pVTZ. Full and mixed
+  are checked separately with the strict ao_eval and ao_grad_lap tolerances.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::test_cartesian_trexio_component_scales_match_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: N_ae_ccpvdz_cart.h5}
+    - {fixture: N2_ecp_ccpvtz_cart.h5}
+    executable_checks:
+      actual-value:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::test_cartesian_trexio_component_scales_match_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-evaluation, expression: actual_value}
+        reference: {role: independent-closed-form, expression: expected_value}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+      actual-grad:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::test_cartesian_trexio_component_scales_match_closed_form#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-evaluation, expression: actual_grad}
+        reference: {role: independent-closed-form, expression: expected_grad}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_grad_lap]}
+      actual-lap:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::test_cartesian_trexio_component_scales_match_closed_form#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-evaluation, expression: actual_lap}
+        reference: {role: independent-closed-form, expression: expected_lap}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_grad_lap]}
+      fused-value:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::test_cartesian_trexio_component_scales_match_closed_form#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-evaluation, expression: fused_value}
+        reference: {role: independent-closed-form, expression: expected_value}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+      fused-grad:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::test_cartesian_trexio_component_scales_match_closed_form#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-evaluation, expression: fused_grad}
+        reference: {role: independent-closed-form, expression: expected_grad}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_grad_lap]}
+      fused-lap:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::test_cartesian_trexio_component_scales_match_closed_form#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-evaluation, expression: fused_lap}
+        reference: {role: independent-closed-form, expression: expected_lap}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_grad_lap]}

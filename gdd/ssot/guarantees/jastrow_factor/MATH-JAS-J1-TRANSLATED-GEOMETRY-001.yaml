@@ -1,0 +1,62 @@
+id: MATH-JAS-J1-TRANSLATED-GEOMETRY-001
+kind: mathematical
+name: J1 derivatives retain translated near-nucleus geometry
+plain_language: >-
+  Analytical and actual autodiff J1 gradients and Laplacians independently
+  match active-zone NumPy radial and chain-rule formulas at a translated H
+  nucleus (0.2,0.3,0.4), for exp/Pade, molecular/cubic boundaries and either
+  occupied spin. Three fixed displacements are (1,2,3), (-3,1,2), (2,-3,1)
+  times 1e-7 Bohr. The cubic cell has side 8 Bohr and uses the exact sine
+  metric, not an asymptotic reference. Geometry is differenced before the
+  active Jastrow-zone cast. Full and mixed retain their existing strict
+  element-wise policies. No files, RNG, determinant, cond(G) screening, FD
+  or statistical acceptance are involved. Oblique metrics, ECP and the
+  complete-wavefunction cusp are outside this component guarantee.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_translated_geometry.py::test_j1_translated_near_nucleus_derivatives
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {form: exp, boundary: molecular, spin: up}
+    - {form: pade, boundary: molecular, spin: up}
+    - {form: exp, boundary: cubic, spin: up}
+    - {form: pade, boundary: cubic, spin: up}
+    - {form: exp, boundary: molecular, spin: down}
+    - {form: pade, boundary: molecular, spin: down}
+    - {form: exp, boundary: cubic, spin: down}
+    - {form: pade, boundary: cubic, spin: down}
+    executable_checks:
+      analytical-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_translated_geometry.py::test_j1_translated_near_nucleus_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-gradient, expression: analytical_gradient}
+        reference: {role: independent-radial-chain-rule-gradient, expression: expected_gradient}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+      analytical-laplacian:
+        site: tests/test_jqmc_kernel/test_jastrow_translated_geometry.py::test_j1_translated_near_nucleus_derivatives#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-laplacian, expression: analytical_laplacian}
+        reference: {role: independent-radial-chain-rule-laplacian, expression: expected_laplacian}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+      autodiff-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_translated_geometry.py::test_j1_translated_near_nucleus_derivatives#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-autodiff-helper-gradient, expression: autodiff_gradient}
+        reference: {role: independent-radial-chain-rule-gradient, expression: expected_gradient}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+      autodiff-laplacian:
+        site: tests/test_jqmc_kernel/test_jastrow_translated_geometry.py::test_j1_translated_near_nucleus_derivatives#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-autodiff-helper-laplacian, expression: autodiff_laplacian}
+        reference: {role: independent-radial-chain-rule-laplacian, expression: expected_laplacian}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}

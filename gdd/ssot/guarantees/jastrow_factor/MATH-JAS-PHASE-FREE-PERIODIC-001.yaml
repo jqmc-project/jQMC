@@ -1,0 +1,31 @@
+id: MATH-JAS-PHASE-FREE-PERIODIC-001
+kind: mathematical
+name: Shared J3 basis has no Bloch phase and is lattice periodic
+plain_language: >-
+  J3 uses one phase-free reference basis, never the determinant Bloch factor.
+  The production AO/MO converter preserves determinant momenta and fixed MO
+  coefficients while removing J3 image and wrap phases. Nonzero symmetric
+  J matrices on Cartesian/spherical pGTO, plane-wave, B-spline and composite
+  bases preserve J3 under fixed one-electron translations of a triclinic cell.
+  Complex storage may hold a fixed cell-periodic function; it does not permit
+  nonzero J3 k or independently chosen J3 orbitals at each twist. No modulus
+  ansatz, discarded MO coefficients, Monte Carlo acceptance, conditioning
+  screen or full-versus-mixed comparison is used. Both modes use their own
+  existing strict AO/MO/Jastrow comparison policy.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_converter_builds_live_phase_free_j3_without_changing_determinant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pgto-cartesian-complex}
+    - {kind: pgto-spherical-complex}
+    - {kind: plane-wave-complex}
+    - {kind: bspline-complex}
+    - {kind: pgto-plane-wave-complex}
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_converter_ao_j3_is_phase_free_and_periodic
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pgto-cartesian-complex}
+    - {kind: pgto-spherical-complex}

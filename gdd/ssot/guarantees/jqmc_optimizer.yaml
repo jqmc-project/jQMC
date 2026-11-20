@@ -1,0 +1,23 @@
+schema_version: 1
+document:
+  id: jqmc.jqmc_optimizer
+  version: 1
+  lifecycle: cutover
+  title: Optimizer guarantees
+  purpose: 'Which test guarantees what, by which verdict method, for the optimizer driver: coordinate geometry, SR/LM solver
+    oracles, device/host parity, selection policy, source contracts, and control flow.'
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - MATH-OPT-SOLVER-ORACLES-001
+  overrides:
+    jqmc.jqmc_optimizer.compute_twist_decomposed_real_coordinate_optimization_target:
+    - MATH-OPT-SOLVER-ORACLES-001
+    - MATH-OPT-TWIST-NORMALIZATION-001
+    jqmc.jqmc_optimizer._normalize_planb_sampler_weight:
+    - MATH-OPT-TWIST-NORMALIZATION-001
+    jqmc.jqmc_optimizer._center_planb_twist_samples:
+    - MATH-OPT-TWIST-NORMALIZATION-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

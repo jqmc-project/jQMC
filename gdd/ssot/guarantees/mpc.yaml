@@ -1,0 +1,16 @@
+schema_version: 1
+document:
+  id: jqmc.mpc
+  version: 1
+  lifecycle: cutover
+  title: MPC guarantees
+  purpose: 'Which test guarantees what, by which verdict method, for the model periodic Coulomb (MPC) interaction: Hood splitting,
+    FFT grid, and the MPC correction.'
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - MATH-MPC-HOOD-SPLITTING-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

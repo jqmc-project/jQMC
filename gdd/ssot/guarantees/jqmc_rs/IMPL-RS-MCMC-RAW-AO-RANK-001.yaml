@@ -1,0 +1,20 @@
+id: IMPL-RS-MCMC-RAW-AO-RANK-001
+kind: implementation
+name: Native MCMC uses the full rank of raw AO AGP orbitals
+plain_language: >-
+  The public native MCMC driver evaluates an AGP over raw real plane-wave or
+  pGTO plus B-spline orbitals at the complete AO rank, including the non-GTO
+  child. For canonical WF-PATTERN-007 and WF-PATTERN-013, two walkers and the
+  same deterministic seed produce finite stored local energies that agree
+  with the independent Python/XLA driver at the medium XLA-Rust tier in each
+  precision mode. The witness checks the constructed basis ranks of seven
+  and eight explicitly and proves that a native sweep or chunk was executed.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_raw_ao_rank.py::test_native_mcmc_raw_ao_agp_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern_id: WF-PATTERN-007, expected_rank: 7}
+    - {pattern_id: WF-PATTERN-013, expected_rank: 8}

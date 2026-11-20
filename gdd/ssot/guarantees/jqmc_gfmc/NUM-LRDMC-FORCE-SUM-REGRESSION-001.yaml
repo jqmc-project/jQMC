@@ -1,0 +1,13 @@
+id: NUM-LRDMC-FORCE-SUM-REGRESSION-001
+kind: numerical
+name: LRDMC aggregate force-sum regression
+plain_language: On the reviewed fixed-seed production runs, the final aggregate SWCT force is finite and its atom sum remains
+  within the declared numerical bound for both conventional and load-balanced drivers. Because the assertion is after stochastic
+  aggregation rather than on every estimator sample, it is a numerical regression and not a sample-level physical proof.
+verdict_methods:
+- VM-NUM-REVIEWED-REGRESSION-001
+required_evidence:
+- verdict_method: VM-NUM-REVIEWED-REGRESSION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_force.py::TestGFMCNForce::test_lrdmc_force_sum_rule_with_SWCT_n
+  - pytest_node: tests/test_jqmc_kernel/test_integration_lrdmc_force.py::TestGFMCTForce::test_lrdmc_force_sum_rule_with_SWCT_t

@@ -1,0 +1,210 @@
+id: PHY-JAS-CUSP-CONDITIONS-001
+kind: physical
+name: Cusp conditions of the DTN Jastrow
+plain_language: 'The DTN Jastrow always satisfies the physical cusp conditions: parallel and antiparallel electron-electron
+  cusps, the per-species electron-nucleus condition, and cuspless f channels at both coalescence points. ECP records, not
+  a charge heuristic or global option, select the electron-nucleus slope: a pseudized species is smooth (dchi/dr at 0+ equals
+  zero), while an all-electron species has dchi/dr at 0+ equal to -Z_eff. Coverage includes all-electron, ECP, mixed AE/ECP,
+  and zero-core H-ccECP where Z_eff equals the bare Z, and a jqmc-tool trexio convert-to file of the H2 all-electron
+  cc-pVDZ input written with explicit valid molecular cutoffs (--dtn-Lu 3.0 --dtn-Lchi 2.5 --dtn-Lf 2.0), which stores
+  them as given and keeps the antiparallel e-e cusp +1/2 and the e-n cusp -1, measured as the jump of the production XLA
+  gradient across each coalescence point. A species mixing elements is refused, and legacy serialized data
+  with apply_en_cusp=False is hard-rejected because its unconstrained chi kink creates a raw local-energy -chi''(0)/r divergence.'
+verdict_methods:
+- VM-PHY-INVARIANT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_ee_cusp_antiparallel
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_ee_cusp_parallel
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_en_cusp_AE
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies::test_all_electron_species_keeps_its_cusp
+    executable_checks:
+      ae-cusp:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_all_electron_species_keeps_its_cusp#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: all-electron-cusp-slope, expression: 'deriv'}
+        reference: {role: minus-effective-nuclear-charge, expression: '-3.0'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies::test_pseudized_species_is_cuspless
+    executable_checks:
+      ecp-cusp:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_pseudized_species_is_cuspless#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: pseudized-cusp-slope, expression: 'deriv'}
+        reference: {role: zero-cusp, expression: '0.0'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+      ae-control:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_pseudized_species_is_cuspless#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: all-electron-control-slope, expression: 'self._chi_derivative_at_origin(data_ae)'}
+        reference: {role: minus-effective-nuclear-charge, expression: '-7.0'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+      zero-core-ecp:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_pseudized_species_is_cuspless#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: trexio-zero-core-ecp-slope, expression: 'self._chi_derivative_at_origin(h_ecp_data)'}
+        reference: {role: zero-cusp, expression: '0.0'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies::test_mixed_ae_and_ecp_decides_per_species
+    executable_checks:
+      ae-in-mixture:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_mixed_ae_and_ecp_decides_per_species#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: all-electron-species-slope, expression: 'ae'}
+        reference: {role: minus-effective-nuclear-charge, expression: '-1.0'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+      ecp-in-mixture:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_mixed_ae_and_ecp_decides_per_species#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: pseudized-species-slope, expression: 'ecp'}
+        reference: {role: zero-cusp, expression: '0.0'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies::test_explicit_species_index_binds_policy_to_the_right_species
+    executable_checks:
+      ecp-species:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_explicit_species_index_binds_policy_to_the_right_species#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: explicit-ecp-species-slope, expression: 'ecp'}
+        reference: {role: zero-cusp, expression: '0.0'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+      first-ae-species:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_explicit_species_index_binds_policy_to_the_right_species#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: first-explicit-ae-species-slope, expression: 'ae_1'}
+        reference: {role: minus-effective-nuclear-charge, expression: '-1.0'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+      second-ae-species:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_explicit_species_index_binds_policy_to_the_right_species#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: second-explicit-ae-species-slope, expression: 'ae_2'}
+        reference: {role: minus-effective-nuclear-charge, expression: '-1.0'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies::test_physical_cusp_target_keeps_constraints_enabled
+    executable_checks:
+      physical-cusp-target:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies.test_physical_cusp_target_keeps_constraints_enabled#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: stored-polynomial-origin-slope, expression: 'slope'}
+        reference: {role: species-physical-cusp-target, expression: 'expected'}
+        precision:
+          full: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+          mixed: {policy: CMP-DTN-EN-CUSP-CONSTRAINT-001}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMolecularCutoffValidation::test_trexio_convert_to_valid_explicit_cutoffs_keep_kato_cusps
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      coalescence-slopes:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMolecularCutoffValidation.test_trexio_convert_to_valid_explicit_cutoffs_keep_kato_cusps#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-gradient-coalescence-slopes, expression: slopes}
+        reference: {role: kato-cusp-slopes, expression: '[0.5, -1.0]'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNElectronNucleusCuspPerSpecies::test_a_species_mixing_elements_is_refused
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_f_cuspless_at_ee
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_f_en_cuspless_at_en
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_legacy_cusp_off_data_is_rejected
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCuspSlopeEverySmoothness::test_xla_gradient_has_kato_cusps_for_every_smoothness
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, C: 3, shape: L1.5-low-order}
+    - {geometry: molecular, C: 3, shape: L2.5-high-order}
+    - {geometry: molecular, C: 4, shape: L1.5-low-order}
+    - {geometry: molecular, C: 4, shape: L2.5-high-order}
+    - {geometry: molecular, C: 5, shape: L1.5-low-order}
+    - {geometry: molecular, C: 5, shape: L2.5-high-order}
+    - {geometry: molecular, C: 6, shape: L1.5-low-order}
+    - {geometry: molecular, C: 6, shape: L2.5-high-order}
+    - {geometry: periodic, C: 3, shape: L1.5-low-order}
+    - {geometry: periodic, C: 3, shape: L2.5-high-order}
+    - {geometry: periodic, C: 4, shape: L1.5-low-order}
+    - {geometry: periodic, C: 4, shape: L2.5-high-order}
+    - {geometry: periodic, C: 5, shape: L1.5-low-order}
+    - {geometry: periodic, C: 5, shape: L2.5-high-order}
+    - {geometry: periodic, C: 6, shape: L1.5-low-order}
+    - {geometry: periodic, C: 6, shape: L2.5-high-order}
+    executable_checks:
+      coalescence-slopes:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCuspSlopeEverySmoothness.test_xla_gradient_has_kato_cusps_for_every_smoothness#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-gradient-coalescence-slopes, expression: slopes}
+        reference: {role: kato-cusp-slopes, expression: _CUSP_PROBE_EXPECTED}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCuspSlopeEverySmoothness::test_xla_cusp_verdict_rejects_legacy_odd_smoothness_sign
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {C: 3}
+    - {C: 5}
+  - pytest_node: tests/test_rs_kernel/test_jastrow_dtn.py::TestDTNRustCuspSlopeEverySmoothness::test_rust_gradient_has_kato_cusps_for_every_smoothness
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, C: 3, shape: L1.5-low-order}
+    - {geometry: molecular, C: 3, shape: L2.5-high-order}
+    - {geometry: molecular, C: 4, shape: L1.5-low-order}
+    - {geometry: molecular, C: 4, shape: L2.5-high-order}
+    - {geometry: molecular, C: 5, shape: L1.5-low-order}
+    - {geometry: molecular, C: 5, shape: L2.5-high-order}
+    - {geometry: molecular, C: 6, shape: L1.5-low-order}
+    - {geometry: molecular, C: 6, shape: L2.5-high-order}
+    - {geometry: periodic, C: 3, shape: L1.5-low-order}
+    - {geometry: periodic, C: 3, shape: L2.5-high-order}
+    - {geometry: periodic, C: 4, shape: L1.5-low-order}
+    - {geometry: periodic, C: 4, shape: L2.5-high-order}
+    - {geometry: periodic, C: 5, shape: L1.5-low-order}
+    - {geometry: periodic, C: 5, shape: L2.5-high-order}
+    - {geometry: periodic, C: 6, shape: L1.5-low-order}
+    - {geometry: periodic, C: 6, shape: L2.5-high-order}
+    executable_checks:
+      coalescence-slopes:
+        site: tests/test_rs_kernel/test_jastrow_dtn.py::TestDTNRustCuspSlopeEverySmoothness.test_rust_gradient_has_kato_cusps_for_every_smoothness#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-gradient-coalescence-slopes, expression: slopes}
+        reference: {role: kato-cusp-slopes, expression: _CUSP_PROBE_EXPECTED}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+  - pytest_node: tests/test_rs_kernel/test_jastrow_dtn.py::TestDTNRustCuspSlopeEverySmoothness::test_rust_cusp_verdict_rejects_legacy_odd_smoothness_sign
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {C: 3}
+    - {C: 5}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCuspSlopeEverySmoothness::test_serialized_pre_fix_odd_smoothness_biases_are_rejected
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, C: 3}
+    - {geometry: molecular, C: 5}
+    - {geometry: periodic, C: 3}
+    - {geometry: periodic, C: 5}

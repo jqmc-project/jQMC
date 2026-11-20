@@ -1,0 +1,25 @@
+id: IMPL-PWP-GAMMA-OVERLAP-COST-001
+kind: implementation
+name: Gamma mixed AO conditioning reduces the plane-wave eigensystem
+plain_language: >-
+  The raw emitted Gamma pGTO/PW AO condition number agrees with dense AO
+  overlap assembly. For a large symmetric Miller set with a constant and
+  cosine/sine pairs, the eigensystem dimension is at most twice the pGTO
+  count plus one, including the explicit constant column. Uncoupled
+  cosine/sine directions retain their exact diagonal eigenvalue.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_gamma_generated_overlap_uses_reduced_eigensystem
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      gamma-overlap-condition-dense-reference:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_gamma_generated_overlap_uses_reduced_eigensystem#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: source-computed-value, expression: observed_cond}
+        reference: {role: independent-dense-ao-overlap, expression: reference_cond}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001}

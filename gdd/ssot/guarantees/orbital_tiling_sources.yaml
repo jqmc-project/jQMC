@@ -1,0 +1,14 @@
+schema_version: 1
+document:
+  id: jqmc.orbital_tiling_sources
+  version: 1
+  lifecycle: cutover
+  title: Physical-supercell source sectors and independent J3 basis
+  purpose: Read complete primitive cosets and stream per-sector structured determinants without global MO matrices.
+symbol_contract:
+  status: governed
+  default_guarantee_refs: [IMPL-TILING-SECTOR-CONVERSION-001]
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

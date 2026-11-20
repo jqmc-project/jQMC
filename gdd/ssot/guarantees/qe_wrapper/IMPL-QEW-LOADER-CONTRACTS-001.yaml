@@ -1,0 +1,28 @@
+id: IMPL-QEW-LOADER-CONTRACTS-001
+kind: implementation
+name: QE loader contracts
+plain_language: Cells, atoms, cutoffs, bands, wavefunctions, and reference bundles load as reviewed; LSDA saves are detected
+  with per-spin band splits and truncation; antiferromagnetic tagged labels resolve through UPF files; missing species,
+  missing UPF files, invalid spin selections, and spin on restricted saves are hard errors.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestQEWrapper::test_load_qe_cell_and_atoms
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestQEWrapper::test_load_qe_ecut_and_bands
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestQEWrapper::test_load_qe_wfc_gamma_expanded
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestQEWrapper::test_load_qe_reference_bundle
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestQEWrapper::test_load_qe_reference_accepts_parent_and_file
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestAntiferromagneticLabels::test_species_pseudo_map_reads_tagged_labels
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestAntiferromagneticLabels::test_resolve_atom_elements_via_upf
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEWrapperLSDA::test_lsda_detection
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEWrapperLSDA::test_per_spin_bands_split
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEWrapperLSDA::test_per_spin_reference_and_truncation
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestAntiferromagneticLabels::test_resolve_atom_elements_missing_species_raises
+  - pytest_node: tests/test_jqmc_kernel/test_qe_wrapper.py::TestAntiferromagneticLabels::test_resolve_atom_elements_missing_upf_file_raises
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEWrapperLSDA::test_spin_selection_errors
+  - pytest_node: tests/test_jqmc_kernel/test_qe_lsda.py::TestQEWrapperLSDA::test_restricted_save_rejects_spin

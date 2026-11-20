@@ -1,0 +1,36 @@
+id: MATH-MPC-HOOD-SPLITTING-001
+kind: mathematical
+name: Hood splitting identities
+plain_language: 'The Hood splitting is exact: y matches the Coulomb value and slope at L, g is the bare Coulomb outside
+  the sphere, the G to zero limit of h is the analytic value, the closed form of h matches an independent quadrature, and
+  h decays with G.'
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestHoodSplitting::test_y_matches_coulomb_in_value_and_slope_at_L
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestHoodSplitting::test_g_is_bare_coulomb_outside_the_sphere
+    executable_checks:
+      d8-n-442:
+        site: tests/test_jqmc_kernel/test_mpc.py::TestHoodSplitting.test_g_is_bare_coulomb_outside_the_sphere#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(_hood_g_real(r, L))
+        reference:
+          role: source-reference-value
+          expression: 1.0 / np.asarray(r)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestHoodSplitting::test_h_G_zero_limit_is_analytic_value
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestHoodSplitting::test_h_G_decays_with_G
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc.py::TestHoodSplitting::test_h_G_closed_form_matches_quadrature

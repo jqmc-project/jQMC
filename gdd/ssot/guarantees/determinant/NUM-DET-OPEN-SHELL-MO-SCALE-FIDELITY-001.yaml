@@ -1,0 +1,31 @@
+id: NUM-DET-OPEN-SHELL-MO-SCALE-FIDELITY-001
+kind: numerical
+name: Mixed logarithmic SD derivative fields retain full-production fidelity at extreme MO scales
+plain_language: >-
+  On the validated O-lsda_gamma real and O-lsda_k025 complex ccECP four-up/two-down
+  inputs and two normalization scales
+  of MATH-DET-OPEN-SHELL-MO-SCALE-001, mixed and full analytical logarithmic
+  determinant gradients/Laplacians are evaluated on independently rebuilt
+  same-source cases after each policy switch. Every nonempty homogeneous block
+  is finite and agrees under the unchanged central orbital_derivative mixed
+  fidelity budget. A deliberately out-of-budget block must fail. This is
+  mixed-versus-full production fidelity, not mixed-versus-AD accuracy.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_open_shell_mo_scale.py::test_scaled_open_shell_derivatives_have_full_oracles_or_mixed_fidelity
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save, scale: 1.0e-85}
+    - {fixture_path: tests/qe_example_files/O-lsda_gamma/out/o.save, scale: 1.0e+85}
+    - {fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, scale: 1.0e-85}
+    - {fixture_path: tests/qe_example_files/O-lsda_k025/out/o_k025.save, scale: 1.0e+85}
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_open_shell_mo_scale.py::test_scaled_open_shell_derivatives_have_full_oracles_or_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-orbital-derivative-block, expression: actual}
+        reference: {role: full-analytical-orbital-derivative-block, expression: reference}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: orbital_derivative}

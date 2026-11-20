@@ -1,0 +1,31 @@
+id: MATH-RS-COMPLEX-SWEEP-UNPAIRED-COLUMNS-CARRIED-STATE-001
+kind: mathematical
+name: Rust complex MCMC sweep with two or more unpaired up columns keeps its carried geminal and inverse equal to a rebuild
+plain_language: >-
+  For a complex Bloch-twist geminal with two or more unpaired up-spin orbitals, including a geminal with no
+  down-spin electrons, the native complex MCMC sweep (_mcmc_sweep_complex, the core of the production complex
+  energy chunk) keeps its carried geminal and Sherman-Morrison inverse equal to the geminal rebuilt from scratch at
+  the current electron positions and its inverse: the up-move row delta must read unpaired column j of the
+  geminal, not the first unpaired column for every j. On the committed all-electron twist H4_pbc_ae_k025_cart.h5
+  (k_frac = (0.25, 0, 0), complex Cartesian pGTO) with a two-up / zero-down and a three-up / zero-down single
+  determinant (no Jastrow) and with the reviewed open-shell AGP (three up, one down, two complex unpaired AO
+  columns, J1+J2), four chained sweeps of 200 proposals from a seeded configuration (Dt 1.2, no AS
+  regularization) each accept moves and together move every up electron; after every sweep the carried geminal
+  equals compute_geminal_all_elements at the returned positions and the carried inverse equals the numpy inverse
+  of that rebuild, in the same precision. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_sweep_unpaired_columns.py::test_complex_sweep_unpaired_columns_carried_state_matches_rebuild
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{case: sd_up2_dn0}, {case: sd_up3_dn0}, {case: agp_open}]
+    executable_checks:
+      carried-geminal-and-inverse-vs-rebuild:
+        site: tests/test_rs_kernel/test_complex_sweep_unpaired_columns.py::test_complex_sweep_unpaired_columns_carried_state_matches_rebuild#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-sweep-carried-geminal-and-inverse, expression: value}
+        reference: {role: from-scratch-geminal-rebuild-and-numpy-inverse, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-MEDIUM-001, zones: [ao_eval, det_eval, det_ratio]}

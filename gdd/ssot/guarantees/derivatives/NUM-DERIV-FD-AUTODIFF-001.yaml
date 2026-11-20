@@ -1,0 +1,35 @@
+id: NUM-DERIV-FD-AUTODIFF-001
+verdict_methods:
+- VM-NUM-FD-ANCHOR-001
+name: Finite-difference agreement with XLA automatic differentiation
+kind: numerical
+plain_language: Independent finite differences and XLA automatic differentiation must give the same derivative on each of
+  the 52 reviewed sentinel cases.
+statement: For every required independent finite-difference fixture cell, the finite difference of the declared XLA forward
+  quantity agrees with the XLA automatic derivative for the same realized input, derivative axis, perturbation direction,
+  stencil, and smooth numerical regime.
+scope:
+  universe: derivatives.fd_autodiff_fixture_cases.v1
+  fixture_set: DERIV-FIX-FD-AUTODIFF-001
+  coverage_policy: reviewed-independent-sentinel-set
+  expected_obligations: 52
+required_evidence:
+  operation: derivatives.fd_autodiff_registered_cases.v1
+  proof: finite-difference-equals-autodiff
+  one_to_one_registration: true
+  precision:
+  - full
+  comparison:
+    policy_contract: gdd/ssot/verdicts.yaml
+    per_case_policy_id_required: true
+    per_case_tolerance_binding_required: true
+    implicit_full_to_mixed_inheritance: forbidden
+    require_recorded_stencil: true
+    require_recorded_step: true
+    require_truncation_and_roundoff_review: true
+    migration_state: case-bindings-enforced
+  witness_requirements:
+  - fixture-construction
+  - semantic-case-signature
+  - perturbation-liveness
+  - smooth-regime

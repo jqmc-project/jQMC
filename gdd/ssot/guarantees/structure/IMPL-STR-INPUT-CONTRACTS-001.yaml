@@ -1,0 +1,20 @@
+id: IMPL-STR-INPUT-CONTRACTS-001
+kind: implementation
+name: Input parsing and configuration contracts
+plain_language: 'QE reference labels split into element and label as reviewed (implementation class), untagged
+  labels pass through unchanged, the default image-list tolerance is wired to the central setting, and inconsistent PBC
+  declarations or missing elements are hard errors.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestFromQEReferenceElementLabelSplit::test_tagged_labels_split_element_and_label
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestFromQEReferenceElementLabelSplit::test_untagged_labels_unchanged
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList::test_primitive_image_list_default_tol_uses_setting
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestFromQEReferenceElementLabelSplit::test_missing_atom_elements_raises
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructurePBCValidation::test_pbc_flag_true_without_lattice_vectors_raises
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructurePBCValidation::test_pbc_flag_false_with_lattice_vectors_raises

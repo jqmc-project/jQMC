@@ -1,0 +1,41 @@
+id: MATH-TILING-PHYSICAL-CONTINUATION-001
+kind: mathematical
+name: Independent physical atom and strain continuation of primitive pGTO blocks
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  Cartesian and spherical primitive pGTO kernel images are assigned to physical
+  supercell atoms using the real-space quotient including electron wrapping.
+  Independent physical displacements and affine strain retain local coefficients,
+  fractional k labels and radial tables. Values, VGL and position/strain autodiff
+  match ordinary explicit-supercell orbitals for skew non-diagonal tiling, outside
+  electron positions and whole-orbital conjugation. This kernel continuation
+  contract does not replace the six-route full energy/force/stress contracts.
+verdict_methods: [VM-MATH-REFERENCE-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_geometry.py::test_independent_physical_atoms_and_strain_match_supercell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pgto_cart, conjugate: false}
+    - {backend: pgto_cart, conjugate: true}
+    - {backend: pgto_sphe, conjugate: false}
+    - {backend: pgto_sphe, conjugate: true}
+    - {backend: composite_cart, conjugate: false}
+    - {backend: composite_cart, conjugate: true}
+    - {backend: composite_sphe, conjugate: false}
+    - {backend: composite_sphe, conjugate: true}
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_geometry.py::test_multi_atom_physical_atoms_match_hand_built_supercell
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {tiling: det4, backend: pgto_cart, conjugate: false}
+    - {tiling: det4, backend: pgto_cart, conjugate: true}
+    - {tiling: det4, backend: pgto_sphe, conjugate: false}
+    - {tiling: det4, backend: pgto_sphe, conjugate: true}
+    - {tiling: det_minus3, backend: pgto_cart, conjugate: false}
+    - {tiling: det_minus3, backend: pgto_cart, conjugate: true}
+    - {tiling: det_minus3, backend: pgto_sphe, conjugate: false}
+    - {tiling: det_minus3, backend: pgto_sphe, conjugate: true}

@@ -1,0 +1,15 @@
+id: MATH-OPTK-PUBLIC-SOLVER-WRAPPERS-001
+kind: mathematical
+name: Retained public accelerated-SR solver entry point
+plain_language: The public accelerated-SR gamma wrapper returns the smaller-magnitude real polynomial root for both coefficient signs and satisfies the stationary-energy numerator. This covers the CPU single-process wrapper, not accelerator or multi-rank certification.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_public_solver_wrappers.py::test_public_asr_gamma_matches_independent_polynomial_roots
+    required_parameter_cases:
+    - {H1: -0.4, H2: 0.7}
+    - {H1: 0.4, H2: 0.7}
+    - {H1: -0.4, H2: -1.3}
+    - {H1: 0.4, H2: -1.3}
+    required_precision_modes: [full, mixed]

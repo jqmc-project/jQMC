@@ -1,0 +1,33 @@
+id: MATH-JAS-INDEPENDENT-ORBITAL-REFERENCE-001
+kind: mathematical
+name: J3 from independent orbital values and pair sums
+plain_language: >-
+  All 12 canonical inputs with active AO or MO J3 preserve the real J3 exponent against independent NumPy orbital evaluation and explicit pair sums, in full and mixed separately at the unchanged strict zone tolerance.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_independent_orbital_composites.py::test_j3_uses_independent_orbital_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-001}
+    - {pattern: WF-PATTERN-002}
+    - {pattern: WF-PATTERN-003}
+    - {pattern: WF-PATTERN-004}
+    - {pattern: WF-PATTERN-005}
+    - {pattern: WF-PATTERN-006}
+    - {pattern: WF-PATTERN-007}
+    - {pattern: WF-PATTERN-008}
+    - {pattern: WF-PATTERN-009}
+    - {pattern: WF-PATTERN-010}
+    - {pattern: WF-PATTERN-011}
+    - {pattern: WF-PATTERN-016}
+    executable_checks:
+      jastrow-three-body:
+        site: tests/test_jqmc_kernel/test_independent_orbital_composites.py::_compare_j3#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-jastrow-three-body, expression: actual}
+        reference: {role: independent-numpy-jastrow-three-body, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval]}

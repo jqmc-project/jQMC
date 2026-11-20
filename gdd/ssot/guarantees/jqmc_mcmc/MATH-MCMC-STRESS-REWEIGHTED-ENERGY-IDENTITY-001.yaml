@@ -1,0 +1,24 @@
+id: MATH-MCMC-STRESS-REWEIGHTED-ENERGY-IDENTITY-001
+kind: mathematical
+name: get_aT equals the jackknifed strain derivative of the reweighted empirical energy
+plain_language: >-
+  For the triclinic two-H plane-wave determinant with an exponential J2 (so the Pulay stress is non-zero) and
+  six fixed seeded configurations laid out as 3 steps x 2 walkers with fixed non-uniform weights w_L, production
+  e_L and analytic stress_HF and stress_PP (with E_L_stress_PP = e_L stress_PP) are placed in a production MCMC
+  object without sampling, and get_aT(0, 3) makes every configuration its own delete-one block. Its mean and
+  jackknife error equal those of jax.jacrev over the full 3x3 eps of each delete-one reweighted empirical energy
+  sum_i w_L,i w_i e_L,eps(F x_i) / sum_i w_L,i w_i, w_i = |Psi_eps(F x_i)|^2 / |Psi_0(x_i)|^2, through
+  Hamiltonian_data._apply_strain, symmetrised and divided by the volume. This pins the sign, the factor 2 and the
+  centering of the covariance term without statistics: get_aT with the factor 2 replaced by 1, with the
+  covariance subtracted, or without the <e_L><stress_PP> product must fail. Strict zone tolerance rebased on the
+  largest summand; full and mixed are judged separately. Sampling and physical stress convergence are not claimed.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_stress_probe_identities.py::test_get_aT_equals_ad_of_reweighted_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_stress_probe_identities.py::test_get_aT_reweighted_identity_rejects_combination_mutations
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

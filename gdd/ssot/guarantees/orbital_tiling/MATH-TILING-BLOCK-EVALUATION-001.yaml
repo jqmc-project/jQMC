@@ -1,0 +1,61 @@
+id: MATH-TILING-BLOCK-EVALUATION-001
+kind: mathematical
+name: Primitive ragged operators supply normalized final orbitals through one interface
+plain_language: PW+pGTO composite cases are required in addition to the separate leaves. B-spline final-band identity blocks and nonidentity PW and Cartesian/spherical pGTO blocks share the same
+  outer provider. Values agree with independent NumPy backend oracles; analytic VGL agrees with coordinate AD and separate
+  evaluation. Supercell translations carry the declared general supertwist. Logical conjugation shares the backend and local
+  coefficient allocations and reverses the whole orbital. Ragged PW blocks also reproduce an independent dense explicit-supercell
+  reciprocal construction for VGL, determinants and one-spin kinetic energy. Empty occupied blocks retain their cosets. This
+  is a fixed-geometry Python/JAX VGL contract, not evidence for native determinant/driver, force/stress, restart,
+  real-source or total-process memory support.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-ERROR-DISPOSITION-001
+fixture_usage:
+  aggregation: union-of-required-evidence
+  electron_configurations:
+  - EC-DIRECT-MIXED
+  input_bindings:
+  - IB-PARAMETER-SET
+  sources:
+  - SRC-NOT-APPLICABLE
+  wavefunctions:
+  - WF-FULL-REVIEWED
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling.py::test_ragged_pw_matches_explicit_supercell_vgl_determinant_and_kinetic
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling.py::test_backends_share_block_vgl_translation_and_conjugation_contract
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - backend: bspline
+    - backend: pgto_cart
+    - backend: pgto_sphe
+    - {backend: composite_cart}
+    - {backend: composite_sphe}
+
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling.py::test_empty_occupied_k_block_keeps_complete_sector
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling.py::test_tiled_composite_rejects_incompatible_children
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}

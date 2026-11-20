@@ -1,0 +1,65 @@
+id: NUM-GFMC-DRIVER-STRESS-FD-001
+kind: numerical
+name: Actual native GFMC stress buffers agree with strain derivatives of the measured physical quantities
+plain_language: 'One actual native GFMC_t or GFMC_n interval runs two walkers on committed lithium.h5 (periodic
+  Li ccECP, spherical pGTO Gamma SD, exponential J1/J2) with seed 34356, a fixed identity mesh, alat 0.30, tmove,
+  tau 0.05 (conventional) or two substeps with E_scf -1 (load-balanced). A forwarding spy records, without replacing,
+  the native interval outputs. At each returned walker position, native stress_HF is the strain derivative of the
+  production t/n measurement energy and native stress_PP that of ln|Psi|, in all nine entries, with the cell, nuclei
+  and electrons strained together and the identity quadrature rotation held fixed; the stored HF, Pulay
+  and E_L*Pulay tensors of the step equal their weighted reductions (w_L, or w_L/(V_diag-E_scf) for GFMC_n). In
+  full precision the derivative is a fourth-order central finite difference at strain steps 5e-4 and 1e-3, which
+  must agree, at the unchanged central tight FD tolerance. Full only: mixed has no FD verdict because its fp32 zones
+  dominate the stencil; its mixed alternative NUM-GFMC-DRIVER-STRESS-MIXED-FIDELITY-001 compares these identical
+  recorded per-walker and stored blocks with independent full native measurement kernels at the same recorded positions,
+  holding actual step weights, normalization and measured energy fixed. Every reference entry must be finite and
+  distinguishable from zero. This is a registered diagnostic; no estimator identity, statistical agreement,
+  high-cond(G) range or Monte Carlo convergence is certified.'
+verdict_methods:
+- VM-NUM-FIXED-INPUT-FD-001
+required_evidence:
+- verdict_method: VM-NUM-FIXED-INPUT-FD-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_driver_stress_fd.py::test_gfmc_driver_stress_buffers_match_strain_fd
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - driver: t
+    - driver: n
+    executable_checks:
+      stencil-convergence:
+        site: tests/test_jqmc_kernel/test_gfmc_driver_stress_fd.py::_assert_fd_verdict#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: fourth-order-finite-difference-at-h
+          expression: fd
+        reference:
+          role: fourth-order-finite-difference-at-2h
+          expression: fd_2h
+        precision:
+          full:
+            policy: CMP-FD-AUTODIFF-FULL-001
+      native-walker-buffers:
+        site: tests/test_jqmc_kernel/test_gfmc_driver_stress_fd.py::_assert_fd_verdict#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-per-walker-stress-buffer
+          expression: actual
+        reference:
+          role: strain-finite-difference-of-measurement-energy-or-log-amplitude
+          expression: reference
+        precision:
+          full:
+            policy: CMP-FD-AUTODIFF-FULL-001
+      stored-moments:
+        site: tests/test_jqmc_kernel/test_gfmc_driver_stress_fd.py::_assert_fd_verdict#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: stored-step-stress-moment
+          expression: stored
+        reference:
+          role: weighted-reduction-of-finite-differences
+          expression: expected
+        precision:
+          full:
+            policy: CMP-FD-AUTODIFF-FULL-001

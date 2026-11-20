@@ -1,0 +1,49 @@
+id: IMPL-RS-GFMC-MOL-CANDIDATE-EXACT-001
+native_evidence:
+- jqmc_rs::gfmc::mol_candidate_exact_tests::candidate_aos_bitwise_legacy_all_pairs
+- jqmc_rs::gfmc::mol_candidate_exact_tests::candidate_mos_sparse_bitwise_dense
+- jqmc_rs::jastrow_factor::tests::j3_grad_outputs_unchanged_mirror_is_bitwise_legacy
+kind: implementation
+name: The molecular GFMC candidate AO batch, MO projection and J3 derivative advance are bit-identical to their per-point reference kernels
+plain_language: >-
+  Three kernels on the real molecular GFMC projection-interval path are batched for speed and give the result bits of
+  their per-point reference kernels. (1) The molecular candidate AO batch (gfmc::molecular_aos_candidate_batch_t, behind the determinant and
+  J3 candidate tables of the kinetic and ECP meshes) evaluates each shell for all points of the batch at once: the
+  geometry, the FAST value screen pz_val*r^2 > LEPSBAS, the primitive exponentials (one compact exp_pd_into stream,
+  an elementwise scalar core with explicit FMAs, only for shells kept at some point), the sequential radial sum,
+  the Cartesian monomials x, x*x, (x*x)*x, the angular product (xp*yp)*zp and the value (radial*scale)*angular are the
+  per-(shell, point) reference expressions evaluated elementwise (no reassociation, no FMA contraction), written
+  transposed (AO-major) and transposed back for the raw-AO consumers; screened entries stay exact zeros. (2) The
+  MO-space projection of a molecular determinant candidate batch (gfmc::molecular_mos_candidate_batch) replays
+  dot_product_fast exactly with the orbital's row-major transposed coefficients (OrbData::mo_coefficients_t):
+  dot_product_fast keeps 16 lane accumulators (column a < n16 = num_ao rounded down to a multiple of 16 is
+  fused-multiply-added into lane a mod 16 in ascending a), folds them into 0.0 in lane order, then adds the tail
+  columns a >= n16 with a separately rounded product in ascending a. Each lane is an independent in-order FMA chain,
+  so the lane-tiled kernel computes one lane for a block of 6 points x 8 MOs in registers and folds lanes in
+  ascending order, performing the same operations on every (point, MO) pair; MOs beyond the last full group of 8
+  run dot_product_fast itself. Columns of shells screened at every point of the batch hold exact zeros and are
+  skipped (fma(0, c, s) = s; only an all-underflow -0.0 accumulator could change sign). Without a row-major
+  transposed copy of the right shape the dense loop runs. (3) The per-hop advance of the final J3 derivative
+  contractions (jastrow_factor::advance_j3_grad_outputs_unchanged) keeps an orbital-major mirror of the eight
+  electron-major derivative tables, built lazily and kept in step by update_j3_grad_lap_cache (the complex row
+  writer drops it), and runs the per-electron reference sums (from 0.0, ascending orbital, separately rounded product)
+  side by side across electrons, so every sum is bit-identical while the loop vectorises. Also exact: on the ECP
+  mesh geometry the radial channel factor v_l(|r - R|) is evaluated once per (electron, nucleus) instead of once per
+  quadrature point (same expression, same accumulation order), and the nn = 1 nearest-nucleus search is a
+  first-minimum scan with the stable-sort tie rule of the general branch. Native evidence compares each batched kernel
+  with a verbatim copy of its per-point reference kernel bit for bit: Cartesian and spherical fixtures with l up to 5, point sets from
+  on top of a nucleus to fully screened (including sets where whole columns are screened at every point), MO widths
+  1 to 300 around the 8-MO tile, an AO count with a 16-lane tail, a wrong-shape transpose falling back to the dense
+  loop, and five hops of the J3 advance with the mirror checked against a fresh rebuild after each row write. On a
+  live three-hop GFMC_n interval that agrees with XLA, the molecular SD leaves (Cartesian and spherical) take the
+  lane-tiled projection (jqmc_rs.gfmc_route_counters index 66), no molecular leaf (SD, AGP, AGPn) ever takes the
+  dense fallback (index 67), and non-molecular leaves reach neither. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_projection.py::test_winv_covers_supported_determinant_and_ao_types
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_cart_sd_jnone, complex_path: false, build_idx: 3, refresh_idx: 4}
+    - {pattern: mol_sphe_sd_jnone, complex_path: false, build_idx: 3, refresh_idx: 4}

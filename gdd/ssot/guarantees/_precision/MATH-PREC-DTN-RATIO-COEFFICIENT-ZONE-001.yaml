@@ -1,0 +1,47 @@
+id: MATH-PREC-DTN-RATIO-COEFFICIENT-ZONE-001
+kind: mathematical
+name: Native DTN single-move ratios use coefficient tensors inflated in the fp64 jastrow_ratio zone
+plain_language: >-
+  The precision policy assigns the single-move Jastrow ratio exp(J(R')-J(R)) to the
+  jastrow_ratio zone (float64 in both modes). The native DTN Jastrow (JastrowDtnData) keeps,
+  besides its shared coefficient tensors (inflated in the jastrow_grad_lap dtype only),
+  a copy inflated in the jastrow_ratio dtype whenever that dtype differs, and every native DTN ratio kernel (DtnRatioState streaming and
+  grouped ratios, the candidate tables, the mesh ratio and compute_dtn_ratio, i.e. the DTN
+  factor of MeshFastStateC::jas_ratio and of the real fast state) reads that copy, as XLA's DTN
+  ratio kernels inflate in the jastrow_ratio dtype. Actual and reference are built from
+  independently loaded copies of the same serialized full input under the full Python policy
+  (the DTN parameter leaves are stored in float64 in both modes), only the native
+  policy differs. (1) On mol_ecp_cart_jdtn (H2 ccECP),
+  pbc_gamma_sphepgto_jdtn (bcc Li ccECP at Gamma) and twist_sphepgto_jdtn (bcc Li ccECP,
+  k = (1/4, 1/4, 1/4)), one _walker_batch(seed=0) walker and four seeded (default_rng(766),
+  sigma = 0.5 bohr) single-electron moves of every electron, jqmc_rs.compute_dtn_ratio under the
+  active mode's whole native policy equals the all-float64 native evaluation elementwise to
+  reduction order (ATOL/RTOL_REDUCTION_ORDER), and that reference equals the XLA truth
+  exp(compute_Jastrow_DTN(R') - compute_Jastrow_DTN(R)) at the strict float64 budget. (2) On the
+  same fixtures, the three _walker_batch(seed=0) walkers and the three production per-walker
+  rotations of test_batch_mesh_per_walker on the default Nv mesh (NN = 1, alat = 0.3), the fast
+  LRDMC branching sum b_L (_gfmc_lrdmc_ecp(fast=True) / _gfmc_lrdmc_ecp_complex(fast=True)),
+  whose discretized-kinetic and ECP-mesh DTN factors come from the fast states' ratios, with the
+  all-float64 native policy except jastrow_eval and jastrow_grad_lap at the active mode's dtype
+  equals the all-float64 evaluation to reduction order, Re and Im. Electron configurations must be
+  identical, values finite and live; full runs are same-case consistency checks. Ratios formed
+  from the float32-inflated shared tensors fail these budgets in mixed. This does not
+  claim mixed fidelity of the DTN value, gradient / Laplacian, carried grad/lap state, Pulay or
+  strain fields, which read the shared tensors; the parameter leaves' storage dtype is
+  MATH-PREC-JASTROW-ZONE-SWEEP-001.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_dtn_ratio_coefficient_zone.py::test_native_dtn_single_move_ratio_matches_full_rebuild
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_jdtn}
+    - {pattern: pbc_gamma_sphepgto_jdtn}
+    - {pattern: twist_sphepgto_jdtn}
+  - pytest_node: tests/test_rs_kernel/test_dtn_ratio_coefficient_zone.py::test_native_fast_lrdmc_dtn_ratio_matches_full_rebuild
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_cart_jdtn}
+    - {pattern: pbc_gamma_sphepgto_jdtn}
+    - {pattern: twist_sphepgto_jdtn}

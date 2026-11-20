@@ -1,0 +1,57 @@
+id: PHY-HAM-JASTROW-PERIODICITY-CONSISTENCY-001
+kind: physical
+name: An accepted Hamiltonian's Jastrow components have its periodicity, so a periodic Jastrow is lattice periodic and reload invariant
+plain_language: >-
+  Hamiltonian_data.build and Hamiltonian_data.sanity_check accept a Hamiltonian only when every Jastrow component that
+  reads a structure (J1, J2, the J3 orbital basis and DTN) carries the pbc_flag of the top-level structure_data and, when
+  periodic, the same lattice vectors. On the Gamma-point H2_pbc_ae_cart.h5 Hamiltonian, a J2 left at the
+  molecular default Structure_data() of init_jastrow_two_body_data, a J1 or a DTN on a molecular copy of the nuclei, an
+  AO J3 on the molecular H2_ecp_ccpvdz_cart basis and a periodic J2 on a 1.1-scaled cell are rejected with ValueError,
+  and on the molecular H2_ecp_ccpvdz_cart.h5 Hamiltonian a J2, J1 or DTN carrying the H2_pbc cell is rejected, both by
+  build and by sanity_check of the directly constructed Hamiltonian. Every candidate that build accepts (periodic J1,
+  Pade and exponential J2, DTN; the consistent ones must be accepted) satisfies lattice-translation invariance
+  ln Psi(r_i + a_k) = ln Psi(r_i) for either electron and each lattice vector at four seeded points within the strict
+  ao/jastrow/det/wf zone tolerance, in memory and after save_to_hdf5/load_from_hdf5, with the reloaded ln Psi equal to
+  the in-memory value within the HDF5 round-trip tolerance; the native J1 + J2 + DTN value and
+  compute_grads_and_laplacian_jastrow_part satisfy the same invariance and reload equality within the strict
+  jastrow_eval/jastrow_grad_lap tolerance. The reference is the lattice periodicity of a Gamma-point wavefunction,
+  independent of the Jastrow implementation. Full and mixed are each required.
+verdict_methods: [VM-PHY-INVARIANT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_structure_consistency.py::test_accepted_periodic_hamiltonian_jastrow_is_lattice_periodic_and_reload_invariant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: j2_pade_periodic}
+    - {case: j2_exp_periodic}
+    - {case: j1_periodic}
+    - {case: dtn_periodic}
+    - {case: j2_pade_default_structure}
+    - {case: j2_exp_default_structure}
+    - {case: j1_molecular_structure}
+    - {case: dtn_molecular_structure}
+  - pytest_node: tests/test_rs_kernel/test_jastrow_structure_consistency_rust.py::test_rust_accepted_periodic_jastrow_is_lattice_periodic_and_reload_invariant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: j2_pade_periodic}
+    - {case: j2_exp_periodic}
+    - {case: j1_periodic}
+    - {case: dtn_periodic}
+    - {case: j2_pade_default_structure}
+    - {case: j2_exp_default_structure}
+    - {case: j1_molecular_structure}
+    - {case: dtn_molecular_structure}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_structure_consistency.py::test_hamiltonian_rejects_jastrow_component_with_mismatched_periodicity
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: pbc_j2_default_structure}
+    - {case: pbc_j1_molecular_structure}
+    - {case: pbc_dtn_molecular_structure}
+    - {case: pbc_j3_molecular_basis}
+    - {case: pbc_j2_other_cell}
+    - {case: mol_j2_periodic}
+    - {case: mol_j1_periodic}
+    - {case: mol_dtn_periodic}

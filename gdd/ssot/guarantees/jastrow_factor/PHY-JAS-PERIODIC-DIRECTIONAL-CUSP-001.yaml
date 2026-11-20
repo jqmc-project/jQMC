@@ -1,0 +1,52 @@
+id: PHY-JAS-PERIODIC-DIRECTIONAL-CUSP-001
+kind: physical
+name: Conventional periodic J1 and J2 keep direction-independent cusp normalization
+plain_language: >-
+  For the selected periodic cells, actual forward autodiff and analytical
+  radial slopes at radius 1e-7 Bohr along four fixed Cartesian/diagonal
+  directions must match independent same-mode cusp-normalized radial
+  envelopes at the unchanged strict Jastrow-zone tolerance. J1 uses a
+  synthetic all-electron H nucleus and has limiting slope -1; J2 retains
+  the conventional spin-independent radial law with limiting slope 1/2.
+  This certifies the antiparallel cusp normalization and preservation of
+  the established same-spin ansatz, NOT the exact parallel-spin 1/4 cusp.
+  Eight explicit part/form/cell/spin rows include orthogonal controls and
+  genuinely nonorthogonal cells. No Cartesian derivative at coalescence,
+  files, RNG, determinant, cond(G) rejection, FD or statistical acceptance
+  is involved. This finite-radius directional detector is complemented by
+  the exact finite-distance law guarantee; it does not certify the cusp
+  of a complete wavefunction, arbitrary near-singular cells or Rust routes.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_directional_cusp
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {part: j1, form: exp, cell_kind: cubic, spin_sector: up}
+    - {part: j1, form: pade, cell_kind: tetragonal, spin_sector: down}
+    - {part: j2, form: exp, cell_kind: orthorhombic, spin_sector: up-down}
+    - {part: j2, form: pade, cell_kind: rotated-orthogonal, spin_sector: up-up}
+    - {part: j1, form: exp, cell_kind: monoclinic, spin_sector: up}
+    - {part: j2, form: pade, cell_kind: monoclinic, spin_sector: down-down}
+    - {part: j1, form: pade, cell_kind: triclinic, spin_sector: down}
+    - {part: j2, form: exp, cell_kind: strong-skew, spin_sector: up-down}
+    executable_checks:
+      forward-cusp:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_directional_cusp#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-forward-ad-radial-slope, expression: autodiff_slope}
+        reference: {role: independent-cusp-normalized-radial-envelope, expression: reference_slope}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2', '3']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+      analytical-cusp:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_directional_cusp#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-analytical-radial-slope, expression: analytical_slope}
+        reference: {role: independent-cusp-normalized-radial-envelope, expression: reference_slope}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2', '3']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}

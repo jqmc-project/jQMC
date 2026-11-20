@@ -1,0 +1,30 @@
+id: NUM-MPC-NON-REDUCED-BASIS-001
+kind: numerical
+name: MPC radius, table and energy are independent of a non-reduced cell basis
+plain_language: >-
+  The MPC inscribed Wigner-Seitz radius, and hence the MPC V_LR table and the MPC e-e energy for a fixed configuration,
+  do not depend on the choice of cell basis for the same lattice, including non-reduced bases whose shortest vector has
+  integer coefficients of magnitude 3 or more. For the plane-wave table fixture (the diag(5,6,7) Bohr box, one doubly
+  occupied three-plane-wave MO, cutoff 1.3 Ha, explicit 16^3 grid) written in the bases U @ diag(5,6,7) with
+  U = [[1,1,0],[2,3,1],[0,0,1]] and U = [[-3,-3,-2],[-2,-1,-2],[1,-3,3]], wigner_seitz_radius and MPC_data.L equal the
+  physical-box value min(lengths)/2 = 2.5 Bohr; the production V_LR table and its lookup at table nodes (with whole-cell
+  offsets) agree with the independent box-face quadrature reference within ATOL_MPC_TABLE_FIXTURE_REGRESSION and
+  ATOL_MPC_OFFGRID_FIXTURE_REGRESSION; and the XLA and the Rust canonical MPC e-e energy of one up and one down electron
+  on table nodes agree with an independent energy assembled from that reference V_LR, its V_const and an exact
+  orthorhombic minimum image within ATOL_MPC_OFFGRID_FIXTURE_REGRESSION (rtol zero). Full and mixed are each required.
+  Off-node interpolation accuracy on such skewed grids is not certified.
+verdict_methods:
+- VM-NUM-REVIEWED-REGRESSION-001
+required_evidence:
+- verdict_method: VM-NUM-REVIEWED-REGRESSION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mpc_non_reduced_basis.py::test_mpc_in_non_reduced_basis_matches_independent_references
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {basis_name: U-110-231-001}
+    - {basis_name: U-strongly-skewed}
+  - pytest_node: tests/test_rs_kernel/test_mpc_non_reduced_basis_rs.py::test_rust_mpc_potential_in_non_reduced_basis_matches_independent_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {basis_name: U-110-231-001}
+    - {basis_name: U-strongly-skewed}

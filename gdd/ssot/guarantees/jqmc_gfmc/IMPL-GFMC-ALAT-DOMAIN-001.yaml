@@ -1,0 +1,50 @@
+id: IMPL-GFMC-ALAT-DOMAIN-001
+kind: implementation
+name: LRDMC drivers reject invalid lattice spacings
+plain_language: >-
+  The lrdmc-tau and lrdmc-bra console entries and the GFMC_t and GFMC_n
+  drivers require a finite, strictly positive lattice spacing alat. Zero,
+  negative, infinite and NaN spacings raise a ValueError naming alat before
+  sampling can start, on the native and XLA routes alike, and the console
+  entry exits non-zero without writing a checkpoint. The same requirement
+  applies to checkpoint continuation. A single invalid stored value causes
+  all sampling ranks to raise the same error, identifying the affected rank.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_gfmc_rejects_invalid_alat
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: GFMC_t, boundary: constructor, alat: 0.0}
+    - {driver_name: GFMC_t, boundary: constructor, alat: -0.3}
+    - {driver_name: GFMC_t, boundary: constructor, alat: {source_expression: numpy.inf}}
+    - {driver_name: GFMC_t, boundary: constructor, alat: {source_expression: numpy.nan}}
+    - {driver_name: GFMC_t, boundary: checkpoint, alat: 0.0}
+    - {driver_name: GFMC_t, boundary: checkpoint, alat: -0.3}
+    - {driver_name: GFMC_t, boundary: checkpoint, alat: {source_expression: numpy.inf}}
+    - {driver_name: GFMC_t, boundary: checkpoint, alat: {source_expression: numpy.nan}}
+    - {driver_name: GFMC_n, boundary: constructor, alat: 0.0}
+    - {driver_name: GFMC_n, boundary: constructor, alat: -0.3}
+    - {driver_name: GFMC_n, boundary: constructor, alat: {source_expression: numpy.inf}}
+    - {driver_name: GFMC_n, boundary: constructor, alat: {source_expression: numpy.nan}}
+    - {driver_name: GFMC_n, boundary: checkpoint, alat: 0.0}
+    - {driver_name: GFMC_n, boundary: checkpoint, alat: -0.3}
+    - {driver_name: GFMC_n, boundary: checkpoint, alat: {source_expression: numpy.inf}}
+    - {driver_name: GFMC_n, boundary: checkpoint, alat: {source_expression: numpy.nan}}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_gfmc.py::test_lrdmc_cli_rejects_nonpositive_alat
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {job_type: lrdmc-tau, rust_on_cpu: '1', alat: 0.0}
+    - {job_type: lrdmc-tau, rust_on_cpu: '1', alat: -0.3}
+    - {job_type: lrdmc-tau, rust_on_cpu: '0', alat: 0.0}
+    - {job_type: lrdmc-tau, rust_on_cpu: '0', alat: -0.3}
+    - {job_type: lrdmc-bra, rust_on_cpu: '1', alat: 0.0}
+    - {job_type: lrdmc-bra, rust_on_cpu: '1', alat: -0.3}
+    - {job_type: lrdmc-bra, rust_on_cpu: '0', alat: 0.0}
+    - {job_type: lrdmc-bra, rust_on_cpu: '0', alat: -0.3}
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_nonfinite_mpi.py::test_rank_local_invalid_alat_fails_collectively
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_name: GFMC_t}
+    - {driver_name: GFMC_n}

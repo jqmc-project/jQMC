@@ -1,0 +1,11 @@
+id: IMPL-CLI-MPC-TWIST-OUTPUT-001
+kind: implementation
+name: Twist CLI publishes BZ MPC estimators
+plain_language: The twist summary prints the BZ-averaged MPC correction and covariance-aware corrected total, including
+  their estimator errors and cutoff, exactly when MPC is enabled and emits no MPC-labelled value when it is disabled.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_mpc.py::test_cli_twist_summary_prints_mpc_only_when_enabled

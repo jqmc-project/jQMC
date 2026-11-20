@@ -1,0 +1,37 @@
+id: MATH-RS-COMPLEX-EXTRA-FIRST-COMPOSITE-VMC-FORCE-001
+kind: mathematical
+name: Rust complex-twist VMC forces of an extra-first composite equal the derivatives of ln Psi and the local energy
+plain_language: 'The native complex-twist VMC Pulay force (d Re ln Psi / dR) and Hellmann-Feynman derivatives (d
+  Re e_L / dR, d Re e_L / dr_up, d Re e_L / dr_dn) of a complex pGTO(+)plane-wave or pGTO(+)B-spline composite basis
+  are the derivatives of Re ln Psi and of the continuum local energy whichever child comes first in the AO order:
+  the determinant Pulay and kinetic force kernels must take the GTO rows of the AO cotangent at the offset of the
+  GTO child, also when the plane-wave or B-spline child precedes it. On the committed pgto_pw_twist_jnone and pgto_bspline_twist_jnone
+  cells (QE-projected Li ccECP at k = 0.25, single determinant, no Jastrow) in their built (pGTO, extra) order and
+  in the (extra, pGTO) order with the MO coefficient columns permuted to match, at one seeded electron configuration,
+  the free kernels vmc_grad_ln_psi_pbc_complex / vmc_grad_e_L_pbc_complex and the MCMC driver entries grad_ln_psi_pbc_complex_batch
+  / grad_e_L_pbc_complex_batch equal reverse-mode AD of the XLA Re ln Psi and Re local energy (identity quadrature
+  rotation) with every nucleus position leaf displaced together or the electron coordinates displaced, in the same
+  precision. Every reference must be finite and distinguishable from zero. Full is judged against the independent
+  AD reference. This mathematical guarantee applies only to full precision at strict; paired mixed numerical
+  coverage is owned by NUM-RS-COMPLEX-EXTRA-FIRST-COMPOSITE-DERIVATIVE-MIXED-FIDELITY-001.'
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_vmc_complex_extra_first_force.py::test_vmc_complex_composite_forces_match_ad_in_both_child_orders
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {pattern: pgto_pw_twist_jnone, order: gto_first}
+    - {pattern: pgto_pw_twist_jnone, order: extra_first}
+    - {pattern: pgto_bspline_twist_jnone, order: gto_first}
+    - {pattern: pgto_bspline_twist_jnone, order: extra_first}
+    executable_checks:
+      force-vs-ad:
+        site: tests/test_rs_kernel/test_vmc_complex_extra_first_force.py::test_vmc_complex_composite_forces_match_ad_in_both_child_orders#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-vmc-pulay-and-hf-force, expression: value}
+        reference: {role: same-precision-autodiff-of-ln-psi-and-local-energy, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, mo_eval, mo_grad, mo_lap, det_eval, det_grad_lap, wf_kinetic, ewald, coulomb]

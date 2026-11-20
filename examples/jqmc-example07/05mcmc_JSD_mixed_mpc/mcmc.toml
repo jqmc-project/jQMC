@@ -1,0 +1,29 @@
+[control]
+job_type = "mcmc"
+mcmc_seed = 34478
+number_of_walkers = 4
+max_time = 86400
+restart = false
+restart_chk = "restart.h5"
+hamiltonian_h5 = "hamiltonian_data.h5"
+verbosity = "high"
+
+[mcmc]
+num_mcmc_steps = 5000
+num_mcmc_per_measurement = 40
+num_mcmc_warmup_steps = 30
+num_mcmc_bin_blocks = 10
+Dt = 1.5
+epsilon_AS = 0.0
+atomic_force = false
+compute_stress = false
+use_swct = true
+parameter_derivatives = false
+
+[coulomb]
+mpc = true
+# Convergence parameter in Hartree; repeat with larger values.
+mpc_cutoff = 30.0
+
+[precision]
+mode = "mixed"

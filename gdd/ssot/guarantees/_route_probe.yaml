@@ -1,0 +1,16 @@
+schema_version: 1
+document:
+  id: jqmc._route_probe
+  version: 1
+  lifecycle: cutover
+  title: Mesh-cache route-engagement guarantees
+  purpose: Which test guarantees what, by which verdict method, for the projection-scoped mesh-cache route probe and the negative
+    route gates it makes possible.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-ROUTE-PROBE-CONTRACT-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

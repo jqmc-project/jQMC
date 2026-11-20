@@ -1,0 +1,24 @@
+id: MATH-TOOL-XYZ-GEOMETRY-UNITS-001
+kind: mathematical
+name: XYZ export preserves the nuclear geometry in angstroms
+plain_language: >-
+  jqmc-tool hamiltonian to-xyz preserves the input atom count and label order. For both a standalone
+  Hamiltonian and the shared geometry in a combined twist-averaged Hamiltonian, each exported Cartesian
+  component equals the corresponding raw TREXIO coordinate in bohr times the independent CODATA 2018
+  factor 0.529177210903 angstrom per bohr, within ATOL_PYTHON_FP64_LOOSE and with RTOL_BIT_EXACT.
+  The committed H2 fixture exercises nonzero coordinates in the twist-averaged route.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestHamiltonianCommands::test_hamiltonian_to_xyz
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {h5_file: H2_ecp_ccpvtz_cart.h5}
+    - {h5_file: N2_ecp_ccpvtz_cart.h5}
+    - {h5_file: Cl2_ecp_ccpvtz_cart.h5}
+    - {h5_file: Ti2_ecp_ccpvtz_cart.h5}
+    - {h5_file: CuBr_ecp_ccpvtz_cart.h5}
+  - pytest_node: tests/test_jqmc_kernel/test_tool_twist_inputs.py::test_to_xyz_accepts_twist_averaged_input
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

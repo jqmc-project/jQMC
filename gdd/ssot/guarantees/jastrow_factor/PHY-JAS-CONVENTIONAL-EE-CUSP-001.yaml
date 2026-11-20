@@ -1,0 +1,54 @@
+id: PHY-JAS-CONVENTIONAL-EE-CUSP-001
+kind: physical
+name: Conventional J2 antiparallel cusp and its spin-independent radial definition
+plain_language: >-
+  Molecular exp and Pade J2 must have the opposite-spin cusp normalization 1/2.
+  Both actual forward AD and analytical gradients match independent same-mode
+  NumPy profiles exp(-b*r)/2 or 1/[2*(1+b*r)^2]. The established conventional
+  spin-independent ansatz uses these same profiles for up-up and down-down;
+  this explicitly DOES NOT certify the exact parallel-spin 1/4 cusp and does
+  not change the ansatz into a spin-dependent one. DTN has a separate guarantee.
+  Two synthetic electrons (1up/1down, 2up/0down, 0up/2down) have one at the
+  origin and one at r=1e-7/1e-5/1e-3 Bohr along +x/-y/+z, with b=0.5/1.25.
+  Every one of the nine samples uses unchanged strict Jastrow zone tolerances
+  in full and mixed. No files, RNG, determinant, cond(G) selection, FD or
+  statistical acceptance is used. PBC, Rust and full-wavefunction cusp are
+  outside this component guarantee.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_cusp_profiles.py::test_j2_radial_profile_has_antiparallel_cusp_and_spin_independent_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {form: exp, b: 0.5, spin_pair: up-down}
+    - {form: pade, b: 0.5, spin_pair: up-down}
+    - {form: exp, b: 1.25, spin_pair: up-down}
+    - {form: pade, b: 1.25, spin_pair: up-down}
+    - {form: exp, b: 0.5, spin_pair: up-up}
+    - {form: pade, b: 0.5, spin_pair: up-up}
+    - {form: exp, b: 1.25, spin_pair: up-up}
+    - {form: pade, b: 1.25, spin_pair: up-up}
+    - {form: exp, b: 0.5, spin_pair: down-down}
+    - {form: pade, b: 0.5, spin_pair: down-down}
+    - {form: exp, b: 1.25, spin_pair: down-down}
+    - {form: pade, b: 1.25, spin_pair: down-down}
+    executable_checks:
+      forward-ad-cusp-profile:
+        site: tests/test_jqmc_kernel/test_jastrow_cusp_profiles.py::test_j2_radial_profile_has_antiparallel_cusp_and_spin_independent_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: forward-ad-radial-slope, expression: ad_slope}
+        reference: {role: independent-spin-independent-half-cusp-profile, expression: expected}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2', '3', '4', '5', '6', '7', '8']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+      analytical-cusp-profile:
+        site: tests/test_jqmc_kernel/test_jastrow_cusp_profiles.py::test_j2_radial_profile_has_antiparallel_cusp_and_spin_independent_form#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-radial-slope, expression: analytical_slope}
+        reference: {role: independent-spin-independent-half-cusp-profile, expression: expected}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2', '3', '4', '5', '6', '7', '8']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}

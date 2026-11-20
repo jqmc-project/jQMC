@@ -1,0 +1,68 @@
+id: NUM-DERIV-GFMC-MEASUREMENT-FD-001
+kind: numerical
+name: GFMC measurement-energy analytical derivatives match finite differences
+plain_language: >-
+  Conventional and load-balanced GFMC analytical nuclear/electron gradients and
+  all nine affine-strain components match fourth-order central differences of
+  their production continuum measurement local energy, not propagation energy.
+  Five fixed inputs per algorithm use H2 all-electron molecular, N2 ccECP
+  molecular tmove/dltmove, and periodic Li ccECP tmove/dltmove with exponential
+  J1/J2. The seed-2026 shell electron configuration and seed-7 quadrature are
+  held fixed; structures and Ewald tables are independently rebuilt for each
+  perturbation. Steps 0.0005 and 0.001 must agree at the unchanged central tight
+  FD tolerance. Each compared component must be finite and distinguishable from
+  zero at that tolerance; ECP and dltmove terms must be active. Molecular strain
+  is an affine derivative, not physical cell stress. This full-only FD evidence
+  does not replace the existing full/mixed same-precision analytical/AD matrix
+  guarantees or extend the 52-case FD/autodiff receipt universe. No high-cond(G)
+  or stochastic convergence coverage is inferred.
+verdict_methods: [VM-NUM-ANALYTICAL-FD-001]
+required_evidence:
+- verdict_method: VM-NUM-ANALYTICAL-FD-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_measurement_fd.py::test_gfmc_t_measurement_derivatives_match_fd
+    executable_checks:
+      stencil-convergence:
+        site: tests/test_jqmc_kernel/test_gfmc_measurement_fd.py::_assert_measurement_fd#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fourth-order-finite-difference-at-h, expression: 'fd[name]'}
+        reference: {role: fourth-order-finite-difference-at-2h, expression: 'fd_2h[name]'}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+      analytical-derivative:
+        site: tests/test_jqmc_kernel/test_gfmc_measurement_fd.py::_assert_measurement_fd#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-analytical-measurement-derivative, expression: 'analytic[name]'}
+        reference: {role: independently-rebuilt-forward-finite-difference, expression: 'fd[name]'}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {case: h2-ae-molecular}
+    - {case: n2-ecp-molecular-tmove}
+    - {case: n2-ecp-molecular-dltmove}
+    - {case: li-ecp-periodic-tmove}
+    - {case: li-ecp-periodic-dltmove}
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_measurement_fd.py::test_gfmc_n_measurement_derivatives_match_fd
+    executable_checks:
+      stencil-convergence:
+        site: tests/test_jqmc_kernel/test_gfmc_measurement_fd.py::_assert_measurement_fd#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fourth-order-finite-difference-at-h, expression: 'fd[name]'}
+        reference: {role: fourth-order-finite-difference-at-2h, expression: 'fd_2h[name]'}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+      analytical-derivative:
+        site: tests/test_jqmc_kernel/test_gfmc_measurement_fd.py::_assert_measurement_fd#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-analytical-measurement-derivative, expression: 'analytic[name]'}
+        reference: {role: independently-rebuilt-forward-finite-difference, expression: 'fd[name]'}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {case: h2-ae-molecular}
+    - {case: n2-ecp-molecular-tmove}
+    - {case: n2-ecp-molecular-dltmove}
+    - {case: li-ecp-periodic-tmove}
+    - {case: li-ecp-periodic-dltmove}

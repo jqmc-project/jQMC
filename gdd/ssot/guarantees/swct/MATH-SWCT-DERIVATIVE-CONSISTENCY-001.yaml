@@ -1,0 +1,27 @@
+id: MATH-SWCT-DERIVATIVE-CONSISTENCY-001
+kind: mathematical
+name: Derivative consistency of the SWCT omega
+plain_language: The closed-form domega equals the jacrev autodiff oracle.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_swct.py::TestSWCTDomegaClosedForm::test_domega_matches_jacrev_oracle
+    required_parameter_cases: [{}]
+    required_precision_modes: [full]
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_swct.py::TestSWCTDomegaClosedForm.test_domega_matches_jacrev_oracle#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(got)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(oracle)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - swct

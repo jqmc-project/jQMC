@@ -1,0 +1,38 @@
+id: IMPL-HAM-HDF5-PRECISION-001
+kind: implementation
+name: Checkpoint field precision and exact cast values
+plain_language: >-
+  For all sixteen declared canonical Hamiltonians in full and mixed separately, loading a checkpoint whose
+  AO radial, AGP lambda and DTN independent arrays use the opposite component width restores the declared
+  dtypes (fp64 model storage for the AO radial arrays and for the DTN independent coefficients in both
+  modes, det_eval for AGP lambda) and exactly preserves the independently cast values, including
+  complex components. MO, AGPn and spline arrays without these alignment rules retain their stored values
+  and dtypes. pGTO template compression is checked against the expanded input. This is a checkpoint field
+  contract, not a numerical wavefunction, compilation-count or timing guarantee.
+  The fp64 AO radial storage and AO evaluation after reload are the subject of
+  IMPL-HAM-HDF5-BASIS-FP64-STORAGE-001. Jastrow parameters are float64 storage in both modes
+  (jastrow_factor._JASTROW_PARAMETER_STORAGE_DTYPE, MATH-PREC-JASTROW-ZONE-SWEEP-001), so the DTN independent
+  coefficients are restored to float64, also from an opposite-width float32 checkpoint, with exact cast values.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_hdf5_precision_alignment.py::test_hdf5_load_aligns_declared_fields_without_losing_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern_id: WF-PATTERN-001}
+    - {pattern_id: WF-PATTERN-002}
+    - {pattern_id: WF-PATTERN-003}
+    - {pattern_id: WF-PATTERN-004}
+    - {pattern_id: WF-PATTERN-005}
+    - {pattern_id: WF-PATTERN-006}
+    - {pattern_id: WF-PATTERN-007}
+    - {pattern_id: WF-PATTERN-008}
+    - {pattern_id: WF-PATTERN-009}
+    - {pattern_id: WF-PATTERN-010}
+    - {pattern_id: WF-PATTERN-011}
+    - {pattern_id: WF-PATTERN-012}
+    - {pattern_id: WF-PATTERN-013}
+    - {pattern_id: WF-PATTERN-014}
+    - {pattern_id: WF-PATTERN-015}
+    - {pattern_id: WF-PATTERN-016}

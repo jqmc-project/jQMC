@@ -1,0 +1,16 @@
+id: IMPL-ECP-CHANNEL-TAG-ACCEPTANCE-001
+kind: implementation
+name: Reviewed acceptance of well-formed ECP channel tags
+plain_language: 'Coulomb_potential_data.sanity_check accepts every well-formed ECP table it must not reject: zero-coefficient
+  placeholder terms (PySCF''s H/He convention), atoms whose l_max differs from their neighbours, the canonical local-first
+  layout at several l_max values, and the shipped ccECP shapes produced by the fixed converter. The sibling PHY-ECP-CHANNEL-TAG-CONSISTENCY-001
+  guarantee owns the refusal side of the same check.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpError::test_sanity_check_accepts_zero_coefficient_terms
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpError::test_sanity_check_accepts_mixed_l_max_across_atoms
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpError::test_sanity_check_accepts_contiguous_channels
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpError::test_sanity_check_accepts_real_ccecp_shapes

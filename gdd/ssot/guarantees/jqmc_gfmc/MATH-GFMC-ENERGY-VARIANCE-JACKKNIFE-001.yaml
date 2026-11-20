@@ -1,0 +1,94 @@
+id: MATH-GFMC-ENERGY-VARIANCE-JACKKNIFE-001
+kind: mathematical
+name: GFMC energy and complex-twist variance against a walker-level weighted jackknife
+plain_language: >-
+  On ten explicit time slices with three unequally weighted walkers each, conventional and load-balanced
+  GFMC get_E (production accessors and their debug twins on COMM_SELF, and the production accessors on two
+  MPI ranks with root-owned moments and NaN-poisoned non-root buffers) return the energy mean, energy error,
+  variance mean and variance error of an independent weighted delete-one-block jackknife. Each replicate
+  averages the unaggregated walkers of the retained slices with explicit products of the preceding bare
+  weights; the energy replicate is Re<e_L> and the variance replicate is <|e_L|^2> - |<e_L>|^2 of the
+  complex replicate mean, the documented complex-observable convention shared with MCMC, never
+  (Re<e_L>)^2. Real and complex energies with non-small imaginary parts, a zero-width history with four
+  blocks and a two-step history with one warmup slice and three blocks (unequal blocks) are required in
+  full and mixed at the same-mode local_energy strict policy. This is deterministic stored-buffer
+  postprocessing: no sampling, wavefunction, propagation or statistical confidence band is certified.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_variance_matches_weighted_jackknife_modulus_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, implementation: production, complex_values: false, history: uniform}
+    - {driver_kind: conventional, implementation: production, complex_values: true, history: uniform}
+    - {driver_kind: conventional, implementation: production, complex_values: false, history: history-warmup}
+    - {driver_kind: conventional, implementation: production, complex_values: true, history: history-warmup}
+    - {driver_kind: load-balanced, implementation: production, complex_values: false, history: uniform}
+    - {driver_kind: load-balanced, implementation: production, complex_values: true, history: uniform}
+    - {driver_kind: load-balanced, implementation: production, complex_values: false, history: history-warmup}
+    - {driver_kind: load-balanced, implementation: production, complex_values: true, history: history-warmup}
+    - {driver_kind: conventional, implementation: debug, complex_values: false, history: uniform}
+    - {driver_kind: conventional, implementation: debug, complex_values: true, history: uniform}
+    - {driver_kind: conventional, implementation: debug, complex_values: false, history: history-warmup}
+    - {driver_kind: conventional, implementation: debug, complex_values: true, history: history-warmup}
+    - {driver_kind: load-balanced, implementation: debug, complex_values: false, history: uniform}
+    - {driver_kind: load-balanced, implementation: debug, complex_values: true, history: uniform}
+    - {driver_kind: load-balanced, implementation: debug, complex_values: false, history: history-warmup}
+    - {driver_kind: load-balanced, implementation: debug, complex_values: true, history: history-warmup}
+    executable_checks:
+      energy-mean:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_variance_matches_weighted_jackknife_modulus_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-energy-mean, expression: energy}
+        reference: {role: independent-weighted-jackknife-energy-mean, expression: expected_energy}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      energy-error:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_variance_matches_weighted_jackknife_modulus_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-energy-jackknife-error, expression: energy_error}
+        reference: {role: independent-weighted-jackknife-energy-error, expression: expected_energy_error}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      variance-mean:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_variance_matches_weighted_jackknife_modulus_reference#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-variance-mean, expression: variance}
+        reference: {role: independent-weighted-jackknife-modulus-variance-mean, expression: expected_variance}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      variance-error:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_energy_variance_matches_weighted_jackknife_modulus_reference#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-variance-jackknife-error, expression: variance_error}
+        reference: {role: independent-weighted-jackknife-modulus-variance-error, expression: expected_variance_error}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_gfmc_mpi_energy_variance_matches_weighted_jackknife_modulus_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, history: uniform, complex_values: false}
+    - {driver_kind: conventional, history: uniform, complex_values: true}
+    - {driver_kind: conventional, history: history-warmup, complex_values: false}
+    - {driver_kind: conventional, history: history-warmup, complex_values: true}
+    - {driver_kind: load-balanced, history: uniform, complex_values: false}
+    - {driver_kind: load-balanced, history: uniform, complex_values: true}
+    - {driver_kind: load-balanced, history: history-warmup, complex_values: false}
+    - {driver_kind: load-balanced, history: history-warmup, complex_values: true}
+    executable_checks:
+      energy-quartet:
+        site: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::_assert_energy_quartet#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: mpi-gfmc-energy-and-variance, expression: actual_value}
+        reference: {role: independent-weighted-jackknife-energy-and-modulus-variance, expression: expected_value}
+        iterations: {variable: quantity, required_values: [energy-mean, energy-error, variance-mean, variance-error]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}

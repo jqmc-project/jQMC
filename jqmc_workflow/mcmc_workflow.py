@@ -20,7 +20,7 @@ with ``jqmc-tool mcmc compute-energy`` to extract the VMC energy +/- error.
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -40,6 +40,7 @@ with ``jqmc-tool mcmc compute-energy`` to extract the VMC energy +/- error.
 import glob
 import os
 import re
+import shutil
 import subprocess
 import time
 from logging import getLogger
@@ -53,8 +54,8 @@ from ._error_estimator import (
 )
 from ._input_generator import generate_input_toml, resolve_with_defaults
 from ._job import get_num_mpi, load_queue_data
-from ._output_parser import parse_force_table
-from ._state import (
+from .forces_parser import parse_force_table, parse_pressure_table, parse_stress_table
+from .state import (
     CompletionStatus,
     WorkflowStatus,
     get_estimation,
@@ -117,11 +118,16 @@ class MCMC_Workflow(Workflow):
         Dt (float, optional):
             MCMC step size (bohr).  Default from ``jqmc_miscs``.
         epsilon_AS (float, optional):
-            Attacalite-Sorella regularization parameter.  Default from ``jqmc_miscs``.
+            Attaccalite-Sorella regularization parameter.  Default from ``jqmc_miscs``.
         num_mcmc_per_measurement (int, optional):
             MCMC updates per measurement.  Default from ``jqmc_miscs``.
         atomic_force (bool, optional):
             Compute atomic forces.  Default from ``jqmc_miscs``.
+        compute_stress (bool, optional):
+            Compute the symmetric stress tensor (Ha/bohr^3) and the
+            diagonal pressure; periodic systems only.  When true, the
+            ``stress`` / ``pressure`` tables are parsed from the ``jqmc``
+            output into ``output_values``.  Default from ``jqmc_miscs``.
         use_swct (bool, optional):
             Apply Space Warp Coordinate Transformation (SWCT) to atomic forces.
             Default is True for MCMC.
@@ -132,10 +138,15 @@ class MCMC_Workflow(Workflow):
         verbosity (str, optional):
             Verbosity level.  Default from ``jqmc_miscs``.
         poll_interval (int):
-            Seconds between job-status polls.
+            Seconds between job-status polls, and between
+            submission attempts while the queue's ``max_job_submit`` is reached.
         target_error (float):
             Target statistical error (Ha).  Ignored when
             *num_mcmc_steps* is set.
+        target_acceptance_ratio (float):
+            Target MCMC acceptance ratio for the ``Dt="auto"`` calibration,
+            which runs short MCMC jobs and fits ``Dt`` to this ratio.
+            Used only when ``Dt="auto"``.  Default 0.5.
         num_mcmc_steps (int, optional):
             Fixed number of measurement steps per production run.  When
             set, the pilot run is skipped and ``target_error`` is ignored;
@@ -154,6 +165,22 @@ class MCMC_Workflow(Workflow):
             (e.g. ``["restart.h5", "hamiltonian_opt*.h5"]``).  Local files
             are always removed; remote files are removed only when the
             workflow targets a remote machine.  Default *None* (no cleanup).
+        precision_mode (str):
+            Precision mode written to the ``[precision]`` section
+            (``mode``) of the generated TOML: ``"full"`` (all float64) or
+            ``"mixed"`` (mixed precision).  Default ``"full"``.
+        mpc (bool, optional):
+            Enable the passive MPC (Model Periodic Coulomb) finite-size
+            correction (``[coulomb] mpc``).  MPC is an energy-only
+            observable: it does not enter the sampled Hamiltonian, ``e_L``,
+            forces or parameter gradients; only the reported total energy
+            is corrected.  ``True`` enables it, ``False`` disables it,
+            *None* (default) omits the key so the jqmc default applies.
+        mpc_cutoff (float, optional):
+            Reciprocal-space kinetic-energy cutoff (Ha) for the MPC
+            reciprocal-space sum (``[coulomb] mpc_cutoff``).  A convergence
+            parameter.  *None* (default) omits the key so the driver
+            default applies.
 
     Examples:
         Standalone launch (automatic mode)::
@@ -182,7 +209,7 @@ class MCMC_Workflow(Workflow):
             enc = Container(
                 label="mcmc",
                 dirname="02_mcmc",
-                input_files=[FileFrom("vmc-opt", "hamiltonian_data_opt_step_9.h5")],
+                input_files=[FileFrom("vmc-opt", ValueFrom("vmc-opt", "optimized_hamiltonian"))],
                 rename_input_files=["hamiltonian_data.h5"],
                 workflow=MCMC_Workflow(
                     server_machine_name="cluster",
@@ -200,8 +227,10 @@ class MCMC_Workflow(Workflow):
         forces (object):
             Atomic forces (only when ``atomic_force=True``).
         num_mcmc_steps (int):
+            Measurement steps per production run (fixed-step mode).
+            In automatic mode this key is ``estimated_steps`` instead.
+        estimated_steps (int):
             Estimated total measurement steps (automatic mode).
-            In fixed-step mode this key is ``estimated_steps``.
 
     Notes:
         * The pilot run is skipped on re-entrance if an estimation already
@@ -225,10 +254,11 @@ class MCMC_Workflow(Workflow):
         num_mcmc_bin_blocks: int = 5,
         num_mcmc_warmup_steps: int = 0,
         # -- [mcmc] section parameters --
-        Dt: float | None = None,
+        Dt: float | str | None = None,
         epsilon_AS: float | None = None,
-        num_mcmc_per_measurement: int | None = None,
+        num_mcmc_per_measurement: int | str | None = None,
         atomic_force: bool | None = None,
+        compute_stress: bool | None = None,
         use_swct: bool | None = None,
         parameter_derivatives: bool | None = None,
         # -- [control] section parameters --
@@ -237,6 +267,7 @@ class MCMC_Workflow(Workflow):
         # -- workflow parameters --
         poll_interval: int = 60,
         target_error: float = 0.001,
+        target_acceptance_ratio: float = 0.5,
         num_mcmc_steps: int | None = None,
         pilot_steps: int = 100,
         pilot_queue_label: str | None = None,
@@ -244,6 +275,24 @@ class MCMC_Workflow(Workflow):
         cleanup_patterns: list | None = None,
         # -- [precision] section --
         precision_mode: str = "full",
+        # -- [coulomb] section --
+        # MPC (Model Periodic Coulomb) finite-size correction. Under the current
+        # design MPC is PASSIVE (``physical = no``): it is an energy-only
+        # observable. It does NOT enter the Hamiltonian, the branching weight,
+        # ``e_L``, ``aF`` or ``gF`` -- forces and parameter gradients stay on the
+        # Ewald channel. Only the REPORTED total energy is corrected
+        # (``E_MPC = E_Ewald + dE_mpc``).
+        #
+        # ``mpc``: True enables the correction, False explicitly disables it,
+        # None omits the key (and, with ``mpc_cutoff`` also None, the whole
+        # ``[coulomb]`` section) from the generated TOML -- the jqmc default.
+        mpc: bool | None = None,
+        # ``mpc_cutoff``: reciprocal-space kinetic-energy cutoff in HARTREE for
+        # the MPC reciprocal-space sum; default 30.0 (matching CASINO's
+        # ``mpc_cutoff`` and QMCPACK's ``cutoff``). This is a CONVERGENCE
+        # parameter, not a physical one: DOUBLE it until the correction stops
+        # changing. None omits the key from the TOML (driver default).
+        mpc_cutoff: float | None = None,
     ):
         super().__init__(cleanup_patterns=cleanup_patterns)
         self.server_machine_name = server_machine_name
@@ -258,7 +307,12 @@ class MCMC_Workflow(Workflow):
         self.Dt = Dt
         self.epsilon_AS = epsilon_AS
         self.num_mcmc_per_measurement = num_mcmc_per_measurement
+        # 'auto' resolves to 4 * total electrons, read once
+        # from the input h5 and cached so every continuation TOML writes the same
+        # concrete int (which must match the checkpoint's frozen value).
+        self._resolved_num_mcmc_per_measurement = None
         self.atomic_force = atomic_force
+        self.compute_stress = compute_stress
         self.use_swct = use_swct
         self.parameter_derivatives = parameter_derivatives
         # [control] section
@@ -267,14 +321,39 @@ class MCMC_Workflow(Workflow):
         # workflow
         self.poll_interval = poll_interval
         self.target_error = target_error
+        # Dt='auto' calibrates to this acceptance (pilot_a).
+        self.target_acceptance_ratio = target_acceptance_ratio
         self.num_mcmc_steps = num_mcmc_steps
         self.pilot_steps = pilot_steps
         self.pilot_queue_label = pilot_queue_label or queue_label
         self.max_continuation = max_continuation
         # [precision] section
         self.precision_mode = precision_mode
+        # [coulomb] section (passive MPC energy-only observable)
+        self.mpc = mpc
+        self.mpc_cutoff = mpc_cutoff
 
     # -- Input generation ------------------------------------------
+
+    def _resolve_num_mcmc_per_measurement(self, input_file):
+        """Expand ``num_mcmc_per_measurement='auto'`` -> 4 * total electrons.
+
+        'auto' is read once from the input Hamiltonian h5
+        (staged next to the generated TOML) and cached, so every continuation
+        writes the same concrete int -- matching the checkpoint's frozen value.
+        A concrete int, or ``None`` (-> misc default 40 via
+        ``resolve_with_defaults``), passes through unchanged. Policy stays in the
+        workflow; the driver only ever sees an integer.
+        """
+        from ._auto_params import resolve_workflow_num_mcmc_per_measurement
+
+        resolved, self._resolved_num_mcmc_per_measurement = resolve_workflow_num_mcmc_per_measurement(
+            self.num_mcmc_per_measurement,
+            self._resolved_num_mcmc_per_measurement,
+            self.hamiltonian_file,
+            input_file,
+        )
+        return resolved
 
     def _generate_input(
         self,
@@ -282,8 +361,14 @@ class MCMC_Workflow(Workflow):
         input_file,
         restart=False,
         restart_chk=None,
+        dt_override=None,
     ):
-        """Generate MCMC TOML input file."""
+        """Generate MCMC TOML input file.
+
+        ``dt_override`` forces a specific ``Dt`` for a
+        pilot_a calibration run, bypassing ``self.Dt`` (which is still ``'auto'``
+        during calibration).
+        """
         control_ov = resolve_with_defaults(
             "control",
             {
@@ -301,12 +386,13 @@ class MCMC_Workflow(Workflow):
             "mcmc",
             {
                 "num_mcmc_steps": num_steps,
-                "Dt": self.Dt,
+                "Dt": dt_override if dt_override is not None else self.Dt,
                 "epsilon_AS": self.epsilon_AS,
-                "num_mcmc_per_measurement": self.num_mcmc_per_measurement,
+                "num_mcmc_per_measurement": self._resolve_num_mcmc_per_measurement(input_file),
                 "num_mcmc_warmup_steps": self.num_mcmc_warmup_steps,
                 "num_mcmc_bin_blocks": self.num_mcmc_bin_blocks,
                 "atomic_force": self.atomic_force,
+                "compute_stress": self.compute_stress,
                 "use_swct": self.use_swct,
                 "parameter_derivatives": self.parameter_derivatives,
             },
@@ -317,6 +403,17 @@ class MCMC_Workflow(Workflow):
         }
         # Add [precision] section
         overrides["precision"] = {"mode": self.precision_mode}
+        # Add [coulomb] keys only when explicitly set; a None value omits that
+        # key (and, when both are None, the whole section) -- bit-identical to
+        # a TOML with no MPC at all. MPC is energy-only (``physical = no``):
+        # nothing here changes e_L, the branching weight, aF or gF.
+        coulomb_ov = {}
+        if self.mpc is not None:
+            coulomb_ov["mpc"] = bool(self.mpc)
+        if self.mpc_cutoff is not None:
+            coulomb_ov["mpc_cutoff"] = float(self.mpc_cutoff)
+        if coulomb_ov:
+            overrides["coulomb"] = coulomb_ov
         generate_input_toml(
             job_type="mcmc",
             overrides=overrides,
@@ -325,6 +422,10 @@ class MCMC_Workflow(Workflow):
 
     # -- Submit / poll / fetch -------------------------------------
     # _submit_and_wait() and _make_job() are inherited from Workflow.
+
+    def _get_command(self, input_file: str) -> str:
+        """MCMC reads a TOML; the script line is ``mpirun -np N jqmc <input>``."""
+        return f"jqmc {input_file}"
 
     # -- configure / run ------------------------------------------
 
@@ -396,12 +497,51 @@ class MCMC_Workflow(Workflow):
         if n_reconciled:
             logger.info(f"  Reconciled {n_reconciled} job record(s) to 'fetched' from existing output.")
 
+        # A fetched continuation may have failed before replacing its predecessor's
+        # checkpoint. Validate its output before trusting cached convergence or
+        # Phase B statistics and before calibration or another production job.
+        vstatus, vmsg = validate_completion(_wd)
+        if vstatus == CompletionStatus.FAILED:
+            logger.error(vmsg)
+            self.output_values["error"] = vmsg
+            self.status = WorkflowStatus.FAILED
+            return self.status, self.output_files, self.output_values
+
+        # -- Dt calibration (pilot_a) ------------------------------
+        # Resolve Dt='auto' to the step size hitting
+        # target_acceptance_ratio BEFORE either mode, mirroring LRDMC's pilot_a
+        # preceding pilot_b. self.Dt becomes a concrete float afterwards, so the
+        # step-estimation pilot / production see the tuned value.
+        if self.Dt == "auto":
+            await self._run_dt_calibration(_wd)
+
         # -- Fixed-step mode ---------------------------------------
         if self.num_mcmc_steps is not None:
             return await self._launch_fixed_steps(_wd)
 
         # -- Automatic mode (pilot + target_error) -----------------
         return await self._launch_auto(_wd)
+
+    async def _run_dt_calibration(self, _wd):
+        """pilot_a: calibrate ``Dt='auto'`` to ``target_acceptance_ratio``.
+
+        Delegates to the shared MCMC-sampling calibration; for MCMC the
+        calibration input is this workflow's own (MCMC) input at the trial Dt.
+        """
+        from ._auto_params import run_dt_calibration
+
+        def _gen(sub_dir, inp_f, dt_v):
+            self._generate_input(self.pilot_steps, os.path.join(sub_dir, inp_f), dt_override=dt_v)
+
+        self.Dt = await run_dt_calibration(
+            self,
+            _wd,
+            self.hamiltonian_file,
+            self.pilot_steps,
+            self.pilot_queue_label,
+            self.target_acceptance_ratio,
+            _gen,
+        )
 
     async def _launch_fixed_steps(self, _wd):
         """Fixed-step production: skip pilot, ignore target_error."""
@@ -415,12 +555,13 @@ class MCMC_Workflow(Workflow):
         for i in range(1, self.max_continuation + 1):
             recorded = get_job_by_step(_wd, i)
             status = recorded.get("status")
+            already_fetched = status == "fetched"
             if status == "fetched":
-                logger.info(f"  step {i}: already fetched. Skipping.")
-                step_files[i] = (recorded["input_file"], recorded["output_file"], recorded.get("run_id", ""))
-                last_run = i
-                continue
-            if status in ("submitted", "completed"):
+                input_i = recorded["input_file"]
+                output_i = recorded["output_file"]
+                run_id_i = recorded.get("run_id", "")
+                logger.info(f"  step {i}: already fetched. Validating before continuation.")
+            elif status in ("submitted", "completed"):
                 input_i = recorded["input_file"]
                 output_i = recorded["output_file"]
                 run_id_i = recorded.get("run_id", "")
@@ -445,47 +586,62 @@ class MCMC_Workflow(Workflow):
                 logger.info(f"-- MCMC Production run {i}/{self.max_continuation} " + "-" * 10)
                 logger.info(f"  {input_i}: {estimated_steps} steps")
 
-            restart_chk = self._find_restart_chk(_wd) if i > 1 else None
-            if i > 1 and restart_chk is None:
-                raise RuntimeError(f"No restart checkpoint found for continuation run {i}. Expected .h5 file in {_wd}")
-            extra_from = [restart_chk] if restart_chk else []
+            if not already_fetched:
+                restart_chk = self._find_restart_chk(_wd) if i > 1 else None
+                if i > 1 and restart_chk is None:
+                    raise RuntimeError(f"No restart checkpoint found for continuation run {i}. Expected .h5 file in {_wd}")
+                extra_from = [restart_chk] if restart_chk else []
 
-            await self._submit_and_wait(
-                input_i,
-                output_i,
-                work_dir=_wd,
-                extra_from_objects=extra_from,
-                step=i,
-                run_id=run_id_i,
-            )
+                await self._submit_and_wait(
+                    input_i,
+                    output_i,
+                    work_dir=_wd,
+                    extra_from_objects=extra_from,
+                    step=i,
+                    run_id=run_id_i,
+                )
             step_files[i] = (input_i, output_i, run_id_i)
             last_run = i
 
             # Post-process energy (informational only, no convergence check)
+            self.output_values.pop("energy", None)
+            self.output_values.pop("energy_error", None)
             restart_chk = self._find_restart_chk(_wd)
             if restart_chk:
-                energy, error = self._compute_energy(restart_chk, work_dir=_wd)
+                energy, error, dE_mpc, dE_mpc_error = self._compute_energy(restart_chk, work_dir=_wd, with_mpc=True)
                 if energy is not None:
                     self.output_values["energy"] = energy
                     self.output_values["energy_error"] = error
                     self.output_values["restart_chk"] = restart_chk
                     logger.info(f"  MCMC energy: {energy} +- {error} Ha")
+                    self._record_mpc_correction(dE_mpc, dE_mpc_error)
+                    if dE_mpc is not None:
+                        logger.info(f"  MPC correction: dE_MPC = {dE_mpc} +- {dE_mpc_error} Ha")
                     if self.atomic_force:
                         forces = self._compute_force(restart_chk, work_dir=_wd, output_file=output_i)
                         if forces is not None:
                             self.output_values["forces"] = forces
+                    if self.compute_stress:
+                        stress, pressure = self._compute_stress(work_dir=_wd, output_file=output_i)
+                        if stress is not None:
+                            self.output_values["stress"] = stress
+                        if pressure is not None:
+                            self.output_values["pressure"] = pressure
                     set_estimation(
                         _wd,
                         last_energy=energy,
                         last_energy_error=error,
+                        last_dE_mpc=dE_mpc,
+                        last_dE_mpc_error=dE_mpc_error,
                         last_num_mcmc_bin_blocks=self.num_mcmc_bin_blocks,
                         last_num_mcmc_warmup_steps=self.num_mcmc_warmup_steps,
                     )
 
             # -- Abnormal-termination guard (single source of truth) --
             # Fixed-step mode has no convergence criterion, so only the
-            # Program-ends / non-finite-energy checks are active here.
-            vstatus, vmsg = validate_completion(_wd, self.output_values)
+            # Program-ends / non-finite-energy / missing-energy checks are
+            # active here.
+            vstatus, vmsg = validate_completion(_wd, self.output_values, require_energy=True)
             if vstatus == CompletionStatus.FAILED:
                 logger.error(vmsg)
                 self.output_values["error"] = vmsg
@@ -496,19 +652,28 @@ class MCMC_Workflow(Workflow):
         last_output = step_files[last_run][1] if last_run in step_files else None
         restart_chk = self._find_restart_chk(_wd)
         if restart_chk:
-            energy, error = self._compute_energy(restart_chk, work_dir=_wd)
+            energy, error, dE_mpc, dE_mpc_error = self._compute_energy(restart_chk, work_dir=_wd, with_mpc=True)
             if energy is not None:
                 self.output_values["energy"] = energy
                 self.output_values["energy_error"] = error
                 self.output_values["restart_chk"] = restart_chk
+                self._record_mpc_correction(dE_mpc, dE_mpc_error)
                 if self.atomic_force:
                     forces = self._compute_force(restart_chk, work_dir=_wd, output_file=last_output)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress:
+                    stress, pressure = self._compute_stress(work_dir=_wd, output_file=last_output)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
                 set_estimation(
                     _wd,
                     last_energy=energy,
                     last_energy_error=error,
+                    last_dE_mpc=dE_mpc,
+                    last_dE_mpc_error=dE_mpc_error,
                     last_num_mcmc_bin_blocks=self.num_mcmc_bin_blocks,
                     last_num_mcmc_warmup_steps=self.num_mcmc_warmup_steps,
                 )
@@ -525,7 +690,7 @@ class MCMC_Workflow(Workflow):
 
     async def _launch_auto(self, _wd):
         """Automatic mode: pilot + target_error convergence."""
-        # -- Phase 0: pilot estimation (skip on continuation) ------
+        # -- Pilot estimation (skip on continuation) ---------------
         estimation = get_estimation(_wd)
 
         if estimation.get("estimated_steps") is not None:
@@ -540,7 +705,11 @@ class MCMC_Workflow(Workflow):
             h5_src = os.path.join(_wd, self.hamiltonian_file)
             h5_dst = os.path.join(pilot_dir, self.hamiltonian_file)
             if os.path.isfile(h5_src) and not os.path.exists(h5_dst):
-                os.symlink(h5_src, h5_dst)
+                try:
+                    os.symlink(h5_src, h5_dst)
+                except OSError:
+                    # Filesystems without symlink support (EOPNOTSUPP): copy.
+                    shutil.copy(h5_src, h5_dst)
 
             recorded_0 = get_job_by_step(pilot_dir, 0)
             status_0 = recorded_0.get("status")
@@ -558,7 +727,7 @@ class MCMC_Workflow(Workflow):
                 output_0 = self._output_filename(0, run_id_0)
                 self._generate_input(self.pilot_steps, os.path.join(pilot_dir, input_0))
             logger.info("")
-            logger.info("-- MCMC Phase 0: Pilot " + "-" * 27)
+            logger.info("-- MCMC pilot estimation " + "-" * 26)
             logger.info(f"  {input_0}: {self.pilot_steps} steps (queue: {self.pilot_queue_label})")
 
             pilot_t0 = time.monotonic()
@@ -648,12 +817,14 @@ class MCMC_Workflow(Workflow):
             )
             restart_chk = self._find_restart_chk(_wd)
             if restart_chk:
-                energy, error = self._compute_energy(restart_chk, work_dir=_wd)
+                energy, error, dE_mpc, dE_mpc_error = self._compute_energy(restart_chk, work_dir=_wd, with_mpc=True)
                 if energy is not None:
                     set_estimation(
                         _wd,
                         last_energy=energy,
                         last_energy_error=error,
+                        last_dE_mpc=dE_mpc,
+                        last_dE_mpc_error=dE_mpc_error,
                         last_num_mcmc_bin_blocks=self.num_mcmc_bin_blocks,
                         last_num_mcmc_warmup_steps=self.num_mcmc_warmup_steps,
                     )
@@ -674,15 +845,24 @@ class MCMC_Workflow(Workflow):
                     restart_chk=restart_chk or "",
                     estimated_steps=estimated_steps,
                 )
+                # Cached correction, written by the same set_estimation
+                # call as cached_energy (absent for a non-MPC run).
+                self._record_mpc_correction(estimation.get("last_dE_mpc"), estimation.get("last_dE_mpc_error"))
                 if self.atomic_force and restart_chk:
                     forces = self._compute_force(restart_chk, work_dir=_wd)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress and restart_chk:
+                    stress, pressure = self._compute_stress(work_dir=_wd)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
                 self.output_files = sorted(os.path.basename(f) for f in glob.glob(os.path.join(_wd, "*.h5")))
                 self.status = WorkflowStatus.COMPLETED
                 return self.status, self.output_files, self.output_values
 
-        # -- Production runs (phase 1..N) --------------------------
+        # -- Production runs ---------------------------------------
         # Three phases:
         #   A. Scan existing runs -> find resume point
         #   B. Re-estimate from accumulated data (if resuming)
@@ -716,7 +896,7 @@ class MCMC_Workflow(Workflow):
             _re_chk = self._find_restart_chk(_wd)
             if _re_chk is None:
                 raise RuntimeError(
-                    f"Phase B: {first_new_run - 1} prior run(s) marked fetched but no restart checkpoint found in {_wd}."
+                    f"Re-estimating from earlier runs: {first_new_run - 1} prior run(s) marked fetched but no restart checkpoint found in {_wd}."
                 )
             # mcmc_counter in restart.h5 is the only trustworthy source
             # for accumulated samples (planned step counts over-count
@@ -726,13 +906,15 @@ class MCMC_Workflow(Workflow):
                 warmup=warmup,
             )
             if actual is None:
-                raise RuntimeError(f"Phase B: cannot read mcmc_counter from {_re_chk} in {_wd}.")
+                raise RuntimeError(f"Re-estimating from earlier runs: cannot read mcmc_counter from {_re_chk} in {_wd}.")
             accumulated_measurement = actual
 
-            _re_energy, _re_error = self._compute_energy_cached(_re_chk, work_dir=_wd, accumulated=actual)
+            _re_energy, _re_error, _re_dE_mpc, _re_dE_mpc_error = self._compute_energy_cached(
+                _re_chk, work_dir=_wd, accumulated=actual, with_mpc=True
+            )
             if _re_energy is None or _re_error is None:
                 raise RuntimeError(
-                    f"Phase B: compute-energy failed for {_re_chk} in {_wd}. Cannot decide whether to resume or stop."
+                    f"Re-estimating from earlier runs: compute-energy failed for {_re_chk} in {_wd}. Cannot decide whether to resume or stop."
                 )
             if _re_error <= self.target_error * 1.05:
                 logger.info(f"  Target already met after prior runs: {_re_error:.6g} <= {self.target_error * 1.05:.6g} Ha")
@@ -741,10 +923,17 @@ class MCMC_Workflow(Workflow):
                     energy_error=_re_error,
                     restart_chk=_re_chk,
                 )
+                self._record_mpc_correction(_re_dE_mpc, _re_dE_mpc_error)
                 if self.atomic_force:
                     forces = self._compute_force(_re_chk, work_dir=_wd)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress:
+                    stress, pressure = self._compute_stress(work_dir=_wd)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
                 first_new_run = self.max_continuation + 1  # skip loop
             else:
                 _additional = estimate_additional_steps(
@@ -791,7 +980,7 @@ class MCMC_Workflow(Workflow):
                         restart_chk=restart_chk,
                     )
                 logger.info("")
-                logger.info(f"-- MCMC Phase 1: Production run {i}/{self.max_continuation} " + "-" * 10)
+                logger.info(f"-- MCMC production run {i}/{self.max_continuation} " + "-" * 15)
                 logger.info(f"  {input_i}: {estimated_steps} steps")
 
             need_restart = i > 1 or first_new_run > 1
@@ -836,7 +1025,7 @@ class MCMC_Workflow(Workflow):
             # -- Side-effects: compute energy from checkpoint (if any) --
             restart_chk = self._find_restart_chk(_wd)
             if restart_chk is None:
-                raise RuntimeError(f"Phase C: run {i} completed but no restart checkpoint found in {_wd}.")
+                raise RuntimeError(f"Production loop: run {i} completed but no restart checkpoint found in {_wd}.")
             # mcmc_counter in restart.h5 is the only trustworthy source for
             # accumulated samples (planned step counts over-count when the
             # run was cut short by max_time).
@@ -845,23 +1034,36 @@ class MCMC_Workflow(Workflow):
                 warmup=warmup,
             )
             if actual is None:
-                raise RuntimeError(f"Phase C: cannot read mcmc_counter from {restart_chk} in {_wd}.")
+                raise RuntimeError(f"Production loop: cannot read mcmc_counter from {restart_chk} in {_wd}.")
             accumulated_measurement = actual
-            energy, error = self._compute_energy_cached(restart_chk, work_dir=_wd, accumulated=actual)
+            energy, error, dE_mpc, dE_mpc_error = self._compute_energy_cached(
+                restart_chk, work_dir=_wd, accumulated=actual, with_mpc=True
+            )
             if energy is not None:
                 self.output_values["energy"] = energy
                 self.output_values["energy_error"] = error
                 self.output_values["restart_chk"] = restart_chk
                 logger.info(f"  MCMC energy: {energy} +- {error} Ha")
+                self._record_mpc_correction(dE_mpc, dE_mpc_error)
+                if dE_mpc is not None:
+                    logger.info(f"  MPC correction: dE_MPC = {dE_mpc} +- {dE_mpc_error} Ha")
                 if self.atomic_force:
                     forces = self._compute_force(restart_chk, work_dir=_wd, output_file=output_i)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress:
+                    stress, pressure = self._compute_stress(work_dir=_wd, output_file=output_i)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
 
                 set_estimation(
                     _wd,
                     last_energy=energy,
                     last_energy_error=error,
+                    last_dE_mpc=dE_mpc,
+                    last_dE_mpc_error=dE_mpc_error,
                     accumulated_measurement_steps=accumulated_measurement,
                     last_num_mcmc_bin_blocks=self.num_mcmc_bin_blocks,
                     last_num_mcmc_warmup_steps=self.num_mcmc_warmup_steps,
@@ -908,19 +1110,28 @@ class MCMC_Workflow(Workflow):
         last_output = step_files[last_run][1] if last_run in step_files else None
         restart_chk = self._find_restart_chk(_wd)
         if restart_chk:
-            energy, error = self._compute_energy_cached(restart_chk, work_dir=_wd)
+            energy, error, dE_mpc, dE_mpc_error = self._compute_energy_cached(restart_chk, work_dir=_wd, with_mpc=True)
             if energy is not None:
                 self.output_values["energy"] = energy
                 self.output_values["energy_error"] = error
                 self.output_values["restart_chk"] = restart_chk
+                self._record_mpc_correction(dE_mpc, dE_mpc_error)
                 if self.atomic_force:
                     forces = self._compute_force(restart_chk, work_dir=_wd, output_file=last_output)
                     if forces is not None:
                         self.output_values["forces"] = forces
+                if self.compute_stress:
+                    stress, pressure = self._compute_stress(work_dir=_wd, output_file=last_output)
+                    if stress is not None:
+                        self.output_values["stress"] = stress
+                    if pressure is not None:
+                        self.output_values["pressure"] = pressure
                 set_estimation(
                     _wd,
                     last_energy=energy,
                     last_energy_error=error,
+                    last_dE_mpc=dE_mpc,
+                    last_dE_mpc_error=dE_mpc_error,
                     accumulated_measurement_steps=accumulated_measurement,
                     last_num_mcmc_bin_blocks=self.num_mcmc_bin_blocks,
                     last_num_mcmc_warmup_steps=self.num_mcmc_warmup_steps,
@@ -946,7 +1157,32 @@ class MCMC_Workflow(Workflow):
                 return os.path.basename(matches[-1])
         return None
 
-    def _compute_energy_cached(self, restart_chk: str, work_dir: str, accumulated: int | None = None):
+    def _record_mpc_correction(self, dE_mpc: float | None, dE_mpc_error: float | None):
+        """Publish the MPC correction into ``output_values`` when present.
+
+        MPC is a passive, energy-only finite-size correction: ``energy``
+        stays the pure-Ewald value and the consumer forms
+        ``energy + dE_mpc`` itself, so the two error bars stay
+        separable.  The keys are left absent for a run without MPC.
+
+        Args:
+            dE_mpc (float or None):
+                ``dE_MPC`` from ``jqmc-tool mcmc compute-energy``.
+            dE_mpc_error (float or None):
+                Statistical error on the above.
+        """
+        if dE_mpc is None:
+            return
+        self.output_values["dE_mpc"] = dE_mpc
+        self.output_values["dE_mpc_error"] = dE_mpc_error
+
+    def _compute_energy_cached(
+        self,
+        restart_chk: str,
+        work_dir: str,
+        accumulated: int | None = None,
+        with_mpc: bool = False,
+    ):
         """Return (energy, error) using ``[estimation]`` cache when fresh.
 
         The cache (``last_energy`` / ``last_energy_error`` in
@@ -960,6 +1196,13 @@ class MCMC_Workflow(Workflow):
         refreshed via :func:`set_estimation` so that subsequent
         invocations within the same or later workflow runs short-circuit.
 
+        The MPC correction (``last_dE_mpc`` / ``last_dE_mpc_error``) is
+        always computed and always written in the *same*
+        :func:`set_estimation` call as the energy it belongs to, so a
+        cache hit can never pair an energy from one run with a
+        correction from another.  Writing *None* removes the keys (TOML
+        has no null), which is exactly what a run without MPC needs.
+
         Args:
             restart_chk (str):
                 Checkpoint filename (basename).
@@ -969,6 +1212,9 @@ class MCMC_Workflow(Workflow):
                 Pre-read ``mcmc_counter`` from ``restart.h5``.  Pass when
                 the caller has already computed it (Phase B / Phase C) to
                 avoid a redundant HDF5 read.
+            with_mpc (bool, optional):
+                Also return the MPC finite-size correction.  Default
+                *False* keeps the ``(energy, error)`` shape.
         """
         if accumulated is None:
             accumulated = read_accumulated_measurement_steps(
@@ -990,20 +1236,28 @@ class MCMC_Workflow(Workflow):
                 f"(acc={accumulated}, b={self.num_mcmc_bin_blocks}, "
                 f"w={self.num_mcmc_warmup_steps})"
             )
-            return e, err
-        energy, error = self._compute_energy(restart_chk, work_dir=work_dir)
+            if not with_mpc:
+                return e, err
+            return e, err, est.get("last_dE_mpc"), est.get("last_dE_mpc_error")
+        # Always parse the correction so the cache entry is complete
+        # regardless of what this particular caller asked for.
+        energy, error, dE_mpc, dE_mpc_error = self._compute_energy(restart_chk, work_dir=work_dir, with_mpc=True)
         if energy is not None and accumulated is not None:
             set_estimation(
                 work_dir,
                 last_energy=energy,
                 last_energy_error=error,
+                last_dE_mpc=dE_mpc,
+                last_dE_mpc_error=dE_mpc_error,
                 accumulated_measurement_steps=accumulated,
                 last_num_mcmc_bin_blocks=self.num_mcmc_bin_blocks,
                 last_num_mcmc_warmup_steps=self.num_mcmc_warmup_steps,
             )
-        return energy, error
+        if not with_mpc:
+            return energy, error
+        return energy, error, dE_mpc, dE_mpc_error
 
-    def _compute_energy(self, restart_chk: str, work_dir: str):
+    def _compute_energy(self, restart_chk: str, work_dir: str, with_mpc: bool = False):
         """Run ``jqmc-tool mcmc compute-energy`` against *restart_chk*.
 
         Always invokes ``jqmc-tool`` so that the returned (energy, error)
@@ -1017,10 +1271,15 @@ class MCMC_Workflow(Workflow):
                 Checkpoint filename (basename).
             work_dir (str):
                 Directory in which to run the command.
+            with_mpc (bool, optional):
+                Also return the MPC finite-size correction (*None* when
+                the run had ``mpc = false``).  Default *False* keeps the
+                ``(energy, error)`` return shape.
 
         Returns:
             tuple:
-                ``(energy, error)`` or ``(None, None)`` on failure.
+                ``(energy, error)``, or ``(energy, error, dE_mpc,
+                dE_mpc_error)`` when *with_mpc*.  All-*None* on failure.
         """
         cmd = [
             "jqmc-tool",
@@ -1043,22 +1302,55 @@ class MCMC_Workflow(Workflow):
                 check=True,
                 cwd=work_dir,
             )
-            return self._parse_energy_output(result.stdout)
+            return self._parse_energy_output(result.stdout, with_mpc=with_mpc)
         except FileNotFoundError as e:
             logger.error(f"compute-energy: '{cmd[0]}' not found on PATH ({e})")
-            return None, None
+            return (None, None, None, None) if with_mpc else (None, None)
         except subprocess.CalledProcessError as e:
             logger.error(f"compute-energy failed: {e.stderr}")
-            return None, None
+            return (None, None, None, None) if with_mpc else (None, None)
 
     @staticmethod
-    def _parse_energy_output(text: str):
-        """Parse ``E = <value> +- <error> Ha.`` from jqmc-tool output."""
+    def _parse_energy_output(text: str, with_mpc: bool = False):
+        """Parse ``E = <value> +- <error> Ha.`` from jqmc-tool output.
+
+        When the run had ``mpc = true``, jqmc-tool prints two extra lines
+        *after* the plain energy line::
+
+            MPC correction: dE_MPC = <value> +- <error> Ha.
+            Total Energy (MPC-corrected): E_MPC = <value> +- <error> Ha.
+
+        Neither confuses the plain-energy pattern: in ``dE_MPC =`` and
+        ``E_MPC =`` the ``E`` is followed by ``_``, not by whitespace or
+        ``=``, so ``search()`` still locks onto the first (pure-Ewald)
+        ``E = ...`` line.  MPC is a passive, energy-only finite-size
+        correction, so ``energy`` stays the pure-Ewald value and the
+        consumer forms ``energy + dE_mpc`` itself -- keeping the two
+        error bars separable.
+
+        Args:
+            text (str):
+                jqmc-tool stdout.
+            with_mpc (bool, optional):
+                Also return the MPC correction.  Default *False* keeps
+                the ``(energy, error)`` return shape.
+
+        Returns:
+            tuple:
+                ``(energy, error)``, or ``(energy, error, dE_mpc,
+                dE_mpc_error)`` when *with_mpc*.  Values are *None* when
+                the corresponding line is absent -- in particular the
+                correction is *None* for a run without MPC.
+        """
         pattern = re.compile(r"E\s*=\s*([+-]?\d+\.?\d*(?:[eE][+-]?\d+)?)\s*\+\-\s*(\d+\.?\d*(?:[eE][+-]?\d+)?)")
         match = pattern.search(text)
-        if match:
-            return float(match.group(1)), float(match.group(2))
-        return None, None
+        energy, error = (float(match.group(1)), float(match.group(2))) if match else (None, None)
+        if not with_mpc:
+            return energy, error
+        mpc_pattern = re.compile(r"dE_MPC\s*=\s*([+-]?\d+\.?\d*(?:[eE][+-]?\d+)?)\s*\+\-\s*(\d+\.?\d*(?:[eE][+-]?\d+)?)")
+        mpc_match = mpc_pattern.search(text)
+        dE_mpc, dE_mpc_error = (float(mpc_match.group(1)), float(mpc_match.group(2))) if mpc_match else (None, None)
+        return energy, error, dE_mpc, dE_mpc_error
 
     def _compute_force(self, restart_chk: str, work_dir: str, output_file: str | None = None):
         """Parse forces from *output_file* or run ``jqmc-tool mcmc compute-force``.
@@ -1142,3 +1434,58 @@ class MCMC_Workflow(Workflow):
         except subprocess.CalledProcessError as e:
             logger.error(f"compute-force failed: {e.stderr}")
             return None
+
+    def _compute_stress(self, work_dir: str, output_file: str | None = None):
+        """Parse ``Stress Tensor`` + ``Pressure`` tables from *output_file*.
+
+        Mirror of :meth:`_compute_force` but stress-only and fast-path-only.
+        ``jqmc-tool`` has no ``compute-stress`` subcommand yet, so we fall
+        back to ``(None, None)`` rather than spawning a tool process. When
+        the run was launched with ``compute_stress=True``, the ``jqmc`` CLI
+        emits both tables to its stdout via ``_log_stress_section`` and
+        these are picked up here.
+
+        Args:
+            work_dir: Directory containing *output_file*.
+            output_file: Basename of the ``jqmc`` stdout file. If *None*,
+                the most recently modified ``*.out`` in *work_dir* is
+                used (covers re-estimation paths that don't track the
+                per-step filename). Returns ``(None, None)`` if no
+                output file is found.
+
+        Returns:
+            ``(stress_dict, pressure_dict)`` -- either entry may be
+            *None* if the corresponding table is absent.
+        """
+        if output_file is None:
+            candidates = sorted(
+                glob.glob(os.path.join(work_dir, "*.out")),
+                key=os.path.getmtime,
+            )
+            if not candidates:
+                return None, None
+            out_path = candidates[-1]
+            output_file = os.path.basename(out_path)
+        else:
+            out_path = os.path.join(work_dir, output_file)
+        if not os.path.isfile(out_path):
+            return None, None
+        try:
+            with open(out_path) as fh:
+                text = fh.read()
+        except OSError:
+            return None, None
+        stress = parse_stress_table(text)
+        pressure = parse_pressure_table(text)
+        if stress is not None:
+            logger.info(
+                f"  Stress from {output_file}: "
+                f"sigma_xx={stress['sigma_xx']:+.6f}+-{stress['sigma_xx_err']:.6f} Ha/bohr^3, "
+                f"sigma_yy={stress['sigma_yy']:+.6f}+-{stress['sigma_yy_err']:.6f} Ha/bohr^3, "
+                f"sigma_zz={stress['sigma_zz']:+.6f}+-{stress['sigma_zz_err']:.6f} Ha/bohr^3"
+            )
+        if pressure is not None:
+            logger.info(
+                f"  Pressure from {output_file}: P_hydro={pressure['P_hydro']:+.6f}+-{pressure['P_hydro_err']:.6f} Ha/bohr^3"
+            )
+        return stress, pressure

@@ -1,0 +1,106 @@
+id: PHY-AO-LATTICE-PERIODICITY-001
+kind: physical
+name: Crystal symmetries of periodic atomic orbitals
+plain_language: 'Periodic atomic orbitals satisfy their defining crystal symmetries: value invariance under lattice translation
+  at Gamma, the Bloch phase at nonzero k, time-reversal pairing between k and -k, a Hermitian overlap, and continuity across
+  cell faces, edges, and corners.'
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf::test_pw_periodicity_under_lattice_translation
+    executable_checks:
+      d8-n-075:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPWLeaf.test_pw_periodicity_under_lattice_translation#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: v0
+        reference:
+          role: source-reference-value
+          expression: v1
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-BIT-EXACT-001
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf::test_bspline_periodicity_under_lattice_translation
+    executable_checks:
+      d8-n-076:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestBsplineLeaf.test_bspline_periodicity_under_lattice_translation#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: v0
+        reference:
+          role: source-reference-value
+          expression: v1
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-BIT-EXACT-001
+  - pytest_node: tests/test_jqmc_kernel/test_complex_pgto.py::TestComplexPGTO::test_bloch_boundary_condition_non_gamma_cart
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPGTOSemantics::test_pgto_complex_with_negated_k_is_TR_pair
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPGTOSemantics.test_pgto_complex_with_negated_k_is_TR_pair#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: ao_dn
+        reference:
+          role: existing-test-reference
+          expression: np.conj(ao_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPGTOSeamContinuity::test_pgto_continuity_across_each_face
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestPGTOSeamContinuity::test_pgto_continuity_across_corner_and_edges
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix::test_overlap_matrix_complex_composite_is_hermitian
+    executable_checks:
+      d8-n-077:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_complex_composite_is_hermitian#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: overlap
+        reference:
+          role: source-reference-value
+          expression: overlap.conj().T
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-LOOSE-BITZERO-001
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestOverlapMatrix.test_overlap_matrix_complex_composite_is_hermitian#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: overlap
+        reference:
+          role: existing-test-reference
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval

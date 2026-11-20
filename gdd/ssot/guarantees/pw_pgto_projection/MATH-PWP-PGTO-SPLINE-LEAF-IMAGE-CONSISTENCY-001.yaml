@@ -1,0 +1,25 @@
+id: MATH-PWP-PGTO-SPLINE-LEAF-IMAGE-CONSISTENCY-001
+kind: mathematical
+name: The pGTO + B-spline composite reproduces the plane-wave band at the spline knots with the leaf's image selection
+plain_language: >-
+  project_pw_to_pgto_spline subtracts the real-space periodic pGTO from the band before splining the
+  remainder, and the converter emits the pGTO half as a normalised periodic pGTO leaf; the subtraction must
+  include every lattice image the leaf keeps, so the composite leaf + spline equals the band at the spline
+  knots within AO_IMAGE_TRUNCATION_ATOL per unit normalised MO coefficient (the leaf
+  selects images at the normalisation-aware envelope tolerance; a subtraction that used the bare tolerance on
+  the raw primitive would never subtract an image the leaf keeps). For one Cartesian d shell
+  (alpha 4, coefficient 1) at (3.85, 3, 3) in a 6 Bohr cubic cell, a single Gamma band equal to the periodic
+  sum of x^2 exp(-alpha r^2) from its analytic Fourier coefficients on the 24^3 Miller box, and a quintic
+  spline on the 24^3 FFT grid, the built leaf keeps image (-1, 0, 0) and, at every spline knot, the sum of
+  the leaf (each normalised AO summed in numpy over the images read from the built leaf's ragged layout,
+  times its MO coefficient from _build_pgto_leaf_and_mo) and evaluate_spline_orbitals differs from the
+  cell-normalised plane-wave sum by at most AO_IMAGE_TRUNCATION_ATOL times the sum of the absolute MO
+  coefficients. Points between knots, non-Gamma twists, AO gradients and Laplacians are not claimed. The
+  check is host fp64 numpy in both precision modes; full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::test_pgto_spline_composite_reproduces_band_at_knots_with_leaf_image_set
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

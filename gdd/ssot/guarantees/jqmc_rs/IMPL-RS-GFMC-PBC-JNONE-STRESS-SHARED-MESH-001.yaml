@@ -1,0 +1,23 @@
+id: IMPL-RS-GFMC-PBC-JNONE-STRESS-SHARED-MESH-001
+kind: implementation
+name: The periodic LRDMC HF stress of a Jastrow-free wavefunction uses the shared rank-1 ECP mesh
+plain_language: >-
+  The production periodic real-Gamma LRDMC HF stress (PbcStressHfArgs::compute_gfmc, the native
+  observable context of the LRDMC drivers) drives gfmc_stress_ecp_pbc_withj for every Jastrow content. With an empty Jastrow its
+  Jastrow ratio is 1 and its Jastrow strain and drift are zero, and its ECP non-local stress is the shared rank-1
+  ecp_nonlocal_stress_mesh_pbc, instead of gfmc_stress_ecp_pbc_jnone, which recomputes every mesh candidate from
+  scratch and remains a parity-pinned kernel. On the committed Jastrow-free real-Gamma lithium ccECP fixtures
+  (spherical pGTO and composite pGTO+PW), two electron samples each, T-move and DLT-move, the kernel equals the XLA
+  jax.jacrev oracle of the affinely strained e_L^t within the periodic native-vs-XLA medium tolerance, max-norm
+  scaled by the largest stress entry. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_stress_pbc_jnone_shared_mesh.py::test_gfmc_stress_ecp_pbc_jnone_shared_mesh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: pbc_gamma_sphepgto_jnone, seed: 0, dltmove: false}
+    - {pattern: pbc_gamma_sphepgto_jnone, seed: 0, dltmove: true}
+    - {pattern: pbc_composite_jnone, seed: 0, dltmove: false}
+    - {pattern: pbc_composite_jnone, seed: 0, dltmove: true}

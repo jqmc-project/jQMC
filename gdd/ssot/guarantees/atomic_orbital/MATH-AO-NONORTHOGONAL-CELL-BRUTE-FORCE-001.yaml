@@ -1,0 +1,65 @@
+id: MATH-AO-NONORTHOGONAL-CELL-BRUTE-FORCE-001
+kind: mathematical
+name: Periodic pGTO values and overlap on non-orthogonal cells against brute-force lattice sums
+plain_language: >-
+  On triclinic, primitive FCC, hexagonal, monoclinic and a strongly skewed-basis cubic cell, with two atoms
+  strictly inside the home cell and s, p, d, f shells including a diffuse s exponent, periodic Cartesian and
+  spherical pGTO values at electrons inside and outside the home cell equal a brute-force lattice sum of the
+  open-boundary AO kernel over every image inside a Gaussian cutoff the test derives itself, at Gamma and at k
+  = (0.25, -0.1, 0.4). The Cartesian kernel is first pinned to a plain NumPy normalized GTO evaluated in the
+  ao_eval zone dtype (r - R formed in fp64), and the brute-force Bloch phase and image sum are reduced in the
+  ao_eval zone dtype. The periodic Cartesian overlap equals a brute-force sum
+  of whole-space primitive overlaps computed by Gauss-Hermite quadrature. AO values use the ao_eval strict
+  policy plus AO_IMAGE_TRUNCATION_ATOL; the overlap uses the det_eval strict policy. A halved AO image radius,
+  a cell.T image metric and a halved overlap image radius must each fail. Full and mixed are judged
+  separately. Nuclei outside the home cell are not claimed.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_periodic_pgto_values_match_bruteforce_image_sum
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_periodic_pgto_values_match_bruteforce_image_sum#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mol
+        reference:
+          role: existing-test-reference
+          expression: numpy_vals
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: triclinic_skewed, kind: cart}
+    - {cell_name: triclinic_skewed, kind: sphe}
+    - {cell_name: primitive_fcc_si, kind: cart}
+    - {cell_name: primitive_fcc_si, kind: sphe}
+    - {cell_name: hexagonal, kind: cart}
+    - {cell_name: hexagonal, kind: sphe}
+    - {cell_name: monoclinic, kind: cart}
+    - {cell_name: monoclinic, kind: sphe}
+    - {cell_name: skewed_basis_cubic6, kind: cart}
+    - {cell_name: skewed_basis_cubic6, kind: sphe}
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_periodic_overlap_matches_bruteforce_lattice_sum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: triclinic_skewed}
+    - {cell_name: primitive_fcc_si}
+    - {cell_name: hexagonal}
+    - {cell_name: monoclinic}
+    - {cell_name: skewed_basis_cubic6}
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_noncubic_oracles_reject_metric_and_truncation_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: halve-ao-image-radius}
+    - {fault: transpose-ao-image-metric}
+    - {fault: halve-overlap-image-radius}

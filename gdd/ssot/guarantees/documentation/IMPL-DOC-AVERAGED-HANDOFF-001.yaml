@@ -1,0 +1,35 @@
+id: IMPL-DOC-AVERAGED-HANDOFF-001
+kind: implementation
+name: Tutorials hand the average of the last 20 optimization steps to MCMC and LRDMC
+plain_language: >-
+  examples/copy_optimized_hamiltonian.py --average-last N selects the N dumps with the largest numeric step (ending at
+  --step when given), passes them in step order to jqmc-tool vmc average-wf, refuses fewer than N dumps unless
+  --allow-fewer is given, refuses a non-positive N, an existing destination (without running the tool) and a refusal by
+  the tool. Run as a subprocess on real Hamiltonian dumps it writes the NumPy mean of exactly the last N steps. The
+  staging model of the linear tutorials writes one dump per wf_dump_freq steps, continues the numbering of a restart and
+  counts the dumps available to --average-last. Every published hand-off into an MCMC or LRDMC directory of the linear
+  command-line tutorials averages the last 20 dumps with enough dumps available, hand-offs that start a further
+  optimization or a conversion copy one dump, and the Python API examples 12 and 13 dump every step and sample the
+  averaged file instead of the in-memory last step. The quoted energies of those tutorials are not covered: they come
+  from reference runs with the single-step hand-off.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_average_last_selects_the_numeric_window_and_refuses_short_or_existing
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_linear_staging_requires_enough_dumps_for_average_last
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {frequency: 1, steps: 150, restart_steps: 0, average: 20, accepted: true}
+    - {frequency: 10, steps: 150, restart_steps: 0, average: 20, accepted: false}
+    - {frequency: 10, steps: 150, restart_steps: 0, average: 15, accepted: true}
+    - {frequency: 1, steps: 10, restart_steps: 15, average: 20, accepted: true}
+    - {frequency: 1, steps: 10, restart_steps: 5, average: 20, accepted: false}
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_published_sampling_handoffs_average_the_last_20_steps
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_tutorial_helper_average_last_writes_the_numpy_mean_of_the_last_dumps
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

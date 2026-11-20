@@ -1,0 +1,16 @@
+id: IMPL-TA-OPT-DUMP-001
+kind: implementation
+name: Twist-averaged optimizer wavefunction dump
+plain_language: 'A twist-averaged optimisation dumps a COMPLETE combined hamiltonian_data_opt_step_N.h5 (all twists, shared
+  Jastrow plus each twist''s optimized MO/lambda payload) into dump_dir at the single-twist dump cadence, numbered by completed
+  optimisation steps, and never writes the rank-0-twist-only file: the inner optimizer dump is switched off on the twist
+  path, and without checkpoint_dir plus source_hamiltonian_path the run dumps nothing and warns. At N_twist == 1 the run writes
+  the single-twist dump of the optimizer.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_multi_twist_opt_step_dump_is_a_complete_combined_input
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_single_twist_keeps_the_historical_opt_step_dump
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_multi_twist_without_a_source_refuses_to_dump_a_single_twist_file

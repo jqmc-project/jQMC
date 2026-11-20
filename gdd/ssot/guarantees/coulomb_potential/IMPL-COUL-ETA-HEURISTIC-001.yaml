@@ -1,0 +1,80 @@
+id: IMPL-COUL-ETA-HEURISTIC-001
+kind: implementation
+name: Reviewed eta-heuristic contracts
+plain_language: The eta selector returns positive cutoffs satisfying its declared formulas on the cubic baseline, honors
+  an explicit override, and successfully builds finite eta-stable energies under extreme cell anisotropy. The separate PHY-COUL-ETA-INVARIANCE-001
+  guarantee owns the physical invariance claim.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEtaHeuristic::test_eta_iteration_heuristic_30bohr_cubic_baseline
+    executable_checks:
+      d8-n-118:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEtaHeuristic.test_eta_iteration_heuristic_30bohr_cubic_baseline#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: r_real_cut
+        reference:
+          role: source-reference-value
+          expression: sqrt_log / eta
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-119:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEtaHeuristic.test_eta_iteration_heuristic_30bohr_cubic_baseline#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: g_max
+        reference:
+          role: source-reference-value
+          expression: 2.0 * eta * sqrt_log
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEtaHeuristic::test_eta_iteration_heuristic_override_skips_selection
+    executable_checks:
+      d8-n-120:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEtaHeuristic.test_eta_iteration_heuristic_override_skips_selection#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: r_real_cut
+        reference:
+          role: source-reference-value
+          expression: sqrt_log / eta_target
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-121:
+        site: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEtaHeuristic.test_eta_iteration_heuristic_override_skips_selection#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: g_max
+        reference:
+          role: source-reference-value
+          expression: 2.0 * eta_target * sqrt_log
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEtaHeuristic::test_eta_iteration_heuristic_handles_extreme_anisotropy

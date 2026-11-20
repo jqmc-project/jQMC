@@ -1,0 +1,91 @@
+id: IMPL-AO-DEBUG-PRODUCTION-001
+kind: implementation
+name: Debug/production route parity of atomic-orbital evaluation
+plain_language: The optimized production evaluators (spherical/solid harmonics and every compute_AOs public route) equal
+  their straightforward debug twins on identical input.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestSphericalHarmonics::test_spherical_harmonics_debug_vs_production
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestSphericalHarmonics::test_solid_harmonics_debug_vs_production
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestSphericalHarmonics.test_solid_harmonics_debug_vs_production#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: S_l_m_debug
+        reference:
+          role: existing-test-reference
+          expression: S_l_m_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs::test_compute_AOs_public_vs_debug_molecular
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs.test_compute_AOs_public_vs_debug_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: prod
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs::test_compute_AOs_public_vs_debug_periodic
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs.test_compute_AOs_public_vs_debug_periodic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: prod
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+  - pytest_node: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs::test_compute_AOs_public_vs_debug_nongto
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_atomic_orbital.py::TestComputeAOs.test_compute_AOs_public_vs_debug_nongto#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: prod
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval

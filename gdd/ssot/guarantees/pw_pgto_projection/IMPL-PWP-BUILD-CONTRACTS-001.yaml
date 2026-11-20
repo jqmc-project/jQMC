@@ -1,0 +1,36 @@
+id: IMPL-PWP-BUILD-CONTRACTS-001
+kind: implementation
+name: Primitive-build contracts
+plain_language: pGTO primitive construction is uncontracted with the declared counts, ignores pswfc fit coefficients, evaluates
+  periodically on the declared grid, and filters diffuse shells by alpha_min; mismatched lengths are hard errors.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_build_pgto_primitives_counts
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_build_pgto_primitives_is_uncontracted_and_ignores_pswfc_fit_coefficients
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_eval_primitive_periodicity
+    executable_checks:
+      d8-n-457:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_eval_primitive_periodicity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: vals
+        reference:
+          role: source-reference-value
+          expression: vals_shift
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_grid_points_shape
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_filter_shells_by_alpha_min_drops_diffuse
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_build_pgto_primitives_length_mismatch

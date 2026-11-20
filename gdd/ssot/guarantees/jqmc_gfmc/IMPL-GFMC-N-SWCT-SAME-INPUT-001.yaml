@@ -1,0 +1,27 @@
+id: IMPL-GFMC-N-SWCT-SAME-INPUT-001
+kind: implementation
+name: GFMC_n same-input force check with the SWCT contraction on; SWCT and no-SWCT GFMC force targets and scope
+plain_language: >-
+  Declares the two GFMC force targets of the load-balanced driver: the no-SWCT force (raw Hellmann-Feynman and Pulay
+  leaves) and the SWCT force (the same leaves contracted with the jqmc.swct weights Omega plus the domega/2 term). The
+  no-SWCT target is the use_swct=False node of IMPL-GFMC-DEBUG-PRODUCTION-001 (TestGFMCBra.test_jqmc_gfmc_n). This
+  guarantee adds the SWCT target: the same node body is re-run with use_swct=True (seed 3446, two walkers, forty
+  intervals of ten hops, rotating meshes, force collection) on two-nucleus molecules, H2 all-electron J1+J2+J3 and H2
+  ccECP J1+J2+J3 with tmove and with dltmove, so the SWCT weight is not identically one. At every realized branching
+  step the per-walker force leaves and the assembled stored force_HF, force_PP and E_L*force_PP equal a same-input
+  reference that recomputes the leaves with fresh inverses and contracts the jqmc.swct weights explicitly; every
+  other comparison and tolerance of the no-SWCT node applies unchanged. Full and mixed are each judged with their own
+  existing strict/medium policy. Dropping the driver's Omega contraction of the up-spin Hellmann-Feynman leaf or its
+  domega/2 term fails every row in both modes. Scope boundary: SWCT under periodic boundary conditions,
+  differentiation of branching weights and multi-walker reconfiguration, and the
+  native Rust GFMC chunk are not covered.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra::test_jqmc_gfmc_n_swct
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {use_swct: true, trexio_file: H2_ae_ccpvdz_cart.h5, with_1b_jastrow: true, with_2b_jastrow: true, with_3b_jastrow: true, non_local_move: null}
+    - {use_swct: true, trexio_file: H2_ecp_ccpvdz_cart.h5, with_1b_jastrow: true, with_2b_jastrow: true, with_3b_jastrow: true, non_local_move: tmove}
+    - {use_swct: true, trexio_file: H2_ecp_ccpvdz_cart.h5, with_1b_jastrow: true, with_2b_jastrow: true, with_3b_jastrow: true, non_local_move: dltmove}

@@ -1,0 +1,4272 @@
+id: IMPL-RS-VMC-DRIVERS-001
+native_evidence:
+- jqmc_rs::mcmc::tests::kato_and_tratio_basic
+- jqmc_rs::mcmc::tests::metropolis_nan_ratio_rejects_like_xla
+- jqmc_rs::mcmc::tests::metropolis_threshold
+kind: implementation
+name: Rust/XLA parity of the VMC/MCMC driver components
+plain_language: The Rust MCMC transition, sweep, observable, force, and stress components reproduce the XLA drivers on identical
+  input, including PBC, twist, LSDA, and B-spline native runs.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+- VM-ERROR-DISPOSITION-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - {"pytest_node":"tests/test_rs_kernel/test_jastrow_skew_law.py::test_native_skew_j12_force_stress_matches_xla","required_precision_modes":["full","mixed"],"required_parameter_cases":[{"j1_form":"exp","j2_form":"pade","trexio_file":"H4_pbc_ae_cart.h5"},{"j1_form":"pade","j2_form":"exp","trexio_file":"H4_pbc_ae_cart.h5"}],"executable_checks":{"log-strain":{"site":"tests/test_rs_kernel/test_jastrow_skew_law.py::test_native_skew_j12_force_stress_matches_xla#comparison-1","comparator":"numpy.testing.assert_allclose","actual":{"role":"native-same-input","expression":"actual_log_strain"},"reference":{"role":"xla-same-precision","expression":"reference_log_strain"},"precision":{"full":{"policy":"CMP-XLA-RUST-MEDIUM-001","zones":["ao_eval","ao_grad_lap","det_eval","jastrow_eval"]},"mixed":{"policy":"CMP-XLA-RUST-MEDIUM-001","zones":["ao_eval","ao_grad_lap","det_eval","jastrow_eval"]}}},"kinetic-force":{"site":"tests/test_rs_kernel/test_jastrow_skew_law.py::test_native_skew_j12_force_stress_matches_xla#comparison-2","comparator":"numpy.testing.assert_allclose","actual":{"role":"native-same-input","expression":"actual_kinetic_force"},"reference":{"role":"xla-same-precision","expression":"reference_kinetic_force"},"precision":{"full":{"policy":"CMP-XLA-RUST-MEDIUM-001","zones":["ao_eval","ao_grad_lap","det_eval","wf_kinetic"]},"mixed":{"policy":"CMP-XLA-RUST-MEDIUM-001","zones":["ao_eval","ao_grad_lap","det_eval","wf_kinetic"]}}},"kinetic-strain":{"site":"tests/test_rs_kernel/test_jastrow_skew_law.py::test_native_skew_j12_force_stress_matches_xla#comparison-3","comparator":"numpy.testing.assert_allclose","actual":{"role":"native-same-input","expression":"actual_kinetic_strain"},"reference":{"role":"xla-same-precision","expression":"reference_kinetic_strain"},"precision":{"full":{"policy":"CMP-XLA-RUST-MEDIUM-001","zones":["ao_eval","ao_grad_lap","det_eval","wf_kinetic","jastrow_eval","jastrow_grad_lap"]},"mixed":{"policy":"CMP-XLA-RUST-MEDIUM-001","zones":["ao_eval","ao_grad_lap","det_eval","wf_kinetic","jastrow_eval","jastrow_grad_lap"]}}}}}
+  - pytest_node: tests/test_rs_kernel/test_mcmc_driver.py::test_move_draws_bit_exact
+  - pytest_node: tests/test_rs_kernel/test_mcmc_driver.py::test_kato_f_l_and_t_ratio_numpy
+    executable_checks:
+      d8-n-346:
+        site: tests/test_rs_kernel/test_mcmc_driver.py::test_kato_f_l_and_t_ratio_numpy#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: source-computed-value
+          expression: jqmc_rs._kato_f_l(z, r)
+        reference:
+          role: source-reference-value
+          expression: f
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+      d8-n-347:
+        site: tests/test_rs_kernel/test_mcmc_driver.py::test_kato_f_l_and_t_ratio_numpy#comparison-2
+        comparator: numpy.isclose
+        actual:
+          role: source-computed-value
+          expression: jqmc_rs._t_ratio(fl, fp, d2, dt)
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+  - pytest_node: tests/test_rs_kernel/test_mcmc_sweep.py::test_mcmc_sweep_matches_reference
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_sweep.py::test_mcmc_sweep_matches_reference#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: res['r_up']
+        reference:
+          role: existing-test-reference
+          expression: r_up
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_sweep.py::test_mcmc_sweep_matches_reference#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: res['r_dn']
+        reference:
+          role: existing-test-reference
+          expression: r_dn
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_sweep.py::test_mcmc_sweep_matches_reference#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: res['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: G_inv
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_mcmc_sweep_pbc.py::test_mcmc_sweep_pbc_matches_reference
+    executable_checks:
+      d8-n-348:
+        site: tests/test_rs_kernel/test_mcmc_sweep_pbc.py::test_mcmc_sweep_pbc_matches_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: res['r_up']
+        reference:
+          role: source-reference-value
+          expression: r_up
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      d8-n-349:
+        site: tests/test_rs_kernel/test_mcmc_sweep_pbc.py::test_mcmc_sweep_pbc_matches_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: res['r_dn']
+        reference:
+          role: source-reference-value
+          expression: r_dn
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_sweep_pbc.py::test_mcmc_sweep_pbc_matches_reference#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: res['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: G_inv
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_multi_sweep_parity
+    executable_checks:
+      d8-n-350:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-6
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: rk
+        reference:
+          role: source-reference-value
+          expression: xk
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      transition-parity-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_up']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_up']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_dn']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_dn']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-4:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal_inv']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-5:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-5
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs[name]
+        reference:
+          role: existing-test-reference
+          expression: xla[name]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+        iterations:
+          variable: name
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_move_by_move_transition
+    executable_checks:
+      d8-n-351:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-6
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: rk
+        reference:
+          role: source-reference-value
+          expression: xk
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      transition-parity-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_up']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_up']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_dn']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_dn']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-4:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal_inv']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-5:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-5
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs[name]
+        reference:
+          role: existing-test-reference
+          expression: xla[name]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+        iterations:
+          variable: name
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_forced_accept
+    executable_checks:
+      d8-n-352:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-6
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: rk
+        reference:
+          role: source-reference-value
+          expression: xk
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      transition-parity-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_up']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_up']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_dn']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_dn']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-4:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal_inv']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-5:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-5
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs[name]
+        reference:
+          role: existing-test-reference
+          expression: xla[name]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+        iterations:
+          variable: name
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_spin_and_edge_electron_index_cells
+    executable_checks:
+      d8-n-353:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-6
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: rk
+        reference:
+          role: source-reference-value
+          expression: xk
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      transition-parity-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_up']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_up']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_dn']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_dn']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-4:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal_inv']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-5:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-5
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs[name]
+        reference:
+          role: existing-test-reference
+          expression: xla[name]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+        iterations:
+          variable: name
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_near_node_configuration
+    executable_checks:
+      d8-n-354:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-6
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: rk
+        reference:
+          role: source-reference-value
+          expression: xk
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      transition-parity-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_up']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_up']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_dn']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_dn']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-4:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal_inv']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-5:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-5
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs[name]
+        reference:
+          role: existing-test-reference
+          expression: xla[name]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+        iterations:
+          variable: name
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_far_unwrapped_pbc_positions
+    executable_checks:
+      d8-n-355:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-6
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: rk
+        reference:
+          role: source-reference-value
+          expression: xk
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      transition-parity-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_up']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_up']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_dn']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_dn']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-4:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal_inv']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-5:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-5
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs[name]
+        reference:
+          role: existing-test-reference
+          expression: xla[name]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+        iterations:
+          variable: name
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+      comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::test_far_unwrapped_pbc_positions#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(rs['r_up']) - r_up_far
+        reference:
+          role: existing-test-reference
+          expression: xla['r_up'] - r_up_far
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_multiple_walkers
+    executable_checks:
+      d8-n-356:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-6
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: rk
+        reference:
+          role: source-reference-value
+          expression: xk
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      transition-parity-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_up']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_up']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['r_dn']
+        reference:
+          role: existing-test-reference
+          expression: xla['r_dn']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      transition-parity-comparison-4:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: xla['geminal_inv']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      transition-parity-comparison-5:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity#comparison-5
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: rs[name]
+        reference:
+          role: existing-test-reference
+          expression: xla[name]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+        iterations:
+          variable: name
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_rs_streaming_cache_no_drift
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::test_rs_streaming_cache_no_drift#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: one_shot['r_up']
+        reference:
+          role: existing-test-reference
+          expression: c_up
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::test_rs_streaming_cache_no_drift#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: one_shot['r_dn']
+        reference:
+          role: existing-test-reference
+          expression: c_dn
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+      comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::test_rs_streaming_cache_no_drift#comparison-3
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: one_shot['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: final_G_inv
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_mutation_check_corrupt_running_state_turns_red
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(single['r_up'])
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(sweep['r_up'])
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+        iterations:
+          variable: configuration_key_label
+          required_values:
+          - 0/0
+          - 0/1
+          - 0/2
+          - 0/3
+          - 0/4
+          - 0/5
+          - 0/6
+          - 0/7
+          - 0/8
+          - 0/9
+          - 0/10
+          - 0/11
+          - 1/0
+          - 1/1
+          - 1/2
+          - 1/3
+          - 1/4
+          - 1/5
+          - 1/6
+          - 1/7
+          - 1/8
+          - 1/9
+          - 1/10
+          - 1/11
+          - 2/0
+          - 2/1
+          - 2/2
+          - 2/3
+          - 2/4
+          - 2/5
+          - 2/6
+          - 2/7
+          - 2/8
+          - 2/9
+          - 2/10
+          - 2/11
+          - 3/0
+          - 3/1
+          - 3/2
+          - 3/3
+          - 3/4
+          - 3/5
+          - 3/6
+          - 3/7
+          - 3/8
+          - 3/9
+          - 3/10
+          - 3/11
+          - 4/0
+          - 4/1
+          - 4/2
+          - 4/3
+          - 4/4
+          - 4/5
+          - 4/6
+          - 4/7
+          - 4/8
+          - 4/9
+          - 4/10
+          - 4/11
+          - 5/0
+          - 5/1
+          - 5/2
+          - 5/3
+          - 5/4
+          - 5/5
+          - 5/6
+          - 5/7
+          - 5/8
+          - 5/9
+          - 5/10
+          - 5/11
+          - 6/0
+          - 6/1
+          - 6/2
+          - 6/3
+          - 6/4
+          - 6/5
+          - 6/6
+          - 6/7
+          - 6/8
+          - 6/9
+          - 6/10
+          - 6/11
+          - 7/0
+          - 7/1
+          - 7/2
+          - 7/3
+          - 7/4
+          - 7/5
+          - 7/6
+          - 7/7
+          - 7/8
+          - 7/9
+          - 7/10
+          - 7/11
+          - 8/0
+          - 8/1
+          - 8/2
+          - 8/3
+          - 8/4
+          - 8/5
+          - 8/6
+          - 8/7
+          - 8/8
+          - 8/9
+          - 8/10
+          - 8/11
+          - 9/0
+          - 9/1
+          - 9/2
+          - 9/3
+          - 9/4
+          - 9/5
+          - 9/6
+          - 9/7
+          - 9/8
+          - 9/9
+          - 9/10
+          - 9/11
+          - 10/0
+          - 10/1
+          - 10/2
+          - 10/3
+          - 10/4
+          - 10/5
+          - 10/6
+          - 10/7
+          - 10/8
+          - 10/9
+          - 10/10
+          - 10/11
+          - 11/0
+          - 11/1
+          - 11/2
+          - 11/3
+          - 11/4
+          - 11/5
+          - 11/6
+          - 11/7
+          - 11/8
+          - 11/9
+          - 11/10
+          - 11/11
+      comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::test_single_move_includes_j3_and_dtn_jastrow#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(single['geminal_inv'])
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(sweep['geminal_inv'])
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+        iterations:
+          variable: configuration_key_label
+          required_values:
+          - 0/0
+          - 0/1
+          - 0/2
+          - 0/3
+          - 0/4
+          - 0/5
+          - 0/6
+          - 0/7
+          - 0/8
+          - 0/9
+          - 0/10
+          - 0/11
+          - 1/0
+          - 1/1
+          - 1/2
+          - 1/3
+          - 1/4
+          - 1/5
+          - 1/6
+          - 1/7
+          - 1/8
+          - 1/9
+          - 1/10
+          - 1/11
+          - 2/0
+          - 2/1
+          - 2/2
+          - 2/3
+          - 2/4
+          - 2/5
+          - 2/6
+          - 2/7
+          - 2/8
+          - 2/9
+          - 2/10
+          - 2/11
+          - 3/0
+          - 3/1
+          - 3/2
+          - 3/3
+          - 3/4
+          - 3/5
+          - 3/6
+          - 3/7
+          - 3/8
+          - 3/9
+          - 3/10
+          - 3/11
+          - 4/0
+          - 4/1
+          - 4/2
+          - 4/3
+          - 4/4
+          - 4/5
+          - 4/6
+          - 4/7
+          - 4/8
+          - 4/9
+          - 4/10
+          - 4/11
+          - 5/0
+          - 5/1
+          - 5/2
+          - 5/3
+          - 5/4
+          - 5/5
+          - 5/6
+          - 5/7
+          - 5/8
+          - 5/9
+          - 5/10
+          - 5/11
+          - 6/0
+          - 6/1
+          - 6/2
+          - 6/3
+          - 6/4
+          - 6/5
+          - 6/6
+          - 6/7
+          - 6/8
+          - 6/9
+          - 6/10
+          - 6/11
+          - 7/0
+          - 7/1
+          - 7/2
+          - 7/3
+          - 7/4
+          - 7/5
+          - 7/6
+          - 7/7
+          - 7/8
+          - 7/9
+          - 7/10
+          - 7/11
+          - 8/0
+          - 8/1
+          - 8/2
+          - 8/3
+          - 8/4
+          - 8/5
+          - 8/6
+          - 8/7
+          - 8/8
+          - 8/9
+          - 8/10
+          - 8/11
+          - 9/0
+          - 9/1
+          - 9/2
+          - 9/3
+          - 9/4
+          - 9/5
+          - 9/6
+          - 9/7
+          - 9/8
+          - 9/9
+          - 9/10
+          - 9/11
+          - 10/0
+          - 10/1
+          - 10/2
+          - 10/3
+          - 10/4
+          - 10/5
+          - 10/6
+          - 10/7
+          - 10/8
+          - 10/9
+          - 10/10
+          - 10/11
+          - 11/0
+          - 11/1
+          - 11/2
+          - 11/3
+          - 11/4
+          - 11/5
+          - 11/6
+          - 11/7
+          - 11/8
+          - 11/9
+          - 11/10
+          - 11/11
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components
+    executable_checks:
+      w11-backend-medium-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+      w11-backend-medium-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: parts
+        reference:
+          role: existing-test-reference
+          expression: float(np.real(evaluate_ln_wavefunction(wf, ru, rd)))
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+      w11-backend-medium-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: native
+        reference:
+          role: existing-test-reference
+          expression: parts
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_local_energy_components
+    executable_checks:
+      w11-backend-medium-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_local_energy_components#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+      w11-backend-medium-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_local_energy_components#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - ewald
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - coulomb
+            - ewald
+      w11-backend-medium-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_local_energy_components#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_kinetic_electronwise
+    executable_checks:
+      w11-backend-medium-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_kinetic_electronwise#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: g
+        reference:
+          role: existing-test-reference
+          expression: r
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+      w11-backend-medium-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_kinetic_electronwise#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.array([det_re, det_im])
+        reference:
+          role: existing-test-reference
+          expression: np.array([ref_det.real, ref_det.imag])
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+      w11-backend-medium-comparison-3:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_kinetic_electronwise#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.array([withj_re, withj_im])
+        reference:
+          role: existing-test-reference
+          expression: np.array([ref_wj.real, ref_wj.imag])
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+      w11-backend-medium-comparison-4:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_kinetic_electronwise#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: g
+        reference:
+          role: existing-test-reference
+          expression: r
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_matrix_inverse_parity
+    executable_checks:
+      d8-n-357:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_matrix_inverse_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: got
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-RS-PARITY-VALUE-R-RS-PARITY-VALUE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-RS-PARITY-VALUE-R-RS-PARITY-VALUE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      d8-n-358:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_matrix_inverse_parity#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: G @ got
+        reference:
+          role: source-reference-value
+          expression: np.eye(G.shape[0])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-RS-PARITY-VALUE-R-RS-PARITY-VALUE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-RS-PARITY-VALUE-R-RS-PARITY-VALUE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_e_L
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: bspline_twist_jdtn}
+    executable_checks:
+      w11-backend-medium-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_e_L#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got.real
+        reference:
+          role: existing-test-reference
+          expression: ref.real
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+      w11-backend-medium-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_e_L#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got.imag
+        reference:
+          role: existing-test-reference
+          expression: ref.imag
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_e_L_component_closure
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: bspline_twist_jdtn}
+    executable_checks:
+      w11-backend-medium-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_e_L_component_closure#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: total
+        reference:
+          role: existing-test-reference
+          expression: float(np.real(_native_e_L(ham, ru, rd, ginv)))
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_order_equivariance
+    executable_checks:
+      d8-n-359:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_order_equivariance#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: permuted
+        reference:
+          role: source-reference-value
+          expression: base[perm]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_force
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_stress
+    executable_checks:
+      w11-backend-medium-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_stress#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+            - mo_grad
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_param_deriv
+    executable_checks:
+      w11-backend-medium-comparison-1:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_param_deriv#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.real(got)
+        reference:
+          role: existing-test-reference
+          expression: np.real(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+            - mo_grad
+      w11-backend-medium-comparison-2:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_param_deriv#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.imag(got)
+        reference:
+          role: existing-test-reference
+          expression: np.imag(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+            - mo_grad
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+            - wf_kinetic
+            - ao_grad_lap
+            - det_grad_lap
+            - jastrow_grad_lap
+            - coulomb
+            - ewald
+            - jastrow_ratio
+            - mo_grad
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_rust_on_off_handoff
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: twist_sphepgto_j12, comput_position_deriv: false, comput_stress: true, comput_param_deriv: false}
+  - pytest_node: tests/test_rs_kernel/test_single_move.py::test_single_move_matches_body
+    executable_checks:
+      d8-n-360:
+        site: tests/test_rs_kernel/test_single_move.py::test_single_move_matches_body#comparison-4
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: res['r_up']
+        reference:
+          role: source-reference-value
+          expression: ref['new_r_up']
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      d8-n-361:
+        site: tests/test_rs_kernel/test_single_move.py::test_single_move_matches_body#comparison-5
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: res['r_dn']
+        reference:
+          role: source-reference-value
+          expression: ref['new_r_dn']
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      comparison-1:
+        site: tests/test_rs_kernel/test_single_move.py::test_single_move_matches_body#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: res['det_t_ratio']
+        reference:
+          role: existing-test-reference
+          expression: ref['Det_T_ratio']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+      comparison-2:
+        site: tests/test_rs_kernel/test_single_move.py::test_single_move_matches_body#comparison-2
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: res['t_ratio']
+        reference:
+          role: existing-test-reference
+          expression: ref['T_ratio']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - jastrow_ratio
+      comparison-3:
+        site: tests/test_rs_kernel/test_single_move.py::test_single_move_matches_body#comparison-3
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: res['r_ratio']
+        reference:
+          role: existing-test-reference
+          expression: ref['R_ratio']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - jastrow_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - jastrow_ratio
+      comparison-6:
+        site: tests/test_rs_kernel/test_single_move.py::test_single_move_matches_body#comparison-6
+        comparator: numpy.allclose
+        actual:
+          role: existing-test-actual
+          expression: res['geminal_inv']
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref['G_inv_new'])
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_ratio
+  - pytest_node: tests/test_rs_kernel/test_tier2_sweep_state.py::test_sweep_emits_det_ratio_state
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_tier2_sweep_state.py::test_sweep_emits_det_ratio_state#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: got
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - det_ratio
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - det_ratio
+            - ao_eval
+        iterations:
+          variable: field
+          required_values:
+          - ao_up
+          - ao_dn
+          - paired_dn
+          - paired_up_lambda
+  - pytest_node: tests/test_rs_kernel/test_tier2_sweep_state.py::test_e_L_fast_consumes_rust_state
+    executable_checks:
+      d8-i-149:
+        site: tests/test_rs_kernel/test_tier2_sweep_state.py::test_e_L_fast_consumes_rust_state#inequality-1
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: ef
+        reference:
+          role: source-reference-value
+          expression: es
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - local_energy
+            - coulomb
+            - det_ratio
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - local_energy
+            - coulomb
+            - det_ratio
+            - ao_eval
+  - pytest_node: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - name: Cl2
+      seed: 0
+      dt: 1.5
+      eps: 0.0
+      warmup: 120
+      measurements: 700
+    - name: Cl2
+      seed: 1
+      dt: 1.5
+      eps: 0.0
+      warmup: 120
+      measurements: 700
+    - name: N2
+      seed: 0
+      dt: 1.5
+      eps: 0.0
+      warmup: 120
+      measurements: 700
+    - name: N2
+      seed: 1
+      dt: 1.5
+      eps: 0.0
+      warmup: 120
+      measurements: 700
+    executable_checks:
+      input-and-measurement-wiring:
+        site: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: observed-input-handoff-and-measurement-checks
+          expression: reference['wiring']
+        reference:
+          role: all-required-connections-held
+          expression: np.ones_like(reference['wiring'])
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      every-acceptance-and-key:
+        site: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: native-sweep-acceptance-counts-and-keys
+          expression: actual_decisions
+        reference:
+          role: independent-same-input-move-decisions-and-keys
+          expression: reference['decisions']
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      every-sweep-state:
+        site: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-sweep-coordinates-and-geminals
+          expression: actual_states
+        reference:
+          role: independent-sweep-coordinates-and-xla-recomputed-geminals
+          expression: reference['states']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      every-local-energy:
+        site: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-measured-local-energies
+          expression: result['samples']
+        reference:
+          role: xla-local-energies-at-every-measured-configuration
+          expression: reference['energies']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - local_energy
+            - coulomb
+            - det_ratio
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - local_energy
+            - coulomb
+            - det_ratio
+            - ao_eval
+      returned-mean:
+        site: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-vmc-returned-mean
+          expression: result['energy']
+        reference:
+          role: fixed-sample-fsum-reference-mean
+          expression: reference['mean']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - local_energy
+            - coulomb
+            - det_ratio
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - local_energy
+            - coulomb
+            - det_ratio
+            - ao_eval
+      returned-standard-error:
+        site: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-vmc-returned-finite-sample-standard-error
+          expression: result['stderr']
+        reference:
+          role: pairwise-sample-difference-reference-standard-error
+          expression: reference['stderr']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - local_energy
+            - coulomb
+            - det_ratio
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - local_energy
+            - coulomb
+            - det_ratio
+            - ao_eval
+      counted-acceptance-rate:
+        site: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: native-vmc-returned-acceptance-rate
+          expression: result['accept_rate']
+        reference:
+          role: independent-acceptance-count-over-prescribed-moves
+          expression: reference['accept_rate']
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      returned-coordinates:
+        site: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-vmc-returned-final-coordinates
+          expression: final_positions
+        reference:
+          role: independent-final-sweep-reference-coordinates
+          expression: reference['final_positions']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+            - ao_eval
+      every-saved-geminal-inverse:
+        site: tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-sweep-saved-geminal-inverses
+          expression: actual_inverses
+        reference:
+          role: fresh-numpy-inverses-of-the-same-saved-geminals
+          expression: reference['inverses']
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - det_ratio
+            - det_eval
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ae
+    executable_checks:
+      comparison-2:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ae#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nu)
+        reference:
+          role: existing-test-reference
+          expression: dru_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ae#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nd)
+        reference:
+          role: existing-test-reference
+          expression: drd_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-1:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ae#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nR)
+        reference:
+          role: existing-test-reference
+          expression: dR_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ecp
+    executable_checks:
+      comparison-2:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ecp#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nu)
+        reference:
+          role: existing-test-reference
+          expression: dru_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ecp#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nd)
+        reference:
+          role: existing-test-reference
+          expression: drd_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-1:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_e_l_ecp#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nR)
+        reference:
+          role: existing-test-reference
+          expression: dR_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_reused_inverse_near_node
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_reused_inverse_near_node#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nR)
+        reference:
+          role: existing-test-reference
+          expression: dR_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_reused_inverse_near_node#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nu)
+        reference:
+          role: existing-test-reference
+          expression: dru_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_reused_inverse_near_node#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nd)
+        reference:
+          role: existing-test-reference
+          expression: drd_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_ln_psi
+    executable_checks:
+      comparison-2:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_ln_psi#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nu)
+        reference:
+          role: existing-test-reference
+          expression: dru_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_ln_psi#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nd)
+        reference:
+          role: existing-test-reference
+          expression: drd_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-1:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_grad_ln_psi#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nR)
+        reference:
+          role: existing-test-reference
+          expression: dR_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_reused_inverse_near_node
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_reused_inverse_near_node#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nR)
+        reference:
+          role: existing-test-reference
+          expression: dR_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_reused_inverse_near_node#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nu)
+        reference:
+          role: existing-test-reference
+          expression: dru_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_reused_inverse_near_node#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nd)
+        reference:
+          role: existing-test-reference
+          expression: drd_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_and_hf_mo_wrapped_j3
+    executable_checks:
+      comparison-2:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_and_hf_mo_wrapped_j3#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nu)
+        reference:
+          role: existing-test-reference
+          expression: dru_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_and_hf_mo_wrapped_j3#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nd)
+        reference:
+          role: existing-test-reference
+          expression: drd_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-4:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_and_hf_mo_wrapped_j3#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nRh)
+        reference:
+          role: existing-test-reference
+          expression: dRh_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-5:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_and_hf_mo_wrapped_j3#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nuh)
+        reference:
+          role: existing-test-reference
+          expression: druh_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-6:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_and_hf_mo_wrapped_j3#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ndh)
+        reference:
+          role: existing-test-reference
+          expression: drdh_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-1:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_pulay_and_hf_mo_wrapped_j3#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nR)
+        reference:
+          role: existing-test-reference
+          expression: dR_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_hf_and_pulay_raw_sphe_j3
+    executable_checks:
+      comparison-2:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_hf_and_pulay_raw_sphe_j3#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nuh)
+        reference:
+          role: existing-test-reference
+          expression: druh_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-3:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_hf_and_pulay_raw_sphe_j3#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ndh)
+        reference:
+          role: existing-test-reference
+          expression: drdh_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-4:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_hf_and_pulay_raw_sphe_j3#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nR)
+        reference:
+          role: existing-test-reference
+          expression: dR_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-5:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_hf_and_pulay_raw_sphe_j3#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nu)
+        reference:
+          role: existing-test-reference
+          expression: dru_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-6:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_hf_and_pulay_raw_sphe_j3#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nd)
+        reference:
+          role: existing-test-reference
+          expression: drd_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-1:
+        site: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_hf_and_pulay_raw_sphe_j3#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nRh)
+        reference:
+          role: existing-test-reference
+          expression: dRh_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_pbc_real
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_pbc_complex
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_pbc_complex_mo_wrapped_j3
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_pbc_pure_pw
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_pbc_composite_pgto_pw_unwrapped_walker
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_pbc_h2_multielectron_periodic_j2
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces.py::test_vmc_force_pbc_mo_wrapped_j3
+  - pytest_node: tests/test_rs_kernel/test_vmc_forces_twist_exotic.py::test_vmc_force_twist_exotic
+    executable_checks:
+      d8-n-362:
+        site: tests/test_rs_kernel/test_vmc_forces_twist_exotic.py::test_vmc_force_twist_exotic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(nu)
+        reference:
+          role: source-reference-value
+          expression: dru_j
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+      d8-n-363:
+        site: tests/test_rs_kernel/test_vmc_forces_twist_exotic.py::test_vmc_force_twist_exotic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(nd)
+        reference:
+          role: source-reference-value
+          expression: drd_j
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+      d8-n-364:
+        site: tests/test_rs_kernel/test_vmc_forces_twist_exotic.py::test_vmc_force_twist_exotic#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(pR)
+        reference:
+          role: source-reference-value
+          expression: pR_j
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+      d8-n-365:
+        site: tests/test_rs_kernel/test_vmc_forces_twist_exotic.py::test_vmc_force_twist_exotic#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(pu)
+        reference:
+          role: source-reference-value
+          expression: pru_j
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+      d8-n-366:
+        site: tests/test_rs_kernel/test_vmc_forces_twist_exotic.py::test_vmc_force_twist_exotic#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(pd)
+        reference:
+          role: source-reference-value
+          expression: prd_j
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+      d8-n-367:
+        site: tests/test_rs_kernel/test_vmc_forces_twist_exotic.py::test_vmc_force_twist_exotic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(nR)
+        reference:
+          role: source-reference-value
+          expression: dR_j
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-FLOOR-MEDIUM-R-FLOOR-MEDIUM-001
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_real
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_composite
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: pbc_composite_jnone}
+    - {pattern: pbc_composite_j12}
+    - {pattern: 'QEPROJ:pw:Li_gamma:ECP'}
+    - {pattern: 'QE:Li_gamma_pgto+pw'}
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_composite#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: hf_n
+        reference:
+          role: existing-test-reference
+          expression: hf_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_composite#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: pp_n
+        reference:
+          role: existing-test-reference
+          expression: pp_j
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+            - coulomb
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_pgto_bspline_composite
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_bspline
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_mesh_fast_vs_ref_pgto
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_mesh_fast_vs_ref_bspline
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_mo_wrapped_j3
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_complex
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_complex_mo_wrapped_j3
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_pbc_h2_periodic_j2
+  - pytest_node: tests/test_rs_kernel/test_vmc_stress.py::test_vmc_stress_reused_inverse_near_node
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_lndet_R
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_lndet_R#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_V_R
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_V_R#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_T_R_jnone
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_T_R_jnone#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_T_R_withJ
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_T_R_withJ#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_lndet_R_sphe
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_lndet_R_sphe#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - det_eval
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_T_R_sphe
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_T_R_sphe#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_grad_lap
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_ecp_force_R
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_ecp_force_R#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_ecp_force_R_nn_filter
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_ecp_force_R_nn_filter#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+            - ao_eval
+            - mo_eval
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_ecp_local_force_R
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_ecp_local_force_R#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - coulomb
+  - pytest_node: tests/test_rs_kernel/test_forces.py::test_grad_J_dtn_R
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_forces.py::test_grad_J_dtn_R#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_forces_pbc.py::test_grad_T_pbc_R
+    executable_checks:
+      d8-i-112:
+        site: tests/test_rs_kernel/test_forces_pbc.py::test_grad_T_pbc_R#inequality-1
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: ana_np
+        reference:
+          role: source-reference-value
+          expression: ref_np
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+  - pytest_node: tests/test_rs_kernel/test_forces_pbc.py::test_grad_T_pbc_R_composite_j3
+    executable_checks:
+      d8-i-113:
+        site: tests/test_rs_kernel/test_forces_pbc.py::test_grad_T_pbc_R_composite_j3#inequality-1
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: ana
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+  - pytest_node: tests/test_rs_kernel/test_forces_pbc.py::test_grad_T_pbc_R_bspline
+    executable_checks:
+      d8-i-114:
+        site: tests/test_rs_kernel/test_forces_pbc.py::test_grad_T_pbc_R_bspline#inequality-1
+        comparator: python.inequality
+        actual:
+          role: source-computed-value
+          expression: ana
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - wf_kinetic
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+  - pytest_node: tests/test_rs_kernel/test_stress.py::test_grad_lnpsi_strain
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_stress.py::test_grad_lnpsi_strain#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - jastrow_eval
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - det_eval
+            - jastrow_eval
+  - pytest_node: tests/test_rs_kernel/test_stress.py::test_grad_el_strain_jnone
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_stress.py::test_grad_el_strain_jnone#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+  - pytest_node: tests/test_rs_kernel/test_stress.py::test_grad_el_strain_ecp
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_stress.py::test_grad_el_strain_ecp#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - wf_kinetic
+  - pytest_node: tests/test_rs_kernel/test_stress.py::test_grad_el_strain_withJ
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_stress.py::test_grad_el_strain_withJ#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_stress.py::test_grad_el_strain_withJ_sphe_agp_j12
+    executable_checks:
+      w11-backend-medium-caller:
+        site: tests/test_rs_kernel/test_stress.py::test_grad_el_strain_withJ_sphe_agp_j12#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ana)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ref)
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+            - jastrow_eval
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - wf_kinetic
+            - local_energy
+            - jastrow_eval
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_stress_pbc.py::test_grad_lnpsi_pbc_strain
+  - pytest_node: tests/test_rs_kernel/test_stress_pbc.py::test_grad_T_det_pbc_strain
+  - pytest_node: tests/test_rs_kernel/test_stress_pbc.py::test_grad_eL_pbc_ecp_strain
+  - pytest_node: tests/test_rs_kernel/test_stress_pbc.py::test_grad_eL_pbc_dtn_strain_uchi
+  - pytest_node: tests/test_rs_kernel/test_stress_pbc.py::test_grad_V_ecp_local_pbc_strain
+  - pytest_node: tests/test_rs_kernel/test_stress_pbc.py::test_dtn_value_strain_uchif
+  - pytest_node: tests/test_rs_kernel/test_stress_pbc.py::test_grad_T_pbc_strain_withJ
+  - pytest_node: tests/test_rs_kernel/test_stress_pbc.py::test_grad_T_pbc_strain_withJ_composite_j3
+  - pytest_node: tests/test_rs_kernel/test_periodic_lsda.py::test_local_energy_fast_lsda_gamma
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_periodic_lsda.py::test_local_energy_fast_lsda_gamma#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: native
+        reference:
+          role: existing-test-reference
+          expression: jax_eL
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_periodic_lsda.py::test_local_energy_fast_complex_lsda_twist
+    executable_checks:
+      comparison-1:
+        site: tests/test_rs_kernel/test_periodic_lsda.py::test_local_energy_fast_complex_lsda_twist#comparison-1
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: native.real
+        reference:
+          role: existing-test-reference
+          expression: jax_eL.real
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_rs_kernel/test_periodic_lsda.py::test_local_energy_fast_complex_lsda_twist#comparison-2
+        comparator: numpy.isclose
+        actual:
+          role: existing-test-actual
+          expression: native.imag
+        reference:
+          role: existing-test-reference
+          expression: jax_eL.imag
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_periodic_lsda.py::test_derivative_observables_lsda_gamma
+    executable_checks:
+      comparison-3:
+        site: tests/test_rs_kernel/test_periodic_lsda.py::test_derivative_observables_lsda_gamma#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: ok_native
+        reference:
+          role: existing-test-reference
+          expression: ok_ref[block]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+        iterations:
+          variable: block
+          required_values:
+          - mo_coefficients_up
+          - mo_coefficients_dn
+      comparison-4:
+        site: tests/test_rs_kernel/test_periodic_lsda.py::test_derivative_observables_lsda_gamma#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: el_native
+        reference:
+          role: existing-test-reference
+          expression: el_ref[block]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+        iterations:
+          variable: block
+          required_values:
+          - mo_coefficients_up
+          - mo_coefficients_dn
+  - pytest_node: tests/test_rs_kernel/test_periodic_lsda.py::test_derivative_observables_complex_open_shell_twist
+    executable_checks:
+      comparison-3:
+        site: tests/test_rs_kernel/test_periodic_lsda.py::test_derivative_observables_complex_open_shell_twist#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: ok_native
+        reference:
+          role: existing-test-reference
+          expression: ok_ref[block]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+        iterations:
+          variable: block
+          required_values:
+          - mo_coefficients_up
+          - mo_coefficients_dn
+      comparison-4:
+        site: tests/test_rs_kernel/test_periodic_lsda.py::test_derivative_observables_complex_open_shell_twist#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: el_native
+        reference:
+          role: existing-test-reference
+          expression: el_ref[block]
+        precision:
+          full:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-MEDIUM-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+        iterations:
+          variable: block
+          required_values:
+          - mo_coefficients_up
+          - mo_coefficients_dn
+  - pytest_node: tests/test_rs_kernel/test_bspline.py::test_bspline_native_vmc
+  - pytest_node: tests/test_rs_kernel/test_bspline.py::test_bspline_ao_stress_dcell
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject
+    executable_checks:
+      d8-n-369:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#comparison-1
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: xla['r_up']
+        reference:
+          role: source-reference-value
+          expression: r_up
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+      d8-n-370:
+        site: tests/test_rs_kernel/test_mcmc_transition.py::test_forced_reject#comparison-2
+        comparator: numpy.allclose
+        actual:
+          role: source-computed-value
+          expression: np.asarray(rs['r_up'])
+        reference:
+          role: source-reference-value
+          expression: r_up
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-BIT-EXACT-001
+  - pytest_node: tests/test_rs_kernel/test_mcmc_transition.py::test_nan_acceptance_ratio_rejects_like_xla
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_driver.py::test_metropolis_accept

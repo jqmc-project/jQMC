@@ -1,0 +1,562 @@
+id: IMPL-WF-FAST-UPDATE-001
+kind: implementation
+name: Fast and streaming evaluation equivalence
+plain_language: The fast kinetic update, the fast ln psi forward and backward paths, the streaming kinetic state (steps,
+  drift accumulation, edge cases, DTN advance, Jastrow combinations, walker-axis vmap), and the streaming J3 dispatches
+  all equal the full recomputation. The 150-hop adversarial near-node chain must actually enter the ill-conditioned regime
+  while keeping the derived mesh elements finite and preventing the streaming state from amplifying an oracle hopping rate
+  computed from the same carried inverse and determinant-ratio state. The chain runs the production per-hop refresh rule of
+  the GFMC_t and GFMC_n projection bodies. After every Sherman-Morrison update the carried inverse is screened by
+  the probe residual against the geminal of the post-hop caches and rebuilt from scratch when the residual exceeds
+  SM_INVERSE_REFRESH_RESIDUAL_THRESHOLD; the chain refreshes at least once, and in full precision its streamed mesh elements
+  equal the independent full recompute (no carried inverse, no carried state) on every hop the existing conditioning screen
+  accepts, of which there is at least one.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_mesh_chain_consistency.py::test_streaming_mesh_elements_track_oracle_over_adversarial_chain
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyFastUpdate::test_compute_kinetic_energy_all_elements_fast_update_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyFastUpdate.test_compute_kinetic_energy_all_elements_fast_update_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: ke_up_fast
+        reference:
+          role: existing-test-reference
+          expression: ke_up_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_ratio
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_ratio
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestKineticEnergyFastUpdate.test_compute_kinetic_energy_all_elements_fast_update_vs_debug#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: ke_dn_fast
+        reference:
+          role: existing-test-reference
+          expression: ke_dn_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_ratio
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_ratio
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestWavefunctionFastPath::test_evaluate_ln_wavefunction_fast_forward
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestWavefunctionFastPath.test_evaluate_ln_wavefunction_fast_forward#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: val_fast
+        reference:
+          role: existing-test-reference
+          expression: val_ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+            - wf_kinetic
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestWavefunctionFastPath::test_evaluate_ln_wavefunction_fast_backward
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingKineticState::test_streaming_kinetic_energy_step_consistency
+    executable_checks:
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_up_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_up_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_dn_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_dn_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingKineticState::test_streaming_kinetic_drift_accumulation
+    executable_checks:
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_up_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_up_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_dn_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_dn_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingKineticState::test_streaming_kinetic_edge_cases
+    executable_checks:
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_up_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_up_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_dn_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_dn_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingKineticState::test_streaming_kinetic_dtn_advance_consistency
+    executable_checks:
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_up_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_up_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_dn_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_dn_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingKineticState::test_streaming_kinetic_jastrow_combinations
+    executable_checks:
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_up_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_up_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::_streaming_step_consistency_one#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_dn_stream)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_dn_fresh)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingKineticState::test_streaming_kinetic_walker_axis_vmap
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingKineticState.test_streaming_kinetic_walker_axis_vmap#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_up_v[w])
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_up_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+        iterations:
+          variable: walker_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingKineticState.test_streaming_kinetic_walker_axis_vmap#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_dn_v[w])
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_dn_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+            - jastrow_grad_lap
+        iterations:
+          variable: walker_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingStateDispatches::test_streaming_discretized_kinetic_j3_state_consistency
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingStateDispatches.test_streaming_discretized_kinetic_j3_state_consistency#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(rup_st)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(rup_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingStateDispatches.test_streaming_discretized_kinetic_j3_state_consistency#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(rdn_st)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(rdn_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingStateDispatches.test_streaming_discretized_kinetic_j3_state_consistency#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(ke_st)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(ke_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingStateDispatches::test_streaming_ecp_nonlocal_j3_state_consistency
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingStateDispatches.test_streaming_ecp_nonlocal_j3_state_consistency#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(rup_st)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(rup_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingStateDispatches.test_streaming_ecp_nonlocal_j3_state_consistency#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(rdn_st)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(rdn_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingStateDispatches.test_streaming_ecp_nonlocal_j3_state_consistency#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(V_st)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(V_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestStreamingStateDispatches.test_streaming_ecp_nonlocal_j3_state_consistency#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(sV_st)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(sV_ref)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_canonical_streaming.py::test_canonical_streaming_kinetic_carries_sm_inverse
+    canonical_fixture:
+      suite: WF-SUITE-CORE-001
+      selector: pattern_id
+      operation: jqmc.wavefunction.canonical-sm-streaming-chain
+      comparison: streaming-kinetic
+      electron_configuration: {algorithm: numpy.random.PCG64.normal, seed: 864, scale: 0.6, configurations: 1, cond_G: finite-not-limited}
+      chain:
+        sweeps: 2
+        order: up-then-down-by-index
+        displacement_algorithm: numpy.random.PCG64.normal-continuation
+        displacement_scale: 0.04
+        inverse_comparison: carried-inverse
+        fast_comparison: fast-kinetic
+    executable_checks:
+      carried-inverse:
+        site: tests/test_jqmc_kernel/test_canonical_streaming.py::test_canonical_streaming_kinetic_carries_sm_inverse#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: sm-carried-inverse, expression: inverse}
+        reference: {role: fresh-inverse-at-current-positions, expression: fresh_inverse}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+      fast-kinetic:
+        site: tests/test_jqmc_kernel/test_canonical_streaming.py::test_canonical_streaming_kinetic_carries_sm_inverse#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: carried-inverse-fast-kinetic, expression: fast}
+        reference: {role: full-recomputation-kinetic, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, jastrow_grad_lap, det_ratio, wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, jastrow_grad_lap, det_ratio, wf_kinetic]}
+      streaming-kinetic:
+        site: tests/test_jqmc_kernel/test_canonical_streaming.py::test_canonical_streaming_kinetic_carries_sm_inverse#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: incremental-state-kinetic, expression: streaming}
+        reference: {role: full-recomputation-kinetic, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, jastrow_grad_lap, det_ratio, wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, jastrow_eval, jastrow_grad_lap, det_ratio, wf_kinetic]}
+      cached-geminal:
+        site: tests/test_jqmc_kernel/test_canonical_streaming.py::test_canonical_streaming_kinetic_carries_sm_inverse#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: all-hop-cached-geminals, expression: cached_g_history}
+        reference: {role: all-hop-fresh-position-geminals, expression: fresh_g_history}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+      same-g-inverse:
+        site: tests/test_jqmc_kernel/test_canonical_streaming.py::test_canonical_streaming_kinetic_carries_sm_inverse#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: all-hop-carried-inverses, expression: carried_inverse_history}
+        reference: {role: independent-inverses-of-same-cached-geminals, expression: cached_inverse_history}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [det_eval]}

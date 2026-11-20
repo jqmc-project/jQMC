@@ -1,0 +1,19 @@
+id: IMPL-TOOL-WAVEFUNCTION-CONVERSION-001
+kind: implementation
+name: Wavefunction conversion CLI round trip
+plain_language: For the selected molecular Cartesian and non-Gamma spherical H2 TREXIO SD inputs with nonzero Pade J2, conv-wf writes an AGP or AGPn Hamiltonian at the requested or default path without modifying the input. The reloaded output preserves structure, Coulomb and Jastrow data and the signed or complex wavefunction and log magnitude at three explicit electron configurations in the same precision mode. Missing, unknown or unsupported conversion targets are usage errors before Hamiltonian I/O. No arbitrary ansatz-to-ansatz or ill-conditioned coverage is claimed.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_wavefunction_conversion.py::test_cli_conversion_preserves_wavefunction_and_hamiltonian
+  - pytest_node: tests/test_jqmc_kernel/test_cli_wavefunction_conversion.py::test_cli_conversion_rejects_invalid_target_before_loading
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {target: null, force_color: false}
+    - {target: invalid-ansatz, force_color: false}
+    - {target: jsd, force_color: false}
+    - {target: null, force_color: true}
+    - {target: invalid-ansatz, force_color: true}
+    - {target: jsd, force_color: true}

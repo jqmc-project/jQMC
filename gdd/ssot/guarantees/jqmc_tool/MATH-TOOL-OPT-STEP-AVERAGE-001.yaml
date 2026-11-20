@@ -1,0 +1,51 @@
+id: MATH-TOOL-OPT-STEP-AVERAGE-001
+kind: mathematical
+name: vmc average-wf writes the uniform mean of exactly the optimized parameters and keeps every other leaf bitwise
+plain_language: >-
+  jqmc-tool vmc average-wf on several hamiltonian_data_opt_step_*.h5 files of one optimization writes, for
+  every variational-parameter leaf that differs between the inputs (J1/J2 scalars, the J3 matrix, the DTN independent
+  coefficients, the AGP lambda matrix, the AGPn lambda_diag, the determinant MO coefficients and the J3 AO radial
+  exponents and contraction coefficients), the arithmetic mean of the inputs in the stored dtype, equal to an independent
+  NumPy mean of the input HDF5 arrays; elements equal in every input keep the first input's bits. Every other dataset and
+  attribute, including parameters that were not optimized, is copied bitwise from the first input, and the averaged leaves
+  are exactly the leaves the inputs change, listed by hand for each optimized-parameter combination. Covered inputs are
+  molecular and periodic-Gamma single-twist files and combined twist dumps of the production twist dump writer (8 complex
+  twists, shared J1/J2 and per-twist MOs); a combined input gives a combined output that loads for every twist with unchanged k-points
+  and weights, and the time-reversal relation C_dn = conj(C_up) survives exactly. Every leaf that a published variational
+  block writes back through the production apply_block_update owners is accepted and averaged. The averaged single-twist
+  file reloads and its ln|Psi| at fixed electron positions is finite and equals that of the first input with the NumPy-mean
+  J1/J2/J3 and MO coefficients set directly, without re-orthonormalization. Real jqmc VMC steps (J1/J2/J3 + SD MOs) average
+  to the NumPy mean and the averaged file runs a jqmc MCMC with finite local energies. The physical quality of an average
+  over a non-converged trajectory is not claimed.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_average_wf_equals_numpy_mean_and_keeps_invariant_leaves
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: molecular-sd-j1j2j3-mo}
+    - {case: molecular-agp-j2-lambda}
+    - {case: molecular-agpn-j3-mo-lambda}
+    - {case: molecular-dtn}
+    - {case: molecular-sd-j2-j3basis}
+    - {case: pbc-gamma-sd-j2j3-mo}
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_average_wf_twist_equals_numpy_mean_and_round_trips
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_average_wf_accepts_every_leaf_the_optimizer_updates
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {base: molecular-sd}
+    - {base: molecular-agp}
+    - {base: molecular-agpn}
+    - {base: molecular-dtn}
+    - {base: pbc-gamma-sd}
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_average_wf_output_evaluates_the_mean_parameter_wavefunction
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {layout: molecular-sd}
+    - {layout: pbc-gamma-sd}
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_average_wf_of_real_optimizer_steps_runs_in_jqmc
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

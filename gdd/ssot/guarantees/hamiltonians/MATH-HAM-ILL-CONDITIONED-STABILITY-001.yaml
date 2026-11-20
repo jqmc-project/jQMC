@@ -1,0 +1,13 @@
+id: MATH-HAM-ILL-CONDITIONED-STABILITY-001
+kind: mathematical
+name: Local-energy stability for an ill-conditioned geminal matrix
+plain_language: On a deterministic open-shell N configuration, full precision targets 1e11 < cond_2(G) < 1e12 and mixed
+  precision targets 1e4 < cond_2(G) < 1e5. In both lanes sigma_min(G) is positive; the public wavefunction, analytical kinetic-energy
+  and local-energy entries remain finite and nonzero where required; and analytical kinetic energy agrees with its same-input
+  autodiff definition within the precision-specific cond_2(G)*eps_active amplification budget.
+verdict_methods:
+- VM-REGIME-CONDITIONED-PROOF-001
+required_evidence:
+- verdict_method: VM-REGIME-CONDITIONED-PROOF-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ill_conditioned_g.py::test_ill_conditioned_g_production_local_energy_is_finite_and_condition_accurate

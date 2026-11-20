@@ -8,7 +8,7 @@ at the root level.
 File layout::
 
     restart.h5
-    |-- _meta/                     (format_version, driver_type, mpi_size, ...)
+    |-- _meta/                     (driver_type, mpi_size, provenance, ...)
     |-- hamiltonian_data/          (shared, saved once)
     `-- rank_{R}/                  (per MPI rank)
         |-- driver_config/
@@ -17,11 +17,14 @@ File layout::
         |-- observables/
         `-- optimizer_state/       (VMCopt only)
 
-Write flow (mirrors the legacy zip approach)::
+Write flow::
 
     1. Each rank writes a temporary HDF5: ``._restart_rank{R}.h5``
     2. MPI Barrier
-    3. Rank 0 merges all temporaries + hamiltonian_data into one file
+    3. Rank 0 adds hamiltonian_data and consolidates the rank files. A
+       multi-rank merge stages the new checkpoint beside its destination
+       and publishes it before removing any rank files. For a single rank,
+       its groups can be relinked in place instead of copied.
     4. MPI Barrier
 
 Read flow::
@@ -44,7 +47,7 @@ Read flow::
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -64,79 +67,28 @@ Read flow::
 from __future__ import annotations
 
 import datetime
+import errno
 import os
-import pickle
+import shutil
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from contextlib import ExitStack, contextmanager
 from logging import getLogger
+from tempfile import TemporaryDirectory
 from typing import Any
 
 import h5py
 import numpy as np
 
-from .hamiltonians import Hamiltonian_data, _save_dataclass_to_hdf5
+from .hamiltonians import (
+    Hamiltonian_data,
+    _apply_ao_basis_dtype_alignment_post_load,
+    _apply_ewald_rebuild_post_load,
+    _apply_image_expansion_post_load,
+    _apply_jastrow_structure_backfill_post_load,
+    _save_dataclass_to_hdf5,
+)
 
 logger = getLogger("jqmc").getChild(__name__)
-
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-CHECKPOINT_FORMAT_VERSION = "1.0"
-
-
-def _get_jqmc_version() -> str:
-    """Return the jQMC version string, or 'unknown' if unavailable."""
-    try:
-        from ._version import __version__
-
-        return __version__
-    except Exception:
-        return "unknown"
-
-
-# ---------------------------------------------------------------------------
-# Optax state serialization (A+B hybrid)
-# ---------------------------------------------------------------------------
-
-
-def save_optax_state(group: h5py.Group, optax_state: Any) -> None:
-    """Save optax optimizer state as pickle bytes in an HDF5 dataset.
-
-    The state is stored as a single opaque (``np.void``) dataset so that
-    the file remains a valid HDF5.  If ``optax_state`` is ``None``, nothing
-    is written.
-
-    Args:
-        group: HDF5 group to write into (e.g. ``f["rank_0/optimizer_state"]``).
-        optax_state: The optax optimizer state (a pytree of NamedTuples).
-    """
-    if optax_state is None:
-        return
-    raw = pickle.dumps(optax_state, protocol=pickle.HIGHEST_PROTOCOL)
-    group.create_dataset("optax_state_pickle", data=np.void(raw))
-
-
-def load_optax_state(group: h5py.Group) -> Any | None:
-    """Load optax optimizer state from an HDF5 group.
-
-    Attempts ``pickle.loads`` first.  If that fails (e.g. after a JAX/optax
-    version change), returns ``None`` so the caller can re-initialise the
-    optimizer with ``optax_tx.init(params)``.
-
-    Args:
-        group: HDF5 group that may contain ``optax_state_pickle``.
-
-    Returns:
-        The restored optax state, or ``None`` on failure / absence.
-    """
-    if "optax_state_pickle" not in group:
-        return None
-    try:
-        raw = group["optax_state_pickle"][()]
-        return pickle.loads(raw.tobytes())
-    except Exception:
-        logger.warning("Could not restore optax state from checkpoint; it will be re-initialised.")
-        return None
-
 
 # ---------------------------------------------------------------------------
 # Per-rank checkpoint I/O (temporary file written by each rank)
@@ -181,7 +133,14 @@ def save_rank_checkpoint(
                 try:
                     cfg_grp.attrs[k] = v
                 except Exception:
-                    pass
+                    # An unserializable driver_config attribute would otherwise
+                    # be silently dropped and read back as missing on restart.
+                    # Name the dropped key so this is discoverable in the log.
+                    logger.warning(
+                        f"checkpoint save: could not serialize driver_config[{k!r}] "
+                        f"(type {type(v).__name__}); it will be MISSING on load.",
+                        exc_info=True,
+                    )
 
         # rng_state
         rng_grp = f.create_group("rng_state")
@@ -223,6 +182,12 @@ def save_rank_checkpoint(
             method = optimizer_state.get("method")
             if method is not None:
                 opt_grp.attrs["method"] = method
+            lineage_id = optimizer_state.get("wavefunction_lineage_id")
+            if lineage_id is not None:
+                opt_grp.attrs["wavefunction_lineage_id"] = lineage_id
+            revision = optimizer_state.get("wavefunction_revision")
+            if revision is not None:
+                opt_grp.attrs["wavefunction_revision"] = int(revision)
             hyperparams = optimizer_state.get("hyperparameters")
             if hyperparams is not None:
                 hp_grp = opt_grp.create_group("hyperparameters")
@@ -231,12 +196,13 @@ def save_rank_checkpoint(
                         try:
                             hp_grp.attrs[k] = v
                         except Exception:
-                            pass
-            optax_st = optimizer_state.get("optax_state")
-            save_optax_state(opt_grp, optax_st)
-            param_size = optimizer_state.get("optax_param_size")
-            if param_size is not None:
-                opt_grp.attrs["optax_param_size"] = param_size
+                            # Name an unserializable hyperparameter instead of
+                            # silently dropping it from the restart state.
+                            logger.warning(
+                                f"checkpoint save: could not serialize optimizer hyperparameter {k!r} "
+                                f"(type {type(v).__name__}); it will be MISSING on load.",
+                                exc_info=True,
+                            )
 
 
 def load_rank_checkpoint(filepath: str, rank: int) -> dict[str, Any]:
@@ -299,11 +265,15 @@ def load_rank_checkpoint(filepath: str, rank: int) -> dict[str, Any]:
         # optimizer_state
         if "optimizer_state" in rank_grp:
             opt_grp = rank_grp["optimizer_state"]
+            # The lineage id and revision are always written with the group;
+            # an absent one is returned as ``None`` (never defaulted) so the
+            # driver loader can reject the damaged rank collectively.
+            revision = opt_grp.attrs.get("wavefunction_revision")
             optimizer_state: dict[str, Any] = {
                 "method": opt_grp.attrs.get("method"),
                 "hyperparameters": None,
-                "optax_state": load_optax_state(opt_grp),
-                "optax_param_size": _convert_attr(opt_grp.attrs.get("optax_param_size")),
+                "wavefunction_lineage_id": _convert_attr(opt_grp.attrs.get("wavefunction_lineage_id")),
+                "wavefunction_revision": None if revision is None else int(revision),
             }
             if "hyperparameters" in opt_grp:
                 hp_grp = opt_grp["hyperparameters"]
@@ -359,37 +329,81 @@ def merge_rank_checkpoints(
         tmp_pattern: Filename pattern with ``{rank}`` placeholder.
         cleanup: Whether to remove temporary files after merging.
     """
-    # Remove existing output
-    if os.path.exists(output_path):
-        os.remove(output_path)
+    # Never publish a restartable checkpoint whose spins are not an
+    # opposite-twist pair (the restart reader refuses it as well).
+    from .determinant import require_opposite_spin_twists
 
-    with h5py.File(output_path, "w") as out:
-        # _meta
-        meta = out.create_group("_meta")
-        meta.attrs["format_version"] = CHECKPOINT_FORMAT_VERSION
-        meta.attrs["driver_type"] = driver_type
-        meta.attrs["mpi_size"] = mpi_size
-        meta.attrs["jqmc_version"] = _get_jqmc_version()
-        meta.attrs["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    require_opposite_spin_twists(hamiltonian_data.wavefunction_data.geminal_data)
+    use_in_place_merge = mpi_size == 1 and cleanup
+    rank_zero_path = tmp_pattern.format(rank=0)
+    with ExitStack() as staging:
+        if use_in_place_merge:
+            # A single-rank temporary already contains every large dataset
+            # needed by the final checkpoint. Relinking its root groups
+            # avoids copying the complete observable history.
+            checkpoint_path = rank_zero_path
+            checkpoint_mode = "r+"
+        else:
+            staging_dir = staging.enter_context(
+                TemporaryDirectory(
+                    dir=os.path.dirname(os.path.abspath(output_path)), prefix=".jqmc-merge-", ignore_cleanup_errors=True
+                )
+            )
+            checkpoint_path = os.path.join(staging_dir, "checkpoint.h5")
+            checkpoint_mode = "w"
 
-        # hamiltonian_data (saved once at root)
-        ham_grp = out.create_group("hamiltonian_data")
-        _save_dataclass_to_hdf5(ham_grp, hamiltonian_data)
+        with h5py.File(checkpoint_path, checkpoint_mode) as out:
+            if use_in_place_merge:
+                rank_data_names = tuple(out.keys())
+                out.create_group("rank_0")
+                for group_name in rank_data_names:
+                    out.move(group_name, f"rank_0/{group_name}")
 
-        # Copy each rank's data
+            meta = out.create_group("_meta")
+            meta.attrs["driver_type"] = driver_type
+            meta.attrs["mpi_size"] = mpi_size
+            from ._build_info import build_info
+
+            info = build_info()
+            meta.attrs["jqmc_version"] = info.version
+            meta.attrs["jqmc_git_commit"] = info.git_commit
+            meta.attrs["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+            hamiltonian_group = out.create_group("hamiltonian_data")
+            _save_dataclass_to_hdf5(hamiltonian_group, hamiltonian_data)
+
+            if not use_in_place_merge:
+                for rank in range(mpi_size):
+                    with h5py.File(tmp_pattern.format(rank=rank), "r") as tmp:
+                        out.copy(tmp, f"rank_{rank}")
+
+        # Closing HDF5 successfully is part of staging the complete file.
+        if not use_in_place_merge:
+            os.replace(checkpoint_path, output_path)
+
+    if cleanup and not use_in_place_merge:
         for rank in range(mpi_size):
-            tmp_path = tmp_pattern.format(rank=rank)
-            with h5py.File(tmp_path, "r") as tmp:
-                out.copy(tmp, f"rank_{rank}")
-            if cleanup:
-                os.remove(tmp_path)
+            os.remove(tmp_pattern.format(rank=rank))
+
+    if use_in_place_merge and os.path.abspath(rank_zero_path) != os.path.abspath(output_path):
+        try:
+            os.replace(rank_zero_path, output_path)
+        except OSError as exc:
+            if exc.errno != errno.EXDEV:
+                raise
+            # A custom tmp_pattern may cross filesystems, where a physical
+            # copy is unavoidable. Production keeps both paths together.
+            shutil.copyfile(rank_zero_path, output_path)
+            os.remove(rank_zero_path)
 
 
 def load_hamiltonian_from_checkpoint(filepath: str) -> Hamiltonian_data:
     """Load only the hamiltonian_data from a checkpoint file.
 
     Useful for post-processing tools that need the wavefunction but not
-    the per-rank QMC state.
+    the per-rank QMC state. Reads the actual Hamiltonian payload and re-expands every
+    periodic ``AOs_*_data`` instance to its image-tile form so the loaded
+    Hamiltonian is immediately usable by AO evaluation kernels.
 
     Args:
         filepath: Path to the merged checkpoint HDF5.
@@ -400,7 +414,32 @@ def load_hamiltonian_from_checkpoint(filepath: str) -> Hamiltonian_data:
     from .hamiltonians import _load_dataclass_from_hdf5
 
     with h5py.File(filepath, "r") as f:
-        return _load_dataclass_from_hdf5(Hamiltonian_data, f["hamiltonian_data"])
+        obj = _load_dataclass_from_hdf5(Hamiltonian_data, f["hamiltonian_data"])
+    obj = _apply_image_expansion_post_load(obj)
+    obj = _apply_ewald_rebuild_post_load(obj)
+    obj = _apply_jastrow_structure_backfill_post_load(obj)
+    # AO basis exponents/coefficients are fp64 model storage in both precision
+    # modes, as in Hamiltonian_data.load_from_hdf5 (issue #124): a checkpoint
+    # written while the mixed loader rounded them to float32 is widened
+    # exactly, and fp64 datasets are kept bit-for-bit.
+    obj = _apply_ao_basis_dtype_alignment_post_load(obj)
+    # Mirror Hamiltonian_data.load_from_hdf5's post-fixup validation.  In
+    # particular, a tied-spin occupied SD must not carry an independently
+    # modified down-spin leaf: the optimizer would otherwise replace it by
+    # conj(C_up) at the first update and discontinuously change the restarted
+    # wavefunction.
+    # Every geminal class must also be an opposite-twist spin pair: a
+    # checkpoint written with both spins at one twist is refused here, before
+    # any restarted sampling.
+    from .determinant import SD_data, require_opposite_spin_twists
+
+    loaded_geminal = obj.wavefunction_data.geminal_data
+    if isinstance(loaded_geminal, SD_data):
+        loaded_geminal.sanity_check()
+        if loaded_geminal.is_tiled_representation:
+            obj.sanity_check()
+    require_opposite_spin_twists(loaded_geminal)
+    return obj
 
 
 def load_checkpoint_meta(filepath: str) -> dict[str, Any]:
@@ -410,8 +449,9 @@ def load_checkpoint_meta(filepath: str) -> dict[str, Any]:
         filepath: Path to the merged checkpoint HDF5.
 
     Returns:
-        Dict with keys: ``format_version``, ``driver_type``, ``mpi_size``,
-        ``jqmc_version``, ``timestamp``.
+        Dict with keys: ``driver_type``, ``mpi_size``,
+        ``jqmc_version``, ``timestamp``; checkpoints written since issue #183
+        also carry ``jqmc_git_commit``.
     """
     meta: dict[str, Any] = {}
     with h5py.File(filepath, "r") as f:
@@ -432,6 +472,191 @@ def get_checkpoint_num_ranks(filepath: str) -> int:
     """
     with h5py.File(filepath, "r") as f:
         return sum(1 for k in f.keys() if k.startswith("rank_"))
+
+
+def _validate_restart_rank_topology(filepath: str, requested_size: int) -> None:
+    """Reject restart topologies that would discard or duplicate rank state.
+
+    ``requested_size`` belongs to the sampling communicator, not necessarily
+    COMM_WORLD: a twist checkpoint stores one intra-twist communicator.
+    Raw checkpoint readers and postprocessors may still read individual ranks.
+    This check runs only at the driver/CLI restart boundary, never in a sampler
+    loop. It validates group names and metadata without loading their payloads.
+    """
+    integer_types = (int, np.integer)
+    if isinstance(requested_size, (bool, np.bool_)) or not isinstance(requested_size, integer_types) or requested_size < 1:
+        raise ValueError("Restart sampling communicator size must be a positive integer.")
+    with h5py.File(filepath, "r") as checkpoint:
+        if "_meta" not in checkpoint or not isinstance(checkpoint["_meta"], h5py.Group):
+            raise ValueError("Checkpoint rank metadata is missing or invalid.")
+        stored_size = checkpoint["_meta"].attrs.get("mpi_size")
+        if isinstance(stored_size, (bool, np.bool_)) or not isinstance(stored_size, integer_types) or stored_size < 1:
+            raise ValueError("Checkpoint rank metadata mpi_size must be a positive integer.")
+        rank_names = {name for name in checkpoint if name.startswith("rank_")}
+        if len(rank_names) != stored_size:
+            raise ValueError("Checkpoint rank metadata does not match the stored rank groups.")
+        # Check the count first: corrupt, enormous mpi_size metadata must not
+        # allocate an enormous range before being rejected.
+        if rank_names != {f"rank_{rank}" for rank in range(len(rank_names))}:
+            raise ValueError("Checkpoint rank groups must be contiguous rank_0 through rank_(mpi_size-1).")
+        if any(not isinstance(checkpoint[name], h5py.Group) for name in rank_names):
+            raise ValueError("Checkpoint rank entries must be HDF5 groups.")
+        if stored_size != requested_size:
+            raise ValueError(
+                f"Restart MPI size mismatch: checkpoint has {stored_size} ranks, "
+                f"sampling communicator has {requested_size}. Restart with the original sampling rank count."
+            )
+
+
+# ---------------------------------------------------------------------------
+# Restart-state consistency across ranks (issues #805, #806, #807)
+# ---------------------------------------------------------------------------
+
+
+def missing_restart_keys(group: str, mapping: Mapping[str, Any], keys: Iterable[str]) -> list[str]:
+    """Return ``group/key`` for each required restart key absent from ``mapping``.
+
+    Restart state that the current writer always writes is required: a
+    checkpoint lacking it is damaged or legacy and is rejected, never
+    defaulted.
+    """
+    return [f"{group}/{key}" for key in keys if key not in mapping]
+
+
+def history_length_errors(
+    observables: Mapping[str, Any], names: Iterable[str], expected_rows: int, counter: int
+) -> list[tuple[str, str]]:
+    """Compare stored history row counts with what the restored step counter requires.
+
+    An empty history is not written, so an absent observable has zero rows.
+    """
+    errors = []
+    for name in names:
+        rows = int(np.shape(observables[name])[0]) if name in observables and np.size(observables[name]) else 0
+        if rows != expected_rows:
+            errors.append(
+                (
+                    f"observables/{name}",
+                    f"stores {rows} rows, but driver_config/mcmc_counter = {counter} requires {expected_rows}",
+                )
+            )
+    return errors
+
+
+def load_rank_checkpoint_for_restart(filepath: str, rank: int) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    """Read one rank group for a driver restart without raising on that rank alone.
+
+    Returns ``(data, problems)``. When a required sub-group of ``rank_{rank}``
+    is absent, ``data`` is ``None`` and ``problems`` names it, so the caller
+    passes it to :func:`raise_on_restart_inconsistency` together with its
+    peers instead of raising before them.
+    """
+    try:
+        return load_rank_checkpoint(filepath, rank=rank), {}
+    except KeyError as exc:
+        return None, {"errors": [("", f"required checkpoint group is missing ({exc})")]}
+
+
+def walker_shape_errors(
+    walker_state: Mapping[str, Any],
+    *,
+    num_walkers: Any,
+    num_electron_up: int,
+    num_electron_dn: int,
+    filepath: str,
+) -> list[tuple[str, str]]:
+    """:func:`validate_restored_walker_shapes` as a rank-local problem list (empty when valid)."""
+    try:
+        validate_restored_walker_shapes(
+            walker_state["latest_r_up_carts"],
+            walker_state["latest_r_dn_carts"],
+            num_walkers=num_walkers,
+            num_electron_up=num_electron_up,
+            num_electron_dn=num_electron_dn,
+            filepath=filepath,
+        )
+    except ValueError as exc:
+        return [("walker_state", str(exc))]
+    return []
+
+
+def _agreement_value(value: Any) -> Any:
+    """Return a picklable, ``==``-comparable form of a restored value."""
+    if isinstance(value, np.ndarray):
+        return ("ndarray", str(value.dtype), value.shape, value.tolist())
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
+def restart_state_problems(records: Sequence[Mapping[str, Any]]) -> list[str]:
+    """Return the restart-state problems found in the gathered per-rank records.
+
+    Pure function of the records every rank gathered, so every rank derives
+    the same list. Each record holds ``rank`` (the checkpoint group index),
+    ``missing`` (``group/key`` paths absent on that rank), ``errors``
+    (``(group, message)`` pairs) and ``agreed`` (values that must be identical
+    on every rank). A value absent on some rank is reported through ``missing``
+    by the caller and is not compared.
+    """
+    problems = []
+    for record in records:
+        rank = record["rank"]
+        problems.extend(f"rank_{rank}/{path}: required restart key is missing" for path in record["missing"])
+        problems.extend(f"rank_{rank}{'/' + group if group else ''}: {message}" for group, message in record["errors"])
+    keys = sorted({key for record in records for key in record["agreed"]})
+    for key in keys:
+        values = [(record["rank"], record["agreed"][key]) for record in records if key in record["agreed"]]
+        if len(values) == len(records) and any(value != values[0][1] for _, value in values[1:]):
+            listing = ", ".join(f"rank_{rank}={value!r}" for rank, value in values)
+            problems.append(f"{key} differs across ranks: {listing}")
+    return problems
+
+
+def raise_on_restart_inconsistency(
+    comm: Any,
+    *,
+    context: str,
+    rank: int,
+    missing: Sequence[str] = (),
+    errors: Sequence[tuple[str, str]] = (),
+    agreed: Mapping[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Raise the same ``ValueError`` on every rank when any rank's restart state is unusable.
+
+    Every rank of ``comm`` must call this at the same point, before any
+    decision taken from restored state reaches a collective: one allgather of
+    the per-rank records, then :func:`restart_state_problems` on the gathered
+    list. No rank raises alone, and no default replaces a missing key.
+
+    Args:
+        comm: Sampling communicator whose ranks restore one group each.
+        context: What is being restored, e.g. ``"MCMC restart from 'restart.h5'"``.
+        rank: This rank's checkpoint group index (``rank_{rank}``).
+        missing: This rank's absent required ``group/key`` paths.
+        errors: This rank's other ``(group, message)`` problems.
+        agreed: Values that must be identical on every rank.
+
+    Returns:
+        The gathered records (rank order), so that a caller can take a
+        collective decision, e.g. a fresh optimizer lineage when every rank
+        lacks one.
+    """
+    record = {
+        "rank": int(rank),
+        "missing": [str(path) for path in missing],
+        "errors": [(str(group), str(message)) for group, message in errors],
+        "agreed": {str(key): _agreement_value(value) for key, value in (agreed or {}).items()},
+    }
+    records = comm.allgather(record) if comm.Get_size() > 1 else [record]
+    problems = restart_state_problems(records)
+    if problems:
+        raise ValueError(
+            f"{context} rejected on every rank: the checkpoint is damaged, legacy, or inconsistent across ranks, "
+            "and restart state is never defaulted. Restart from an intact checkpoint or start a fresh run.\n  "
+            + "\n  ".join(problems)
+        )
+    return records
 
 
 # ---------------------------------------------------------------------------
@@ -464,6 +689,64 @@ def load_driver_config_from_checkpoint(
     return config
 
 
+def accumulated_weight_split(
+    w_L: np.ndarray,
+    num_gfmc_collect_steps: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return the accumulated GFMC weights as binary mantissas and exponents.
+
+    Pure-NumPy equivalent of :func:`jqmc.jqmc_gfmc._compute_G_L_split`. For
+    each index *i* the window product ``prod(w_L[i : i + k])`` (*k* =
+    ``num_gfmc_collect_steps``) equals ``mantissa[i] * 2**exponent[i]``. Every
+    factor is split by ``frexp`` and the running mantissa is renormalized after
+    each multiplication, so the integer exponent carries the whole magnitude and
+    no intermediate overflows or underflows. Scaling by powers of two is exact,
+    so ``ldexp(mantissa, exponent)`` reproduces the sequential product bit for
+    bit whenever that product is a normal float64 number.
+
+    Args:
+        w_L: Raw weight array, shape ``(A, x)``.
+        num_gfmc_collect_steps: Window length *k*.
+
+    Returns:
+        ``(mantissa, exponent)``, each of shape ``(max(A - k, 0), x)``.
+    """
+    w_L = np.asarray(w_L, dtype=np.float64)
+    A, x = w_L.shape
+    k = num_gfmc_collect_steps
+    n_out = max(A - k, 0)
+    factor_mantissa, factor_exponent = np.frexp(w_L)
+    mantissa = np.ones((n_out, x), dtype=np.float64)
+    exponent = np.zeros((n_out, x), dtype=np.int64)
+    for i in range(k if n_out > 0 else 0):
+        mantissa, renormalization = np.frexp(mantissa * factor_mantissa[i : i + n_out])
+        exponent += factor_exponent[i : i + n_out] + renormalization
+    return mantissa, exponent
+
+
+def scale_accumulated_weights(splits: Sequence[tuple[np.ndarray, np.ndarray]]) -> list[np.ndarray]:
+    """Form accumulated weights that share one power-of-two scale.
+
+    ``splits`` holds the ``(mantissa, exponent)`` pairs of every weight block
+    entering one estimate (for example the retained rows of each MPI rank).
+    The largest exponent ``M`` among the nonzero finite mantissas of all blocks
+    is subtracted before ``ldexp``, i.e. every weight is multiplied by the
+    common exact factor ``2**-M``. The common factor cancels in every weighted
+    mean and jackknife ratio, so those estimates equal the unscaled ones, but
+    the weights stay below one however long the collect window is.
+
+    Args:
+        splits: Sequence of ``(mantissa, exponent)`` pairs.
+
+    Returns:
+        The scaled weights of every block, in the input order.
+    """
+    candidates = [exponent[(mantissa != 0) & np.isfinite(mantissa)] for mantissa, exponent in splits]
+    nonempty = [values for values in candidates if values.size > 0]
+    shift = max(int(np.max(values)) for values in nonempty) if nonempty else 0
+    return [np.ldexp(mantissa, exponent - shift) for mantissa, exponent in splits]
+
+
 def compute_accumulated_weights(
     w_L: np.ndarray,
     num_gfmc_collect_steps: int,
@@ -473,6 +756,9 @@ def compute_accumulated_weights(
     Pure-NumPy equivalent of :func:`jqmc.jqmc_gfmc._compute_G_L`.
     For each index *i* the accumulated weight is
     ``prod(w_L[i : i + k])`` where *k* = ``num_gfmc_collect_steps``.
+    This unscaled product leaves the float64 range once ``k * tau * |E|``
+    exceeds about 709; estimators use
+    :func:`compute_retained_accumulated_weights` instead.
 
     Args:
         w_L: Raw weight array, shape ``(A, x)``.
@@ -481,13 +767,35 @@ def compute_accumulated_weights(
     Returns:
         Accumulated weights, shape ``(A - k, x)``.
     """
-    A, x = w_L.shape
-    k = num_gfmc_collect_steps
-    n_out = A - k
-    G_L = np.empty((n_out, x))
-    for i in range(n_out):
-        G_L[i] = np.prod(w_L[i : i + k], axis=0)
-    return G_L
+    mantissa, exponent = accumulated_weight_split(w_L, num_gfmc_collect_steps)
+    return np.ldexp(mantissa, exponent)
+
+
+def compute_retained_accumulated_weights(
+    w_L_list: Sequence[np.ndarray],
+    num_gfmc_collect_steps: int,
+    num_gfmc_warmup_steps: int,
+) -> list[np.ndarray]:
+    """Accumulated weights of the retained rows of several histories, on one common scale.
+
+    For every history the rows after ``num_gfmc_warmup_steps`` of
+    :func:`accumulated_weight_split` are kept, and all of them are scaled by
+    the single power of two of :func:`scale_accumulated_weights`. Use this for
+    every estimate that combines the histories in one ratio.
+
+    Args:
+        w_L_list: Raw weight arrays, each of shape ``(A_r, x_r)``.
+        num_gfmc_collect_steps: Window length *k*.
+        num_gfmc_warmup_steps: Number of leading accumulated rows to discard.
+
+    Returns:
+        The scaled retained weights of every history, in the input order.
+    """
+    splits = []
+    for w_L in w_L_list:
+        mantissa, exponent = accumulated_weight_split(w_L, num_gfmc_collect_steps)
+        splits.append((mantissa[num_gfmc_warmup_steps:], exponent[num_gfmc_warmup_steps:]))
+    return scale_accumulated_weights(splits)
 
 
 def load_observables_from_checkpoint(
@@ -528,24 +836,115 @@ def load_observables_from_checkpoint(
     return result
 
 
-# ---------------------------------------------------------------------------
-# Version check helpers
-# ---------------------------------------------------------------------------
+@contextmanager
+def open_observable_datasets(filepath: str, keys: Sequence[str]) -> Iterator[list[dict[str, h5py.Dataset]]]:
+    """Open observable datasets of every rank without reading them.
 
-
-def check_checkpoint_version(filepath: str) -> None:
-    """Validate checkpoint format version, raising on incompatibility.
+    Lazy counterpart of :func:`load_observables_from_checkpoint` for arrays
+    too large to hold whole, such as the per-atom force observables of a long
+    run (issue 949): the caller reads row slices while the file is open.
+    Ranks are enumerated and absent keys are omitted exactly as there.
 
     Args:
-        filepath: Path to a checkpoint HDF5.
+        filepath: Path to the merged checkpoint HDF5.
+        keys: Observable dataset names to open.
+
+    Yields:
+        A list of dicts, one per rank, each mapping observable name to its
+        open ``h5py.Dataset``. The handles are valid only inside the context.
+    """
+    with h5py.File(filepath, "r") as f:
+        num_ranks = sum(1 for k in f.keys() if k.startswith("rank_"))
+        result = []
+        for rank in range(num_ranks):
+            obs_grp = f[f"rank_{rank}/observables"]
+            result.append({k: obs_grp[k] for k in keys if k in obs_grp})
+        yield result
+
+
+def validate_restored_walker_shapes(
+    r_up_carts: Any,
+    r_dn_carts: Any,
+    *,
+    num_walkers: int,
+    num_electron_up: int,
+    num_electron_dn: int,
+    filepath: str,
+) -> None:
+    """Reject malformed walker arrays before restart execution.
+
+    A checkpoint whose walker block was written for another electron count or
+    walker count would otherwise be accepted and only fail (or silently
+    misbehave) deep inside the first jitted kernel.
 
     Raises:
-        ValueError: If the format version is unsupported.
+        ValueError: If either array is not ``(num_walkers, n_electrons, 3)``.
     """
-    meta = load_checkpoint_meta(filepath)
-    version = meta.get("format_version", "unknown")
-    if version != CHECKPOINT_FORMAT_VERSION:
-        raise ValueError(
-            f"Checkpoint format version mismatch: file has '{version}', "
-            f"but this version of jQMC expects '{CHECKPOINT_FORMAT_VERSION}'."
-        )
+    for label, arr, n_elec in (
+        ("latest_r_up_carts", r_up_carts, num_electron_up),
+        ("latest_r_dn_carts", r_dn_carts, num_electron_dn),
+    ):
+        shape = tuple(np.shape(arr))
+        if n_elec == 0 and int(np.size(arr)) == 0:
+            continue
+        expected = (int(num_walkers), int(n_elec), 3)
+        if shape != expected:
+            raise ValueError(
+                f"{filepath}: restored walker array {label} has shape {shape}, but the checkpoint's "
+                f"Hamiltonian and driver config require {expected} (num_walkers, electrons, 3). "
+                "The checkpoint is inconsistent; start a fresh run."
+            )
+
+
+def validate_restored_walker_finiteness_collectively(
+    comm: Any,
+    *,
+    driver: str,
+    filepath: str,
+    r_up_carts: Any,
+    r_dn_carts: Any,
+) -> None:
+    """Reject poisoned restart coordinates identically on every sampling rank.
+
+    Shape validation must run first so each coordinate index has the documented
+    ``(walker, electron, Cartesian component)`` meaning.  The common finite
+    path performs one integer reduction and no object collection.  Detailed
+    records are gathered only after that reduction proves at least one rank is
+    poisoned; no rank raises before its peers reach the same boundary.
+
+    Raises:
+        FloatingPointError: Collectively when any restored coordinate is NaN
+            or infinite.  The message identifies every affected sampling rank
+            and the first coordinate indices on that rank.
+    """
+    sampling_rank = int(comm.Get_rank())
+    local_bad_count = 0
+    local_records: list[str] = []
+    for field, raw_values in (
+        ("latest_r_up_carts", r_up_carts),
+        ("latest_r_dn_carts", r_dn_carts),
+    ):
+        values = np.asarray(raw_values)
+        bad_indices = np.argwhere(~np.isfinite(values))
+        local_bad_count += int(bad_indices.shape[0])
+        for walker, electron, component in bad_indices[:8]:
+            local_records.append(
+                f"sampling_rank={sampling_rank}, field={field}, walker={int(walker)}, "
+                f"electron={int(electron)}, component={int(component)}, "
+                f"value={values[walker, electron, component]!r}"
+            )
+
+    global_bad_count = int(comm.allreduce(local_bad_count)) if comm.Get_size() > 1 else local_bad_count
+    if global_bad_count == 0:
+        return
+    gathered = comm.allgather(tuple(local_records)) if comm.Get_size() > 1 else [tuple(local_records)]
+    records = [record for rank_records in gathered for record in rank_records]
+    details = "\n  ".join(records[:16])
+    omitted = global_bad_count - len(records[:16])
+    if omitted > 0:
+        details += f"\n  ... and {omitted} more non-finite coordinate(s)"
+    raise FloatingPointError(
+        f"{driver} checkpoint load detected {global_bad_count} non-finite restored walker coordinate(s) "
+        f"in {filepath}; refusing to continue a poisoned checkpoint. Start a fresh run from finite coordinates.\n  "
+        f"{details}"
+    )

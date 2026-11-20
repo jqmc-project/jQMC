@@ -1,0 +1,15 @@
+schema_version: 1
+document:
+  id: jqmc.upf_wrapper
+  version: 1
+  lifecycle: cutover
+  title: UPF wrapper guarantees
+  purpose: Which test guarantees what, by which verdict method, for UPF pseudopotential parsing and basis initialization.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-UPF-PARSER-CONTRACTS-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

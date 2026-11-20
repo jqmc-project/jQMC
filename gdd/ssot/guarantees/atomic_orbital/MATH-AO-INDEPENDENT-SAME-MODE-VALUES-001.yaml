@@ -1,0 +1,47 @@
+id: MATH-AO-INDEPENDENT-SAME-MODE-VALUES-001
+kind: mathematical
+name: Independent AO values in the active precision
+plain_language: >-
+  Both orbital channels of every canonical synthetic input agree with independent NumPy AO values, including periodic wrapping and Bloch phase. The reference has the exact active real or complex AO dtype. Full and mixed are never compared to each other.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_independent_orbital_composites.py::test_independent_ao_values_preserve_active_precision
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-001}
+    - {pattern: WF-PATTERN-002}
+    - {pattern: WF-PATTERN-003}
+    - {pattern: WF-PATTERN-004}
+    - {pattern: WF-PATTERN-005}
+    - {pattern: WF-PATTERN-006}
+    - {pattern: WF-PATTERN-007}
+    - {pattern: WF-PATTERN-008}
+    - {pattern: WF-PATTERN-009}
+    - {pattern: WF-PATTERN-010}
+    - {pattern: WF-PATTERN-011}
+    - {pattern: WF-PATTERN-012}
+    - {pattern: WF-PATTERN-013}
+    - {pattern: WF-PATTERN-014}
+    - {pattern: WF-PATTERN-015}
+    - {pattern: WF-PATTERN-016}
+    executable_checks:
+      orbital-values:
+        site: tests/test_jqmc_kernel/test_independent_orbital_composites.py::test_independent_ao_values_preserve_active_precision#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-ao-values, expression: actual}
+        reference: {role: independent-numpy-ao-values, expression: reference}
+        iterations: {variable: channel, required_values: [up, down]}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval]}
+      reference-dtype:
+        site: tests/test_jqmc_kernel/test_independent_orbital_composites.py::test_independent_ao_values_preserve_active_precision#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: observed-reference-dtype, expression: actual_dtype}
+        reference: {role: active-ao-zone-dtype, expression: expected_dtype}
+        iterations: {variable: channel, required_values: [up, down]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

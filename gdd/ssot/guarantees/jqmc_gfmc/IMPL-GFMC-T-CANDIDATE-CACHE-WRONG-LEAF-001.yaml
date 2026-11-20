@@ -1,0 +1,19 @@
+id: IMPL-GFMC-T-CANDIDATE-CACHE-WRONG-LEAF-001
+kind: implementation
+name: The GFMC_t candidate-cache same-input observer rejects a 7e-4 wrong-leaf fault in both precision modes
+plain_language: >-
+  The production GFMC_t kinetic mesh advance is wrapped so that the up-spin candidate orbital
+  table consumed by the next hop is displaced toward its pre-advance (previous sub-step) value by 7e-4 of its largest
+  entry, the size of a driver-level stale-cache fault and below the medium mixed trajectory pin. On the H2
+  ccECP J1+J2+J3 and Li all-electron J1+J2+J3 runs of IMPL-GFMC-T-ACTUAL-CANDIDATE-CACHE-001 the unchanged observer
+  fails on its cached-orbital comparison, in full and in mixed, each with its own existing strict tolerance. This is a
+  negative control of the observer's sensitivity, not a new value guarantee.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_candidate_cache_same_input.py::test_gfmc_t_candidate_cache_rejects_a_7e4_wrong_leaf
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {stem: H2_ecp_ccpvdz_cart.h5, spec: {j3: pgto}}
+    - {stem: Li_ae_ccpvdz_cart.h5, spec: {j3: pgto}}

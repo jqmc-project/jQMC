@@ -1,0 +1,62 @@
+id: MATH-RS-NATIVE-GAUSSIAN-001
+native_evidence:
+- jqmc_rs::threefry::tests::erfinv_known_values
+- jqmc_rs::threefry::tests::native_normal_inverse_transform
+- jqmc_rs::threefry::tests::native_normal_rejects_scale_error
+- jqmc_rs::threefry::tests::native_normal_rejects_sign_flip
+- jqmc_rs::threefry::tests::native_normal_rejects_untransformed_uniform
+kind: mathematical
+name: Native Gaussian values against the inverse function of specified inputs
+plain_language: >-
+  For each required key pair and all one million specified inputs, the native Gaussian
+  value must agree elementwise with sqrt(2)*erfinv(u) evaluated independently by SciPy,
+  where u is constructed from JAX Threefry split/uniform without using native output.
+  Applying independent erf to the actual value must also recover that same u within
+  the unchanged central atol_consistency/rtol_consistency pair. XLA values must also
+  agree with the independent inverse and with native values at that same bound. Both signs and both
+  native approximation regions must be exercised. Full and mixed are both required;
+  the sampler's normal transform is fp64 in either mode. No sample moments, KS statistic,
+  sigma band or statistical convergence claim may substitute for these pointwise checks.
+  This contract covers the declared inputs, not arbitrary PRNG quality or every possible key.
+verdict_methods: [VM-MATH-NATIVE-GAUSSIAN-001]
+required_evidence:
+- verdict_method: VM-MATH-NATIVE-GAUSSIAN-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_inverse_transform_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {key_words: [20260715, 9911], count: 1000000}
+    - {key_words: [1234567, 890123], count: 1000000}
+    executable_checks:
+      inverse-function:
+        site: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_inverse_transform_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-Gaussian-values, expression: actual}
+        reference: {role: independent-inverse-function-values, expression: reference}
+        precision:
+          full: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+          mixed: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+      forward-inverse-relation:
+        site: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_inverse_transform_reference#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: independent-erf-of-native-values, expression: recovered}
+        reference: {role: independently-generated-specified-uniforms, expression: uniforms}
+        precision:
+          full: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+          mixed: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+      xla-inverse-function:
+        site: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_inverse_transform_reference#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-Gaussian-values, expression: xla_values}
+        reference: {role: independent-inverse-function-values, expression: reference}
+        precision:
+          full: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+          mixed: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+      same-input-backends:
+        site: tests/test_rs_kernel/test_chain_modes.py::test_native_normal_inverse_transform_reference#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-Gaussian-values, expression: actual}
+        reference: {role: xla-Gaussian-values, expression: xla_values}
+        precision:
+          full: {policy: CMP-NATIVE-GAUSSIAN-F64-001}
+          mixed: {policy: CMP-NATIVE-GAUSSIAN-F64-001}

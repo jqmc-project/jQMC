@@ -1,0 +1,21 @@
+id: MATH-ECP-MIXED-AE-NEAREST-ECP-001
+kind: mathematical
+name: Non-local ECP of a mixed ECP/all-electron molecule projects onto ECP nuclei only
+plain_language: >-
+  In a molecule where only some nuclei carry an ECP, the nearest-neighbor non-local ECP projector of each
+  electron lives on its NN nearest nuclei that carry a non-local channel: an all-electron nucleus never
+  hosts a projector and never displaces an ECP centre from that set, even when it is the electron's
+  nearest nucleus, and NN larger than the number of ECP nuclei means all of them. An all-electron
+  nucleus listed after the last ECP nucleus projects nothing and never inherits another nucleus's ECP
+  parameters. On a two-nucleus, two-electron Slater-determinant input with the ECP on either nucleus,
+  the XLA plain and inverse-update evaluators and the Rust kernel each equal an independent numpy
+  projection (authored octahedral rule, closed-form determinant ratio). The reference is the ideal
+  float64 physical value; each backend runs at its configured precision (in mixed, float32 AO
+  evaluation on both the XLA and the native standalone path, float64 Coulomb/determinant accumulation)
+  and is judged at the strict tolerance of the zones on its own path, in full and mixed separately.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_local.py::test_ecp_nonlocal_mixed_ecp_all_electron_matches_independent_projection

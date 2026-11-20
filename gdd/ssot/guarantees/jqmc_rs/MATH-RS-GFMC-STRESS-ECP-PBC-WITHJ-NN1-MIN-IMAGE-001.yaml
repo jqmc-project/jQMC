@@ -1,0 +1,21 @@
+id: MATH-RS-GFMC-STRESS-ECP-PBC-WITHJ-NN1-MIN-IMAGE-001
+kind: mathematical
+name: The LRDMC periodic ECP stress with Jastrow (default route) selects the minimum-image nearest ECP nucleus (NN = 1)
+plain_language: >-
+  gfmc_forces.rs gfmc_stress_ecp_pbc_withj_route, the default LRDMC stress route of a real-Gamma periodic ECP
+  wavefunction with Jastrow (jqmc_rs._gfmc_stress_ecp_pbc_withj, tmove and dltmove), ranks the ECP nuclei of its NN = 1 filter
+  by the minimum-image distance in nearest_set; LRDMC walkers drift whole lattice vectors out of the home cell. On the committed
+  lithium cell (Li bcc, two ECP nuclei, real Gamma, SD with J1/J2), one up and one down electron, the home-cell copy Xw puts
+  each electron within about 1 bohr of a home-cell nucleus and X = Xw + lattice vectors (four shift pairs) puts each electron
+  next to an image of that nucleus; the brute-force image search of tests/_ecp_min_image_reference.py shows that the
+  minimum-image nearest nucleus at X is the one at Xw and that the raw Cartesian distance ranks the other nucleus first for
+  every electron (input validity). The stress at X equals the stress at Xw (lattice-translation invariance of the HF stress for
+  a real-Gamma wavefunction), compared in the max norm scaled by the largest entry as in the periodic GFMC stress tests. Full and
+  mixed are judged separately, each at the existing zone tolerances of its own policy (no mixed-vs-full comparison).
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_stress_ecp_pbc_withj_nn1_min_image.py::test_gfmc_stress_ecp_pbc_withj_nn1_selects_min_image_nearest_nucleus
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{dltmove: false, shift: shift0}, {dltmove: false, shift: shift1}, {dltmove: false, shift: shift2}, {dltmove: false, shift: shift3}, {dltmove: true, shift: shift0}, {dltmove: true, shift: shift1}, {dltmove: true, shift: shift2}, {dltmove: true, shift: shift3}]

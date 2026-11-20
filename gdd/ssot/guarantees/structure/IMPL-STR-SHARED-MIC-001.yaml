@@ -1,0 +1,88 @@
+id: IMPL-STR-SHARED-MIC-001
+kind: implementation
+name: Shared MIC across consumers
+plain_language: The electron-ion and ion-ion consumers evaluate distances through the same shared MIC implementation.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC::test_structure_ei_and_ii_consumers_match_shared_mic
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - cell_name: cubic_10bohr
+    - cell_name: primitive_fcc_si
+    - cell_name: triclinic_skewed
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_structure_ei_and_ii_consumers_match_shared_mic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: structure-relative-position-or-neighbor-distance
+          expression: got_np
+        reference:
+          role: explicit-shared-mic-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: atom_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_structure_ei_and_ii_consumers_match_shared_mic#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: structure-relative-position-or-neighbor-distance
+          expression: got_jnp
+        reference:
+          role: explicit-shared-mic-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: atom_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_structure_ei_and_ii_consumers_match_shared_mic#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: structure-relative-position-or-neighbor-distance
+          expression: structure._median_nn_distance()
+        reference:
+          role: explicit-shared-mic-reference
+          expression: np.median(nearest)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy

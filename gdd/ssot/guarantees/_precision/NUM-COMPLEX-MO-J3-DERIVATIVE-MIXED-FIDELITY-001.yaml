@@ -1,0 +1,58 @@
+id: NUM-COMPLEX-MO-J3-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: XLA complex-MO J3 derivative fields and observable derivatives retain full-route fidelity in mixed
+plain_language: >-
+  On the committed Li twist pGTO, pGTO plus PW and pGTO plus B-spline fixtures,
+  with the original occupied complex MO, optional pi/3 phase rotation, seeded
+  nonzero J3 matrix and seed1 well-conditioned configurations, mixed analytical
+  J3 derivative fields and local-energy/ln-Psi derivatives retain independently
+  rebuilt full analytical production results. Every factory clears both
+  policy-blind QE projection caches and independently runs the original model
+  and coordinate generator. Actual selected full/mixed coordinates must agree
+  exactly; no conditioning threshold, seed or resampling limit is changed.
+  Gradient components, Laplacian, Hessian components and gradlap components
+  use the existing orbital_derivative block budget. Nuclear, strain, electron
+  and J3 parameter derivatives use parameter_derivative. c-axis j_matrix,
+  radial exponents and coefficients remain separate homogeneous blocks.
+  Local-gradient cases preserve the original value-only running inverse;
+  nuclear cases preserve the original fresh assembly route. The original
+  strict nonzero J3-share floor is checked using full analytical with/without-J3
+  outputs. Each positive fidelity call requires an excess perturbation to fail.
+  Same-mode value API parity and the full mathematical AD oracles remain separate.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_xla_complex_mo_j3_fields.py::test_xla_complex_mo_j3_basis_fields_match_autodiff_of_re_mo
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{kind: pgto, rotated: false}, {kind: pgto, rotated: true}, {kind: pgto_pw, rotated: false}, {kind: pgto_pw, rotated: true}, {kind: pgto_bspline, rotated: false}, {kind: pgto_bspline, rotated: true}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_grad_fidelity_harness.py::assert_orbital_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-derivative-block, expression: mixed_block}
+        reference: {role: independently-rebuilt-full-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: orbital_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_xla_complex_mo_j3_fields.py::test_xla_complex_mo_j3_local_energy_gradients_match_autodiff
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{kind: pgto, quantity: e_L/r, rotated: false}, {kind: pgto, quantity: e_L/eps, rotated: false}, {kind: pgto, quantity: ln_Psi/eps, rotated: false}, {kind: pgto, quantity: e_L/c, rotated: false}, {kind: pgto_pw, quantity: e_L/r, rotated: false}, {kind: pgto_pw, quantity: e_L/eps, rotated: false}, {kind: pgto_pw, quantity: ln_Psi/eps, rotated: false}, {kind: pgto_pw, quantity: e_L/c, rotated: false}, {kind: pgto_bspline, quantity: e_L/r, rotated: true}, {kind: pgto_bspline, quantity: e_L/eps, rotated: true}, {kind: pgto_bspline, quantity: ln_Psi/eps, rotated: true}, {kind: pgto_bspline, quantity: e_L/c, rotated: true}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_grad_fidelity_harness.py::assert_parameter_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-derivative-block, expression: mixed_block}
+        reference: {role: independently-rebuilt-full-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}
+  - pytest_node: tests/test_jqmc_kernel/test_xla_complex_mo_j3_nuclear_force.py::test_xla_complex_mo_j3_nuclear_force_matches_local_energy_ad
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{kind: pgto}, {kind: pgto_pw}, {kind: pgto_bspline}]
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/_grad_fidelity_harness.py::assert_parameter_mixed_fidelity#helper-inequality-1
+        comparator: python.inequality
+        actual: {role: mixed-analytical-derivative-block, expression: mixed_block}
+        reference: {role: independently-rebuilt-full-analytical-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}

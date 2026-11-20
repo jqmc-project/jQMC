@@ -1,0 +1,70 @@
+name: jQMC public docs deploy
+
+on:
+  push:
+    branches: [rc-gh-pages]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-gh-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'jqmc-project/jQMC'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RUSTFLAGS: ''
+      CARGO_BUILD_JOBS: '2'
+      JAX_PLATFORMS: cpu
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install MPI and select Rust
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openmpi-bin libopenmpi-dev
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+      - name: Install the package and its documented Sphinx dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install '.[docs]'
+          python -m pip check
+      - name: Build the current documentation
+        run: |
+          python scripts/check_docs_examples.py
+          python scripts/render_examples_doc.py --check
+          make -C doc html
+          test -s docs_build/index.html
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs_build/
+          retention-days: 7
+
+  # Published with the GitHub Pages Actions source: no branch is written, so
+  # the published site changes only through a push to rc-gh-pages. The
+  # github-pages environment admits deployments from rc-gh-pages only.
+  docs:
+    name: publish jqmc docs to GitHub Pages
+    if: github.repository == 'jqmc-project/jQMC' && github.ref == 'refs/heads/rc-gh-pages'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

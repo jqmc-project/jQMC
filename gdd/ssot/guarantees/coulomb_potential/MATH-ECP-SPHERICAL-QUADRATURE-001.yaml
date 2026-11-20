@@ -1,0 +1,80 @@
+id: MATH-ECP-SPHERICAL-QUADRATURE-001
+kind: mathematical
+name: Degree-five exactness of the 18-point spherical rule
+plain_language: >-
+  The production 18-point spherical quadrature reproduces the normalized sphere integral of every
+  Cartesian monomial of total degree at most five, using the exact double-factorial moment formula.
+  This supplies the angular exactness condition for s/p/d projector products; it does not guarantee
+  higher-degree integration. No wavefunction, electronic configuration, or sampling error bar is used.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_reference.py::test_octahedral_rule_integrates_monomials_through_degree_five
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {powers: [0, 0, 0]}
+    - {powers: [0, 0, 1]}
+    - {powers: [0, 0, 2]}
+    - {powers: [0, 0, 3]}
+    - {powers: [0, 0, 4]}
+    - {powers: [0, 0, 5]}
+    - {powers: [0, 1, 0]}
+    - {powers: [0, 1, 1]}
+    - {powers: [0, 1, 2]}
+    - {powers: [0, 1, 3]}
+    - {powers: [0, 1, 4]}
+    - {powers: [0, 2, 0]}
+    - {powers: [0, 2, 1]}
+    - {powers: [0, 2, 2]}
+    - {powers: [0, 2, 3]}
+    - {powers: [0, 3, 0]}
+    - {powers: [0, 3, 1]}
+    - {powers: [0, 3, 2]}
+    - {powers: [0, 4, 0]}
+    - {powers: [0, 4, 1]}
+    - {powers: [0, 5, 0]}
+    - {powers: [1, 0, 0]}
+    - {powers: [1, 0, 1]}
+    - {powers: [1, 0, 2]}
+    - {powers: [1, 0, 3]}
+    - {powers: [1, 0, 4]}
+    - {powers: [1, 1, 0]}
+    - {powers: [1, 1, 1]}
+    - {powers: [1, 1, 2]}
+    - {powers: [1, 1, 3]}
+    - {powers: [1, 2, 0]}
+    - {powers: [1, 2, 1]}
+    - {powers: [1, 2, 2]}
+    - {powers: [1, 3, 0]}
+    - {powers: [1, 3, 1]}
+    - {powers: [1, 4, 0]}
+    - {powers: [2, 0, 0]}
+    - {powers: [2, 0, 1]}
+    - {powers: [2, 0, 2]}
+    - {powers: [2, 0, 3]}
+    - {powers: [2, 1, 0]}
+    - {powers: [2, 1, 1]}
+    - {powers: [2, 1, 2]}
+    - {powers: [2, 2, 0]}
+    - {powers: [2, 2, 1]}
+    - {powers: [2, 3, 0]}
+    - {powers: [3, 0, 0]}
+    - {powers: [3, 0, 1]}
+    - {powers: [3, 0, 2]}
+    - {powers: [3, 1, 0]}
+    - {powers: [3, 1, 1]}
+    - {powers: [3, 2, 0]}
+    - {powers: [4, 0, 0]}
+    - {powers: [4, 0, 1]}
+    - {powers: [4, 1, 0]}
+    - {powers: [5, 0, 0]}
+    executable_checks:
+      spherical-moment:
+        site: tests/test_jqmc_kernel/test_ecp_projector_reference.py::test_octahedral_rule_integrates_monomials_through_degree_five#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-mesh-monomial-sum, expression: actual}
+        reference: {role: analytic-normalized-sphere-moment, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}

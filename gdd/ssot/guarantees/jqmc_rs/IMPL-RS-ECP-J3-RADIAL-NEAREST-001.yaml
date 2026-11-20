@@ -1,0 +1,30 @@
+id: IMPL-RS-ECP-J3-RADIAL-NEAREST-001
+kind: implementation
+name: Native real non-local ECP J3 orbital radial derivatives use nearest projectors
+plain_language: >-
+  With active J1, J2 and GTO J3 on the molecular Cl2 ccECP fixture, the real Rust
+  parameter-derivative context evaluates the non-local ECP gradient of both J3
+  orbital radial blocks using the production nearest-nucleus rule. The same-precision
+  XLA analytical non-local gradient is the per-element reference. Both centres have
+  nonzero non-local projectors and are selected by electrons in the fixed configuration.
+  The sum of the two analytical single-centre operators gives an all-pairs gradient
+  distinguishable from the nearest-projector gradient in each block.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_radial_nearest_selection.py::test_native_ecp_j3_radial_matches_nearest_projector_gradient
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      nearest-projector-j3-radial-gradient:
+        site: tests/test_rs_kernel/test_ecp_radial_nearest_selection.py::test_native_ecp_j3_radial_matches_nearest_projector_gradient#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-real-nearest-projector-gradient, expression: actual}
+        reference: {role: xla-analytical-nearest-projector-gradient, expression: expected}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [coulomb, ao_eval, mo_eval, det_eval, jastrow_eval]}
+        iterations:
+          variable: field
+          required_values: [exponents, coefficients]

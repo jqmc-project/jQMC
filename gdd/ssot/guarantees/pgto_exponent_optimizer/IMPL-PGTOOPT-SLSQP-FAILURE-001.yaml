@@ -1,0 +1,12 @@
+id: IMPL-PGTOOPT-SLSQP-FAILURE-001
+kind: implementation
+name: An unsuccessful exponent SLSQP is never adopted
+plain_language: optimize_pgto_exponents raises PGTOExponentOptimizationError, carrying SLSQP's status, iteration count and
+  message, whenever SLSQP does not report success, including the iteration limit. It raises before the returned point is
+  exponentiated or evaluated, so a failed solve can neither be published nor surface as an unrelated downstream error.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pgto_exponent_optimizer.py::test_unsuccessful_slsqp_point_is_never_adopted

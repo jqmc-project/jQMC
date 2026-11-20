@@ -1,0 +1,19 @@
+id: IMPL-RS-COMPLEX-CONVERTER-BSPLINE-MO-J3-NATIVE-MCMC-001
+kind: implementation
+name: Native complex-twist MCMC runs on the QE converter's pGTO+B-spline MO J3 and stores the XLA local energy
+plain_language: >-
+  A complex-twist Hamiltonian whose J3 orbital is the QE converter's dense complex MO over a pGTO(+)B-spline
+  composite (run_qe2jqmc on the committed QE Li k=(1/4,1/4,1/4) ccECP save with kind pgto+bspline, j1 = j2 = 1
+  and j3_basis_type mo) is accepted by the native observable context: no AttributeError or other exception is
+  raised before sampling, and production energy-only MCMC (two walkers, seed 34356, fixed quadrature mesh, three
+  production calls of six steps) runs on the native complex energy chunk and its native random stream. After each
+  call the last stored complex e_L of every walker equals compute_local_energy of the same Hamiltonian evaluated
+  from scratch by XLA at the returned walker, Re and Im, within the MCMC Rust/XLA driver policy, and the walkers
+  move between calls. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_converter_mo_j3_composite.py::test_converter_complex_bspline_mo_j3_native_mcmc_energies_match_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

@@ -1,0 +1,33 @@
+id: PHY-MCMC-FORCE-SUM-RULES-001
+kind: physical
+name: Force sum rules and stress translation invariance
+plain_language: The total MCMC force satisfies the physical sum rule (with SWCT, with DTN, and at an all-electron twist),
+  and the stress is invariant under lattice translations.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_force.py::TestMCMCForce::test_mcmc_force_sum_rule_with_SWCT
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_force.py::TestMCMCForce::test_mcmc_force_sum_rule_with_DTN
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_force.py::TestMCMCForce::test_mcmc_force_sum_rule_twist_ae
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressAD::test_stress_translation_invariance
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressAD.test_stress_translation_invariance#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sigma_shift
+        reference:
+          role: existing-test-reference
+          expression: sigma_orig
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ewald

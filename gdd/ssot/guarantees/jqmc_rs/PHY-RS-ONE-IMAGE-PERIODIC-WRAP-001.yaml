@@ -1,0 +1,27 @@
+id: PHY-RS-ONE-IMAGE-PERIODIC-WRAP-001
+kind: physical
+name: Native one-image periodic pGTO geminal obeys the Bloch law for a lattice-translated electron
+plain_language: >-
+  On the Rust backend a periodic pGTO leaf whose build-time image truncation keeps only the home image
+  (n_image == 1) is still periodic: translating an electron by n.cell must multiply its geminal row by
+  exp(2 pi i k_frac.n) (1 at Gamma), exactly as for a multi-image leaf, instead of evaluating the raw
+  coordinate against the home-only image set. For one normalized s Gaussian (exponent 1) at (6, 6, 6) in the
+  cubic cell 12 I (asserted single-image), one up and one down electron, unit AGP lambda and the down spin at
+  the conjugate twist, the native compute_geminal_complex at k = (0.13, -0.11, 0.2) and
+  compute_geminal_all_elements at Gamma, for spherical and Cartesian leaves, must equal an independent
+  brute-force Bloch image sum of the analytic normalized Gaussian at the home configuration and with the up
+  electron translated by n = (1, -1, 0), (2, 1, 1) and (37, -18, 24) lattice vectors, and the translated value
+  must equal exp(2 pi i k_frac.n) times the native home value with the same nonzero modulus. Each mode is
+  judged with its own ao_eval / det_eval strict zone policy relative to the reference modulus.
+  Full and mixed are judged separately.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_periodic_invariants.py::test_one_image_periodic_leaf_wraps_translated_electron_native
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: sphe, twist: true}
+    - {kind: sphe, twist: false}
+    - {kind: cart, twist: true}
+    - {kind: cart, twist: false}

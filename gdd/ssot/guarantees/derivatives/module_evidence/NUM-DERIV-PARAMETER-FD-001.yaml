@@ -1,0 +1,47 @@
+id: NUM-DERIV-PARAMETER-FD-001
+kind: numerical
+name: Variational parameter derivatives agree with actual update-path finite differences
+plain_language: >-
+  Analytical e_L and ln|Psi| parameter gradients consumed by the optimizer agree with fourth-order
+  central differences of production primal values along actual apply_block_updates directions.
+  N2 ccECP Cartesian SD with J1/J2/J3, N2 dense AO-AGP with J1/J2/DTN u/chi/f, and periodic Li ccECP
+  spherical pGTO Gamma SD with J1/J2/J3 each use two shell configurations (PCG64 seeds 2026/2027)
+  and a fixed QR quadrature rotation (seed 7). Owner ties and MO retractions enter the measured
+  update tangent; analytical gradients are contracted with that tangent. Per block select the two
+  largest e_L gradient components and largest ln|Psi| component, deduplicated. Tangents and both
+  forward derivatives at steps 0.0005 and 0.001 must agree at the unchanged central tight FD tolerance;
+  each block and quantity must have at least one non-vacuous probe across the configurations. The
+  step comparison is a consistency check, not a rigorous truncation bound. Full only; mixed public
+  analytical/AD evidence remains under MATH-DERIVAPI-CONSISTENCY-001, not these exact configurations
+  or update-path FD. No all-component, high-cond(G), complex or mixed-FD coverage is inferred.
+verdict_methods: [VM-NUM-FIXED-INPUT-FD-001]
+required_evidence:
+- verdict_method: VM-NUM-FIXED-INPUT-FD-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_param_fd_anchor.py::test_c_axis_fd_anchor
+    required_precision_modes: [full]
+    required_parameter_cases: [{case_id: li-pbc-sd-j123}, {case_id: n2-ecp-agp-jdtn}, {case_id: n2-ecp-sd-j123}]
+    executable_checks:
+      update-tangent:
+        site: tests/test_jqmc_kernel/test_param_fd_anchor.py::test_c_axis_fd_anchor#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: update-tangent-at-2h, expression: d_2h}
+        reference: {role: update-tangent-at-h, expression: d}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+      step-consistency:
+        site: tests/test_jqmc_kernel/test_param_fd_anchor.py::test_c_axis_fd_anchor#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: fourth-order-finite-difference-at-2h, expression: fd_2h}
+        reference: {role: fourth-order-finite-difference-at-h, expression: fd_h}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+        iterations: {variable: quantity, required_values: [ln_Psi, e_L]}
+      parameter-derivative:
+        site: tests/test_jqmc_kernel/test_param_fd_anchor.py::test_c_axis_fd_anchor#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-gradient-contracted-with-update-tangent, expression: 'predicted[quantity]'}
+        reference: {role: actual-updated-wavefunction-forward-finite-difference, expression: fd_h}
+        precision:
+          full: {policy: CMP-FD-AUTODIFF-FULL-001}
+        iterations: {variable: quantity, required_values: [ln_Psi, e_L]}

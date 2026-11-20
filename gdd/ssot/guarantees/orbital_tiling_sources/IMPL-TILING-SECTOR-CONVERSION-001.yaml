@@ -1,0 +1,65 @@
+id: IMPL-TILING-SECTOR-CONVERSION-001
+kind: implementation
+name: Complete source sectors, converter options and tiled twist persistence
+plain_language: >-
+  Group primitive k points into complete supercell cosets with equal positive
+  within-sector weights, retaining source indices and summing sector weights.
+  Select a single Gamma/general sector or write a weighted ensemble. CLI and
+  Workflow preserve one quoted matrix and explicit supertwist selection. QE
+  synthetic projection fixtures exercise all three sector modes through the
+  converter. The actual PySCF lithium_twist_222 TREXIO fixture exercises general
+  and ensemble GTO conversion with an independent physical-supercell J3 basis.
+  Multi-k TREXIO requires a complete MO-to-k-point map: missing, malformed,
+  out-of-range or empty per-k associations are rejected before conversion.
+  Ragged twist payloads use explicit provider classes without version markers
+  and preserve source-band IDs and shared spin arrays; nonzero J3 survives HDF5 and corrupt metadata is rejected. This is an
+  adapter/storage contract, not certification of the six-route energy, force,
+  stress or native numerical equality matrix.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_sectors.py::test_sector_partition_preserves_cosets_ids_and_weights
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {matrix: [2, 1, 1]}
+    - {matrix: [2, 1, 0, 0, 2, 0, 0, 0, -1]}
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_sectors.py::test_sector_partition_rejects_invalid_mesh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {invalid: missing}
+    - {invalid: duplicate}
+    - {invalid: weights}
+    - {invalid: tiny_weights}
+    - {invalid: nan}
+    - {invalid: complex}
+    - {invalid: huge}
+    - {invalid: negative}
+    - {invalid: overflow}
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_sectors.py::test_trexio_tiling_rejects_invalid_mo_k_point_mapping
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {corruption: missing}
+    - {corruption: length}
+    - {corruption: out_of_range}
+    - {corruption: uncovered_k}
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_sectors.py::test_cli_tiling_selection_is_validated_before_source_io
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{source: qe}, {source: trexio}]
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_sectors.py::test_workflow_transports_tiling_sector_and_ensemble_options
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{source: qe}, {source: trexio}]
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_sectors.py::test_qe_tiling_sector_conversion_and_storage
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{mode: gamma}, {mode: general}, {mode: average}]
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_sectors.py::test_real_trexio_tiling_cli_keeps_supercell_j3
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{mode: general}, {mode: average}]
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_sectors.py::test_tiled_twist_payload_validation_and_nonzero_j3_roundtrip
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{corruption: none}, {corruption: provider_class}, {corruption: sector}, {corruption: weight}, {corruption: payload}]
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_restart.py::test_single_gamma_trexio_promotes_real_gto_without_changing_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{angular: cart}, {angular: sphe}]

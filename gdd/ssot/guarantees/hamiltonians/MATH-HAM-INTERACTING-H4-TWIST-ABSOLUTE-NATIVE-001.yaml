@@ -1,0 +1,19 @@
+id: MATH-HAM-INTERACTING-H4-TWIST-ABSOLUTE-NATIVE-001
+kind: mathematical
+name: Native interacting H4 twist local energy equals the independent primitive and Ewald formulas
+plain_language: >-
+  The native Rust route compute_local_energy_fast_complex, with a fresh geminal inverse, reproduces the complex
+  local energy of the unchanged h4_twist_j12 fixture (H4_pbc_ae_k025_cart.h5, time-reversal SD, two electrons per
+  spin, J1 + J2) at the fixed image-offset configuration of MATH-HAM-INTERACTING-H4-TWIST-ABSOLUTE-001, against the
+  same independent reference (explicit Cartesian primitives, integer-image Bloch phases, MO and determinant
+  contractions, periodic J1/J2, complex Hessian kinetic energy and a NumPy Ewald sum). Re and Im are compared
+  together at the strict zone policy of each mode, and the reference has a live imaginary part. The same native
+  call with image phases taken at 1.01 k must fail. Full and mixed are judged separately. This H4 guarantee
+  does not cover Li ccECP twist inputs; the Li DTN complex-energy case has its own MATH-RUST-COMPLEX-ECP-ABSOLUTE-001 guarantee, without expanding this H4 scope.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_periodic_invariants.py::test_interacting_h4_twist_local_energy_matches_independent_absolute_value_native
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

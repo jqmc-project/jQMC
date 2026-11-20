@@ -1,0 +1,15 @@
+id: IMPL-JAS-PERSISTENCE-001
+kind: implementation
+name: Jastrow persistence round trip
+plain_language: 'The DTN Jastrow round-trips through HDF5 (route parity, direct vs through-disk) and its variational
+  blocks round-trip through the block interface.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNPhaseB::test_jastrow_dtn_hdf5_roundtrip
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNPhaseB::test_dtn_variational_blocks_round_trip

@@ -1,0 +1,30 @@
+id: IMPL-GFMC-INCREMENTAL-TWIN-002
+kind: implementation
+name: Incremental interval potential equals the full-recompute twin (XLA GFMC drivers)
+plain_language: 'The XLA GFMC_t / GFMC_n projection bodies with the carried incremental potential state reproduce the environment-selected
+  full-recompute debug route (JQMC_GFMC_POT_FULL_RECOMPUTE=1) on the same backend and the same seeds: the walk is byte-identical,
+  the stored per-step w_L / e_L agree at the tight absolute twin pin, and both the trace-time witness and the per-walker
+  applied-update counter prove the incremental branch was actually traced and executed.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_incremental_twin_xla.py::test_gfmc_xla_incremental_twin
+    executable_checks:
+      stored-propagation-weight:
+        site: tests/test_jqmc_kernel/test_gfmc_incremental_twin_xla.py::test_gfmc_xla_incremental_twin#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: incremental-stored-weight, expression: 'np.asarray(g_prod._stored_w_L)'}
+        reference: {role: full-recompute-stored-weight, expression: 'np.asarray(g_twin._stored_w_L)'}
+        precision:
+          full: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+          mixed: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+      stored-local-energy:
+        site: tests/test_jqmc_kernel/test_gfmc_incremental_twin_xla.py::test_gfmc_xla_incremental_twin#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: incremental-stored-real-energy, expression: 'np.real(np.asarray(g_prod._stored_e_L))'}
+        reference: {role: full-recompute-stored-real-energy, expression: 'np.real(np.asarray(g_twin._stored_e_L))'}
+        precision:
+          full: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}
+          mixed: {policy: CMP-GFMC-INCREMENTAL-TWIN-001}

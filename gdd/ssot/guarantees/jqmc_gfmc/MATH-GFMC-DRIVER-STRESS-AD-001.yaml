@@ -1,0 +1,81 @@
+id: MATH-GFMC-DRIVER-STRESS-AD-001
+kind: mathematical
+name: Actual native GFMC stress buffers equal strict full strain AD
+plain_language: Full native GFMC_t/n per-walker HF/Pulay stress and stored HF/Pulay/E_L*Pulay moments retain the
+  original independent strain AD of production measurement energy and log amplitude at strict. The original full
+  medium all-entry nonzero threshold remains separately required, as do two walkers, fixed identity mesh, recorded
+  final positions and original t/n weighted reductions. Mixed is owned by NUM-GFMC-DRIVER-STRESS-MIXED-FIDELITY-001.
+  The independent full-only FD anchor NUM-GFMC-DRIVER-STRESS-FD-001 remains; no estimator/statistical/high-condition/trajectory
+  equality is claimed.
+verdict_methods:
+- VM-MATH-AD-ORACLE-001
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_driver_stress_fd.py::test_gfmc_driver_stress_buffers_match_same_precision_ad
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - driver: t
+    - driver: n
+    executable_checks:
+      native-walker-buffers-ad:
+        site: tests/test_jqmc_kernel/test_gfmc_driver_stress_fd.py::_assert_ad_verdict#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: native-per-walker-stress-buffer
+          expression: actual
+        reference:
+          role: same-precision-strain-autodiff-of-measurement-energy-or-log-amplitude
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_eval
+            - det_grad_lap
+            - det_ratio
+            - coulomb
+            - ewald
+            - wf_eval
+            - wf_kinetic
+            - wf_ratio
+            - local_energy
+      stored-moments-ad:
+        site: tests/test_jqmc_kernel/test_gfmc_driver_stress_fd.py::_assert_ad_verdict#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: stored-step-stress-moment
+          expression: stored
+        reference:
+          role: weighted-reduction-of-same-precision-autodiff
+          expression: expected
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - mo_eval
+            - mo_grad
+            - mo_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_eval
+            - det_grad_lap
+            - det_ratio
+            - coulomb
+            - ewald
+            - wf_eval
+            - wf_kinetic
+            - wf_ratio
+            - local_energy

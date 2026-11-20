@@ -1,0 +1,90 @@
+id: IMPL-ECP-XLA-PROJECTOR-DOMAIN-001
+kind: implementation
+name: XLA ECP rejects unsupported projectors before numerical evaluation
+plain_language: >-
+  All five XLA nonlocal ECP entries reject l=7 and l=8 before projection, including zero-coefficient
+  channels and unsupported degrees declared only by padding metadata. The supported l=6/local-tag=7
+  boundary remains finite with a nonempty projector output and correctly shaped empty down-spin
+  arrays on a fixed one-up-electron molecular SD. The realized tags and coefficients are also checked
+  against the requested l=6/7/8 and zero/nonzero coefficient cases. Backend-neutral table validation is not narrowed
+  by XLA's tabulated-polynomial limit. This boundary contract does not claim high-l continuous
+  quadrature accuracy, arbitrary angular-momentum support in Rust, or numerical ECP reference agreement.
+verdict_methods: [VM-ERROR-DISPOSITION-001, VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_domain.py::test_xla_rejects_unsupported_projector_before_evaluation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: nearest-neighbor, lmax: 7, coefficient: 1.0}
+    - {route: holomorphic, lmax: 7, coefficient: 1.0}
+    - {route: fast-update, lmax: 7, coefficient: 1.0}
+    - {route: all-pairs, lmax: 7, coefficient: 1.0}
+    - {route: provided-quadrature, lmax: 7, coefficient: 1.0}
+    - {route: nearest-neighbor, lmax: 7, coefficient: 0.0}
+    - {route: holomorphic, lmax: 7, coefficient: 0.0}
+    - {route: fast-update, lmax: 7, coefficient: 0.0}
+    - {route: all-pairs, lmax: 7, coefficient: 0.0}
+    - {route: provided-quadrature, lmax: 7, coefficient: 0.0}
+    - {route: nearest-neighbor, lmax: 8, coefficient: 1.0}
+    - {route: holomorphic, lmax: 8, coefficient: 1.0}
+    - {route: fast-update, lmax: 8, coefficient: 1.0}
+    - {route: all-pairs, lmax: 8, coefficient: 1.0}
+    - {route: provided-quadrature, lmax: 8, coefficient: 1.0}
+    - {route: nearest-neighbor, lmax: 8, coefficient: 0.0}
+    - {route: holomorphic, lmax: 8, coefficient: 0.0}
+    - {route: fast-update, lmax: 8, coefficient: 0.0}
+    - {route: all-pairs, lmax: 8, coefficient: 0.0}
+    - {route: provided-quadrature, lmax: 8, coefficient: 0.0}
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_domain.py::test_xla_rejects_declared_padding_above_supported_degree
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: nearest-neighbor}
+    - {route: holomorphic}
+    - {route: fast-update}
+    - {route: all-pairs}
+    - {route: provided-quadrature}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_domain.py::test_domain_fixture_realizes_requested_channels
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {lmax: 6, coefficient: 0.0}
+    - {lmax: 6, coefficient: 1.0}
+    - {lmax: 7, coefficient: 0.0}
+    - {lmax: 7, coefficient: 1.0}
+    - {lmax: 8, coefficient: 0.0}
+    - {lmax: 8, coefficient: 1.0}
+    executable_checks:
+      angular-tags:
+        site: tests/test_jqmc_kernel/test_ecp_projector_domain.py::test_domain_fixture_realizes_requested_channels#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: realized-ecp-angular-tags, expression: np.asarray(coulomb.ang_moms)}
+        reference: {role: requested-ecp-angular-tags, expression: expected_tags}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      coefficients:
+        site: tests/test_jqmc_kernel/test_ecp_projector_domain.py::test_domain_fixture_realizes_requested_channels#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: realized-ecp-coefficients, expression: np.asarray(coulomb.coefficients)}
+        reference: {role: requested-ecp-coefficients, expression: expected_coefficients}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      local-tags:
+        site: tests/test_jqmc_kernel/test_ecp_projector_domain.py::test_domain_fixture_realizes_requested_channels#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: realized-local-channel-tags, expression: np.asarray(coulomb.max_ang_mom_plus_1)}
+        reference: {role: requested-local-channel-tags, expression: expected_local_tags}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_domain.py::test_xla_accepts_l6_with_local_tag7
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {route: nearest-neighbor}
+    - {route: holomorphic}
+    - {route: fast-update}
+    - {route: all-pairs}
+    - {route: provided-quadrature}

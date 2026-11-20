@@ -1,0 +1,46 @@
+id: MATH-WF-PHASE-AWARE-KINETIC-AD-001
+kind: mathematical
+name: Kinetic autodiff and its local-energy wrapper preserve the wavefunction phase
+plain_language: >-
+  For a single non-Gamma plane wave and a two-wave superposition with nonzero
+  imaginary kinetic energy, the scalar and per-electron autodiff references
+  agree with the independent normalized Fourier Laplacian. The local-energy
+  reference adds the same Coulomb potential and preserves the complex result.
+  A constant real Gamma wave retains zero real kinetic energy and a real local
+  energy equal to the potential. The cases run in Full and Mixed.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_phase_aware_kinetic_ad.py::test_phase_aware_kinetic_ad_matches_fourier_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{case: single-wave}, {case: superposition}]
+    executable_checks:
+      scalar-per-electron-and-local-energy:
+        site: tests/test_jqmc_kernel/test_phase_aware_kinetic_ad.py::test_phase_aware_kinetic_ad_matches_fourier_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: phase-aware-kinetic-and-local-energy, expression: actual}
+        reference: {role: independent-fourier-kinetic-and-local-energy, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, wf_eval, wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, mo_eval, det_eval, wf_eval, wf_kinetic]}
+  - pytest_node: tests/test_jqmc_kernel/test_phase_aware_kinetic_ad.py::test_phase_aware_kinetic_ad_preserves_real_gamma
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      constant-wave-kinetic:
+        site: tests/test_jqmc_kernel/test_phase_aware_kinetic_ad.py::test_phase_aware_kinetic_ad_preserves_real_gamma#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: real-autodiff-kinetic-values, expression: actual_kinetic}
+        reference: {role: exact-constant-wave-kinetic, expression: reference_kinetic}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      zero-kinetic-local-energy:
+        site: tests/test_jqmc_kernel/test_phase_aware_kinetic_ad.py::test_phase_aware_kinetic_ad_preserves_real_gamma#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: real-autodiff-local-energy, expression: actual_local}
+        reference: {role: potential-only-local-energy, expression: reference_local}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

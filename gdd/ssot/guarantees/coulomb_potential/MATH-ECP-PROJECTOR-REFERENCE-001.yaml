@@ -1,0 +1,95 @@
+id: MATH-ECP-PROJECTOR-REFERENCE-001
+kind: mathematical
+name: Independent fixed-input nonlocal ECP projections
+plain_language: >-
+  On explicit one-electron molecular Gaussian inputs, the nearest-neighbor Nv=18 ECP evaluator reproduces
+  the radial projector eigenvalue of each real s/p/d harmonic, and every nonzero l=0..6 channel reproduces
+  independently evaluated discrete per-grid projections and their sum. Each named position and rotation
+  is required in full and mixed separately. Each reference evaluates its orbital-ratio factor where
+  production does (orbital values in ao_eval, the SD ratio in det_eval, projector, Legendre values and
+  weights in coulomb), so mixed is never judged against an fp64 answer;
+  the s/p/d eigenvalue reference is V_l(r) shifted by the ao_eval-dtype minus fp64-geometry projection,
+  a shift that is exactly zero in full. Discrete high-l agreement does not certify continuous angular
+  integration accuracy, other meshes, real TREXIO fixtures, or rejection of unsupported angular channels.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_reference.py::test_s_p_d_projector_has_analytic_radial_eigenvalue
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {ell: 0, magnetic: 0, rotation: identity}
+    - {ell: 0, magnetic: 0, rotation: tilted}
+    - {ell: 1, magnetic: -1, rotation: identity}
+    - {ell: 1, magnetic: -1, rotation: tilted}
+    - {ell: 1, magnetic: 0, rotation: identity}
+    - {ell: 1, magnetic: 0, rotation: tilted}
+    - {ell: 1, magnetic: 1, rotation: identity}
+    - {ell: 1, magnetic: 1, rotation: tilted}
+    - {ell: 2, magnetic: -2, rotation: identity}
+    - {ell: 2, magnetic: -2, rotation: tilted}
+    - {ell: 2, magnetic: -1, rotation: identity}
+    - {ell: 2, magnetic: -1, rotation: tilted}
+    - {ell: 2, magnetic: 0, rotation: identity}
+    - {ell: 2, magnetic: 0, rotation: tilted}
+    - {ell: 2, magnetic: 1, rotation: identity}
+    - {ell: 2, magnetic: 1, rotation: tilted}
+    - {ell: 2, magnetic: 2, rotation: identity}
+    - {ell: 2, magnetic: 2, rotation: tilted}
+    executable_checks:
+      radial-eigenvalue:
+        site: tests/test_jqmc_kernel/test_ecp_projector_reference.py::test_s_p_d_projector_has_analytic_radial_eigenvalue#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-nonlocal-ecp, expression: actual}
+        reference: {role: analytic-projector-radial-eigenvalue, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+  - pytest_node: tests/test_jqmc_kernel/test_ecp_projector_reference.py::test_each_ecp_channel_matches_independent_discrete_projection
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {channel: 0, position: first, rotation: identity}
+    - {channel: 0, position: first, rotation: tilted}
+    - {channel: 0, position: second, rotation: identity}
+    - {channel: 0, position: second, rotation: tilted}
+    - {channel: 1, position: first, rotation: identity}
+    - {channel: 1, position: first, rotation: tilted}
+    - {channel: 1, position: second, rotation: identity}
+    - {channel: 1, position: second, rotation: tilted}
+    - {channel: 2, position: first, rotation: identity}
+    - {channel: 2, position: first, rotation: tilted}
+    - {channel: 2, position: second, rotation: identity}
+    - {channel: 2, position: second, rotation: tilted}
+    - {channel: 3, position: first, rotation: identity}
+    - {channel: 3, position: first, rotation: tilted}
+    - {channel: 3, position: second, rotation: identity}
+    - {channel: 3, position: second, rotation: tilted}
+    - {channel: 4, position: first, rotation: identity}
+    - {channel: 4, position: first, rotation: tilted}
+    - {channel: 4, position: second, rotation: identity}
+    - {channel: 4, position: second, rotation: tilted}
+    - {channel: 5, position: first, rotation: identity}
+    - {channel: 5, position: first, rotation: tilted}
+    - {channel: 5, position: second, rotation: identity}
+    - {channel: 5, position: second, rotation: tilted}
+    - {channel: 6, position: first, rotation: identity}
+    - {channel: 6, position: first, rotation: tilted}
+    - {channel: 6, position: second, rotation: identity}
+    - {channel: 6, position: second, rotation: tilted}
+    executable_checks:
+      per-grid-projection:
+        site: tests/test_jqmc_kernel/test_ecp_projector_reference.py::test_each_ecp_channel_matches_independent_discrete_projection#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-nonlocal-ecp-grid, expression: actual_grid}
+        reference: {role: independent-legendre-gaussian-grid, expression: reference_grid}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+      projection-sum:
+        site: tests/test_jqmc_kernel/test_ecp_projector_reference.py::test_each_ecp_channel_matches_independent_discrete_projection#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-nonlocal-ecp-sum, expression: actual_sum}
+        reference: {role: independent-legendre-gaussian-sum, expression: reference_sum}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb]}

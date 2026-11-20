@@ -1,0 +1,36 @@
+id: NUM-GFMC-GRID-J3-MEASUREMENT-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: GFMC grid J3 analytical measurement derivatives retain mixed/full fidelity
+plain_language: The original analytical XLA GFMC measurement nuclear/up/down electron gradients and strain tensor
+  for PW/B-spline J123, tmove/dltmove, obey the central parameter-derivative mixed/full homogeneous-block infinity-norm
+  budget at the same deterministic seed-0 configuration. Both policies independently load fresh Hamiltonians from
+  identical serialized full physical input; native/Python policies are configured before source construction and
+  restored. Identity Nv12 quadrature, alat0.30, J3 scaling and measurement-energy composition are unchanged. All
+  four named physical blocks, their shapes and finite values are required; each numerical comparison is bound to
+  its actual local source site and required quantity-label iteration. Every mixed case rejects an isolated out-of-budget
+  perturbation with its full reference fixed. The original independent full AD formulas and strict budget remain
+  separately required. All four parameter cases and both scientific modes remain. The native/XLA companion and its
+  J3 activation controls retain their existing backend-consistency policy and cases. No production zone is promoted,
+  and this numerical guarantee is not a native-backend parity claim.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_grid_j3_derivatives.py::test_gfmc_grid_j3_derivatives_match_energy_ad
+    required_precision_modes: [mixed]
+    required_parameter_cases:
+    - {basis: bspline, dltmove: false}
+    - {basis: bspline, dltmove: true}
+    - {basis: pw, dltmove: false}
+    - {basis: pw, dltmove: true}
+    executable_checks:
+      analytical-mixed-vs-independently-rebuilt-full:
+        site: tests/test_rs_kernel/test_gfmc_grid_j3_derivatives.py::test_gfmc_grid_j3_derivatives_match_energy_ad#helper-inequality-2
+        comparator: python.inequality
+        iterations:
+          variable: quantity
+          required_values: [nuclear, electron-up, electron-down, strain]
+        actual: {role: mixed-XLA-analytical-GFMC-derivative-block, expression: mixed_block}
+        reference: {role: full-XLA-analytical-GFMC-derivative-block, expression: full_block}
+        precision:
+          mixed: {policy: CMP-MIXED-FULL-FIDELITY-001, quantity_class: parameter_derivative}

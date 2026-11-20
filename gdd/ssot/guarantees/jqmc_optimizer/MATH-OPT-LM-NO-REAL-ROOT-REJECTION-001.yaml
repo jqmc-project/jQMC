@@ -1,0 +1,29 @@
+id: MATH-OPT-LM-NO-REAL-ROOT-REJECTION-001
+kind: mathematical
+name: An LM pencil without a numerically real root is rejected into the aSR step
+plain_language: >-
+  When no root of the conditioned non-symmetric LM pencil is numerically real, no LM update is decoded: the LM
+  solver raises LMNoRealRootError for centered pencils whose spectrum is all complex (augmented dimension 2 and 4,
+  H = S^(1/2) R S^(1/2) with rotation-scaling blocks of R, confirmed all-complex by an independent dense eigvals),
+  instead of decoding the phase-dependent real part of a complex eigenvector. On the single-k target and on the
+  twist-decomposed (shared and twist-local scope) target with full LM, a fixed one-coordinate-per-scope batch whose
+  centered 2x2 pencil has the complex root pair (H_0 + K/s)/2 +- i takes the existing rejection branch even with
+  both acceptance gates opened: the applied update equals the reference-connected aSR step on the SR direction from
+  an independent symmetric 2x2 model eigensolve, and the predicted energy its eigenvalue, within the fp64 pair; the
+  recorded rejection reason names the missing real root and no LM reference weight is reported. The reduced-LM route
+  shares the same caller branch but is not separately exercised by an all-complex reduced pencil.
+verdict_methods: [VM-ERROR-DISPOSITION-001, VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_lm_solver_reports_no_real_root_for_all_complex_spectrum
+    required_parameter_cases: [{augmented_dimension: 2}, {augmented_dimension: 4}]
+    required_precision_modes: [full, mixed]
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_single_k_lm_without_real_root_takes_asr_rejection_step
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_twist_lm_without_real_root_takes_asr_rejection_step_in_each_scope
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

@@ -1,0 +1,1513 @@
+id: IMPL-JAS-FAST-ROUTE-EQUIVALENCE-001
+kind: implementation
+name: Fast DTN routes equal the straightforward recompute
+plain_language: 'Every accelerated DTN f-channel route returns what the straightforward recompute returns: the fused one-shot
+  mesh equals per-config evaluation (including the oblique-cell shift crossing, the exact-once double-count positive control,
+  spin-channel asymmetry, u-only pairs outside the f lists, and the pinned flattening order); the drift mesh equals the
+  streamed oracle across PBC image crossings and through the production wiring; and the incremental rank-one grad/Laplacian
+  advance equals a freshly built full state across drift accumulation, cutoff crossings, PBC image crossings, edge cases,
+  and the walker axis under vmap, within the strict pair of its jastrow_grad_lap_carry zone (fp64 in both modes) and with
+  the carried state stored in that zone. A stream that cannot take the fast route says so loudly rather than degrading silently.
+  The routes are dense one-shot kernels (there is no neighbour-list route), so the claim is fast-vs-recompute, not
+  sparse-vs-dense.'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGeometryMeshWeighted::test_weighted_geometry_matches_dense_oracle
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGeometryMeshWeighted.test_weighted_geometry_matches_dense_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(got_R)
+        reference:
+          role: existing-test-reference
+          expression: ref_R
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGeometryMeshWeighted.test_weighted_geometry_matches_dense_oracle#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(got_eps)
+        reference:
+          role: existing-test-reference
+          expression: ref_eps
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGeometryMeshWeighted::test_pbc_image_crossing_matches_dense_oracle
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGeometryMeshWeighted.test_pbc_image_crossing_matches_dense_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(got_R)
+        reference:
+          role: existing-test-reference
+          expression: ref_R
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGeometryMeshWeighted.test_pbc_image_crossing_matches_dense_oracle#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(got_eps)
+        reference:
+          role: existing-test-reference
+          expression: ref_eps
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh::test_fused_mesh_delta_matches_per_config
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh.test_fused_mesh_delta_matches_per_config#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: fused[m, k]
+        reference:
+          role: existing-test-reference
+          expression: float(d_dense)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+        iterations:
+          variable: mesh_label
+          required_values:
+          - 0/0
+          - 0/1
+          - 0/2
+          - 0/3
+          - 0/4
+          - 0/5
+          - 1/0
+          - 1/1
+          - 1/2
+          - 1/3
+          - 1/4
+          - 1/5
+          - 2/0
+          - 2/1
+          - 2/2
+          - 2/3
+          - 2/4
+          - 2/5
+          - 3/0
+          - 3/1
+          - 3/2
+          - 3/3
+          - 3/4
+          - 3/5
+          - 4/0
+          - 4/1
+          - 4/2
+          - 4/3
+          - 4/4
+          - 4/5
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh::test_fused_oblique_cell_shift_crossing
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh.test_fused_oblique_cell_shift_crossing#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: fused[m, k]
+        reference:
+          role: existing-test-reference
+          expression: float(d_dense)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+        iterations:
+          variable: mesh_label
+          required_values:
+          - 0/0
+          - 0/1
+          - 0/2
+          - 0/3
+          - 0/4
+          - 0/5
+          - 1/0
+          - 1/1
+          - 1/2
+          - 1/3
+          - 1/4
+          - 1/5
+          - 2/0
+          - 2/1
+          - 2/2
+          - 2/3
+          - 2/4
+          - 2/5
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh::test_fused_exact_once_double_count_positive_control
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh.test_fused_exact_once_double_count_positive_control#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: ratio_entry
+        reference:
+          role: existing-test-reference
+          expression: ratio_dense
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh::test_fused_spin_channel_asymmetric
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh.test_fused_spin_channel_asymmetric#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: fused[m, k]
+        reference:
+          role: existing-test-reference
+          expression: float(d_dense)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+        iterations:
+          variable: mesh_label
+          required_values:
+          - 0/0
+          - 0/1
+          - 0/2
+          - 0/3
+          - 0/4
+          - 0/5
+          - 1/0
+          - 1/1
+          - 1/2
+          - 1/3
+          - 1/4
+          - 1/5
+          - 2/0
+          - 2/1
+          - 2/2
+          - 2/3
+          - 2/4
+          - 2/5
+          - 3/0
+          - 3/1
+          - 3/2
+          - 3/3
+          - 3/4
+          - 3/5
+          - 4/0
+          - 4/1
+          - 4/2
+          - 4/3
+          - 4/4
+          - 4/5
+          - 5/0
+          - 5/1
+          - 5/2
+          - 5/3
+          - 5/4
+          - 5/5
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh::test_fused_u_only_pair_outside_f_lists
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh.test_fused_u_only_pair_outside_f_lists#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: fused[m, k]
+        reference:
+          role: existing-test-reference
+          expression: float(d_dense)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+        iterations:
+          variable: mesh_label
+          required_values:
+          - 0/0
+          - 0/1
+          - 0/2
+          - 0/3
+          - 0/4
+          - 0/5
+          - 1/0
+          - 1/1
+          - 1/2
+          - 1/3
+          - 1/4
+          - 1/5
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNFusedMesh::test_fused_mesh_flattening_order_pinned
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense::test_drift_mesh_matches_streamed_oracle
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense.test_drift_mesh_matches_streamed_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: O[c]
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: configuration_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense.test_drift_mesh_matches_streamed_oracle#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: dJ[c]
+        reference:
+          role: existing-test-reference
+          expression: ref_v
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+        iterations:
+          variable: configuration_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense::test_drift_mesh_pbc_image_crossing
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense.test_drift_mesh_pbc_image_crossing#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(O)[0]
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense.test_drift_mesh_pbc_image_crossing#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(dJ)[0]
+        reference:
+          role: existing-test-reference
+          expression: ref_v
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense::test_dtn_mesh_wiring_matches_streamed
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense.test_dtn_mesh_wiring_matches_streamed#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(O)[c]
+        reference:
+          role: existing-test-reference
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: configuration_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense.test_dtn_mesh_wiring_matches_streamed#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(dJ)[c]
+        reference:
+          role: existing-test-reference
+          expression: ref_v
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_ratio
+        iterations:
+          variable: configuration_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming::test_streaming_matches_fresh_k32
+    executable_checks:
+      strict-streaming-helper-comparison-3:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-4:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-5:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.grad_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-6:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.grad_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-7:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.lap_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-8:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.lap_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-9:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.r_up_carts)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.r_up_carts)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-10:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.r_dn_carts)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.r_dn_carts)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming::test_streaming_drift_accumulation
+    executable_checks:
+      strict-streaming-helper-comparison-3:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-4:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming::test_streaming_cutoff_crossing
+    executable_checks:
+      strict-streaming-helper-comparison-3:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-4:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-5:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.grad_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-6:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.grad_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-7:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.lap_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-8:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.lap_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-9:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.r_up_carts)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.r_up_carts)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-10:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.r_dn_carts)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.r_dn_carts)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming::test_streaming_pbc_image_crossing
+    executable_checks:
+      strict-streaming-helper-comparison-3:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-4:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-5:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.grad_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-6:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.grad_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-7:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.lap_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-8:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.lap_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-9:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.r_up_carts)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.r_up_carts)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-10:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.r_dn_carts)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.r_dn_carts)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming::test_streaming_edge_cases
+    executable_checks:
+      strict-streaming-helper-comparison-3:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-4:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+        empty_cases:
+        - selector:
+            n_up: 3
+            n_dn: 0
+          shape:
+          - 0
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+      strict-streaming-helper-comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-streaming-helper-comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+        empty_cases:
+        - selector:
+            n_up: 3
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+      strict-state-leaf-comparison-5:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.grad_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-6:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.grad_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+        empty_cases:
+        - selector:
+            n_up: 3
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+      strict-state-leaf-comparison-7:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.lap_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-8:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.lap_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+        empty_cases:
+        - selector:
+            n_up: 3
+            n_dn: 0
+          shape:
+          - 0
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+      strict-state-leaf-comparison-9:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.r_up_carts)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.r_up_carts)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+      strict-state-leaf-comparison-10:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::_assert_dtn_state_matches_fresh#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.r_dn_carts)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(fresh.r_dn_carts)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+        empty_cases:
+        - selector:
+            n_up: 3
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+        - selector:
+            n_up: 1
+            n_dn: 0
+          shape:
+          - 0
+          - 3
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming::test_streaming_walker_axis_vmap
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming.test_streaming_walker_axis_vmap#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_up[w])
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+        iterations:
+          variable: walker_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming.test_streaming_walker_axis_vmap#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_up[w])
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_up)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+        iterations:
+          variable: walker_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming.test_streaming_walker_axis_vmap#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.grad_dn[w])
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(g_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+        iterations:
+          variable: walker_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNGradLapStreaming.test_streaming_walker_axis_vmap#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(state.lap_dn[w])
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(l_dn)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap_carry
+        iterations:
+          variable: walker_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNDriftMeshDense::test_streamed_fallback_is_loud

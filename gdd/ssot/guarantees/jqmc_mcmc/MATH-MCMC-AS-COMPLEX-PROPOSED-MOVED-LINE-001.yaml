@@ -1,0 +1,30 @@
+id: MATH-MCMC-AS-COMPLEX-PROPOSED-MOVED-LINE-001
+kind: mathematical
+name: The native complex AS factor of a proposal with a large determinant ratio keeps the exact decision
+plain_language: >-
+  Complex proposed state. The native complex sweep (ObsCtx.mcmc_sweep_complex) and its
+  per-step walker batch (ObsCtx.mcmc_sweep_complex_batch) evaluate the Attaccalite-Sorella factor of a proposal from
+  the moved geminal line rebuilt from the new orbital values and the moved inverse line in its exact form
+  G^-1 e_k / R (column, up move) or e_k^T G^-1 / R (row, down move); the rank-one update G^-1 - (G^-1 u)(v^T G^-1)/R
+  cancels for a large ratio and must not decide the move. Evidence: neutral He in a 100-bohr cubic cell at twist
+  (0.25, 0.125, 0), no Jastrow, one complex Cartesian Bloch orbital phi = N_0 (1 + i x) exp(-r^2) per spin (AOs s and
+  p_x, MO coefficients 1 and i/2, time-reversed down partner). Electron 0 of either spin at (6.6, 0.3, 0.4), the other
+  at (0.4, 0.3, 0.4), moved along x by Dt 0.7479083679405935 and injected normal -9.343232587286982 to x = 0.3:
+  |R| ~ 1.2e18 and exact acceptance 1/2. Threefry keys (777, 18), (777, 0), (777, 5) (up) and (777, 2), (777, 3),
+  (777, 15) (down), each checked to select that move, with draws on both sides of 1/2; epsilon_AS 0 and 0.1. R_AS = 1
+  exactly for every nonzero 1x1 complex G, so the decision at 0.1 equals that at 0. Reference: jax threefry draws in
+  the sweep order, the Kato-width Gaussian transition density in numpy and the closed-form orbital (its
+  normalization checked against the production geminal at a well-scaled configuration). Decisions are exact for every
+  key, single and batched. Full and mixed are judged separately. Fixed-input decision accuracy, not a statistical
+  test.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_as_factor_robust_native.py::test_native_complex_as_proposed_moved_line_keeps_decisions
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {spin: up, epsilon: 0.0}
+    - {spin: up, epsilon: 0.1}
+    - {spin: down, epsilon: 0.0}
+    - {spin: down, epsilon: 0.1}

@@ -1,0 +1,129 @@
+id: MATH-STR-IMAGE-SET-COMPLETENESS-001
+kind: mathematical
+name: Periodic image sets agree with an independent geometric reference
+plain_language: For the declared cubic, primitive FCC and triclinic inputs, cell-cell and per-atom Gaussian image indices
+  equal the complete set from an independent finite active-set distance solver, SVD candidate bound and envelope root. Exact
+  integer-array comparison preserves multiplicity. No electron configuration or statistical estimate is involved.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList::test_primitive_image_indices_match_independent_active_set
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - cell_name: cubic_10bohr
+      exponent: 0.1
+      angular_l: 0
+    - cell_name: cubic_10bohr
+      exponent: 1.0
+      angular_l: 2
+    - cell_name: primitive_fcc_si
+      exponent: 1.0
+      angular_l: 0
+    - cell_name: primitive_fcc_si
+      exponent: 0.1
+      angular_l: 1
+    - cell_name: triclinic_skewed
+      exponent: 1.0
+      angular_l: 0
+    - cell_name: triclinic_skewed
+      exponent: 0.1
+      angular_l: 2
+    executable_checks:
+      complete-integer-image-set:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_primitive_image_indices_match_independent_active_set#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: production-cell-cell-image-indices
+          expression: actual
+        reference:
+          role: independent-active-set-image-indices
+          expression: reference
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList::test_per_atom_image_indices_match_independent_active_set
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - cell_name: cubic_10bohr
+      fractional_atom:
+      - 0.0
+      - 0.0
+      - 0.0
+    - cell_name: primitive_fcc_si
+      fractional_atom:
+      - 0.0
+      - 0.0
+      - 0.0
+    - cell_name: triclinic_skewed
+      fractional_atom:
+      - 0.0
+      - 0.0
+      - 0.0
+    - cell_name: cubic_10bohr
+      fractional_atom:
+      - 0.5
+      - 0.5
+      - 0.5
+    - cell_name: primitive_fcc_si
+      fractional_atom:
+      - 0.5
+      - 0.5
+      - 0.5
+    - cell_name: triclinic_skewed
+      fractional_atom:
+      - 0.5
+      - 0.5
+      - 0.5
+    - cell_name: cubic_10bohr
+      fractional_atom:
+      - 0.0
+      - 0.5
+      - 0.5
+    - cell_name: primitive_fcc_si
+      fractional_atom:
+      - 0.0
+      - 0.5
+      - 0.5
+    - cell_name: triclinic_skewed
+      fractional_atom:
+      - 0.0
+      - 0.5
+      - 0.5
+    - cell_name: cubic_10bohr
+      fractional_atom:
+      - 0.15
+      - 0.4
+      - 0.75
+    - cell_name: primitive_fcc_si
+      fractional_atom:
+      - 0.15
+      - 0.4
+      - 0.75
+    - cell_name: triclinic_skewed
+      fractional_atom:
+      - 0.15
+      - 0.4
+      - 0.75
+    executable_checks:
+      complete-integer-image-set:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureImageList.test_per_atom_image_indices_match_independent_active_set#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: production-per-atom-image-indices
+          expression: actual
+        reference:
+          role: independent-active-set-image-indices
+          expression: reference
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001

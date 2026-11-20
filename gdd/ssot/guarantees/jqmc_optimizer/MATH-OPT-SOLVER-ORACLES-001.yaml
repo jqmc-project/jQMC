@@ -1,0 +1,369 @@
+id: MATH-OPT-SOLVER-ORACLES-001
+kind: mathematical
+name: SR and LM solver oracles
+plain_language: 'The LM pencil, jackknife, generalized eigensolver, reduced pencils, block-diagonal SR systems, and sharded
+  CG kernels match independent dense oracles and known solutions (mathematical), and centered builders are
+  invariant to the reference shift.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_full_lm_pencil_matches_independent_centered_real_oracle
+    executable_checks:
+      d8-n-236:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_full_lm_pencil_matches_independent_centered_real_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.H
+        reference:
+          role: source-reference-value
+          expression: expected_H
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-237:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_full_lm_pencil_matches_independent_centered_real_oracle#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.S
+        reference:
+          role: source-reference-value
+          expression: expected_S
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_coordinate_force_jackknife_matches_raw_delete_one_bin_oracle
+    executable_checks:
+      d8-n-238:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_coordinate_force_jackknife_matches_raw_delete_one_bin_oracle#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: standard_error
+        reference:
+          role: source-reference-value
+          expression: np.sqrt(expected_variance)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-239:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_coordinate_force_jackknife_matches_raw_delete_one_bin_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: force
+        reference:
+          role: source-reference-value
+          expression: direct(np.arange(batch.weights.size))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_real_lm_solver_matches_direct_generalized_eigenproblem
+    executable_checks:
+      d8-n-240:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_real_lm_solver_matches_direct_generalized_eigenproblem#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: s_metric_error_units
+        reference:
+          role: source-reference-value
+          expression: '0.0'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-LM-EIGENVECTOR-S-METRIC-UNITS-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-LM-EIGENVECTOR-S-METRIC-UNITS-ZERO-001
+      d8-n-241:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_real_lm_solver_matches_direct_generalized_eigenproblem#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.predicted_energy
+        reference:
+          role: source-reference-value
+          expression: eigenvalues[best]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-242:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_real_lm_solver_matches_direct_generalized_eigenproblem#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.reference_weight
+        reference:
+          role: source-reference-value
+          expression: reference_weights[best]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_reduced_precontracted_pencil_matches_explicit_full_congruence
+    executable_checks:
+      d8-n-243:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_reduced_precontracted_pencil_matches_explicit_full_congruence#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: precontracted.S
+        reference:
+          role: source-reference-value
+          expression: explicit.S
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-244:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_reduced_precontracted_pencil_matches_explicit_full_congruence#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: precontracted.conditioning_metric
+        reference:
+          role: source-reference-value
+          expression: explicit.conditioning_metric
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-245:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_reduced_precontracted_pencil_matches_explicit_full_congruence#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: precontracted.H
+        reference:
+          role: source-reference-value
+          expression: explicit.H
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_sr_is_exact_world_sampler_block_diagonal_real_system
+    executable_checks:
+      d8-n-246:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_sr_is_exact_world_sampler_block_diagonal_real_system#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.q
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_sharded_chunk_cg_kernels_match_local_oracles_on_one_rank
+    executable_checks:
+      d8-n-247:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_sharded_chunk_cg_kernels_match_local_oracles_on_one_rank#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: wide_sharded[0]
+        reference:
+          role: source-reference-value
+          expression: wide_local[0]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-248:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_sharded_chunk_cg_kernels_match_local_oracles_on_one_rank#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: tall_sharded[0]
+        reference:
+          role: source-reference-value
+          expression: tall_local[0]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_gamma_all_real_matches_frozen_pre_c9_normalized_reference
+    executable_checks:
+      d8-n-249:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_gamma_all_real_matches_frozen_pre_c9_normalized_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual
+        reference:
+          role: source-reference-value
+          expression: reference
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_wide_real_cpu_mpi_matches_redundant_dense_global_oracle
+    executable_checks:
+      d8-n-250:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_wide_real_cpu_mpi_matches_redundant_dense_global_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_two_rank_sharded_tall_chunk_cg_matches_global_dense_oracle
+    executable_checks:
+      d8-n-251:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_two_rank_sharded_tall_chunk_cg_matches_global_dense_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-C9-GAMMA-SR-UPDATE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-C9-GAMMA-SR-UPDATE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_unequal_count_two_rank_cpu_and_device_match_valid_dense_oracle
+    executable_checks:
+      d8-n-252:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_unequal_count_two_rank_cpu_and_device_match_valid_dense_oracle#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestSolveLinearMethod::test_trivial_2x2
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestSolveLinearMethod::test_diagonal_known_solution
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestSolveLinearMethod::test_v0_max_selection
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_centered_real_pencil_uses_projective_metric_at_twist
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_centered_lm_builder_and_update_are_invariant_to_reference_shift
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_complete_plain_sr_target_encodes_one_real_coordinate_update
+    executable_checks:
+      d8-n-253:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_complete_plain_sr_target_encodes_one_real_coordinate_update#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.q
+        reference:
+          role: source-reference-value
+          expression: sr.q
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_complete_asr_target_scales_depreconditioned_sr_direction
+    executable_checks:
+      d8-n-254:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_complete_asr_target_scales_depreconditioned_sr_direction#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.q
+        reference:
+          role: source-reference-value
+          expression: result.accepted_scale * result.sr_q
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestSolveLinearMethod::test_epsilon_cutoff
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestSolveLinearMethod::test_all_diag_S_zero

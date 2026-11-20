@@ -1,0 +1,263 @@
+id: NUM-PUBLIC-REMAINDER-DERIVATIVES-MIXED-FIDELITY-001
+kind: numerical
+name: Remaining public derivative APIs retain Mixed Full-production fidelity
+plain_language: All forty original cases preserve their physical fixtures, seeds, flags, full output fields and
+  branch domains. Mixed compares independently loaded same-backend analytical models from one Full-constructed physical
+  Hamiltonian and fixed coordinates, separately for each homogeneous quantity/axis/parameter field, under the unchanged
+  central parameter_derivative maximum-deviation budget. Joint MO/basis retains its same-policy joint-versus-isolated
+  block comparisons and requested-block nonzero controls; DTN retains its alpha/beta/gamma field set; twist/ECP,
+  radial and all-electron cases preserve their original topology, block flags and fixture variants. Nonempty finite
+  equal shapes and excess-budget rejection remain. Full strict AD and original Full algebra/parity checks retain
+  explicit Full-only executable comparisons in MATH-DERIVAPI-CONSISTENCY-001. No new budget, seed, conditioning
+  exclusion, skip, production route or numerical algorithm is introduced.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_joint_mo_basis_gradients_match_single_block_and_analytic
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - quantity: ln_Psi
+      basis: exponents
+      geminal: SD
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: ln_Psi
+      basis: exponents
+      geminal: SD
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: ln_Psi
+      basis: exponents
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: ln_Psi
+      basis: exponents
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: ln_Psi
+      basis: coefficients
+      geminal: SD
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: ln_Psi
+      basis: coefficients
+      geminal: SD
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: ln_Psi
+      basis: coefficients
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: ln_Psi
+      basis: coefficients
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: ln_Psi
+      basis: both
+      geminal: SD
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: ln_Psi
+      basis: both
+      geminal: SD
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: ln_Psi
+      basis: both
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: ln_Psi
+      basis: both
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: e_L
+      basis: exponents
+      geminal: SD
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: e_L
+      basis: exponents
+      geminal: SD
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: e_L
+      basis: exponents
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: e_L
+      basis: exponents
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: e_L
+      basis: coefficients
+      geminal: SD
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: e_L
+      basis: coefficients
+      geminal: SD
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: e_L
+      basis: coefficients
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: e_L
+      basis: coefficients
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: e_L
+      basis: both
+      geminal: SD
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: e_L
+      basis: both
+      geminal: SD
+      stem: H2_ae_ccpvdz_sphe.h5
+    - quantity: e_L
+      basis: both
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_cart.h5
+    - quantity: e_L
+      basis: both
+      geminal: AGPn
+      stem: H2_ae_ccpvdz_sphe.h5
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_remainder_compare#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-homogeneous-derivative-field
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-source-and-fixed-coordinates
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_dtn_o_k_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: N2_ecp_ccpvtz_cart.h5
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_remainder_compare#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-homogeneous-derivative-field
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-source-and-fixed-coordinates
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_o_k_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: lithium_k025.h5
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_remainder_compare#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-homogeneous-derivative-field
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-source-and-fixed-coordinates
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_basis_opt_now_analytic
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: lithium_k025.h5
+    - stem: lithium_k025_cart.h5
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_remainder_compare#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-homogeneous-derivative-field
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-source-and-fixed-coordinates
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_analytic_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - wrt: c
+      quantity: ln_Psi
+    - wrt: c
+      quantity: e_L
+    - wrt: r
+      quantity: ln_Psi
+    - wrt: r
+      quantity: e_L
+    - wrt: R
+      quantity: ln_Psi
+    - wrt: R
+      quantity: e_L
+    - wrt: eps
+      quantity: ln_Psi
+    - wrt: eps
+      quantity: e_L
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_remainder_compare#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-homogeneous-derivative-field
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-source-and-fixed-coordinates
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_lambda_basis_opt_analytic_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_remainder_compare#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-homogeneous-derivative-field
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-source-and-fixed-coordinates
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_pbc_twist_ae_cart_j3_basis_opt_analytic_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_remainder_compare#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-homogeneous-derivative-field
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-source-and-fixed-coordinates
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

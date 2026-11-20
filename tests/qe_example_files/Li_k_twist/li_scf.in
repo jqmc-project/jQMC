@@ -1,0 +1,61 @@
+&CONTROL
+    calculation   = 'scf'
+    prefix        = 'li_twist'
+    outdir        = './out'
+    pseudo_dir    = '../'
+    verbosity     = 'high'
+    tstress       = .false.
+    tprnfor       = .false.
+    disk_io       = 'medium'
+/
+&SYSTEM
+    ! Li, body-centered cubic (Im-3m, space group 229), a = 3.51 Ang.
+    ! Reference: Wyckoff, Crystal Structures, Vol. 1 (Interscience, 1963).
+    ! Conventional cubic cell with 2 Li at Wyckoff 2a: (0,0,0), (1/2,1/2,1/2).
+    ! Matches the pyscf reference (tests/trexio_example_files/run_pyscf_Li_pbc_*.py).
+    ! ibrav=1 : simple cubic. celldm(1) = a [Bohr] = 3.51 Ang / 0.529177 = 6.6329.
+    ibrav         = 1
+    celldm(1)     = 6.6329
+    nat           = 2
+    ntyp          = 1
+    ! Li.ccECP: Z_valence = 1 -> 2 valence electrons / cell -> 1 occupied band (RHF).
+    nbnd          = 8
+    ! Li.ccECP is soft (no semicore); 60 Ry / 240 Ry is plenty.
+    ecutwfc       = 60.0
+    ecutrho       = 240.0
+    ! Fixed occupations: the QE -> jQMC converter accepts only integer
+    ! band occupations (QMC fixes the electron numbers; no grand-canonical
+    ! TABC yet). bcc Li is a metal, but at the single k-point(s) sampled
+    ! here the fixed 1-band filling is well-defined (converter fixture,
+    ! not physics).
+    occupations   = 'fixed'
+    nspin         = 1
+    ! nosym + noinv force the FULL unfolded 8-point 2x2x2 shifted MP
+    ! mesh. Without these flags Im-3m + time-reversal would IBZ-collapse
+    ! the 8 shifted points to a single representative (the cubic point
+    ! group is large enough that (+/-1/4, +/-1/4, +/-1/4) is one star).
+    ! For a multi-twist QMC test fixture we want all 8 wfc files
+    ! materialised; the unfolded SCF density is physically identical
+    ! (symmetry-equivalent contributions per k) but the disk layout is
+    ! what the twist-driver loader iterates over. Matches the unfolded
+    ! pyscf fixture (tests/trexio_example_files/lithium_twist_222.h5).
+    nosym         = .true.
+    noinv         = .true.
+/
+&ELECTRONS
+    conv_thr      = 1.0d-9
+    mixing_beta   = 0.3
+    electron_maxstep = 200
+/
+ATOMIC_SPECIES
+    Li  6.941  Li.ccECP.upf
+
+ATOMIC_POSITIONS {crystal}
+    Li  0.0  0.0  0.0
+    Li  0.5  0.5  0.5
+
+! Shifted 2x2x2 Monkhorst-Pack grid (shift 1 1 1) -> k-points at
+! (+/-0.25, +/-0.25, +/-0.25); Gamma is NOT included.
+! Matches pyscf cell.make_kpts([2,2,2], with_gamma_point=False).
+K_POINTS automatic
+    2 2 2 1 1 1

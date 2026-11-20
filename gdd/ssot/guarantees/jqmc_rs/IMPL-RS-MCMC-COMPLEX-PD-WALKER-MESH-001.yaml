@@ -1,0 +1,24 @@
+id: IMPL-RS-MCMC-COMPLEX-PD-WALKER-MESH-001
+kind: implementation
+name: Complex twist parameter derivatives use each walker's ECP mesh
+plain_language: >-
+  For three fixed walkers of the complex Li k=(1/4,1/4,1/4) ccECP input,
+  each walker's native dE_L/dc block uses its own rotated ECP quadrature.
+  The derivatives agree with XLA evaluated independently at the same walkers
+  with the corresponding rotations, using real projections for real parameters
+  and both components for complex molecular-orbital coefficients. In full
+  precision native and XLA are compared directly. In mixed precision each route,
+  native and XLA separately, is compared under the same strict tolerance with an
+  independently rebuilt full-precision reference: the XLA route on a Hamiltonian
+  reloaded under the full policy from the serialized full-precision input, with
+  the mixed values from a Hamiltonian reloaded under the mixed policy from the
+  same source.
+  Replacing the rotations with walker zero's rotation gives a distinguishable
+  result in every checked block under the existing strict parity tolerances.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_batch_mesh_per_walker.py::test_native_batch_entries_use_each_walkers_rotated_mesh
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{pattern: twist_sphepgto_j12}]

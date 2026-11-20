@@ -1,0 +1,32 @@
+id: MATH-MCMC-NATIVE-COMPLEX-RANGE-SAFE-RANK1-DIVISION-001
+kind: mathematical
+name: The range-safe rank-1 division of the native complex inverse update keeps the whole carried inverse exact for a 2x2 geminal
+plain_language: >-
+  The rank-1 term of the accepted-move update of the native complex sweep
+  (complex_det::sm_apply_inplace_complex, ainv_u / R) is range-safe on its own: for a finite ratio whose magnitude
+  exceeds ~1.3e154 the inverse column (up move) or row (down move) of the electron that did NOT move, which the exact
+  moved column / row does not overwrite, stays finite and exact. Evidence: periodic neutral Be (Z = 4) in a cubic
+  cell of side 100 bohr, Bloch twist (0.25, 0.125, 0), no Jastrow, time_reversal=False, two up and two down
+  electrons in phi0 = c N12 x^12 (1 + i x) exp(-r^2) and phi1 = N13 x^13 exp(-r^2) (normalized Cartesian
+  primitives); the moved electron 0 (up and down) goes x_start -> 0.3 at y = 0.3, z = 0.4 with the other electron
+  of its spin at (0.4, 0.3, 0.4) and the opposite spin at (0.5, 0.2, 0.1), (0.7, 0.1, 0.3), for x_start = 1e-14
+  (|R| ~ 1e161) and 1e-17 (|R| ~ 1e197) and the in-range control 1e-11 (|R| ~ 1e125); exact acceptance 1, Dt = 2,
+  epsilon_AS = 0. Starting from the closed-form carried pair (G = Phi_up^T Phi_dn and its 2x2-adjugate inverse),
+  the sweep must accept, return the closed-form geminal row-scaled at the ao_eval/det_eval strict pair and a finite
+  carried inverse equal, entry by entry including the non-moved column or row, to the closed-form adjugate inverse
+  of the target geminal column-scaled at the det_eval/det_ratio strict pair. Reverting only the rank-1 division to
+  the plain complex division must fail every large-ratio case. This mathematical-oracle guarantee is full-precision
+  only; the mixed lane of the same test requires only acceptance and a finite carried inverse.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_large_ratio_carried_inverse_native.py::test_native_complex_2x2_update_beyond_sqrt_float_max_keeps_whole_exact_inverse
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {spin: up, x_start: 1.0e-11}
+    - {spin: up, x_start: 1.0e-14}
+    - {spin: up, x_start: 1.0e-17}
+    - {spin: down, x_start: 1.0e-11}
+    - {spin: down, x_start: 1.0e-14}
+    - {spin: down, x_start: 1.0e-17}

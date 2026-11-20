@@ -2,16 +2,50 @@
 
 For a water molecule (ccECP, cc-pVTZ, Cartesian), this script:
   1. Converts the TREXIO file to ``hamiltonian_data.h5``
-     with J2=exp + J3=ao-small.
-  2. Optimizes wavefunction parameters via VMC_Workflow (100 opt steps).
+     with Pade J2 (CLI default form) + J3=ao-small, no J1.
+  2. Optimizes the Jastrow via VMC_Workflow: MAX_CONTINUATION runs of
+     NUM_OPT_STEPS steps each (no convergence criterion is set, so every
+     run is executed; 2 x 100 = 200 steps).
   3. Launches MCMC and LRDMC production runs with ``atomic_force=True``.
   4. Prints a summary table with energies and forces.
 
 Patterns
 --------
   A) J3 + MCMC   -- SR use_lm=True, delta=0.35
-  B) J3 + LRDMC  -- same VMC; LRDMC a=0.30
+  B) J3 + LRDMC  -- same VMC; LRDMC a=0.30 (default GFMC_t / lrdmc-tau driver)
 """
+
+# Copyright (C) 2024- Kosuke Nakano
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 
 import math
 import os
@@ -22,6 +56,7 @@ import sys
 from jqmc_workflow import (
     Container,
     FileFrom,
+    ValueFrom,
     Launcher,
     LRDMC_Workflow,
     MCMC_Workflow,
@@ -32,13 +67,14 @@ from jqmc_workflow import (
 )
 
 # -- Configuration -------------------------------------------------
+# docs: configuration-begin
 SERVER = "cluster"
-QUEUE_LABEL = "cores-120-mpi-120-omp-1-24h"
-PILOT_QUEUE_LABEL = "cores-120-mpi-120-omp-1-3h"
+QUEUE_LABEL = "cores-128-mpi-128-omp-1-1h"
+PILOT_QUEUE_LABEL = "cores-128-mpi-128-omp-1-1h"
 
 # VMC
 NUM_OPT_STEPS = 100
-WF_DUMP_FREQ = 20
+WF_DUMP_FREQ = 1  # dump every step: VMC_Workflow hands on the average of the last 20 steps
 TARGET_VMC_ERROR = 3.0e-3
 
 # MCMC / LRDMC
@@ -47,16 +83,18 @@ ALAT = 0.30
 TARGET_PROD_ERROR = 5.0e-4
 
 # Common
-MAX_TIME = 76000
+MAX_TIME = 3000
 MAX_CONTINUATION = 2
 NUMBER_OF_WALKERS = 1
-POLL_INTERVAL = 300
+POLL_INTERVAL = 60
 
 # pySCF output
 TREXIO_FILE = "water_ccecp_ccpvtz.h5"
 PYSCF_OUTPUT = "water.out"
 
-# pySCF script (embedded from local_pyscf.py)
+# docs: configuration-end
+
+# PySCF script, written to _local_pyscf.py and run by the PySCF stage
 PYSCF_SCRIPT = '''\
 from pyscf import gto, scf
 from pyscf.tools import trexio
@@ -171,10 +209,10 @@ def build_pipeline() -> tuple[
     result_containers: dict[str, Container] = {}
 
     # ==================================================================
-    # J2=exp + J3=ao-small  ->  MCMC + LRDMC
+    # J2 (Pade) + J3=ao-small  ->  MCMC + LRDMC
     # ==================================================================
 
-    # WF: TREXIO -> hamiltonian_data.h5  (J1=None, J2=exp, J3=ao-small)
+    # WF: TREXIO -> hamiltonian_data.h5  (J1=None, J2=Pade, J3=ao-small)
     wf = Container(
         label="wf",
         dirname="01_wf",
@@ -201,15 +239,15 @@ def build_pipeline() -> tuple[
             Dt=Dt,
             number_of_walkers=NUMBER_OF_WALKERS,
             num_opt_steps=NUM_OPT_STEPS,
+            # Code minimums: 30 warmup measurements and 10 bins.
+            num_mcmc_warmup_steps=30,
             num_mcmc_bin_blocks=10,
             pilot_mcmc_steps=50,
             pilot_vmc_steps=20,
             opt_J1_param=False,
             opt_J2_param=True,
             opt_J3_param=True,
-            opt_JNN_param=False,
-            opt_lambda_param=False,
-            opt_with_projected_MOs=False,
+            opt_geminal=False,
             target_error=TARGET_VMC_ERROR,
             optimizer_kwargs={
                 "method": "sr",
@@ -228,7 +266,7 @@ def build_pipeline() -> tuple[
         label="mcmc",
         dirname="03_mcmc",
         input_files=[
-            FileFrom("vmc", f"hamiltonian_data_opt_step_{NUM_OPT_STEPS}.h5"),
+            FileFrom("vmc", ValueFrom("vmc", "optimized_hamiltonian")),
         ],
         rename_input_files=["hamiltonian_data.h5"],
         workflow=MCMC_Workflow(
@@ -253,7 +291,7 @@ def build_pipeline() -> tuple[
         label="lrdmc",
         dirname="04_lrdmc",
         input_files=[
-            FileFrom("vmc", f"hamiltonian_data_opt_step_{NUM_OPT_STEPS}.h5"),
+            FileFrom("vmc", ValueFrom("vmc", "optimized_hamiltonian")),
         ],
         rename_input_files=["hamiltonian_data.h5"],
         workflow=LRDMC_Workflow(
@@ -290,7 +328,7 @@ def print_summary_table(
     print()
     print("=" * 100)
     print("  Water Energy & Force Summary  (ccECP / cc-pVTZ, Cartesian)")
-    print(f"  LRDMC a = {ALAT},  VMC opt steps = {NUM_OPT_STEPS}")
+    print(f"  LRDMC a = {ALAT},  VMC opt steps = {NUM_OPT_STEPS} x {MAX_CONTINUATION} runs")
     if hf_energy is not None:
         print(f"  HF energy = {hf_energy:.6f} Ha")
     print("=" * 100)

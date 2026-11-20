@@ -1,0 +1,109 @@
+id: OPS-DERIV-CLOSURE-001
+verdict_methods:
+- VM-OPS-SET-CLOSURE-001
+name: Complete derivative evidence chain
+kind: operational
+plain_language: The derivative evidence chain is closed only when every required finite-difference, XLA analytical,
+  mixed-precision, and Rust parity obligation is registered by exactly one collected required test case, and every such
+  case emits exactly its registered receipts when it runs.
+statement: Derivative completion holds only when the reviewed requirements and actual evidence registrations are one-to-one,
+  every required fixture and witness is available, and required precision and proof metadata agree. Statically, the
+  node-level registry derives each collected case's receipt keys from its definition and real callspec values with the
+  tests' own id helpers; per lane their union over the actual collection must equal the exact universe, whose sha256 is
+  pinned (Rust R03/R09 derived from their leaves, Rust obligations equal to XLA), and every key must belong to exactly one
+  collected required case; a static checker pins the registry 1:1 to the tests' recorder call sites. At runtime every
+  registered case, at teardown, must have emitted exactly its registered receipts, once each, each passing record, FD and
+  route validation, or the case fails. Which CI job runs a case is CI configuration, not part of this guarantee.
+scope:
+  analytical_obligations: 979
+  rust_required_obligations: 979
+  rust_explicit_na_obligations: 0
+  required_guarantees:
+  - NUM-DERIV-FD-AUTODIFF-001
+  - MATH-DERIV-LOG-WAVEFUNCTION-001
+  - MATH-DERIV-LOCAL-ENERGY-001
+  - MATH-DERIV-CONVENTIONAL-ALGORITHM-001
+  - MATH-DERIV-LOAD-BALANCED-ALGORITHM-001
+  - NUM-DERIV-MIXED-001
+  - IMPL-DERIV-RUST-XLA-001
+required_evidence:
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_completion_gate.py::test_all_required_cases_are_registered_in_pytest
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_completion_gate.py::test_derivative_correctness_oracles_never_switch_precision_lanes
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_completion_gate.py::test_mixed_precision_keeps_production_smoke_in_addition_to_autograd_oracles
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_completion_gate.py::test_production_entry_inventory_matches_discovery
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_completion_gate.py::test_production_verification_inventory_is_well_formed
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_completion_gate.py::test_required_analytical_derivative_families_are_finished
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_completion_gate.py::test_required_case_ids_are_unique
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_completion_gate.py::test_gfmc_matrix_retains_independently_required_parameter_sets
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_completion_gate.py::test_generated_matrix_has_all_required_fixture_bindings
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_evidence.py::test_condition_target_generation_guarantee
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_evidence.py::test_condition_target_generator_cannot_bypass_production_g
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_generated_molecular.py::test_matrix_generation_deterministic
+  - pytest_node: tests/test_jqmc_kernel/test_analytic_grad_matches_autograd_generated_molecular.py::test_mo_agp_fixture_axis_is_explicit_and_buildable
+  - pytest_node: tests/test_rs_kernel/test_analytic_coverage_completion_gate.py::test_every_required_rust_obligation_has_blocking_evidence
+  - pytest_node: tests/test_rs_kernel/test_analytic_coverage_completion_gate.py::test_rust_analytic_matrices_have_no_green_escape
+  - pytest_node: tests/test_rs_kernel/test_analytic_coverage_completion_gate.py::test_rust_continuous_matrix_registration_is_complete
+  - pytest_node: tests/test_rs_kernel/test_analytic_coverage_completion_gate.py::test_rust_contract_has_no_not_applicable_derivative_obligations
+  - pytest_node: tests/test_rs_kernel/test_analytic_coverage_completion_gate.py::test_rust_gfmc_matrix_registration_is_complete
+  - pytest_node: tests/test_rs_kernel/test_analytic_coverage_completion_gate.py::test_upstream_analytical_requirements_have_rust_registrations
+  - pytest_node: tests/test_rs_kernel/test_analytic_coverage_completion_gate.py::test_upstream_leaf_and_regime_requirements_have_native_evidence
+  - pytest_node: tests/test_rs_kernel/test_rs_analytic_matrix.py::test_divergence_allowlist_is_covered_by_the_matrix
+  - pytest_node: tests/test_rs_kernel/test_rs_analytic_matrix.py::test_parameter_derivative_matrix_has_no_green_escape_hatch
+  - pytest_node: tests/test_rs_kernel/test_rs_analytic_matrix_rRe.py::test_divergence_allowlist_is_covered_by_the_matrix
+  - pytest_node: tests/test_rs_kernel/test_rs_analytic_matrix_rRe.py::test_observable_derivative_matrix_has_no_green_escape_hatch
+  - pytest_node: tests/test_gdd_simplification/test_derivative_registry.py::test_selfcheck_rejects_a_missing_extra_misclassified_or_invalid_receipt
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {defect: missing}
+    - {defect: invalid}
+    - {defect: unrelated-guarantee}
+    - {defect: wrong-kind}
+    - {defect: wrong-lane}
+    - {defect: upstream-wrong-guarantee}
+    - {defect: 'none'}
+  - pytest_node: tests/test_gdd_simplification/test_derivative_registry.py::test_selfcheck_never_attests_a_failed_case_and_rejects_an_unregistered_emitter
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {}
+  fd_static:
+    operation: derivatives.fd_autodiff_completion.v1
+    require_empty_differences:
+    - missing
+    - extra
+    - duplicate
+    - unavailable
+    - fixture-signature-mismatch
+    - perturbation-metadata-mismatch
+  static:
+    operation: derivatives.analytical_completion.v1
+    require_empty_differences:
+    - missing
+    - extra
+    - duplicate
+    - unavailable
+    - precision-mismatch
+    - proof-mismatch
+    - liveness-mismatch
+  rust_static:
+    operation: derivatives.rust_completion.v1
+    require_empty_differences:
+    - missing
+    - extra
+    - duplicate
+    - unavailable
+    - block-mismatch
+    - function-mismatch
+  runtime:
+    collection_closure: scripts/check_gdd_required_cases.py
+    derivative_registry: gdd/engine/derivative_registry.py
+    registry_checker: scripts/check_gdd_derivative_registry.py
+    require_exact_receipt_universes:
+      xla-full: 979
+      xla-mixed: 979
+      fd: 52
+      mixed: 10
+      rust-full-required: 979
+      rust-mixed-required: 979
+      rust-full-fragments: 1489
+      rust-mixed-fragments: 1489

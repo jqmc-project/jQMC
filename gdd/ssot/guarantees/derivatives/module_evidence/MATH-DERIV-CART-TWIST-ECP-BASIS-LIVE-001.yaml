@@ -1,0 +1,62 @@
+id: MATH-DERIV-CART-TWIST-ECP-BASIS-LIVE-001
+kind: mathematical
+name: Cartesian twist ECP nonlocal basis derivatives retain their complex contraction
+plain_language: >-
+  On committed lithium_k025_cart.h5 with J1/J2, seed-zero positions and identity ECP
+  rotation, isolated nonlocal-potential exponent/coefficient derivatives are finite,
+  nonzero above the existing floor and retain the strict full-precision scalar AD
+  oracle. Real-projecting complex analytical mesh weights must fail both contractions,
+  with a call witness and passing unmodified control. Mixed uses independently rebuilt
+  full production fidelity in NUM-ORBITAL-ELEMENTARY-DERIVATIVE-MIXED-FIDELITY-001;
+  that guarantee keeps the medium-zone nonzero floor. Kinetic cancellation cannot
+  satisfy this isolated ECP comparison.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cart_twist_ecp_basis.py::test_cart_twist_nonlocal_basis_matches_autodiff
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+    executable_checks:
+      full-isolated-nonlocal-ad:
+        site: tests/test_jqmc_kernel/test_cart_twist_ecp_basis.py::_assert_live_ecp_basis#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-output-or-control-fault
+          expression: a
+        reference:
+          role: full-same-forward-value-autodiff-reference
+          expression: b
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_cart_twist_ecp_basis.py::test_cart_twist_nonlocal_basis_rejects_real_projected_weights
+    required_parameter_cases:
+    - {}
+    required_precision_modes:
+    - full
+    executable_checks:
+      full-complex-contraction-ad-rejection:
+        site: tests/test_jqmc_kernel/test_cart_twist_ecp_basis.py::test_cart_twist_nonlocal_basis_rejects_real_projected_weights#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-output-or-control-fault
+          expression: actual[name]
+        reference:
+          role: full-same-forward-value-autodiff-reference
+          expression: reference[name]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - local_energy

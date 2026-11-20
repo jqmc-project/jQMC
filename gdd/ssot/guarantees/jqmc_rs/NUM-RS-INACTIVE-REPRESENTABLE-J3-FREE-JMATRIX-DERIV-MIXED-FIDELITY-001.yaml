@@ -1,0 +1,33 @@
+id: NUM-RS-INACTIVE-REPRESENTABLE-J3-FREE-JMATRIX-DERIV-MIXED-FIDELITY-001
+kind: numerical
+name: The mixed free real J3 j_matrix derivative of ln Psi for an all-zero-j_matrix representable J3 retains full-route fidelity
+plain_language: >-
+  Mixed precision. On the input of MATH-RS-INACTIVE-REPRESENTABLE-J3-FREE-JMATRIX-DERIV-XLA-001 (the
+  real constant plane-wave child), the j_matrix-derivative block returned in mixed precision by
+  grad_ln_Psi_jastrow_3b_jmatrix (the block judged against XLA AD in full) is finite and stays within the
+  registered parameter-derivative fidelity budget of the same route built and evaluated independently in full
+  precision, judged by the block infinity norm; the full block is nonzero above the absolute floor. The case also
+  injects one out-of-budget change into the mixed block and requires the fidelity gate to reject it without
+  modifying the full reference. The mixed grad_eL_wrt_jastrow_3b_jmatrix and grad_eL_ecp_wrt_jastrow_3b_jmatrix
+  blocks must be finite arrays of the j_matrix shape.
+verdict_methods: [VM-NUM-MIXED-FIDELITY-001]
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_inactive_complex_j3_free_wrappers.py::test_free_real_j3_jmatrix_derivative_inactive_representable_j3_matches_xla
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      same-native-mixed-fidelity:
+        site: tests/test_rs_kernel/test_inactive_complex_j3_free_wrappers.py::test_free_real_j3_jmatrix_derivative_inactive_representable_j3_matches_xla#inequality-2
+        comparator: python.inequality
+        actual:
+          role: mixed-native-parameter-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-native-parameter-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

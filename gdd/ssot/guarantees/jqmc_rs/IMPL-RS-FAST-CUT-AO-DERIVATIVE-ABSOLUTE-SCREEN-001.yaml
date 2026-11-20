@@ -1,0 +1,36 @@
+id: IMPL-RS-FAST-CUT-AO-DERIVATIVE-ABSOLUTE-SCREEN-001
+kind: implementation
+name: FAST-mode Rust AO derivative screens drop only derivatives that are negligible in absolute AO units
+plain_language: >-
+  The screened FAST-mode Rust AO gradient and Laplacian kernels used by the native energy chunk, the GFMC
+  derivative-cache column update and its image-folded sibling (compute_aos_grad_lap_fast_cut,
+  compute_aos_single_value_grad_lap_fast_cut_into, compute_aos_single_value_grad_lap_fast_cut_folded_into) may zero
+  a shell's derivative rows for a far electron only where every dropped gradient component and Laplacian of every AO
+  of that shell is negligible in absolute AO units, normalization and contraction coefficients included; a cut
+  relative to the shell's own peak factor is not enough, because the dropped Laplacian of an uncontracted tight
+  primitive then grows as zeta^1.75 and biases the FAST local energy upward. On an in-test molecular
+  basis of uncontracted s, p, d, f and g primitives with exponents up to 1e6 plus mixed-sign contracted s and p
+  shells that join tight and diffuse primitives, Cartesian and spherical, at seeded points on radii with zeta r^2
+  from 10 to 60 for every exponent (beyond the radius of a shell-relative cut for every tight shell, where the exact
+  derivatives exceed the comparison envelope), the gradient components and Laplacian of all three kernels, reached
+  through the test-only binding compute_AOs_grad_lap_fast_cut, equal the exact XLA compute_AOs_grad and
+  compute_AOs_laplacian within the strict XLA-Rust consistency tolerance of the ao_grad_lap zone. Full and mixed are
+  each required.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_fast_cut_derivative_screen_bound.py::test_fast_cut_ao_derivative_screen_drops_only_negligible_absolute_terms
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: cart}
+    - {kind: sphe}
+    executable_checks:
+      fast-cut-ao-derivatives-vs-exact-xla:
+        site: tests/test_rs_kernel/test_fast_cut_derivative_screen_bound.py::test_fast_cut_ao_derivative_screen_drops_only_negligible_absolute_terms#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-fast-cut-ao-grad-lap, expression: val}
+        reference: {role: exact-xla-ao-grad-lap, expression: ref}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_grad_lap]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_grad_lap]}

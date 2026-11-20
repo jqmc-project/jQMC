@@ -1,0 +1,37 @@
+id: MATH-RS-COMPLEX-EXTRA-FIRST-COMPOSITE-KINETIC-MO-DERIV-001
+kind: mathematical
+name: Rust complex-twist kinetic MO derivative of an extra-first composite equals the derivative of the kinetic
+  energy
+plain_language: 'The native complex-twist kinetic MO-coefficient derivative d Re T / dC of a complex pGTO(+)plane-wave
+  or pGTO(+)B-spline composite determinant (the direct-MO kinetic block of dE_L/dc used for MO optimization) is
+  the derivative of the kinetic energy with respect to the complex MO coefficients whichever child comes first in
+  the AO order: the raw AO stack must follow the composite child order, also when the plane-wave or B-spline child
+  precedes the pGTO child. On the committed pgto_pw_twist_jnone and pgto_bspline_twist_jnone cells (QE-projected
+  Li ccECP at k = 0.25, single determinant, no Jastrow) in their built (pGTO, extra) order and in the (extra, pGTO)
+  order with the MO coefficient columns permuted to match, at one seeded electron configuration, the up- and down-spin
+  derivatives from the free kernel grad_T_mo_withJ_complex and from the MCMC driver adapter _RsComplexPdCtx.pd_el_mo
+  equal reverse-mode AD of the XLA Re kinetic energy with respect to the MO coefficients (dT/dRe C - i dT/dIm C),
+  in the same precision. Every reference must be finite and distinguishable from zero. Full is judged against the
+  independent AD reference. This mathematical guarantee applies only to full precision at strict; paired mixed
+  numerical coverage is owned by NUM-RS-COMPLEX-EXTRA-FIRST-COMPOSITE-DERIVATIVE-MIXED-FIDELITY-001.'
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_extra_first_mo_param_deriv.py::test_complex_composite_kinetic_mo_derivative_matches_ad_in_both_child_orders
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {pattern: pgto_pw_twist_jnone, order: gto_first}
+    - {pattern: pgto_pw_twist_jnone, order: extra_first}
+    - {pattern: pgto_bspline_twist_jnone, order: gto_first}
+    - {pattern: pgto_bspline_twist_jnone, order: extra_first}
+    executable_checks:
+      kinetic-mo-derivative-vs-ad:
+        site: tests/test_rs_kernel/test_complex_extra_first_mo_param_deriv.py::test_complex_composite_kinetic_mo_derivative_matches_ad_in_both_child_orders#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-kinetic-mo-coefficient-derivative, expression: value}
+        reference: {role: same-precision-autodiff-of-kinetic-energy, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, mo_eval, mo_grad, mo_lap, det_eval, det_grad_lap, wf_kinetic]

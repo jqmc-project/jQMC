@@ -1,0 +1,76 @@
+id: MATH-WF-COMPLEX-KINETIC-FD-001
+kind: mathematical
+name: Complex-Psi kinetic finite differences retain phase on calibrated Fourier states
+plain_language: >-
+  The test-only _compute_kinetic_energy_all_elements_debug evaluates fourth-order
+  central second differences of the complex Psi value, dividing each electron's
+  contribution by the unchanged center Psi and returning both spin arrays.
+  _compute_kinetic_energy_debug sums those arrays. On the declared one-MO-per-spin
+  Fourier states in a diagonal (5,6,7) Bohr cell, its result at h=0.125 Bohr
+  agrees with the independent exact Fourier kinetic energy and with the same-mode
+  analytic production result. Cases are a single twisted plane wave, the same
+  wave in both spin sectors, a complex two-wave superposition, and a real standing
+  wave; each runs at the home configuration and with explicit lattice translations.
+  The home superposition comparison also checks the distinct complex up-spin and
+  down-spin contributions of a paired superposition at the same step.
+  Full also requires decreasing errors at h=(0.5,0.25,0.125) Bohr. Mixed retains
+  the same finite-step comparisons but makes no monotonic-convergence promise
+  below its value-rounding floor. Inputs remain unchanged. A phase-removal
+  mutation of the actual value dependency is rejected by the exact Fourier
+  comparison. Invalid nonpositive or nonfinite steps are rejected explicitly.
+  This reference shares production wavefunction values and independently checks
+  kinetic derivative assembly, not general wavefunction-value correctness.
+  No accuracy promise is made near nodes, cusps, underflow, or on arbitrary
+  wavefunctions at this fixed step. Full and Mixed execute separately.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_kinetic_fd_oracle.py::test_kinetic_fd_oracle_matches_fourier_solution
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: plane-wave, translated: false}
+    - {case: plane-wave, translated: true}
+    - {case: paired-plane-wave, translated: false}
+    - {case: paired-plane-wave, translated: true}
+    - {case: superposition, translated: false}
+    - {case: superposition, translated: true}
+    - {case: real-standing-wave, translated: false}
+    - {case: real-standing-wave, translated: true}
+    executable_checks:
+      oracle-calibration:
+        site: tests/test_jqmc_kernel/test_wavefunction_kinetic_fd_oracle.py::test_kinetic_fd_oracle_matches_fourier_solution#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: finite-difference-oracle, expression: reference}
+        reference: {role: exact-Fourier-kinetic-energy, expression: expected}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-WF-KINETIC-FD-FOURIER-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-WF-KINETIC-FD-FOURIER-001}
+      production-vs-oracle:
+        site: tests/test_jqmc_kernel/test_wavefunction_kinetic_fd_oracle.py::test_kinetic_fd_oracle_matches_fourier_solution#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytic-production-kinetic-energy, expression: production}
+        reference: {role: same-mode-finite-difference-oracle, expression: reference}
+        precision:
+          full: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-WF-KINETIC-FD-FOURIER-001}
+          mixed: {policy: CMP-SOURCE-CENTRAL-PAIR-001, pair: TOL-WF-KINETIC-FD-FOURIER-001}
+      production-vs-exact:
+        site: tests/test_jqmc_kernel/test_wavefunction_kinetic_fd_oracle.py::test_kinetic_fd_oracle_matches_fourier_solution#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytic-production-kinetic-energy, expression: production}
+        reference: {role: exact-Fourier-kinetic-energy, expression: expected}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap, wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_grad_lap, wf_kinetic]}
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_kinetic_fd_oracle.py::test_kinetic_fd_oracle_detects_discarded_phase
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_kinetic_fd_oracle.py::test_kinetic_fd_oracle_rejects_invalid_step
+    required_parameter_cases:
+    - {step: 0.0}
+    - {step: -0.1}
+    - {step: {source_expression: numpy.inf}}
+    - {step: {source_expression: numpy.nan}}
+    required_precision_modes: [full, mixed]

@@ -1,0 +1,34 @@
+id: IMPL-TILING-NATIVE-RESTART-001
+kind: implementation
+name: Native tiled supercell J3 optimization and force stress restart
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  The actual native MCMC context executes tiled sweeps, physical forces and
+  stress for all four primitive backends and both spin layouts. A finite
+  independent supercell J3 matrix changes under a J3-only optimization while
+  every frozen Slater coefficient remains exact. HDF5 resumed continuation
+  matches uninterrupted walker coordinates, RNG keys, energy, weights and
+  force/stress histories. Native method counters forbid counting a silent XLA
+  fallback as native driver evidence. Statistical convergence is not asserted.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_orbital_tiling_restart.py::test_native_tiled_j3_optimization_force_stress_restart
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw, restricted: true}
+    - {backend: pw, restricted: false}
+    - {backend: bspline, restricted: true}
+    - {backend: bspline, restricted: false}
+    - {backend: pgto_cart, restricted: true}
+    - {backend: pgto_cart, restricted: false}
+    - {backend: pgto_sphe, restricted: true}
+    - {backend: pgto_sphe, restricted: false}
+    - {backend: composite_cart, restricted: true}
+    - {backend: composite_cart, restricted: false}
+    - {backend: composite_sphe, restricted: true}
+    - {backend: composite_sphe, restricted: false}

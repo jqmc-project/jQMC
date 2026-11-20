@@ -1,0 +1,44 @@
+id: MATH-MCMC-KATO-PBC-PROPOSAL-001
+kind: mathematical
+name: Periodic Kato proposal widths use the nearest nucleus image in XLA and native sweeps
+plain_language: >-
+  On the canonical bare-nucleus periodic cells WF-PATTERN-003 (polarized real Li),
+  WF-PATTERN-015 (real Be) and WF-PATTERN-016 (complex-twist Be AGP), Z_eff exceeds one,
+  so the Kato width f_l(d) = (1 + Z_eff^2 d) / (Z_eff^2 (1 + d)) depends on the distance
+  d to the nearest nucleus image. In each precision separately, XLA (two-spin and
+  up-only) and native (real and complex) sweeps of 50 proposals at Dt=1, epsilon_AS=0
+  must match a from-scratch Metropolis replay with full NumPy geminal determinants,
+  full Jastrow values and an explicit centered 7x7x7 lattice-image search independent
+  of the production minimum-image helpers. Home-cell starts and starts translated
+  by up to 30 lattice cells are required. Accepted counts and final threefry keys
+  match exactly; final coordinates use ATOL_PBC_TRANSLATION_INVARIANT and zero relative
+  tolerance for the independently evaluated f64 geometry. Both accept and reject
+  outcomes are exercised. The legacy complex acceptance oracle also agrees with that
+  replay; its AS-regularization variant agrees with the native complex sweep on the
+  determinant-only bare-Be twist cell at seeds 0 and 2 with epsilon_AS=1e30. This pins proposal geometry,
+  not a statistical convergence claim.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_kato_pbc_proposals.py::test_native_sweep_kato_width_matches_independent_periodic_replay
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-003, lattice_shift: 0}
+    - {pattern: WF-PATTERN-003, lattice_shift: 30}
+    - {pattern: WF-PATTERN-015, lattice_shift: 0}
+    - {pattern: WF-PATTERN-015, lattice_shift: 30}
+    - {pattern: WF-PATTERN-016, lattice_shift: 0}
+    - {pattern: WF-PATTERN-016, lattice_shift: 30}
+  - pytest_node: tests/test_rs_kernel/test_kato_pbc_proposals.py::test_complex_as_acceptance_oracle_uses_periodic_kato_distance
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{seed: 0}, {seed: 2}]
+  - pytest_node: tests/test_jqmc_kernel/test_kato_pbc_proposals.py::test_xla_sweep_kato_width_matches_independent_periodic_replay
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: WF-PATTERN-003, lattice_shift: 0}
+    - {pattern: WF-PATTERN-003, lattice_shift: 30}
+    - {pattern: WF-PATTERN-015, lattice_shift: 0}
+    - {pattern: WF-PATTERN-015, lattice_shift: 30}
+    - {pattern: WF-PATTERN-016, lattice_shift: 0}
+    - {pattern: WF-PATTERN-016, lattice_shift: 30}

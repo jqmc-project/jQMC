@@ -1,0 +1,16 @@
+id: IMPL-TREXIO-TWIST-ROUNDTRIP-001
+kind: implementation
+name: TREXIO multi-twist round trip
+plain_language: 'The 8-twist k-point list enumerates completely, per-twist reads return uniform shapes preserving convention
+  B, and the conversion to twist-average input round-trips (route parity, direct vs through-disk).'
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_read_trexio_kpoint_list_enumerates_8_twists
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_read_trexio_file_per_twist_returns_uniform_shape
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_read_trexio_file_per_twist_preserves_convention_b
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_convert_trexio_to_twist_average_input_full_round_trip
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_cli_twist_average_matches_converter_and_keeps_jastrow
+  - pytest_node: tests/test_jqmc_kernel/test_integration_trexio_multi_twist.py::TestTREXIOMultiTwist::test_converter_keeps_gamma_row_of_multi_k_file_complex

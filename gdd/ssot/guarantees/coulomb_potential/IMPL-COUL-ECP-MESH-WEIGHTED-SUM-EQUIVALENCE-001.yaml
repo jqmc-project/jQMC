@@ -1,0 +1,19 @@
+id: IMPL-COUL-ECP-MESH-WEIGHTED-SUM-EQUIVALENCE-001
+kind: implementation
+name: The weighted rank-one ECP mesh drift and Pulay-force sums equal the weighted dense per-config fields
+plain_language: >-
+  The ECP non-local derivatives use only weighted sums over the one-electron-moved mesh configurations.
+  derivatives.one_move_mesh.mesh_drift_weighted and mesh_force_weighted contract the configuration weights into the
+  rank-one factors and never build a per-configuration all-electron field.
+  For random weights, both the full drift and the determinant-only drift (mesh_drift_weighted) equal the weighted
+  dense drift of mesh_ratio_and_drift and det_drift_mesh. The Pulay force (mesh_force_weighted) equals the weighted
+  dense mesh_force. The ratio and the moved electron's own drift from mesh_ratio_state equal the dense ones.
+  All comparisons use the strict zone policy of the AO, determinant and Jastrow zones.
+  The cases are molecular ECP H2 and N2 with J1, J2 and J3, periodic Gamma Li with J1, J2 and J3, and complex-twist
+  H2 with complex weights. Full and mixed are judged separately.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_one_move_mesh_weighted_sums.py::test_weighted_mesh_sums_match_dense_fields

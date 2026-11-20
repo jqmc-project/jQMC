@@ -1,0 +1,51 @@
+id: MATH-RS-JASTROW-SMALL-SEPARATION-CLOSED-FORM-001
+kind: mathematical
+name: Rust J1/J2 values at a tiny separation against their closed forms
+plain_language: >-
+  With the fixtures of MATH-JAS-SMALL-SEPARATION-CLOSED-FORM-001, the native compute_Jastrow_one_body and
+  compute_Jastrow_two_body value quotients J(h)/h (h in 2**-16, 2**-26, 2**-38 Bohr; molecular and cubic
+  periodic; Pade and exp) equal the expm1 closed form evaluated in the active jastrow_eval dtype from the
+  fp64-reconstructed separation, within the jastrow_eval strict zone policy of the
+  active precision mode (the f32 native kernels run in mixed). The exp form is also checked at separations
+  whose exponent straddles the branch points of the native 1 - exp(-y) helpers (|y| = 1/4 for the f32
+  Taylor branch, y = ln 2 for the f64 exp_m1 branch). Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_jastrow_small_displacement.py::test_rust_jastrow_value_small_displacement_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, kind: J1, form: pade}
+    - {geometry: molecular, kind: J1, form: exp}
+    - {geometry: molecular, kind: J2, form: pade}
+    - {geometry: molecular, kind: J2, form: exp}
+    - {geometry: cubic_10bohr, kind: J1, form: pade}
+    - {geometry: cubic_10bohr, kind: J1, form: exp}
+    - {geometry: cubic_10bohr, kind: J2, form: pade}
+    - {geometry: cubic_10bohr, kind: J2, form: exp}
+    executable_checks:
+      closed-form:
+        site: tests/test_rs_kernel/test_jastrow_small_displacement.py::test_rust_jastrow_value_small_displacement_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-value-quotient, expression: value_over_h}
+        reference: {role: zone-dtype-closed-form-value-quotient, expression: closed_value_over_h}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+  - pytest_node: tests/test_rs_kernel/test_jastrow_small_displacement.py::test_rust_jastrow_exp_value_across_branch_points_matches_closed_form
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {geometry: molecular, kind: J1}
+    - {geometry: molecular, kind: J2}
+    - {geometry: cubic_10bohr, kind: J1}
+    - {geometry: cubic_10bohr, kind: J2}
+    executable_checks:
+      closed-form:
+        site: tests/test_rs_kernel/test_jastrow_small_displacement.py::test_rust_jastrow_exp_value_across_branch_points_matches_closed_form#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-value-quotient, expression: value_over_h}
+        reference: {role: zone-dtype-closed-form-value-quotient, expression: closed_value_over_h}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval]}

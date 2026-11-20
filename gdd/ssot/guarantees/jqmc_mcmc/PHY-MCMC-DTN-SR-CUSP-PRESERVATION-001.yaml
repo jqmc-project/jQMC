@@ -1,0 +1,45 @@
+id: PHY-MCMC-DTN-SR-CUSP-PRESERVATION-001
+kind: physical
+name: DTN cusp preservation through one production SR update
+plain_language: One production MCMC SR step on a DTN-only Jastrow completes on the reviewed H2 and open-shell Li fixtures,
+  moves every independent DTN parameter family, and preserves the exact antiparallel and parallel electron-electron cusp
+  constraints after the update.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCOptimize::test_dtn_sr_step_e2e
+    executable_checks:
+      d8-n-194:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCOptimize.test_dtn_sr_step_e2e#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: cusp_anti
+        reference:
+          role: source-reference-value
+          expression: '0.5'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-195:
+        site: tests/test_jqmc_kernel/test_jqmc_mcmc.py::TestMCMCOptimize.test_dtn_sr_step_e2e#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: cusp_par
+        reference:
+          role: source-reference-value
+          expression: '0.25'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001

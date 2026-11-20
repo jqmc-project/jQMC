@@ -1,0 +1,193 @@
+id: MATH-PWP-PROJECTION-IDENTITIES-001
+kind: mathematical
+name: Projection algebra identities
+plain_language: 'The projection algebra is exact: orthogonal PW design matrices, B-spline partition of unity, knot interpolation,
+  exact PW-to-PW projection with declared truncation, Fourier-domain matrices equal to the real-space and FFT evaluations,
+  block projection equal to the full eigensolve, Schur consistency, and batched design matrices equal to per-primitive assembly
+  with preserved norms.'
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_build_pw_design_matrix_orthogonal
+    executable_checks:
+      d8-n-443:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_build_pw_design_matrix_orthogonal#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: gram
+        reference:
+          role: source-reference-value
+          expression: cell.volume * np.eye(len(millers))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-LOOSE-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-LOOSE-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_bspline_weights_partition_of_unity
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_spline_interpolates_at_knots
+    executable_checks:
+      d8-n-444:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_spline_interpolates_at_knots#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: recon[:, 0]
+        reference:
+          role: source-reference-value
+          expression: field.reshape(-1)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_project_pw_to_pw_exact_and_truncation
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_fourier_vs_real_pgto_cu
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_fourier_vs_real_mixed_li
+    executable_checks:
+      d8-n-445:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_fourier_vs_real_mixed_li#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: m_four.residuals
+        reference:
+          role: source-reference-value
+          expression: m_real.residuals
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-RELAXED-R-PW-PROJECTION-FP64-RELAXED-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-RELAXED-R-PW-PROJECTION-FP64-RELAXED-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_fourier_vs_real_pgto_spline_li
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_build_gto_pw_matrix_matches_fft_of_real
+    executable_checks:
+      d8-n-446:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_build_gto_pw_matrix_matches_fft_of_real#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: G_analytic
+        reference:
+          role: source-reference-value
+          expression: G_fft
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-GRID-R-PW-PROJECTION-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-GRID-R-PW-PROJECTION-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_project_from_blocks_matches_full_eigh
+    executable_checks:
+      d8-n-447:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_project_from_blocks_matches_full_eigh#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: res_new
+        reference:
+          role: source-reference-value
+          expression: res_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-R-PW-PROJECTION-FP64-001
+      d8-n-448:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_project_from_blocks_matches_full_eigh#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: coeff_gto_new
+        reference:
+          role: source-reference-value
+          expression: coeff_gto_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-GRID-R-PW-PROJECTION-FP64-GRID-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-GRID-R-PW-PROJECTION-FP64-GRID-001
+      d8-n-449:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_project_from_blocks_matches_full_eigh#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: coeff_pw_new
+        reference:
+          role: source-reference-value
+          expression: coeff_pw_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-GRID-R-PW-PROJECTION-FP64-GRID-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-GRID-R-PW-PROJECTION-FP64-GRID-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_mixed_basis_projection_schur_consistency_cu
+    executable_checks:
+      d8-n-450:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_mixed_basis_projection_schur_consistency_cu#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: err2 / psi_norm2
+        reference:
+          role: source-reference-value
+          expression: best.residuals
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-SPLINE-RESIDUAL-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-SPLINE-RESIDUAL-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_build_gto_design_matrix_batched_matches_per_primitive
+    executable_checks:
+      d8-n-451:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_build_gto_design_matrix_batched_matches_per_primitive#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: design.real
+        reference:
+          role: source-reference-value
+          expression: ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-LOOSE-R-ATOL-PW-PROJECTION-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PW-PROJECTION-FP64-LOOSE-R-ATOL-PW-PROJECTION-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_reconstruct_pw_orbitals_norm
+    executable_checks:
+      d8-n-452:
+        site: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection.test_reconstruct_pw_orbitals_norm#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: norms[:5]
+        reference:
+          role: source-reference-value
+          expression: np.full(5, ref.cell.volume)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PW-PROJECTION-FP64-NORM-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PW-PROJECTION-FP64-NORM-001
+  - pytest_node: tests/test_jqmc_kernel/test_pw_pgto_projection.py::TestPWPGTOProjection::test_mixed_full_overlap_condition_qr_reduction_matches_direct_matrix

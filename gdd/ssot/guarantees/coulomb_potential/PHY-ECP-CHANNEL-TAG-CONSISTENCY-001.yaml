@@ -1,0 +1,14 @@
+id: PHY-ECP-CHANNEL-TAG-CONSISTENCY-001
+kind: physical
+name: ECP non-local channel tags are declared-and-present
+plain_language: Coulomb_potential_data.sanity_check rejects an ECP table where max_ang_mom_plus_1 declares a non-local l
+  with no term backing it (or no term at all tagged as the local channel, or a tag above the local channel), while accepting
+  zero-coefficient terms and atoms whose l_max differs from their neighbours.
+verdict_methods:
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpError::test_sanity_check_rejects_declared_l_with_no_terms
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpError::test_sanity_check_rejects_missing_local_channel
+  - pytest_node: tests/test_jqmc_kernel/test_coulomb_potential.py::TestEcpError::test_sanity_check_rejects_tag_above_local_channel

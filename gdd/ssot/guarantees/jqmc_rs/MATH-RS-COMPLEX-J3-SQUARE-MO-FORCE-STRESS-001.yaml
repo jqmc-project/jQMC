@@ -1,0 +1,56 @@
+id: MATH-RS-COMPLEX-J3-SQUARE-MO-FORCE-STRESS-001
+kind: mathematical
+name: Rust complex-twist J3 forces and stress of a square non-identity MO-wrapped J3 orbital equal the energy derivatives
+plain_language: 'The native complex-twist Hellmann-Feynman derivatives of the local energy (d Re e_L / dR, d Re
+  e_L / dr_up, d Re e_L / dr_dn, d Re e_L / d eps) and Pulay derivatives of the wave function (d Re ln Psi / dR,
+  d Re ln Psi / d eps) are the derivatives of the continuum local energy and of ln Psi for any MO-wrapped J3 orbital,
+  including a square MO coefficient matrix that is not the identity: the J3 force and stress kernels must apply
+  the MO coefficients whenever an MO layer is present, as the forward J3 value does, and must not decide by the
+  shape of the MO matrix. On the committed pgto_pw_twist_j123 cell (QE-projected Li ccECP at k = 0.25, complex pGTO(+)PW
+  single determinant, exp J1/J2 and an MO-wrapped pGTO(+)PW composite J3 with a seeded nonzero j_matrix) and on
+  its reduction to a bare complex pGTO J3 leaf, with the J3 MO replaced by a seeded orthogonal Q and j_matrix rotated
+  to Q M Q^T (J1-like column Q j) so the wave function is unchanged, at one seeded electron configuration, the free
+  kernels vmc_grad_e_L_pbc_complex, vmc_grad_ln_psi_pbc_complex, vmc_grad_e_L_eps_pbc_complex and vmc_grad_ln_psi_eps_pbc_complex,
+  the MCMC driver entries grad_e_L_pbc_complex_batch, grad_ln_psi_pbc_complex_batch, grad_e_L_eps_pbc_complex_batch
+  and grad_ln_psi_eps_pbc_complex_batch, and the GFMC/LRDMC T-move measurement force and stress _gfmc_grad_e_L_ecp_pbc_complex
+  and _gfmc_stress_ecp_pbc_complex equal reverse-mode AD of the XLA Re local energy (identity quadrature rotation)
+  and Re ln Psi with every nucleus position leaf displaced together, the electron coordinates displaced, or the
+  cell, nuclei and electrons strained together, in the same precision. Every reference must be finite and distinguishable
+  from zero. This mathematical guarantee owns full AD only at strict; paired mixed numerical receipts belong
+  to NUM-RS-COMPLEX-J3-CHILD-ORDER-SQUARE-MO-DERIVATIVE-MIXED-FIDELITY-001.'
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_complex_j3_square_mo_force_stress.py::test_complex_j3_square_nonidentity_mo_forces_match_ad
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {basis: pgto_pw}
+    - {basis: pgto}
+    executable_checks:
+      force-vs-ad:
+        site: tests/test_rs_kernel/test_complex_j3_square_mo_force_stress.py::test_complex_j3_square_nonidentity_mo_forces_match_ad#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-vmc-and-gfmc-hf-and-pulay-force, expression: value}
+        reference: {role: same-precision-autodiff-of-local-energy-and-ln-psi, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, mo_eval, mo_grad, mo_lap, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap,
+              wf_kinetic, ewald, coulomb]
+  - pytest_node: tests/test_rs_kernel/test_complex_j3_square_mo_force_stress.py::test_complex_j3_square_nonidentity_mo_stress_matches_strain_ad
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {basis: pgto_pw}
+    - {basis: pgto}
+    executable_checks:
+      stress-vs-strain-ad:
+        site: tests/test_rs_kernel/test_complex_j3_square_mo_force_stress.py::test_complex_j3_square_nonidentity_mo_stress_matches_strain_ad#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-complex-vmc-and-gfmc-hf-and-pulay-stress, expression: value}
+        reference: {role: same-precision-strain-autodiff-of-local-energy-and-ln-psi, expression: reference}
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, mo_eval, mo_grad, mo_lap, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap,
+              wf_kinetic, ewald, coulomb]

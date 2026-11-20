@@ -1,0 +1,20 @@
+id: MATH-OPT-SHIPPED-DEFAULTS-STEP-001
+kind: mathematical
+name: One real optimization step with the shipped default optimizer configuration equals an independent recomputation
+plain_language: >-
+  One MCMC.run_optimize step on H2 (all-electron, Pade J1 + J2, fixed seed, real sampler) with optimizer_kwargs taken
+  unchanged from jqmc_miscs.cli_parameters (SR with conjugate gradient, use_lm with lm_subspace_dim 0, i.e. the
+  accelerated-SR scaling) hands exactly those controls to the optimization target. The consumed local energies, log
+  derivatives and local-energy derivatives equal an independent evaluation at the stored configurations; the SR
+  direction equals a dense solve of (S + epsilon diag S) q = f; the scale equals the reference-connected stationary
+  point of the one-dimensional linear-method model along that direction; the applied change is the shipped delta
+  times that scaled step, and it lowers the reweighted fixed-sample energy while its reflection raises it. A doubled
+  delta, the unscaled SR step and a plain-SR replay must fail these checks.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_shipped_default_optimizer_configuration_reaches_the_target
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_shipped_default_asr_update_matches_dense_recomputation
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_shipped_default_step_lowers_the_fixed_sample_energy
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_batch_update.py::test_negative_control_shipped_default_checks_reject_changed_defaults

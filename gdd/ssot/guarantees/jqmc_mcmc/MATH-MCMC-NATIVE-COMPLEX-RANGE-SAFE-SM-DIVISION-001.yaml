@@ -1,0 +1,29 @@
+id: MATH-MCMC-NATIVE-COMPLEX-RANGE-SAFE-SM-DIVISION-001
+kind: mathematical
+name: The native complex rank-1 inverse update stays finite and exact for a finite determinant ratio beyond the square root of the float64 range
+plain_language: >-
+  Every division by the determinant ratio in the accepted-move update of
+  the native complex sweep (complex_det::sm_apply_inplace_complex: the rank-1 term and the exact moved column or
+  row) is range-safe: a finite ratio whose magnitude exceeds ~1.3e154, where the unscaled complex division forms
+  an overflowing |R|^2, gives a finite carried inverse equal to the dense inverse of the carried geminal instead
+  of NaN; in range the division is bit-identical to the plain complex division. Evidence: the periodic complex He
+  model of MATH-MCMC-NATIVE-COMPLEX-LARGE-RATIO-CARRIED-INVERSE-001 with the moved electron (up and down) going
+  x_start -> 0.3 for x_start = 1e-14 (|R| ~ 5.07e161) and 1e-17 (|R| ~ 5.07e197), and the in-range control
+  1e-11 (|R| ~ 5.07e125); exact acceptance 1. Starting from the closed-form carried pair (a finite float64
+  det-zone state in both precision modes; orbitals are evaluated only at the proposed x = 0.3), the sweep must
+  accept, return the closed-form geminal row-scaled at the ao_eval/det_eval strict pair and a finite carried
+  inverse equal to the dense inverse of the carried geminal column-scaled at the det_eval/det_ratio strict pair.
+  Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_large_ratio_carried_inverse_native.py::test_native_complex_update_with_ratio_beyond_sqrt_float_max_keeps_finite_exact_inverse
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {spin: up, x_start: 1.0e-11}
+    - {spin: up, x_start: 1.0e-14}
+    - {spin: up, x_start: 1.0e-17}
+    - {spin: down, x_start: 1.0e-11}
+    - {spin: down, x_start: 1.0e-14}
+    - {spin: down, x_start: 1.0e-17}

@@ -1,0 +1,26 @@
+id: IMPL-OPT-TIE-ADJOINT-COST-001
+kind: implementation
+name: Device linear-tie adjoint batches sparse coordinate accumulation
+plain_language: >-
+  The device real adjoint of a COO tie sums Re(conj(coefficient) * covector)
+  over every entry sharing a coordinate in one vectorized scatter-add. Its
+  recursively inspected JAXpr has bounded equal primitive counts for J3 ties
+  with 20 and 930 entries, with no scan, while or dense multiplication hiding
+  per-entry dispatch/copy work. Independent dense references verify actual J3
+  symmetric and AGP Hermitian paired/free ties and a general sparse complex tie
+  with four contributions to one coordinate, including scalar, multi-axis and
+  empty sample batches. Real-result dtype is preserved for fp32/fp64 inputs;
+  the public derivative-source transform retains the real/Wirtinger directional
+  chain rule. This is a structural cost bound, not a machine-specific timing SLA.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_device_tie_adjoint_dispatch_structure_is_independent_of_nonzeros
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_device_tie_adjoint_and_directional_sources_match_dense_reference
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{kind: symmetric}, {kind: hermitian}, {kind: general-f32}, {kind: general-f64}]

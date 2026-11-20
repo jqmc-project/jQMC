@@ -1,0 +1,91 @@
+id: NUM-PUBLIC-MOLECULAR-ECP-DERIVATIVE-MIXED-FIDELITY-001
+kind: numerical
+name: Public molecular ECP derivatives retain Mixed Full-production fidelity
+plain_language: Original N2/H2 molecular ECP electron/strain and H2 optimizer-parameter derivative cases, seed0
+  positions and identity quadrature, compare independently reloaded XLA analytical Full/Mixed production from one
+  serialized Full physical input. Full source construction and identical fixed positions are required. Electron
+  up/down, strain, J1/J2 and occupied-MO parameter fields keep their shapes, complete keys and finite values; original
+  ECP activation and parameter-key controls remain. Every nonempty homogeneous field obeys the unchanged central
+  parameter_derivative infinity-norm budget and rejects an isolated excess-budget perturbation. All six original
+  cases remain. Full strict AD remains in MATH-DERIVAPI-CONSISTENCY-001. No production precision zone, physical
+  input, route, budget, seed, conditioning filter or skip changes.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dr_vs_auto
+    required_parameter_cases:
+    - stem: N2_ecp_ccpvtz_cart.h5
+    - stem: H2_ecp_ccpvdz_cart.h5
+    required_precision_modes:
+    - mixed
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_first17_ecp_fidelity#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-local-energy-derivative
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-physical-input-and-positions
+          expression: full_block
+        iterations:
+          variable: field
+          required_values:
+          - electron-up
+          - electron-down
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_deps_vs_auto
+    required_parameter_cases:
+    - stem: N2_ecp_ccpvtz_cart.h5
+    - stem: H2_ecp_ccpvdz_cart.h5
+    required_precision_modes:
+    - mixed
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_first17_ecp_fidelity#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-local-energy-derivative
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-physical-input-and-positions
+          expression: full_block
+        iterations:
+          variable: field
+          required_values:
+          - strain
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_ecp_e_L_dc_vs_auto
+    required_parameter_cases:
+    - stem: H2_ecp_ccpvdz_cart.h5
+    - stem: H2_ecp_ccpvtz_cart.h5
+    required_precision_modes:
+    - mixed
+    executable_checks:
+      analytical-mixed-vs-fresh-full:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_api_first17_ecp_fidelity#inequality-3
+        comparator: python.inequality
+        actual:
+          role: mixed-XLA-analytical-local-energy-derivative
+          expression: mixed_block
+        reference:
+          role: independent-full-XLA-same-physical-input-and-positions
+          expression: full_block
+        iterations:
+          variable: field
+          required_values:
+          - j1_param
+          - j2_param
+          - mo_coefficients_up
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

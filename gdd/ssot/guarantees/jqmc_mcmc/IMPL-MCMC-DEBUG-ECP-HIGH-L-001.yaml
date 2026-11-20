@@ -1,0 +1,21 @@
+id: IMPL-MCMC-DEBUG-ECP-HIGH-L-001
+kind: implementation
+name: MCMC production/debug parity with a live non-local l >= 1 ECP channel
+plain_language: >-
+  On the committed Cl2 ccECP, whose non-local s and p coefficients are non-zero on both atoms (checked
+  from the raw ECP arrays), with J1+J2, two walkers and force on, the production MCMC driver and the
+  _MCMC_debug twin keep keys and accepted moves exactly and final walkers within the fp64 walker pin, and
+  stored w_L and e_L, the public energy and the public force agree at the strict zone tier; stored and
+  public values are finite. At every final walker the l >= 1 non-local contribution, from the eager
+  all-pairs kernel with and without the l >= 1 coefficients, exceeds the e_L envelope. Production run
+  with the l >= 1 coefficients zeroed on the same walk must fail the e_L comparison. The stored production
+  e_L of the last step equals kinetic + bare Coulomb + local ECP + a non-local reference built from the raw
+  ECP arrays (terms selected from ang_moms and max_ang_mom_plus_1, scipy Legendre, full determinant and
+  Jastrow ratios, nearest-nucleus convention) at each final walker and the rotation of its final key, with
+  the l >= 1 part of the reference outside the envelope, and the l >= 1-zeroed production run must miss
+  that reference. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_driver_ecp_high_l.py::test_mcmc_high_l_ecp_production_matches_debug

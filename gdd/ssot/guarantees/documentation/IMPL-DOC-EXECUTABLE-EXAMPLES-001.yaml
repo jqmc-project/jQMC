@@ -1,0 +1,24 @@
+id: IMPL-DOC-EXECUTABLE-EXAMPLES-001
+kind: implementation
+name: Published examples use the supported interfaces and staging conventions
+plain_language: >-
+  The published analysis and workflow snippets use valid dump selection,
+  checkpoint handoff, minimum analysis populations, and QE input staging.
+  The weighted-statistics example executes. Model-based staging tests cover
+  both restricted and LSDA wavefunction filenames; they do not certify a
+  physical energy or a complete external QE calculation.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_dump_selection_numeric_partial_and_continued
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_workflow_handoff_gate_rejects_fixed_step_and_missing_rename
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_published_vmc_dump_reaches_actual_container_staging
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_published_analysis_commands_one_rank_one_walker
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_weighted_statistics_example_is_executable
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_linear_staging_paths_and_original_qe_path_regression
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_linear_staging_pw_x_names_restricted_and_lsda_wavefunction_files
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_linear_staging_qe_conversion_accepts_shipped_restricted_or_lsda_save
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_scientific_molecular_tutorial_analysis_minima
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_published_analysis_command_lines_satisfy_minima
+  - pytest_node: tests/test_jqmc_kernel/test_docs_examples.py::test_solid_state_workflow_example_is_in_the_public_manual_and_gate

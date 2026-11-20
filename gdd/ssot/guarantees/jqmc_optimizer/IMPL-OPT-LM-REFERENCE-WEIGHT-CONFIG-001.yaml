@@ -1,0 +1,44 @@
+id: IMPL-OPT-LM-REFERENCE-WEIGHT-CONFIG-001
+kind: implementation
+name: LM reference-weight configuration reaches both optimization routes
+plain_language: >-
+  The optimizer consumes lm_reference_weight_min from optimizer_kwargs,
+  records the effective setting and forwards it to the ordinary target and
+  the twist-decomposed Plan-B target. An omitted setting retains the shared
+  default 0.9. For full and reduced LM, a candidate below the supplied
+  reference-weight threshold is rejected into the existing aSR fallback;
+  equality is accepted when the existing energy gate passes. Plan-B applies
+  the same setting to both shared and sampler-local blocks. Fixed candidate
+  inputs and observed driver arguments and updates detect an ignored override
+  or a reversed boundary. This is a configuration and selection contract,
+  not a stochastic convergence claim or a change to numerical tolerances.
+  The target checks use synthetic fixed batches. Driver checks use the
+  H2_pbc_ae_k025_cart.h5 wavefunction with only exponential-J2 parameters
+  active and a synthetic fixed batch; they do not sample electron positions
+  or claim accuracy of that batch's energy and derivatives.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_reference_weight.py::test_lm_reference_weight_controls_candidate_acceptance
+    required_parameter_cases:
+    - {route: ordinary, lm_subspace_dim: -1, threshold_case: omitted}
+    - {route: ordinary, lm_subspace_dim: -1, threshold_case: equality}
+    - {route: ordinary, lm_subspace_dim: -1, threshold_case: reject}
+    - {route: ordinary, lm_subspace_dim: 1, threshold_case: omitted}
+    - {route: ordinary, lm_subspace_dim: 1, threshold_case: equality}
+    - {route: ordinary, lm_subspace_dim: 1, threshold_case: reject}
+    - {route: planb, lm_subspace_dim: -1, threshold_case: omitted}
+    - {route: planb, lm_subspace_dim: -1, threshold_case: equality}
+    - {route: planb, lm_subspace_dim: -1, threshold_case: reject}
+    - {route: planb, lm_subspace_dim: 1, threshold_case: omitted}
+    - {route: planb, lm_subspace_dim: 1, threshold_case: equality}
+    - {route: planb, lm_subspace_dim: 1, threshold_case: reject}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_reference_weight.py::test_optimizer_driver_forwards_reference_weight
+    required_parameter_cases:
+    - {route: ordinary, threshold_case: omitted}
+    - {route: ordinary, threshold_case: equality}
+    - {route: planb, threshold_case: omitted}
+    - {route: planb, threshold_case: equality}
+    required_precision_modes: [full, mixed]

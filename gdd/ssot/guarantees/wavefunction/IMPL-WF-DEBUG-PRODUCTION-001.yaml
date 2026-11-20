@@ -1,0 +1,250 @@
+id: IMPL-WF-DEBUG-PRODUCTION-001
+kind: implementation
+name: Debug/production route parity of wavefunction evaluation
+plain_language: The discretized kinetic energy equals its debug twin, the analytic nodal distance equals the debug evaluation,
+  and the wavefunction value is self-consistent between evaluate_wavefunction and exp of evaluate_ln_wavefunction across
+  every periodic kind.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestDiscretizedKineticEnergy::test_debug_and_jax_discretized_kinetic_energy
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestDiscretizedKineticEnergy.test_debug_and_jax_discretized_kinetic_energy#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_kinetic_part_r_up_carts_jax
+        reference:
+          role: existing-test-reference
+          expression: mesh_kinetic_part_r_up_carts_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestDiscretizedKineticEnergy.test_debug_and_jax_discretized_kinetic_energy#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_kinetic_part_r_dn_carts_jax
+        reference:
+          role: existing-test-reference
+          expression: mesh_kinetic_part_r_dn_carts_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestDiscretizedKineticEnergy.test_debug_and_jax_discretized_kinetic_energy#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_kinetic_part_r_up_carts_jax_fast_update
+        reference:
+          role: existing-test-reference
+          expression: mesh_kinetic_part_r_up_carts_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestDiscretizedKineticEnergy.test_debug_and_jax_discretized_kinetic_energy#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: mesh_kinetic_part_r_dn_carts_jax_fast_update
+        reference:
+          role: existing-test-reference
+          expression: mesh_kinetic_part_r_dn_carts_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestDiscretizedKineticEnergy.test_debug_and_jax_discretized_kinetic_energy#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: elements_kinetic_part_jax
+        reference:
+          role: existing-test-reference
+          expression: elements_kinetic_part_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+      comparison-6:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestDiscretizedKineticEnergy.test_debug_and_jax_discretized_kinetic_energy#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: elements_kinetic_part_jax_fast_update
+        reference:
+          role: existing-test-reference
+          expression: elements_kinetic_part_debug
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - jastrow_ratio
+            - det_ratio
+            - wf_ratio
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestNodalDistance::test_nodal_distance_analytic_vs_debug
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestNodalDistance.test_nodal_distance_analytic_vs_debug#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(nd_analytic)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(nd_debug)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - jastrow_grad_lap
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction::test_evaluate_wavefunction_periodic_value
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pw}
+    - {kind: bspline}
+    - {kind: pgto}
+    - {kind: pgto+pw}
+    - {kind: pgto+bspline}
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_wave_function.py::TestPeriodicWavefunction.test_evaluate_wavefunction_periodic_value#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.log(np.abs(psi_np))
+        reference:
+          role: existing-test-reference
+          expression: ln_abs_psi_np
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - wf_kinetic

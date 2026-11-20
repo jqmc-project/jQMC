@@ -6,7 +6,6 @@
 
 export OMP_NUM_THREADS=_OMP_NUM_THREADS_
 
-INPUT=_INPUT_
 OUTPUT=_OUTPUT_
 
-mpirun -np _NUM_CORES_ jqmc ${INPUT} > ${OUTPUT} 2>&1
+mpirun -np _NUM_CORES_ _COMMAND_ > ${OUTPUT} 2>&1

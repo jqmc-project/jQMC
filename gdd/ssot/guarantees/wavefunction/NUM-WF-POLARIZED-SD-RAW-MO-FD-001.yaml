@@ -1,0 +1,46 @@
+id: NUM-WF-POLARIZED-SD-RAW-MO-FD-001
+kind: numerical
+name: Fully polarized SD stored MO gradients agree with raw primal finite differences
+plain_language: On the validated WF-PATTERN-008 SD, each backend runs two walkers with seed 11 for 14 steps and two steps
+  per measurement. Every real and imaginary component of all 12 occupied complex MO coefficients is directly perturbed at
+  the final measured coordinates, giving 48 finite partial derivatives across two walkers. No apply_update, Stiefel retraction
+  or parameter tie enters the primitive evaluate_ln_wavefunction oracle. Stored Re(g) and -Im(g) agree with centered differences
+  at h=0.00001 using the unchanged central tight full FD pair; centered differences at h and 2h also agree under that pair.
+  The field cardinality and route-engagement controls are explicit. This full-only numerical anchor concerns occupied MO parameters,
+  not all Jastrow blocks, the absolute correctness of the primal Hamiltonian or a rigorous truncation-error bound.
+verdict_methods:
+- VM-NUM-FIXED-INPUT-FD-001
+required_evidence:
+- verdict_method: VM-NUM-FIXED-INPUT-FD-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_polarized_sd_mcmc_parameters_match_raw_full_fd_or_mixed_fidelity
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - rust_on: false
+    - rust_on: true
+    executable_checks:
+      raw-coefficient-derivative:
+        site: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_polarized_sd_mcmc_parameters_match_raw_full_fd_or_mixed_fidelity#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: stored-driver-real-and-minus-imaginary-mo-gradient
+          expression: production_components
+        reference:
+          role: raw-mo-coefficient-centered-lnabspsi-finite-difference
+          expression: primitive_fd
+        precision:
+          full:
+            policy: CMP-FD-AUTODIFF-FULL-001
+      centered-step-consistency:
+        site: tests/test_rs_kernel/test_polarized_sd_variational_blocks.py::test_polarized_sd_mcmc_parameters_match_raw_full_fd_or_mixed_fidelity#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: raw-mo-coefficient-centered-finite-difference-at-h
+          expression: primitive_fd
+        reference:
+          role: raw-mo-coefficient-centered-finite-difference-at-2h
+          expression: doubled_fd
+        precision:
+          full:
+            policy: CMP-FD-AUTODIFF-FULL-001

@@ -1,0 +1,34 @@
+id: IMPL-RS-MCMC-CHUNK-AS-WEIGHT-001
+kind: implementation
+name: Native MCMC chunk active AS walker weights
+plain_language: Native real and complex MCMC energy chunks store the squared Attaccalite-Sorella reweighting factor
+  at their returned walker positions, including a non-vacuous R_AS below epsilon_AS. The molecular ECP case uses
+  the API default epsilon_AS=0.1; the one-orbital complex twist case uses epsilon_AS=2 so its exact R_AS=1 is active.
+  XLA factors and weights are cross-checked against a NumPy inverse-and-norm reference on the same configurations.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_observables.py::test_native_chunk_stored_as_weights_match_recomputed_walkers
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {pattern: mol_ecp_sphe_j12, epsilon: 0.1, steps: 60, walkers: 3}
+    - {pattern: twist_sphepgto_j12, epsilon: 2.0, steps: 3, walkers: 2}
+    executable_checks:
+      native-vs-xla-weight:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_native_chunk_stored_as_weights_match_recomputed_walkers#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-stored-active-AS-weight, expression: 'stored[walker]'}
+        reference: {role: xla-weight-at-returned-walker, expression: xla_weight}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, det_eval, det_ratio]}
+      native-vs-independent-weight:
+        site: tests/test_rs_kernel/test_mcmc_observables.py::test_native_chunk_stored_as_weights_match_recomputed_walkers#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-stored-active-AS-weight, expression: 'stored[walker]'}
+        reference: {role: numpy-inverse-norm-squared-ratio, expression: reference}
+        precision:
+          full: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, det_eval, det_ratio]}
+          mixed: {policy: CMP-XLA-RUST-MEDIUM-001, zones: [ao_eval, det_eval, det_ratio]}

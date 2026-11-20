@@ -1,0 +1,27 @@
+id: MATH-MCMC-AS-COMPLEX-EXTREME-FINITE-PROPOSAL-001
+kind: mathematical
+name: A finite complex proposal whose squared ratio exceeds the float64 range keeps the exact AS decision
+plain_language: >-
+  Complex proposed state. The native complex sweep (ObsCtx.mcmc_sweep_complex) and its per-step walker
+  batch (ObsCtx.mcmc_sweep_complex_batch) form the proposed inverse quotients (G^-1 u)/R and (v^T G^-1)/R of the AS
+  factor range-safely, so that a finite ratio R whose |R|^2 (or |G^-1 u| |R|) is not representable in float64 does
+  not turn the proposed inverse into NaN and reject the move. Evidence: the He Bloch cell of
+  MATH-MCMC-AS-COMPLEX-PROPOSED-MOVED-LINE-001 with phi = N_12 x^12 (1 + i x) exp(-r^2) (AOs x^12 and x^13 exp(-r^2),
+  MO coefficients 1 and 2.5 i). Electron 0 of either spin at (1e-14, 0.3, 0.4), the other at (0.4, 0.3, 0.4), so
+  |G| ~ 1e-178 with the finite exact inverse 1/G (closed form, injected in float64 in both precision modes; G G^-1 = 1
+  checked), moved along x to 0.3 with Dt 2: ln|R| is finite but 2 ln|R| exceeds ln(float64 max), and the exact
+  acceptance is 1. Threefry keys (777, 0), (777, 5), (777, 8) (up) and (777, 2), (777, 3), (777, 15) (down), each
+  checked to select that move; epsilon_AS 0 and 0.1 (R_AS = 1 exactly for the 1x1 G). Reference as in
+  MATH-MCMC-AS-COMPLEX-PROPOSED-MOVED-LINE-001. Every key must be accepted, single and batched. Full and mixed are
+  judged separately. Fixed-input decision accuracy, not a statistical test.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_mcmc_as_factor_robust_native.py::test_native_complex_as_extreme_finite_proposal_keeps_decisions
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {spin: up, epsilon: 0.0}
+    - {spin: up, epsilon: 0.1}
+    - {spin: down, epsilon: 0.0}
+    - {spin: down, epsilon: 0.1}

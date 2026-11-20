@@ -18,7 +18,7 @@ The client is always localhost, so only server_machine_name is required.
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -41,7 +41,7 @@ import os
 import shlex
 from logging import getLogger
 
-from ._machine import Machine, Machines_handler
+from .machine import Machines_handler, get_machine
 
 logger = getLogger("jqmc-workflow").getChild(__name__)
 
@@ -57,7 +57,10 @@ class Data_transfer:
     """
 
     def __init__(self, server_machine_name: str, safe_mode: bool = False):
-        self.server_machine = Machine(server_machine_name)
+        # Process-wide cached Machine so all JobSubmissions on the same
+        # server share a single authenticated SSH transport. See the
+        # registry block in ``machine.py`` for the rationale.
+        self.server_machine = get_machine(server_machine_name)
         self.machine_handler = Machines_handler(self.server_machine)
         self.safe_mode = safe_mode
 
@@ -67,17 +70,20 @@ class Data_transfer:
     def _resolve_local_root(self) -> str:
         """Determine the local workspace_root from localhost entry."""
         try:
-            local_m = Machine("localhost")
-            try:
-                return local_m.workspace_root or os.path.expanduser("~")
-            finally:
-                local_m.ssh_close()
+            # localhost Machine never opens SSH (``ssh_open`` returns
+            # early when ``machine_type != "remote"``) so caching it is
+            # free, and an explicit ``ssh_close()`` would be a no-op here.
+            local_m = get_machine("localhost")
+            return local_m.workspace_root or os.path.expanduser("~")
         except (KeyError, FileNotFoundError):
             return os.path.expanduser("~")
 
     def ssh_close(self):
-        self.server_machine.ssh_close()
-        self.machine_handler.ssh_close()
+        # No-op: the underlying Machine is shared via ``get_machine``
+        # and torn down centrally by :py:func:`close_all_machines` at
+        # workflow end. Tearing it down here would force the next
+        # ``_submit_and_wait`` to re-authenticate (OTP again).
+        return
 
     # -- put (local -> remote) --------------------------------------
 
@@ -207,9 +213,9 @@ class Data_transfer:
             for obj in from_objects:
                 if any(c in obj for c in ("*", "?", "[")):
                     pattern = os.path.basename(obj)
-                    self.server_machine.ssh_open()
                     try:
-                        entries = self.server_machine.sftp.listdir(server_dir)
+                        with self.server_machine.sftp_session() as sftp:
+                            entries = sftp.listdir(server_dir)
                     except OSError:
                         entries = []
                     matched = [e for e in entries if fnmatch.fnmatch(e, pattern)]

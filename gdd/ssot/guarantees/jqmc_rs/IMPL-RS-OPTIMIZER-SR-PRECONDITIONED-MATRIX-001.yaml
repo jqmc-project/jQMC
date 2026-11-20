@@ -1,0 +1,22 @@
+id: IMPL-RS-OPTIMIZER-SR-PRECONDITIONED-MATRIX-001
+kind: implementation
+name: Native host wide-only SR preconditioned matrix has the NumPy route's exact bits
+plain_language: >-
+  Under the production CPU dispatch (JQMC_FLAG_RUST_ON_CPU=1 on the JAX cpu backend) prepare_wide_sr_real_system
+  (jqmc_optimizer) writes the preconditioned matrix X_q[active] * inverse_sqrt[active] of a wide-only system (fewer
+  active coordinates than twice the local samples) with jqmc_rs.optimizer_sr_precondition_sample_major, a parallel
+  version of the NumPy gather and scaling, stored sample-major (Fortran order of the same shape). For a real and a
+  complex X_q in C and Fortran storage, with frozen coordinate groups removed, on a shape with several row blocks, the
+  matrix has the NumPy route's (JQMC_FLAG_RUST_ON_CPU=0) dtype, shape and raw bits and is read-only, and the
+  preconditioned right-hand side has identical bits. Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_wide_sr_preconditioned_matrix_rust_equals_numpy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: real, order: C}
+    - {kind: real, order: F}
+    - {kind: complex, order: C}
+    - {kind: complex, order: F}

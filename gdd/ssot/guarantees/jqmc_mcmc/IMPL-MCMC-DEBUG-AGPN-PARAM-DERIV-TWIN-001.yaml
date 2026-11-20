@@ -1,0 +1,94 @@
+id: IMPL-MCMC-DEBUG-AGPN-PARAM-DERIV-TWIN-001
+kind: implementation
+name: _MCMC_debug stores the production AGPn parameter-derivative blocks
+plain_language: >-
+  On the molecular all-electron H2 cc-pVDZ Cartesian AGPn without Jastrow (mol_cart_agpn_jnone) and the
+  periodic real-Gamma lithium ECP sphe-pGTO AGPn with J1+J2, production XLA MCMC and the _MCMC_debug twin
+  run from seed 3446 with 2 walkers, 3 measurements of 4 moves and both d ln Psi / dc and de_L / dc on.
+  PRNG keys and acceptance counters are identical and final walkers agree at the fp64 walker pin; then
+  every block production stores in dln_Psi_dc and de_L_dc (mo_coefficients_up and lambda_diag required;
+  both non-zero in dln_Psi_dc, mo_coefficients_up non-zero in de_L_dc since the rank-one H2 AGPn has
+  de_L / d lambda_diag identically zero) is stored by the debug twin with the same shape and agrees strictly in each precision mode,
+  all values finite; the only extra debug blocks allowed are the geminal AO-basis blocks production
+  computes only when basis optimization is requested. The stored e_L agrees as well. Same-backend route
+  check; the debug twin collects the AGPn blocks with its own reducer.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_debug_agpn_param_deriv.py::test_mcmc_debug_agpn_parameter_derivatives_match_production
+    executable_checks:
+      d8-n-198:
+        site: tests/test_jqmc_kernel/test_mcmc_debug_agpn_param_deriv.py::test_mcmc_debug_agpn_parameter_derivatives_match_production#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug._MCMC_debug__latest_r_up_carts
+        reference:
+          role: source-reference-value
+          expression: production._MCMC__latest_r_up_carts
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+      d8-n-199:
+        site: tests/test_jqmc_kernel/test_mcmc_debug_agpn_param_deriv.py::test_mcmc_debug_agpn_parameter_derivatives_match_production#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug._MCMC_debug__latest_r_dn_carts
+        reference:
+          role: source-reference-value
+          expression: production._MCMC__latest_r_dn_carts
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+      block-comparison-1:
+        site: tests/test_jqmc_kernel/test_mcmc_debug_agpn_param_deriv.py::_assert_block#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: debug_value
+        reference:
+          role: existing-test-reference
+          expression: production_value
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - ewald
+            - wf_eval
+            - wf_kinetic
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_eval
+            - jastrow_grad_lap
+            - det_eval
+            - det_grad_lap
+            - coulomb
+            - ewald
+            - wf_eval
+            - wf_kinetic
+            - local_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: mol_cart_agpn_jnone}
+    - {case: pbc_gamma_sphepgto_j12_agpn}

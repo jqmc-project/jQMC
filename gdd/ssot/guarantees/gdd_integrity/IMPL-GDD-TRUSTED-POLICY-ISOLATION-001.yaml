@@ -1,0 +1,19 @@
+id: IMPL-GDD-TRUSTED-POLICY-ISOLATION-001
+kind: implementation
+name: The protected-contract check decides with the trusted base policy in isolation
+plain_language: The check keeps its deciding modules protected and runs protocol 2, with the protocol-1 to protocol-2
+  transition as the only permitted bootstrap. Its isolated trusted-policy test executes the real archive and launcher on a toy repository
+  with unrelated semantic checks stubbed only in that fixture. In that trusted run a protected change and a guard
+  change both stay red and candidate guard code must not execute. The launcher itself remains candidate code, so an
+  edit of the launcher is outside this contract. A red change is accepted only by merging it.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_gdd_simplification/test_trusted_policy_isolation.py::test_trusted_policy_stays_red_without_importing_candidate_guards
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}

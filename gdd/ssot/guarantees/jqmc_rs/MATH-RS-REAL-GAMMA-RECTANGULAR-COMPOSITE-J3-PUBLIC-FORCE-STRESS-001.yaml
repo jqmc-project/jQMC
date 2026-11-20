@@ -1,0 +1,36 @@
+id: MATH-RS-REAL-GAMMA-RECTANGULAR-COMPOSITE-J3-PUBLIC-FORCE-STRESS-001
+kind: mathematical
+name: Public native MCMC and GFMC_t HF force and stress of a rectangular dense-MO pGTO+B-spline J3 equal AD of the local energy
+plain_language: >-
+  The public production MCMC and GFMC_t drivers on the native real-Gamma backend store the Hellmann-Feynman
+  nuclear derivative d Re e_L / dR and HF stress d Re e_L / d eps of a wave function whose J3 orbital is a
+  two-row real rectangular MO over the Gamma pGTO(+)B-spline composite, including the B-spline child's value,
+  gradient and Laplacian contributions. On run_qe2jqmc output for the committed QE Li Gamma ccECP save (kind
+  pgto+bspline, j1 = j2 = 1, j3_basis_type mo), with the J3 MO extended by a seeded second row (seed 191,
+  standard deviation 0.04, B-spline coefficient twice the first row's), the J3 copy of the B-spline child scaled
+  by 1000 (determinant unchanged) and the j_matrix [[0.07, 0.035, 0.11], [0.035, -0.04, -0.08]] (nonzero
+  symmetric off-diagonal and linear couplings): public MCMC (one walker, one step, seed 113, fixed identity
+  ECP mesh, no SWCT) and public GFMC_t (one walker, six branching steps, seed 113, tmove, alat 0.30, tau 0.05,
+  fixed identity ECP mesh, no SWCT) with force and stress requested must actually call the native context,
+  and the stored HF nuclear derivative and HF stress of the final measured step equal reverse-mode AD of the
+  XLA Re local energy (identity quadrature rotation) at the final sampled electron configuration, with every
+  nucleus position leaf displaced together or the cell, nuclei and electrons strained together, in full
+  precision. Every reference must be finite and distinguishable from zero, and the J3 must change both
+  references beyond the comparison tolerance. Reference nonzero and J3-contribution liveness retain the original medium budgets. Full AD is judged at the strict zone policy. Mixed stored quantities are covered by
+  NUM-RS-REAL-GAMMA-RECTANGULAR-COMPOSITE-J3-PUBLIC-MIXED-FIDELITY-001 using independently rebuilt native
+  measurement kernels at the identical mixed-sampled configuration.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_real_gamma_rectangular_composite_j3_public_drivers.py::test_public_rectangular_composite_j3_hf_force_and_stress_match_ad
+    required_precision_modes: [full]
+    required_parameter_cases: [{driver: MCMC}, {driver: GFMC_t}]
+    executable_checks:
+      public-hf-force-and-stress-vs-ad:
+        site: tests/test_rs_kernel/test_real_gamma_rectangular_composite_j3_public_drivers.py::test_public_rectangular_composite_j3_hf_force_and_stress_match_ad#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: public-native-driver-stored-hf-force-and-stress, expression: value}
+        reference: {role: same-precision-autodiff-of-re-local-energy-at-final-configuration, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, mo_grad, mo_lap, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, wf_kinetic, ewald, coulomb]}

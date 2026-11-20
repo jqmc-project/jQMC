@@ -1,0 +1,27 @@
+id: IMPL-OPT-CONTROL-001
+kind: implementation
+name: Optimizer control-flow contracts
+plain_language: The device reduction route follows from the communicators (a world-spanning sampler uses the device
+  collectives, a multi-rank twist sampler the host-staged MPI CG, and the removed use_device_collectives option raises
+  TypeError), the twist driver forwards the device-optimizer request unchanged, and world-atomic step acceptance,
+  zero-step no-ops, non-finite energy handling and batch lifecycle follow the reviewed control contract; the progress
+  guard raises instead of retrying.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_full_loop_real.py::test_gamma_agp_is_converted_and_retracted_as_time_reversal_agpn
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_twist_sampler_device_sr.py::test_multi_rank_twist_local_device_sr_matches_host_route
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_twist_kwargs_forward_the_device_optimizer_request_unchanged
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_optimizer_control.py::test_device_optimizer_request_is_kept_and_the_removed_collectives_option_raises
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_optimizer_control.py::test_twist_step_acceptance_is_world_atomic
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_optimizer_control.py::test_zero_step_optimization_is_a_noop
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_optimizer_control.py::test_nonfinite_energy_does_not_advance_accepted_step_counter
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_full_loop_real.py::test_full_loop_releases_previous_batch_before_next_sampling
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_full_loop_real.py::test_full_loop_consumes_the_aggregated_step_energy
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_full_loop_real.py::test_step_timing_books_each_interval_once
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_optimize.py::TestTwistAverageOptimize::test_twist_progress_guard_raises_instead_of_retrying_same_chunk

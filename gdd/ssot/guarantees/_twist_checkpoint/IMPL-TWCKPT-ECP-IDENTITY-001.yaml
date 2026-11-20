@@ -1,0 +1,16 @@
+id: IMPL-TWCKPT-ECP-IDENTITY-001
+kind: implementation
+name: Completed twist estimates match the requested effective core potential
+plain_language: >-
+  A sampling driver reuses completed twist estimates only when the effective
+  core potential stored in the checkpoint matches the requested Hamiltonian.
+  Changes to the saved ECP fields raise ValueError before the stale estimates
+  can enter the twist average. Matching fields allow an otherwise valid
+  checkpoint to be reused without rewriting it.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_resume.py::test_twist_resume_rejects_a_changed_ecp
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}]

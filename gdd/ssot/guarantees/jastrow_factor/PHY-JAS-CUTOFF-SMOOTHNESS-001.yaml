@@ -1,0 +1,308 @@
+id: PHY-JAS-CUTOFF-SMOOTHNESS-001
+kind: physical
+name: Cutoff smoothness and seam behavior of the DTN Jastrow
+plain_language: DTN channels vanish smoothly at their cutoffs (C4 edge smoothness, two derivatives vanishing at the fold
+  seam) and minimum-image paths agree inside the supported ball; the reviewed negative control exposes the gradient jump
+  when the cutoff is unsafe, and unsafe constructions are rejected.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_cutoff_edge_smoothness_C4
+  - pytest_node: tests/test_jqmc_kernel/test_dtn_cutoff_primal_reference.py::test_original_cutoff_fixture_is_outside_support
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      original-policy-outside-support:
+        site: tests/test_jqmc_kernel/test_dtn_cutoff_primal_reference.py::test_original_cutoff_fixture_is_outside_support#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: original-fixture-policy-field, expression: got}
+        reference: {role: exact-outside-support-zero, expression: np.zeros_like(got)}
+        iterations: {variable: field, required_values: [value, grad-up, grad-down, lap-up, lap-down]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      independent-primal-outside-support:
+        site: tests/test_jqmc_kernel/test_dtn_cutoff_primal_reference.py::test_original_cutoff_fixture_is_outside_support#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: independent-projected-primal-policy-field, expression: ref}
+        reference: {role: exact-outside-support-zero, expression: np.zeros_like(ref)}
+        iterations: {variable: field, required_values: [value, grad-up, grad-down, lap-up, lap-down]}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams::test_ee_distance_paths_match_shared_mic_inside_supported_ball
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams.test_ee_distance_paths_match_shared_mic_inside_supported_ball#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: float(r_an)
+        reference:
+          role: existing-test-reference
+          expression: exact_r
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams.test_ee_distance_paths_match_shared_mic_inside_supported_ball#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: float(r_ad)
+        reference:
+          role: existing-test-reference
+          expression: exact_r
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams.test_ee_distance_paths_match_shared_mic_inside_supported_ball#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: rows
+        reference:
+          role: existing-test-reference
+          expression: exact_r
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams.test_ee_distance_paths_match_shared_mic_inside_supported_ball#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: md
+        reference:
+          role: existing-test-reference
+          expression: exact
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams.test_ee_distance_paths_match_shared_mic_inside_supported_ball#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(g_an)
+        reference:
+          role: existing-test-reference
+          expression: exact / exact_r
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-6:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams.test_ee_distance_paths_match_shared_mic_inside_supported_ball#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(g_ad)
+        reference:
+          role: existing-test-reference
+          expression: exact / exact_r
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-7:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams.test_ee_distance_paths_match_shared_mic_inside_supported_ball#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: float(lap_an)
+        reference:
+          role: existing-test-reference
+          expression: 2.0 / exact_r
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-8:
+        site: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams.test_ee_distance_paths_match_shared_mic_inside_supported_ball#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: float(lap_ad)
+        reference:
+          role: existing-test-reference
+          expression: 2.0 / exact_r
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - jastrow_grad_lap
+        iterations:
+          variable: sample_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams::test_default_cutoff_channels_vanish_with_two_derivatives_at_fold_seam
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNMinImageSeams::test_unsafe_f_cutoff_negative_control_exposes_fold_gradient_jump
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_sanity_check_rejects_low_smoothness
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNConstraints::test_dtn_sanity_check_rejects_large_cutoff_pbc
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_dtn.py::TestDTNCutoffPolicy::test_sanity_check_rejects_seam_crossing_L_f

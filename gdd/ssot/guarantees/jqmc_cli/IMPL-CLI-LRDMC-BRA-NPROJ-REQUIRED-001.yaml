@@ -1,0 +1,49 @@
+id: IMPL-CLI-LRDMC-BRA-NPROJ-REQUIRED-001
+kind: implementation
+name: lrdmc-bra CLI requires an explicit num_mcmc_per_measurement on a fresh run
+plain_language: >-
+  [lrdmc-bra] num_mcmc_per_measurement has no default and no value derived from alat. A fresh single-twist lrdmc-bra
+  TOML without it exits non-zero with "num_mcmc_per_measurement should be specified." before GFMC_n is constructed,
+  whether alat is given or not; the twist-averaged route refuses such a TOML with a ValueError naming
+  [lrdmc-bra].num_mcmc_per_measurement before the twist driver is called, on a fresh run and on a twist resume. An
+  explicit value reaches GFMC_n or the twist driver exactly as written at any alat. A single-twist restart does not
+  need the key: the checkpoint's frozen value is kept when the key is omitted or equal, and a different explicit
+  value is refused by the frozen-key guard as before. The jqmc-tool lrdmc generate-input template writes the key as
+  the same required "None" placeholder as num_mcmc_steps, with no alat rule.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_bra_nproj_required.py::test_cli_explicit_value_is_used_unchanged
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {alat: 0.1, explicit: 30}
+    - {alat: 0.1, explicit: 40}
+    - {alat: 0.3, explicit: 7}
+    - {alat: 0.2, explicit: 1}
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_bra_nproj_required.py::test_generated_template_marks_the_key_required
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {exclude_comment: false}
+    - {exclude_comment: true}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_bra_nproj_required.py::test_cli_fresh_run_without_key_stops_before_the_driver
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {alat: null}
+    - {alat: 0.3}
+    - {alat: 0.1}
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_bra_nproj_required.py::test_twist_dispatch_requires_the_key
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {explicit: null, restart: false}
+    - {explicit: null, restart: true}
+    - {explicit: 30, restart: false}
+    - {explicit: 30, restart: true}
+  - pytest_node: tests/test_jqmc_kernel/test_lrdmc_bra_nproj_required.py::test_cli_restart_keeps_checkpoint_value
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {toml_value: null}
+    - {toml_value: 30}
+    - {toml_value: 31}

@@ -1,0 +1,65 @@
+id: MATH-GFMC-TWIST-GEMINAL-FINAL-WALKER-RECOMPUTE-001
+kind: mathematical
+name: The final GFMC walker of complex AGP and AGPn runs equals a from-scratch recomputation on both backends
+plain_language: >-
+  On the all-electron H4 periodic twist H4_pbc_ae_k025_cart.h5 (k_frac=(0.25,0,0), J1+J2) with a dense
+  complex AO AGP and a four-MO AGPn with occupations 1, 1/2, 1/4, 1/8, each closed shell (two up, two down)
+  and open shell (three up, one down, two complex unpaired columns), production GFMC_n (load-balanced, four
+  projections per measurement) and GFMC_t (conventional, tau 0.05) run four branching steps with one walker,
+  seed 3446, alat 0.30 and a random mesh, on the XLA route and on the native complex projection route
+  (witnessed by a context spy). At the returned walker the stored complex e_L of the last step, measured on
+  the carried Sherman-Morrison inverse of the final interval and with Im outside the band, and its stored
+  e_L2 equal the complex Hessian of an independently assembled Psi (MO contraction, paired and unpaired
+  geminal columns, determinant and Jastrow written from their definitions over the production AO values)
+  plus the production Coulomb sum; on the XLA route the carried geminal inverse equals the inverse of the
+  independently assembled geminal matrix. The native route keeps its inverse inside the interval, so only
+  its stored energies are compared. Each comparison is strict in its own precision mode, Re and Im together;
+  full and mixed are judged separately and never against each other.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_twist_geminal_gfmc_final_walker.py::test_twist_geminal_gfmc_final_walker_matches_independent_recompute
+    executable_checks:
+      final-walker-e-l:
+        site: tests/test_rs_kernel/test_twist_geminal_gfmc_final_walker.py::test_twist_geminal_gfmc_final_walker_matches_independent_recompute#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: existing-complex-actual, expression: 'stored_e_l'}
+        reference: {role: independent-complex-reference, expression: 'e_l_ref'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_eval, jastrow_grad_lap, det_grad_lap, wf_kinetic, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_eval, jastrow_grad_lap, det_grad_lap, wf_kinetic, coulomb]}
+      final-walker-e-l2:
+        site: tests/test_rs_kernel/test_twist_geminal_gfmc_final_walker.py::test_twist_geminal_gfmc_final_walker_matches_independent_recompute#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: existing-complex-actual, expression: 'stored_e_l2'}
+        reference: {role: independent-complex-reference, expression: 'np.abs(e_l_ref) ** 2'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_eval, jastrow_grad_lap, det_grad_lap, wf_kinetic, coulomb]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_eval, jastrow_grad_lap, det_grad_lap, wf_kinetic, coulomb]}
+      final-walker-carried-inverse:
+        site: tests/test_rs_kernel/test_twist_geminal_gfmc_final_walker.py::test_twist_geminal_gfmc_final_walker_matches_independent_recompute#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: existing-complex-actual, expression: 'carried_inverse'}
+        reference: {role: independent-complex-reference, expression: 'reference_inverse'}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, det_eval]}
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: agp, driver: n, backend: xla}
+    - {case: agp, driver: n, backend: rust}
+    - {case: agp, driver: t, backend: xla}
+    - {case: agp, driver: t, backend: rust}
+    - {case: agpn, driver: n, backend: xla}
+    - {case: agpn, driver: n, backend: rust}
+    - {case: agpn, driver: t, backend: xla}
+    - {case: agpn, driver: t, backend: rust}
+    - {case: agp_open, driver: n, backend: xla}
+    - {case: agp_open, driver: n, backend: rust}
+    - {case: agp_open, driver: t, backend: xla}
+    - {case: agp_open, driver: t, backend: rust}
+    - {case: agpn_open, driver: n, backend: xla}
+    - {case: agpn_open, driver: n, backend: rust}
+    - {case: agpn_open, driver: t, backend: xla}
+    - {case: agpn_open, driver: t, backend: rust}

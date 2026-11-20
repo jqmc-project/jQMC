@@ -1,0 +1,21 @@
+id: IMPL-CLI-TWIST-CHECKPOINT-LAYOUT-001
+kind: implementation
+name: Twist CLI refuses a single-file restart checkpoint before any computation
+plain_language: >-
+  Within the selected twist driver, for a combined input including a one-twist file, an existing regular file at
+  control.restart_chk stops the CLI twist dispatch with a ValueError that names the path and explains
+  the twist checkpoint directory layout (one twist_NNN.h5 per twist plus shared_state.h5), that a
+  single-file checkpoint cannot be resumed or converted, and how to proceed. This holds for restart
+  false and true and for the default restart.h5 as well as a custom name; the combined input is not read, no
+  twist driver is called and the file is left unchanged. An existing directory or an absent path is
+  forwarded unchanged to the twist driver with resume equal to restart. No conversion of old
+  checkpoints is provided. The top-level CLI uses an existing file checkpoint
+  for a single-run restart; its frozen initialization input does not select a
+  twist driver in that case.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::TestTwistCheckpointLayout::test_existing_regular_restart_file_is_rejected_before_any_twist_runs
+  - pytest_node: tests/test_jqmc_kernel/test_cli_twist_dispatch.py::TestTwistCheckpointLayout::test_directory_or_absent_restart_path_reaches_twist_driver

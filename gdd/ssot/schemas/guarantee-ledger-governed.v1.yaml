@@ -1,0 +1,38 @@
+schema_format: 1
+schema_id: gdd.schema.guarantee-ledger-governed.v1
+match:
+  path_glob: gdd/ssot/guarantees/*.yaml
+  lifecycle: cutover
+document_schema_version: 1
+required_top_level:
+  - schema_version
+  - document
+  - symbol_contract
+  - guarantees
+optional_top_level:
+  - enforcement_map
+  - ledger_extensions
+default_required_top_level: []
+extensions:
+  derivatives:
+    document_ids: [jqmc.derivatives]
+    document_required_fields: [description, human_ledger]
+    required_top_level:
+      - enforcement
+      - operation_ids
+      - baseline
+      - domain
+      - common_contract
+      - existing_test_integration
+      - assurance_chain
+      - fixture_sets
+      - module_evidence
+    optional_top_level: []
+document_block:
+  required_fields: [id, version, lifecycle, title]
+  default_required_fields: [purpose]
+enforcement_map_required: true
+global_enforcement:
+  guarantees: scripts/check_gdd_module_ledgers.py
+  symbol_contract: scripts/check_gdd_symbol_ownership.py
+prose_keys_extra: [values_source]

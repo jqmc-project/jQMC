@@ -1,0 +1,45 @@
+id: MATH-GFMC-FIXED-ENSEMBLE-FORCE-001
+kind: mathematical
+name: Fixed-ensemble force aggregation against a normalized-energy derivative
+plain_language: >-
+  On ten explicit time slices with three unequally weighted walkers each, conventional and load-balanced
+  GFMC force accessors return the negative derivative of the normalized finite weighted energy.
+  An independent AD reference perturbs unaggregated linear local energies and exponential real
+  log-amplitude weights, not production's covariance formula. The mean and jackknife error must
+  separately agree within the current mode's local_energy strict policy. Both real and complex
+  energies, unequal blocks, a zero-width history and a nonuniform two-step history with warmup
+  are required. This is deterministic stored-buffer postprocessing on COMM_SELF: no wavefunction,
+  electronic configuration, sampling, distributed reduction, SWCT or physical force correctness
+  is certified, and no statistical confidence interval is an acceptance criterion.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_force_matches_fixed_ensemble_energy_derivative
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver_kind: conventional, complex_values: false, history: uniform}
+    - {driver_kind: load-balanced, complex_values: false, history: uniform}
+    - {driver_kind: conventional, complex_values: true, history: uniform}
+    - {driver_kind: load-balanced, complex_values: true, history: uniform}
+    - {driver_kind: conventional, complex_values: false, history: history-warmup}
+    - {driver_kind: load-balanced, complex_values: false, history: history-warmup}
+    - {driver_kind: conventional, complex_values: true, history: history-warmup}
+    - {driver_kind: load-balanced, complex_values: true, history: history-warmup}
+    executable_checks:
+      force-mean:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_force_matches_fixed_ensemble_energy_derivative#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-force-mean, expression: actual_mean}
+        reference: {role: independent-fixed-ensemble-force-mean, expression: expected_mean}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+      force-error:
+        site: tests/test_jqmc_kernel/test_gfmc_estimator_reference.py::test_gfmc_force_matches_fixed_ensemble_energy_derivative#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: gfmc-force-jackknife-error, expression: actual_error}
+        reference: {role: independent-fixed-ensemble-force-error, expression: expected_error}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [local_energy]}

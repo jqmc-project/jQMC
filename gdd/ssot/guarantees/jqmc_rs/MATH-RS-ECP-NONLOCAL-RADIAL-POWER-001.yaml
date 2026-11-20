@@ -1,0 +1,107 @@
+id: MATH-RS-ECP-NONLOCAL-RADIAL-POWER-001
+kind: mathematical
+name: Native non-local ECP kernels use the term's own radial power
+plain_language: >-
+  For a non-local ECP term (l, c, a, n) the native radial factor is c r^(n-2) exp(-a r^2). On an explicit
+  one-centre molecular input (nodeless s Gaussian SD, one up and one down electron within 0.8 bohr of the
+  centre, no Jastrow, a single non-local l=0 term with c = +-1.3) the orbital ratio is 1 at every
+  quadrature point, so the non-local energy is the sum over electrons of c r^(n-2) exp(-a r^2). For n in 0,
+  1, 2 and 3 (n = 2 is the ccECP control), in full and mixed separately, the native Sherman-Morrison
+  non-local value kernel equals that closed form, the native VMC local energy (production fast route and
+  full recompute) carries it as e_L(c) - e_L(c=0), and the native LRDMC projection step (production FAST
+  mesh and full-recompute mesh, T-move and DLA) carries it in e_L(c) - e_L(c=0), with its negative part in
+  the fixed-node off-diagonal sum b_L(c) - b_L(c=0). At n != 2 the closed form differs from its n = 2 value
+  beyond the tolerance. Force, stress, parameter-derivative, periodic and complex-twist copies of the radial
+  factor are not covered.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_nonlocal_value_radial_power_matches_closed_form_and_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {power: 0}
+    - {power: 1}
+    - {power: 2}
+    - {power: 3}
+    executable_checks:
+      value-closed-form:
+        site: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_nonlocal_value_radial_power_matches_closed_form_and_xla#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-nonlocal-ecp-value, expression: actual}
+        reference: {role: closed-form-nonlocal-radial-factor, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}
+  - pytest_node: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_vmc_local_energy_radial_power_matches_closed_form_and_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {power: 0, fast: true}
+    - {power: 0, fast: false}
+    - {power: 1, fast: true}
+    - {power: 1, fast: false}
+    - {power: 2, fast: true}
+    - {power: 2, fast: false}
+    - {power: 3, fast: true}
+    - {power: 3, fast: false}
+    executable_checks:
+      local-energy-nonlocal-closed-form:
+        site: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_vmc_local_energy_radial_power_matches_closed_form_and_xla#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-local-energy-nonlocal-contribution, expression: actual}
+        reference: {role: closed-form-nonlocal-radial-factor, expression: reference}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}
+  - pytest_node: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_lrdmc_mesh_nonlocal_radial_power_matches_closed_form_and_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {power: 0, sign: 1, non_local_move: tmove, fast: true}
+    - {power: 0, sign: 1, non_local_move: tmove, fast: false}
+    - {power: 0, sign: 1, non_local_move: dltmove, fast: true}
+    - {power: 0, sign: 1, non_local_move: dltmove, fast: false}
+    - {power: 0, sign: -1, non_local_move: tmove, fast: true}
+    - {power: 0, sign: -1, non_local_move: tmove, fast: false}
+    - {power: 0, sign: -1, non_local_move: dltmove, fast: true}
+    - {power: 0, sign: -1, non_local_move: dltmove, fast: false}
+    - {power: 1, sign: 1, non_local_move: tmove, fast: true}
+    - {power: 1, sign: 1, non_local_move: tmove, fast: false}
+    - {power: 1, sign: 1, non_local_move: dltmove, fast: true}
+    - {power: 1, sign: 1, non_local_move: dltmove, fast: false}
+    - {power: 1, sign: -1, non_local_move: tmove, fast: true}
+    - {power: 1, sign: -1, non_local_move: tmove, fast: false}
+    - {power: 1, sign: -1, non_local_move: dltmove, fast: true}
+    - {power: 1, sign: -1, non_local_move: dltmove, fast: false}
+    - {power: 2, sign: 1, non_local_move: tmove, fast: true}
+    - {power: 2, sign: 1, non_local_move: tmove, fast: false}
+    - {power: 2, sign: 1, non_local_move: dltmove, fast: true}
+    - {power: 2, sign: 1, non_local_move: dltmove, fast: false}
+    - {power: 2, sign: -1, non_local_move: tmove, fast: true}
+    - {power: 2, sign: -1, non_local_move: tmove, fast: false}
+    - {power: 2, sign: -1, non_local_move: dltmove, fast: true}
+    - {power: 2, sign: -1, non_local_move: dltmove, fast: false}
+    - {power: 3, sign: 1, non_local_move: tmove, fast: true}
+    - {power: 3, sign: 1, non_local_move: tmove, fast: false}
+    - {power: 3, sign: 1, non_local_move: dltmove, fast: true}
+    - {power: 3, sign: 1, non_local_move: dltmove, fast: false}
+    - {power: 3, sign: -1, non_local_move: tmove, fast: true}
+    - {power: 3, sign: -1, non_local_move: tmove, fast: false}
+    - {power: 3, sign: -1, non_local_move: dltmove, fast: true}
+    - {power: 3, sign: -1, non_local_move: dltmove, fast: false}
+    executable_checks:
+      lrdmc-e-l-nonlocal-closed-form:
+        site: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_lrdmc_mesh_nonlocal_radial_power_matches_closed_form_and_xla#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-lrdmc-e-l-nonlocal-contribution, expression: actual_e}
+        reference: {role: closed-form-nonlocal-radial-factor, expression: reference_e}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}
+      lrdmc-b-l-nonlocal-closed-form:
+        site: tests/test_rs_kernel/test_ecp_nonlocal_radial_power.py::test_native_lrdmc_mesh_nonlocal_radial_power_matches_closed_form_and_xla#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-lrdmc-b-l-nonlocal-contribution, expression: actual_b}
+        reference: {role: closed-form-negative-nonlocal-radial-factor, expression: reference_b}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [coulomb, det_ratio, ao_eval]}

@@ -4,6 +4,7 @@ Public API
 ----------
 Workflow classes:
     :class:`WF_Workflow`        TREXIO -> hamiltonian_data.h5 conversion.
+    :class:`QE_Workflow`        Quantum ESPRESSO (PW) -> hamiltonian_data.h5 conversion.
     :class:`VMC_Workflow`       Jastrow / orbital optimisation (job_type=vmc).
     :class:`MCMC_Workflow`      VMC production sampling (job_type=mcmc).
     :class:`LRDMC_Workflow`     Lattice-Regularized DMC (job_type=lrdmc-bra / lrdmc-tau).
@@ -31,7 +32,7 @@ Composition helpers:
 #   the documentation and/or other materials provided with the
 #   distribution.
 #
-# * Neither the name of the jqmc project nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived
 #   from this software without specific prior written permission.
 #
@@ -55,14 +56,14 @@ try:
 except Exception:
     __version__ = "unknown"
 
-from ._machine import list_machines, probe_environment
-from ._output_parser import (
+from .machine import list_machines, probe_environment
+from .forces_parser import repair_forces_from_output
+from .output_parser import (
     parse_input_params,
     parse_lrdmc_ext_output,
     parse_lrdmc_output,
     parse_mcmc_output,
     parse_vmc_output,
-    repair_forces_from_output,
 )
 from ._phase import (
     PHASE_ALLOWED_ACTIONS,
@@ -81,7 +82,7 @@ from ._results import (
     VMC_Diagnostic_Data,
     VMC_Step_Data,
 )
-from ._state import (
+from .state import (
     JobStatus,
     WorkflowStatus,
     get_all_workflow_statuses,
@@ -96,6 +97,7 @@ from .launcher import Launcher
 from .lrdmc_ext_workflow import LRDMC_Ext_Workflow
 from .lrdmc_workflow import LRDMC_Workflow
 from .mcmc_workflow import MCMC_Workflow
+from .qe_workflow import QE_Workflow
 from .vmc_workflow import VMC_Workflow
 from .wf_workflow import WF_Workflow
 from .workflow import (
@@ -112,6 +114,7 @@ __all__ = [
     "ValueFrom",
     "Launcher",
     "WF_Workflow",
+    "QE_Workflow",
     "VMC_Workflow",
     "MCMC_Workflow",
     "LRDMC_Workflow",

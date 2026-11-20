@@ -1,0 +1,15 @@
+id: IMPL-BUILDINFO-SDIST-BUILD-FLOOR-001
+kind: implementation
+name: The setuptools_scm build requirement cannot select a release that loses the full commit in sdist -> wheel
+plain_language: >-
+  setuptools_scm 9.2.2 and 10.0.x rewrite the full commit written by version_file_template to
+  None when a wheel is built from the sdist without .git (the PyPI route); 10.1.1 keeps it. The single setuptools_scm
+  entry of [build-system] requires has a lower bound of at least 10.1.1. An install-route check builds the
+  sdist and the wheel from it with setuptools_scm pinned to that floor and requires the full source commit.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_build_info_routes.py::test_build_requirement_floor_keeps_the_full_commit_through_sdist
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

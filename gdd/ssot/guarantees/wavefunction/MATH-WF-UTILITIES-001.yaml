@@ -1,0 +1,10 @@
+id: MATH-WF-UTILITIES-001
+kind: mathematical
+name: Wavefunction utility identities
+plain_language: The f-epsilon plane-wave utility reproduces its closed-form boundary values.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_wave_function.py::TestWavefunctionUtilities::test_f_epsilon_PW_boundary_values

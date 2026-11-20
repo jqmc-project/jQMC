@@ -1,0 +1,68 @@
+id: IMPL-TWCKPT-COMPLETENESS-001
+kind: implementation
+name: Twist completion detection
+plain_language: 'Twist completion keys on the converged attribute, target steps, AND the physics identity: every checkpoint
+  stores the k-point and a wavefunction/structure digest, resume REFUSES a checkpoint written for a different k or a re-optimized
+  wavefunction and a non-finite stored energy (stale per-twist energies can never be blended into the BZ average),
+  resume of the MCMC and GFMC twist drivers also REFUSES a reused twist whose stored normalized BZ weight or total twist
+  count differs exactly from the input, and a checkpoint directory holding twist_NNN.h5 with NNN at least the input twist
+  count, because the directory BZ average combines the stored weights of every file, a fresh run of those drivers
+  marks every existing twist_NNN.h5 unconverged on world rank 0 before sampling, so a fresh run stopped before rewriting a
+  twist leaves a directory that the manifest refuses and that a resume re-samples, pre-upgrade checkpoints
+  without identity, weight or count recompute, missing files report incomplete, summaries preserve normalized BZ
+  weight and total twist count together with observable attributes/datasets, path helpers are stable, and wrong shared-jastrow
+  payloads are rejected. The self-contained directory manifest returns only canonical index-ordered twist files with normalized
+  weights, and rejects missing, incomplete, unconverged, pre-upgrade, index/count-inconsistent, or invalid-weight manifests.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-IMPL-ROUTE-PARITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestTwistIdentityGuard::test_legacy_checkpoint_without_identity_recomputes
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestTwistIdentityGuard::test_matching_identity_stays_complete
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestIsTwistComplete::test_is_twist_complete_returns_false_when_file_missing
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestIsTwistComplete::test_is_twist_complete_keys_on_converged_attr
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestIsTwistComplete::test_is_twist_complete_keys_on_target_steps_at_least
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestIsTwistComplete::test_is_twist_complete_passes_when_all_three_present
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestCheckpointSummary::test_load_twist_checkpoint_summary_reads_attrs_and_datasets
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestCheckpointHelpers::test_twist_checkpoint_path_and_shared_state_path
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestCheckpointHelpers::test_is_twist_run_complete_missing_file_returns_false
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestCheckpointHelpers::test_is_twist_run_complete_counter_thresholds
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestCheckpointManifest::test_load_twist_checkpoint_manifest_returns_canonical_paths_and_normalized_weights
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestCheckpointHelpers::test_shared_jastrow_round_trip
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestTwistIdentityGuard::test_stale_k_point_is_refused
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestTwistIdentityGuard::test_stale_wavefunction_digest_is_refused
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {change: literal}
+    - {change: jastrow-2b-param}
+    - {change: jastrow-removed}
+    - {change: dn-mo}
+    - {change: dn-mo-entry}
+    - {change: up-mo-imag-dropped}
+    - {change: agp-lambda}
+    - {change: agp-lambda-entry}
+  - pytest_node: tests/test_jqmc_kernel/test_twist_resume.py::test_twist_driver_refuses_stale_checkpoint
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}]
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestTwistIdentityGuard::test_resume_refuses_another_twist_count_or_bz_weight
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}]
+  - pytest_node: tests/test_jqmc_kernel/test_twist_resume.py::test_fresh_run_killed_before_saving_leaves_no_converged_old_twist
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}]
+  - pytest_node: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_resume_refuses_changed_bz_weights
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}]
+  - pytest_node: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_resume_refuses_a_changed_twist_count
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestTwistIdentityGuard::test_non_finite_stored_energy_is_refused
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestCheckpointHelpers::test_load_shared_jastrow_rejects_wrong_payload
+  - pytest_node: tests/test_jqmc_kernel/test_twist_checkpoint.py::TestCheckpointManifest::test_load_twist_checkpoint_manifest_rejects_incomplete_or_inconsistent_directories

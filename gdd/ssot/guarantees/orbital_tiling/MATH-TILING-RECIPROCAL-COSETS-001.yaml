@@ -1,0 +1,39 @@
+id: MATH-TILING-RECIPROCAL-COSETS-001
+kind: mathematical
+name: Exact integer quotient geometry and order-independent general-supertwist matching
+plain_language: Tiling uses row lattices and exactly abs(det(S)) reciprocal cosets of S.T. Integer determinant and adjugate
+  intermediates use arbitrary-precision arithmetic. Tests check quotient cardinality, uniqueness, independent character orthogonality,
+  shifted sectors, non-diagonal and negative determinants and float-ill-conditioned integer matrices. Missing, duplicate and
+  incompatible sectors are rejected explicitly.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-ERROR-DISPOSITION-001
+fixture_usage:
+  aggregation: union-of-required-evidence
+  electron_configurations:
+  - EC-NOT-REQUIRED
+  input_bindings:
+  - IB-PARAMETER-SET
+  sources:
+  - SRC-NOT-APPLICABLE
+  wavefunctions:
+  - WF-NOT-APPLICABLE
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling.py::test_exact_geometry_and_order_independent_shifted_cosets
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling.py::test_common_model_rejects_invalid_geometry_and_blocks
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}

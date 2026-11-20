@@ -1,0 +1,30 @@
+id: MATH-MCMC-SAMPLER-STRESS-AD-REFERENCE-001
+kind: mathematical
+name: Measured MCMC stress buffers against AD of an independent strained program
+plain_language: >-
+  Every walker e_L, stress_HF, stress_PP and E_L_stress_PP value saved by two successive production MCMC
+  measurements equals, in all nine tensor entries, jax AD with respect to eps of a separately written
+  program for the fixed-ansatz strained local energy and ln|Psi| (cell, nuclei and electrons mapped by
+  I + eps; its own periodic Cartesian Gaussians, exponential J2 on the adopted positive full-Gram periodic
+  distance of MATH-JAS-PERIODIC-DISTANCE-LAW-001, Hessian kinetic energy and Ewald sum; no production
+  evaluator, strain helper or stress kernel). At every step the same program on the
+  diagonal-Gram sine distance must be rejected by the same comparison, so the skew-cell J2 geometry is
+  discriminated. The fixture is two all-electron H nuclei
+  in a triclinic cell, one up and one down electron in an s+p Cartesian periodic Gaussian SD with J2;
+  seed 34 supplies two walkers with two moves per measurement, Dt=0.7 and AS=0. The p shells make the
+  antisymmetric part non-vacuous, so a transposed buffer fails. get_aT on the same run equals a delete-one
+  jackknife assembled from the reference tensors, so dropping its symmetrisation fails. XLA and Rust are
+  both required. The program is evaluated in the active mode's zone dtypes (AO values at ao_eval, AO
+  derivatives at ao_grad_lap, J2 values and derivatives at jastrow_eval / jastrow_grad_lap, the MO
+  contraction, ln|det|, kinetic assembly and Ewald sum in their fp64 zones), so full is judged against the
+  fp64 program and mixed against the same program at the mixed zone dtypes, never against an fp64 answer. Same-mode zone strict (full) and medium (mixed) comparisons, no
+  statistical window. ECP, J1/J3/DTN, twists and GFMC stress are not claimed here.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mcmc_stress_ad_reference.py::test_mcmc_stress_buffers_match_independent_strain_ad
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: xla}
+    - {backend: rust}

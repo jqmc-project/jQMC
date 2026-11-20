@@ -1,0 +1,239 @@
+schema_version: 1
+contract_id: GDD-SYMBOL-OWNERSHIP-001
+lifecycle: cutover
+plain_language: Every in-scope top-level Python class and function has one primary ledger; every governed symbol resolves
+  to an existing guarantee.
+discovery_policy:
+  source_globs:
+  - jqmc/**/*.py
+  excluded_paths:
+    jqmc/__init__.py: package initializer; no locally defined production symbols
+    jqmc/_version.py: generated version metadata
+  public_name_rule: a symbol whose name does not start with underscore
+  private_name_rule: a symbol whose name starts with underscore
+  included_symbols:
+  - top-level class definitions
+  - top-level function definitions
+  - top-level async function definitions
+  structurally_excluded:
+  - class methods
+  - nested functions and classes
+  - imported symbols and aliases
+  - assignments and constants
+non_python_boundaries:
+  jqmc_rs:
+    ledger: gdd/ssot/guarantees/jqmc_rs.yaml
+    source_root: jqmc/rs/src
+    python_ast_status: out-of-scope
+    reason: Rust symbols require a separate Rust-aware discovery contract
+out_of_scope_packages:
+- package: jqmc_workflow
+  tests_root: tests/test_jqmc_workflow
+  reason: Separate orchestration package outside the jqmc production surface; the GDD cutover universe is jqmc.* only.
+    Revisit after cutover.
+  revisit: post-cutover
+ownership:
+  jqmc._build_info:
+    source: jqmc/_build_info.py
+    ledger: gdd/ssot/guarantees/_build_info.yaml
+  jqmc._cli_entry:
+    source: jqmc/_cli_entry.py
+    ledger: gdd/ssot/guarantees/_cli_entry.yaml
+  jqmc._checkpoint:
+    source: jqmc/_checkpoint.py
+    ledger: gdd/ssot/guarantees/_checkpoint.yaml
+  jqmc._complex_update:
+    source: jqmc/_complex_update.py
+    ledger: gdd/ssot/guarantees/_complex_update.yaml
+  jqmc._diff_mask:
+    source: jqmc/_diff_mask.py
+    ledger: gdd/ssot/guarantees/_diff_mask.yaml
+  jqmc._driver_helpers:
+    source: jqmc/_driver_helpers.py
+    ledger: gdd/ssot/guarantees/_driver_helpers.yaml
+  jqmc._precision:
+    source: jqmc/_precision.py
+    ledger: gdd/ssot/guarantees/_precision.yaml
+  jqmc._restart_policy:
+    source: jqmc/_restart_policy.py
+    ledger: gdd/ssot/guarantees/_restart_policy.yaml
+  jqmc._route_probe:
+    source: jqmc/_route_probe.py
+    ledger: gdd/ssot/guarantees/_route_probe.yaml
+  jqmc._setting:
+    source: jqmc/_setting.py
+    ledger: gdd/ssot/guarantees/_setting.yaml
+  jqmc._twist_average:
+    source: jqmc/_twist_average.py
+    ledger: gdd/ssot/guarantees/_twist_average.yaml
+  jqmc._twist_checkpoint:
+    source: jqmc/_twist_checkpoint.py
+    ledger: gdd/ssot/guarantees/_twist_checkpoint.yaml
+  jqmc.atomic_orbital:
+    source: jqmc/atomic_orbital.py
+    ledger: gdd/ssot/guarantees/atomic_orbital.yaml
+  jqmc.coulomb_potential:
+    source: jqmc/coulomb_potential.py
+    ledger: gdd/ssot/guarantees/coulomb_potential.yaml
+  jqmc.derivatives:
+    source: jqmc/derivatives/__init__.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives._auto:
+    source: jqmc/derivatives/_auto.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives._capability:
+    source: jqmc/derivatives/_capability.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.ao:
+    source: jqmc/derivatives/ao.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.ao_deriv:
+    source: jqmc/derivatives/ao_deriv.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.assemble:
+    source: jqmc/derivatives/assemble.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.basis:
+    source: jqmc/derivatives/basis.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.bridge:
+    source: jqmc/derivatives/bridge.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.driver:
+    source: jqmc/derivatives/driver.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.dtn:
+    source: jqmc/derivatives/dtn.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.ecp_force:
+    source: jqmc/derivatives/ecp_force.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.ewald:
+    source: jqmc/derivatives/ewald.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.fast:
+    source: jqmc/derivatives/fast.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.fast_mesh:
+    source: jqmc/derivatives/fast_mesh.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.force:
+    source: jqmc/derivatives/force.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.geminal:
+    source: jqmc/derivatives/geminal.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.gfmc:
+    source: jqmc/derivatives/gfmc.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.hoist:
+    source: jqmc/derivatives/hoist.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.kinetic:
+    source: jqmc/derivatives/kinetic.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.mesh_stream:
+    source: jqmc/derivatives/mesh_stream.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.one_move_mesh:
+    source: jqmc/derivatives/one_move_mesh.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.orbital_tiling:
+    source: jqmc/derivatives/orbital_tiling.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.pbc_stress:
+    source: jqmc/derivatives/pbc_stress.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.derivatives.pgto_deriv:
+    source: jqmc/derivatives/pgto_deriv.py
+    ledger: gdd/ssot/guarantees/derivatives.yaml
+  jqmc.determinant:
+    source: jqmc/determinant.py
+    ledger: gdd/ssot/guarantees/determinant.yaml
+  jqmc.hamiltonians:
+    source: jqmc/hamiltonians.py
+    ledger: gdd/ssot/guarantees/hamiltonians.yaml
+  jqmc.jastrow_factor:
+    source: jqmc/jastrow_factor.py
+    ledger: gdd/ssot/guarantees/jastrow_factor.yaml
+  jqmc.jqmc_cli:
+    source: jqmc/jqmc_cli.py
+    ledger: gdd/ssot/guarantees/jqmc_cli.yaml
+  jqmc.jqmc_gfmc:
+    source: jqmc/jqmc_gfmc.py
+    ledger: gdd/ssot/guarantees/jqmc_gfmc.yaml
+  jqmc.jqmc_mcmc:
+    source: jqmc/jqmc_mcmc.py
+    ledger: gdd/ssot/guarantees/jqmc_mcmc.yaml
+  jqmc.jqmc_miscs:
+    source: jqmc/jqmc_miscs.py
+    ledger: gdd/ssot/guarantees/jqmc_miscs.yaml
+  jqmc.jqmc_optimizer:
+    source: jqmc/jqmc_optimizer.py
+    ledger: gdd/ssot/guarantees/jqmc_optimizer.yaml
+  jqmc.jqmc_optimizer_kernel:
+    source: jqmc/jqmc_optimizer_kernel.py
+    ledger: gdd/ssot/guarantees/jqmc_optimizer_kernel.yaml
+  jqmc.jqmc_qe:
+    source: jqmc/jqmc_qe.py
+    ledger: gdd/ssot/guarantees/jqmc_qe.yaml
+  jqmc.jqmc_tool:
+    source: jqmc/jqmc_tool.py
+    ledger: gdd/ssot/guarantees/jqmc_tool.yaml
+  jqmc.molecular_orbital:
+    source: jqmc/molecular_orbital.py
+    ledger: gdd/ssot/guarantees/molecular_orbital.yaml
+  jqmc.mpc:
+    source: jqmc/mpc.py
+    ledger: gdd/ssot/guarantees/mpc.yaml
+  jqmc.orbital_tiling:
+    source: jqmc/orbital_tiling.py
+    ledger: gdd/ssot/guarantees/orbital_tiling.yaml
+  jqmc.orbital_tiling_geometry:
+    source: jqmc/orbital_tiling_geometry.py
+    ledger: gdd/ssot/guarantees/orbital_tiling_geometry.yaml
+  jqmc.orbital_tiling_hdf5:
+    source: jqmc/orbital_tiling_hdf5.py
+    ledger: gdd/ssot/guarantees/orbital_tiling.yaml
+  jqmc.orbital_tiling_sources:
+    source: jqmc/orbital_tiling_sources.py
+    ledger: gdd/ssot/guarantees/orbital_tiling_sources.yaml
+  jqmc.output_parser:
+    source: jqmc/output_parser.py
+    ledger: gdd/ssot/guarantees/jqmc_cli.yaml
+  jqmc.pgto_exponent_optimizer:
+    source: jqmc/pgto_exponent_optimizer.py
+    ledger: gdd/ssot/guarantees/pgto_exponent_optimizer.yaml
+  jqmc.pw_pgto_projection:
+    source: jqmc/pw_pgto_projection.py
+    ledger: gdd/ssot/guarantees/pw_pgto_projection.yaml
+  jqmc.qe_orbital_tiling:
+    source: jqmc/qe_orbital_tiling.py
+    ledger: gdd/ssot/guarantees/qe_orbital_tiling.yaml
+  jqmc.qe_to_jqmc:
+    source: jqmc/qe_to_jqmc.py
+    ledger: gdd/ssot/guarantees/qe_to_jqmc.yaml
+  jqmc.qe_wrapper:
+    source: jqmc/qe_wrapper.py
+    ledger: gdd/ssot/guarantees/qe_wrapper.yaml
+  jqmc.rs.generate_setting_consts:
+    source: jqmc/rs/generate_setting_consts.py
+    ledger: gdd/ssot/guarantees/jqmc_rs.yaml
+  jqmc.rs.tools.gen_erfc:
+    source: jqmc/rs/tools/gen_erfc.py
+    ledger: gdd/ssot/guarantees/jqmc_rs.yaml
+  jqmc.structure:
+    source: jqmc/structure.py
+    ledger: gdd/ssot/guarantees/structure.yaml
+  jqmc.swct:
+    source: jqmc/swct.py
+    ledger: gdd/ssot/guarantees/swct.yaml
+  jqmc.trexio_wrapper:
+    source: jqmc/trexio_wrapper.py
+    ledger: gdd/ssot/guarantees/trexio_wrapper.yaml
+  jqmc.upf_wrapper:
+    source: jqmc/upf_wrapper.py
+    ledger: gdd/ssot/guarantees/upf_wrapper.yaml
+  jqmc.wavefunction:
+    source: jqmc/wavefunction.py
+    ledger: gdd/ssot/guarantees/wavefunction.yaml

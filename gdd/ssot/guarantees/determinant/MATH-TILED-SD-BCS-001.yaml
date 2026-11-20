@@ -1,0 +1,41 @@
+id: MATH-TILED-SD-BCS-001
+kind: mathematical
+name: Frozen tiled SD consumes final primitive-block orbitals in BCS spin sectors
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  The Python/JAX SD route consumes final tiled orbitals without global coefficients.
+  Restricted construction explicitly shares a source; independent LSDA input keeps its
+  local coefficients and occupied-band counts. Both use (+k_s,-k_s) boundary sectors.
+  Tests compare determinant, log determinant, debug assembly and kinetic energy to
+  independent spin-matrix algebra for PW, B-spline and Cartesian/spherical pGTO.
+  Translating one electron measures the appropriate spin phase. Optimizer publication
+  and gradient masking reject orbital/geminal flags, and dense AGP promotion is rejected.
+  This does not certify native SD, full energy, force/stress, drivers or restart support.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-ERROR-DISPOSITION-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling.py::test_tiled_sd_preserves_bcs_spin_sectors_and_kinetic
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw, restricted: true}
+    - {backend: pw, restricted: false}
+    - {backend: bspline, restricted: true}
+    - {backend: bspline, restricted: false}
+    - {backend: pgto_cart, restricted: true}
+    - {backend: pgto_cart, restricted: false}
+    - {backend: pgto_sphe, restricted: true}
+    - {backend: pgto_sphe, restricted: false}
+    - {backend: composite_cart, restricted: true}
+    - {backend: composite_cart, restricted: false}
+    - {backend: composite_sphe, restricted: true}
+    - {backend: composite_sphe, restricted: false}
+
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling.py::test_tiled_sd_rejects_orbital_optimization_and_dense_conversion
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

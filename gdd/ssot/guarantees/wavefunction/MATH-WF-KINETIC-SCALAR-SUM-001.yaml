@@ -1,0 +1,26 @@
+id: MATH-WF-KINETIC-SCALAR-SUM-001
+kind: mathematical
+name: Twist scalar kinetic energy equals its same-mode per-electron sum
+plain_language: >-
+  On the original four complex twist/no-Jastrow or J1+J2 fixtures and fixed
+  straddling-cell coordinates, mixed scalar compute_kinetic_energy equals the
+  sum of the same-mode compute_kinetic_energy_all_elements vector under the
+  original strict zone policy. Both operands come from mixed production APIs.
+  The full complex-Psi Hessian checks and mixed per-electron normalized-Laplacian
+  fidelity remain separately registered; this identity does not compare total
+  energy across precisions or replace an invariant or physical reference.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_complex_twist_kinetic_matches_complex_psi_hessian
+    required_precision_modes: [mixed]
+    required_parameter_cases: [{case: lithium_k025-jnone}, {case: lithium_k025-j12}, {case: H2_pbc_ae_k025_cart-jnone}, {case: H2_pbc_ae_k025_cart-j12}]
+    executable_checks:
+      same-mode-total-sum:
+        site: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::_compare_kinetic#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: same-mode-scalar-kinetic, expression: "mixed['total']"}
+        reference: {role: same-mode-per-electron-kinetic-sum, expression: "np.sum(mixed['per_electron'])"}
+        precision:
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ao_eval, ao_grad_lap, mo_eval, mo_grad, mo_lap, det_eval, det_grad_lap, jastrow_eval, jastrow_grad_lap, wf_eval, wf_kinetic]}

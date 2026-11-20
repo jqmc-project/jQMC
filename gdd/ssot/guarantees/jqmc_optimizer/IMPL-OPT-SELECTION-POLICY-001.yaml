@@ -1,0 +1,300 @@
+id: IMPL-OPT-SELECTION-POLICY-001
+kind: implementation
+name: Coordinate selection and fallback policy
+plain_language: Coordinate budgets, scope selection by root consensus, warm-start fingerprints, subfloor freezing with atomic
+  complex pairs, LM energy gates, and the ASR fallback follow the reviewed policy, and reduced routes never build the full
+  coordinate pencil; cross-term and negative-metric violations are rejected.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_atomic_group_selection_includes_complex_pair_and_boundary_ties
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_single_k_lm_uses_one_combined_coordinate_budget
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_lm_applies_coordinate_budget_independently_per_scope
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_lm_scope_selection_uses_root_consensus_when_rank_scores_differ
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_rejected_lm_candidate_uses_asr_fallback
+    executable_checks:
+      d8-n-284:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_rejected_lm_candidate_uses_asr_fallback#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.predicted_energy
+        reference:
+          role: source-reference-value
+          expression: '-123.0'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-285:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_rejected_lm_candidate_uses_asr_fallback#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.linearized_wavefunction_norm
+        reference:
+          role: source-reference-value
+          expression: expected_norm
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-286:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_rejected_lm_candidate_uses_asr_fallback#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.q
+        reference:
+          role: source-reference-value
+          expression: 0.37 * result.sr_q
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-287:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_rejected_lm_candidate_uses_asr_fallback#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.accepted_scale
+        reference:
+          role: source-reference-value
+          expression: '0.37'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_rejected_lm_candidate_uses_asr_fallback_in_each_scope
+    executable_checks:
+      d8-n-288:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_rejected_lm_candidate_uses_asr_fallback_in_each_scope#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.q
+        reference:
+          role: source-reference-value
+          expression: 0.37 * result.sr_q
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-289:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_rejected_lm_candidate_uses_asr_fallback_in_each_scope#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.accepted_scale
+        reference:
+          role: source-reference-value
+          expression: '0.37'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-290:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_rejected_lm_candidate_uses_asr_fallback_in_each_scope#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.predicted_energy
+        reference:
+          role: source-reference-value
+          expression: '-123.0'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_lm_energy_gate_uses_bz_error_for_shared_and_local_error_for_sampler
+    executable_checks:
+      d8-n-291:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_lm_energy_gate_uses_bz_error_for_shared_and_local_error_for_sampler#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.q[shared]
+        reference:
+          role: source-reference-value
+          expression: np.zeros(2, dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-292:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_planb_lm_energy_gate_uses_bz_error_for_shared_and_local_error_for_sampler#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.q[local]
+        reference:
+          role: source-reference-value
+          expression: 0.37 * result.sr_q[local]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_reduced_lm_routes_do_not_build_the_full_coordinate_pencil
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_centered_asr_selects_reference_connected_stationary_root
+    executable_checks:
+      d8-n-293:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_centered_asr_selects_reference_connected_stationary_root#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.predicted_energy
+        reference:
+          role: source-reference-value
+          expression: energy(expected_gamma)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-294:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_centered_asr_selects_reference_connected_stationary_root#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.gamma
+        reference:
+          role: source-reference-value
+          expression: expected_gamma
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_centered_asr_accepts_small_negative_reference_root
+    executable_checks:
+      d8-n-295:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_centered_asr_accepts_small_negative_reference_root#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.gamma
+        reference:
+          role: source-reference-value
+          expression: expected_gamma
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_matching_wide_warm_start_is_real_and_reused_at_the_same_fingerprint
+    executable_checks:
+      d8-n-296:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_matching_wide_warm_start_is_real_and_reused_at_the_same_fingerprint#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: second.q
+        reference:
+          role: source-reference-value
+          expression: first.q
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_incompatible_wide_warm_start_resets_before_real_cg
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_subfloor_coordinate_is_removed_before_strongly_correlated_solve
+    executable_checks:
+      d8-n-297:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_subfloor_coordinate_is_removed_before_strongly_correlated_solve#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: q[1]
+        reference:
+          role: source-reference-value
+          expression: expected[0] / np.sqrt(prepared.metric_diagonal[1])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-PYTHON-FP64-AGGREGATOR-INVARIANT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-LOOSE-R-PYTHON-FP64-AGGREGATOR-INVARIANT-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_atomic_complex_pair_freezes_together_when_one_diagonal_is_subfloor
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_unified_target_selects_tall_from_surviving_real_dimensions
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_regime_uses_realified_sample_dimension_and_equality_is_tall
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_lm_solver_rejects_reference_tangent_overlap_cross_terms
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_asr_contraction_rejects_cross_terms_above_centered_roundoff_policy
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_bounded_centered_asr_rejects_negative_metric
+    executable_checks:
+      d8-n-298:
+        site: tests/test_jqmc_kernel/test_optimizer_lm_real.py::test_bounded_centered_asr_rejects_negative_metric#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.gamma
+        reference:
+          role: source-reference-value
+          expression: '0.1'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry
+    executable_checks:
+      d8-n-299:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_complex_samples_are_contracted_before_real_projection_and_cg_rejects_complex_carry#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: prepared.b_preconditioned
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_tall_solvers_reject_complex_duals

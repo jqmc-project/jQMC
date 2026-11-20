@@ -1,0 +1,998 @@
+id: IMPL-GFMC-DEBUG-PRODUCTION-001
+kind: implementation
+name: GFMC same-input algorithm and debug-twin guarantees
+plain_language: The load-balanced GFMC_n driver agrees with full-recompute leaves at every actual hop and measurement
+  input. Its categorical choices exactly invert its own numerically checked CDF; every key and population carry,
+  measurement moment, historical weight product, energy-shift update and fixed-sample energy/variance/force estimate
+  is checked. Observation must not change the real driver outputs. The original fixture cases, seed 3446, two
+  walkers per rank, forty ten-hop intervals and full/mixed strict/medium policies are retained. Force leaves use
+  the existing analytic derivative backend with fresh inverses, not an independent derivative formula. This is
+  not equality of separately evolving trajectories or a statistical accuracy claim. GFMC_t (tau) and both drivers'
+  dedicated stress evaluations retain their debug-twin guarantees. Mixed XLA GFMC_t additionally has an end-to-end
+  trajectory witness on an explicitly screened well-conditioned 2x2 open-shell determinant with J1+J2+J3; final
+  walkers, projection counters, weights, and local-energy observables are compared.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+- VM-IMPL-GFMC-SAME-INPUT-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCTau::test_jqmc_gfmc_t
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_gfmc.py::test_mixed_xla_gfmc_t_debug_equals_production_in_well_conditioned_domain
+    executable_checks:
+      d8-n-181:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::test_mixed_xla_gfmc_t_debug_equals_production_in_well_conditioned_domain#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug._latest_r_up_carts
+        reference:
+          role: source-reference-value
+          expression: production._latest_r_up_carts
+        precision:
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+      d8-n-182:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::test_mixed_xla_gfmc_t_debug_equals_production_in_well_conditioned_domain#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: debug._latest_r_dn_carts
+        reference:
+          role: source-reference-value
+          expression: production._latest_r_dn_carts
+        precision:
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity::test_gfmc_t_stress_debug_vs_production
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity.test_gfmc_t_stress_debug_vs_production#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sigma_mean_d
+        reference:
+          role: existing-test-reference
+          expression: sigma_mean_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity.test_gfmc_t_stress_debug_vs_production#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sigma_std_d
+        reference:
+          role: existing-test-reference
+          expression: sigma_std_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity.test_gfmc_t_stress_debug_vs_production#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: P_mean_d
+        reference:
+          role: existing-test-reference
+          expression: P_mean_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity.test_gfmc_t_stress_debug_vs_production#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: P_std_d
+        reference:
+          role: existing-test-reference
+          expression: P_std_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity::test_gfmc_n_stress_debug_vs_production
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity.test_gfmc_n_stress_debug_vs_production#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sigma_mean_d
+        reference:
+          role: existing-test-reference
+          expression: sigma_mean_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity.test_gfmc_n_stress_debug_vs_production#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: sigma_std_d
+        reference:
+          role: existing-test-reference
+          expression: sigma_std_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity.test_gfmc_n_stress_debug_vs_production#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: P_mean_d
+        reference:
+          role: existing-test-reference
+          expression: P_mean_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCStressParity.test_gfmc_n_stress_debug_vs_production#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: P_std_d
+        reference:
+          role: existing-test-reference
+          expression: P_std_p
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+- verdict_method: VM-IMPL-GFMC-SAME-INPUT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra::test_jqmc_gfmc_n
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: H_ecp_ccpvdz_cart.h5
+      with_1b_jastrow: true
+      with_2b_jastrow: false
+      with_3b_jastrow: false
+      non_local_move: tmove
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: H_ecp_ccpvdz_cart.h5
+      with_1b_jastrow: false
+      with_2b_jastrow: false
+      with_3b_jastrow: false
+      non_local_move: dltmove
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: H_ecp_ccpvdz_cart.h5
+      with_1b_jastrow: true
+      with_2b_jastrow: true
+      with_3b_jastrow: true
+      non_local_move: dltmove
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: H2_ae_ccpvdz_cart.h5
+      with_1b_jastrow: true
+      with_2b_jastrow: true
+      with_3b_jastrow: true
+      non_local_move: null
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: Li_ae_ccpvdz_cart.h5
+      with_1b_jastrow: true
+      with_2b_jastrow: true
+      with_3b_jastrow: true
+      non_local_move: null
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: lithium.h5
+      with_1b_jastrow: true
+      with_2b_jastrow: true
+      with_3b_jastrow: true
+      non_local_move: tmove
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: lithium_k025.h5
+      with_1b_jastrow: false
+      with_2b_jastrow: false
+      with_3b_jastrow: false
+      non_local_move: null
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: QEPROJ:bspline:Li_gamma:ECP
+      with_1b_jastrow: true
+      with_2b_jastrow: true
+      with_3b_jastrow: false
+      non_local_move: tmove
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: QE:Li_gamma_pgto+pw
+      with_1b_jastrow: true
+      with_2b_jastrow: true
+      with_3b_jastrow: false
+      non_local_move: tmove
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: RSPATTERN:mol_ecp_cart_jdtn
+      with_1b_jastrow: true
+      with_2b_jastrow: true
+      with_3b_jastrow: false
+      non_local_move: tmove
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: RSPATTERN:mol_sphe_agp_jnone
+      with_1b_jastrow: false
+      with_2b_jastrow: false
+      with_3b_jastrow: false
+      non_local_move: null
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: RSPATTERN:mol_cart_agpn_jnone
+      with_1b_jastrow: false
+      with_2b_jastrow: false
+      with_3b_jastrow: false
+      non_local_move: null
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: RSPATTERN:pw_gamma_jnone
+      with_1b_jastrow: false
+      with_2b_jastrow: false
+      with_3b_jastrow: false
+      non_local_move: tmove
+    - mcmc_seed: 3446
+      num_walkers: 2
+      num_mcmc_steps: 40
+      num_mcmc_per_measurement: 10
+      alat: 0.3
+      E_scf: -1.0
+      num_gfmc_collect_steps: 5
+      warmup: 25
+      bins: 10
+      trexio_file: RSPATTERN:pgto_bspline_gamma_jnone
+      with_1b_jastrow: false
+      with_2b_jastrow: false
+      with_3b_jastrow: false
+      non_local_move: tmove
+    executable_checks:
+      observer-equal:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: observer_equal
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: np.ones_like(observer_equal)
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      projection-exact:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: projection['exact'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: projection['exact'][1]
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      projection-candidates:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: projection['candidates'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: projection['candidates'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id001
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id001
+      projection-cdf:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: projection['cdf'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: projection['cdf'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id002
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id002
+      projection-propagation:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: projection['propagation'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: projection['propagation'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id003
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id003
+      projection-weights:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: projection['weights'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: projection['weights'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id004
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id004
+      projection-inverse:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: projection['inverse'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: projection['inverse'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id005
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id005
+      projection-positions:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: projection['positions'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: projection['positions'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id006
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id006
+      measurement-exact:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#exact-comparison-3
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: measurement['exact'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: measurement['exact'][1]
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      measurement-measurement-diagonal:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: measurement['measurement_diagonal'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: measurement['measurement_diagonal'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id007
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id007
+      measurement-measurement-energy:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: measurement['measurement_energy'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: measurement['measurement_energy'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id008
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id008
+      measurement-measurement-inverse:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: measurement['measurement_inverse'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: measurement['measurement_inverse'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id009
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id009
+      measurement-force-leaves:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: measurement['force_leaves'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: measurement['force_leaves'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id010
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id010
+      measurement-force-assembly:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-11
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: measurement['force_assembly'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: measurement['force_assembly'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id011
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id011
+      population-exact:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#exact-comparison-4
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: population['exact'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: population['exact'][1]
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+      population-branching-cdf:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-12
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: population['branching_cdf'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: population['branching_cdf'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id012
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id012
+      population-weights:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-13
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: population['weights'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: population['weights'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id013
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id013
+      population-energy-shift:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-14
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: population['energy_shift'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: population['energy_shift'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id014
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id014
+      population-moments-force:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-17
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: population['moments_force'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: population['moments_force'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id015
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id015
+      population-moments-energy:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-18
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: population['moments_energy'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: population['moments_energy'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id016
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id016
+      population-moments-energy-squared:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-19
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: population['moments_energy_squared'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: population['moments_energy_squared'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id017
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id017
+      histories-weights:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-20
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: histories['weights'][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: histories['weights'][1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id018
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id018
+      histories-each:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#exact-comparison-5
+        comparator: numpy.testing.assert_array_equal
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: histories[name][0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: histories[name][1]
+        precision:
+          full:
+            policy: CMP-EXACT-VALUES-001
+          mixed:
+            policy: CMP-EXACT-VALUES-001
+        iterations:
+          variable: name
+          required_values:
+          - e_L
+          - e_L2
+          - force_HF
+          - force_PP
+          - E_L_force_PP
+      actual-energy:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-21
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: actual_energy
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: expected_energy
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id019
+            - ao_eval
+            - jastrow_eval
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id019
+      actual-force:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-22
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: actual_force
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: expected_force
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: &id020
+            - ao_eval
+            - ao_grad_lap
+            - jastrow_grad_lap
+            - det_eval
+            - coulomb
+            - wf_kinetic
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: *id020
+      observer-energy-observables:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-23
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: observer_energy[0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: observer_energy[1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic]
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic]
+      observer-force-observables:
+        site: tests/test_jqmc_kernel/test_jqmc_gfmc.py::TestGFMCBra.test_jqmc_gfmc_n#comparison-24
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: observed-driver-or-checked-leaf-input
+          expression: observer_force[0]
+        reference:
+          role: same-input-recomputation-or-exact-protocol
+          expression: observer_force[1]
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones: [ao_eval, ao_grad_lap, jastrow_grad_lap, det_eval, coulomb, wf_kinetic]
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-MEDIUM-001
+            zones: [ao_eval, ao_grad_lap, jastrow_grad_lap, det_eval, coulomb, wf_kinetic]

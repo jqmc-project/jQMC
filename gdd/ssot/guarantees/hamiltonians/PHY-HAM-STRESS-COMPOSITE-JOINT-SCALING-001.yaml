@@ -1,0 +1,26 @@
+id: PHY-HAM-STRESS-COMPOSITE-JOINT-SCALING-001
+kind: physical
+name: Composite pGTO plus plane-wave joint-scaling invariance through the production strain and basis blocks
+plain_language: >-
+  The committed H-ae_gamma fixture (8 all-electron H, cubic 9.5 bohr cell, Gamma, 4 up and 4 down) projected
+  onto one s pGTO shell per atom (exponents 0.8 and 2.4, Cartesian periodic leaf) plus the plane waves below a
+  quarter of the wavefunction cutoff, no Jastrow, one fixed configuration. Scaling geometry by F = s I through
+  _apply_strain, electrons by s, pGTO exponents by 1/s^2 and contraction coefficients by s^(3/2), with MO and
+  plane-wave data fixed, leaves Psi invariant. At s = 1.02 and 0.97 ln|Psi|, s^2 T and s V equal their s = 1
+  values; jax.jacrev through this path gives geometry plus basis partials of 0, -2 T and -V; and the production
+  analytic strain trace plus the production analytic basis chain -2 sum(Z dX/dZ) + 1.5 sum(c dX/dc)
+  (opt_lambda_basis_exp and opt_lambda_basis_coeff) equals -2 T - V for e_L and 0 for ln|Psi|. Leaving the pGTO
+  leaf unstrained must fail the finite and AD stages; dropping the image-T correction of the pGTO Pulay or
+  kinetic strain contraction, or zeroing the exponent-normalization derivative, must fail the analytic stage.
+  Strict zone tolerance, cancellations rebased on the largest cancelling term; full and mixed are judged
+  separately. Other l, spherical leaves, Jastrow and ECP are not claimed here.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_stress_probe_identities.py::test_composite_pgto_plane_wave_joint_scaling
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_stress_probe_identities.py::test_composite_joint_scaling_rejects_pgto_mutations
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

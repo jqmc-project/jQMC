@@ -1,0 +1,484 @@
+id: MATH-STR-MIC-CORRECTNESS-001
+kind: mathematical
+name: Minimum-image convention correctness
+plain_language: 'The shared MIC equals brute-force enumeration (mathematical), the orthorhombic general path
+  equals the parallelepiped wrap, the parallelepiped helper is provably distinct from Wigner-Seitz on oblique cells, distance
+  derivatives away from seams are the Euclidean closed form, and the face probe resolves the expected one-sided gradient
+  jump as the reviewed negative control.'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC::test_general_mic_vs_brute_force
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - cell_name: cubic_10bohr
+      seed: 20260603
+    - cell_name: primitive_fcc_si
+      seed: 20260604
+    - cell_name: triclinic_skewed
+      seed: 20260605
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_general_mic_vs_brute_force#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: production-minimum-image
+          expression: got
+        reference:
+          role: independent-lattice-enumeration
+          expression: ref
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: probe_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+          - '20'
+          - '21'
+          - '22'
+          - '23'
+          - '24'
+          - '25'
+          - '26'
+          - '27'
+          - '28'
+          - '29'
+          - '30'
+          - '31'
+          - '32'
+          - '33'
+          - '34'
+          - '35'
+          - '36'
+          - '37'
+          - '38'
+          - '39'
+          - '40'
+          - '41'
+          - '42'
+          - '43'
+          - '44'
+          - '45'
+          - '46'
+          - '47'
+          - '48'
+          - '49'
+          - '50'
+          - '51'
+          - '52'
+          - '53'
+          - '54'
+          - '55'
+          - '56'
+          - '57'
+          - '58'
+          - '59'
+          - '60'
+          - '61'
+          - '62'
+          - '63'
+          - '64'
+          - '65'
+          - '66'
+          - '67'
+          - '68'
+          - '69'
+          - '70'
+          - '71'
+          - '72'
+          - '73'
+          - '74'
+          - '75'
+          - '76'
+          - '77'
+          - '78'
+          - '79'
+          - '80'
+          - '81'
+          - '82'
+          - '83'
+          - '84'
+          - '85'
+          - '86'
+          - '87'
+          - '88'
+          - '89'
+          - '90'
+          - '91'
+          - '92'
+          - '93'
+          - '94'
+          - '95'
+          - '96'
+          - '97'
+          - '98'
+          - '99'
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics::test_pbc_minimum_image_and_nearest
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics.test_pbc_minimum_image_and_nearest#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: periodic-relative-position
+          expression: rel_atom0
+        reference:
+          role: explicit-vector-or-numpy-route
+          expression: np.array([0.9, 0.0, 0.0])
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics.test_pbc_minimum_image_and_nearest#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: periodic-relative-position
+          expression: rel_atom1
+        reference:
+          role: explicit-vector-or-numpy-route
+          expression: np.array([-0.1, 0.0, 0.0])
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics.test_pbc_minimum_image_and_nearest#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: periodic-relative-position
+          expression: rel_atom0_jnp
+        reference:
+          role: explicit-vector-or-numpy-route
+          expression: rel_atom0
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureBasics.test_pbc_minimum_image_and_nearest#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: periodic-relative-position
+          expression: rel_atom1_jnp
+        reference:
+          role: explicit-vector-or-numpy-route
+          expression: rel_atom1
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC::test_orthorhombic_general_equals_parallelepiped_wrap
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_orthorhombic_general_equals_parallelepiped_wrap#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: wigner-seitz-minimum-image
+          expression: general
+        reference:
+          role: orthorhombic-fractional-wrap
+          expression: para_cart
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: probe_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+          - '12'
+          - '13'
+          - '14'
+          - '15'
+          - '16'
+          - '17'
+          - '18'
+          - '19'
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC::test_parallelepiped_helper_distinct_from_ws_on_oblique
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - cell_name: primitive_fcc_si
+    - cell_name: triclinic_skewed
+    executable_checks:
+      wigner-seitz-minimum:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_parallelepiped_helper_distinct_from_ws_on_oblique#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: general-minimum-image
+          expression: general
+        reference:
+          role: independent-lattice-enumeration
+          expression: brute_force_mic(diff, cell)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+      parallelepiped-wrap:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_parallelepiped_helper_distinct_from_ws_on_oblique#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: parallelepiped-image
+          expression: para_cart
+        reference:
+          role: independent-fractional-floor-wrap
+          expression: expected_para
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC::test_general_mic_distance_derivatives_away_from_seams
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - cell_name: cubic_10bohr
+    - cell_name: primitive_fcc_si
+    - cell_name: triclinic_skewed
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_general_mic_distance_derivatives_away_from_seams#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: mic-distance-or-derivative
+          expression: value
+        reference:
+          role: euclidean-formula-or-lattice-translation
+          expression: radius
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: probe_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-2:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_general_mic_distance_derivatives_away_from_seams#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: mic-distance-or-derivative
+          expression: grad
+        reference:
+          role: euclidean-formula-or-lattice-translation
+          expression: ref / radius
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: probe_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-3:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_general_mic_distance_derivatives_away_from_seams#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: mic-distance-or-derivative
+          expression: lap
+        reference:
+          role: euclidean-formula-or-lattice-translation
+          expression: 2.0 / radius
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: probe_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_general_mic_distance_derivatives_away_from_seams#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: mic-distance-or-derivative
+          expression: float(distance(shifted))
+        reference:
+          role: euclidean-formula-or-lattice-translation
+          expression: value
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: probe_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+      comparison-5:
+        site: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC.test_general_mic_distance_derivatives_away_from_seams#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: mic-distance-or-derivative
+          expression: np.asarray(jax.grad(distance)(shifted))
+        reference:
+          role: euclidean-formula-or-lattice-translation
+          expression: grad
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: probe_label
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+          - '8'
+          - '9'
+          - '10'
+          - '11'
+  - pytest_node: tests/test_jqmc_kernel/test_structure.py::TestStructureMIC::test_general_mic_face_probe_resolves_expected_gradient_jump

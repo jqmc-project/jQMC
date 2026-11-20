@@ -1,0 +1,25 @@
+id: IMPL-TA-PHASE-FREE-PERSISTENCE-001
+kind: implementation
+name: Shared Jastrow persistence rejects nonzero Bloch phase
+plain_language: >-
+  Combined twist input, standalone shared Jastrow and optimizer shared-state
+  writers and loaders reject a nonzero-k J3 reference. Loader evidence writes
+  a valid file then changes only the persisted J3 orbital, independently of
+  writer validation. Invalid old phase-bearing input is not silently migrated.
+  A phase-free Jastrow remains supported with a nonzero-twist determinant.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_shared_jastrow_persistence_rejects_phase_bearing_payload
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {storage: combined-input, boundary: writer}
+    - {storage: combined-input, boundary: loader}
+    - {storage: shared-jastrow, boundary: writer}
+    - {storage: shared-jastrow, boundary: loader}
+    - {storage: optimizer-checkpoint, boundary: writer}
+    - {storage: optimizer-checkpoint, boundary: loader}
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_twist_optimizer_resume_requires_canonical_shared_state_before_driver_load
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

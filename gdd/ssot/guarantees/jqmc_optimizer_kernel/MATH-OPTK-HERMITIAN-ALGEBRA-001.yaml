@@ -1,0 +1,135 @@
+id: MATH-OPTK-HERMITIAN-ALGEBRA-001
+kind: mathematical
+name: Hermitian algebra of the optimizer kernel
+plain_language: The Hermitian square root, the linear-method solve, the complex jackknife variance formula, and the real-path
+  variance (bit identical to the debug form) satisfy their exact algebraic contracts.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_opt_gt_force.py::TestT1ForceWirtingerFD::test_real_param_exact_decomposition
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestHermitianSqrt::test_hermitian_sqrt_real_bit_identical
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestHermitianSqrt::test_hermitian_sqrt_complex_roundtrip
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestHermitianSqrt.test_hermitian_sqrt_complex_roundtrip#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: sqrt_S
+        reference:
+          role: reference
+          expression: sqrt_S.conj().T
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestHermitianSqrt.test_hermitian_sqrt_complex_roundtrip#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: sqrt_S @ sqrt_S
+        reference:
+          role: reference
+          expression: S
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+      central-pair-3:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestHermitianSqrt.test_hermitian_sqrt_complex_roundtrip#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: inv_sqrt_S @ S @ inv_sqrt_S
+        reference:
+          role: reference
+          expression: eye
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestHermitianSqrt::test_hermitian_sqrt_clip_floor_on_near_singular_real
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestHermitianSqrt.test_hermitian_sqrt_clip_floor_on_near_singular_real#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: sqrt_S
+        reference:
+          role: reference
+          expression: expected_sqrt
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+      central-pair-2:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestHermitianSqrt.test_hermitian_sqrt_clip_floor_on_near_singular_real#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: actual
+          expression: inv_sqrt_S
+        reference:
+          role: reference
+          expression: expected_inv_sqrt
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod::test_solve_linear_method_real_path_unchanged
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod::test_solve_linear_method_complex_hermitian_LM
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod::test_solve_linear_method_complex_zero_force_zero_step
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestSolveLinearMethod.test_solve_linear_method_complex_zero_force_zero_step#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: zero-force-LM-update
+          expression: np.abs(c_vec)
+        reference:
+          role: known-zero-update
+          expression: np.zeros(p, dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-AGGREGATOR-LOOSE-PAIR-001
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestComplexJackknife::test_complex_jackknife_variance_formula
+    executable_checks:
+      central-pair-1:
+        site: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestComplexJackknife.test_complex_jackknife_variance_formula#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: complex-variance-formula
+          expression: np.real(Var_right)
+        reference:
+          role: expanded-real-imaginary-identity
+          expression: Var_real_floor
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-FIXED-SAMPLE-FP64-001
+  - pytest_node: tests/test_jqmc_kernel/test_wavefunction_hermitian.py::TestRealPathVar::test_real_path_var_formula_bit_identical_to_debug

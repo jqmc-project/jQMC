@@ -1,0 +1,985 @@
+{
+  "schema_version": 1,
+  "vocabularies": {
+    "allowed_classes": [
+      "end-to-end",
+      "force-stress",
+      "param-derivative",
+      "policy-contract"
+    ],
+    "migration_classes": [
+      "leaf-kernel",
+      "wrong-family"
+    ]
+  },
+  "allowed_sites": [
+    {
+      "site": "tests/test_jqmc_kernel/test_agpn_gamma_ecp_reference.py::_gamma_agpn_mixed_fidelity",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of Gamma AGPn ECP lambda optimizer-source derivative on the mixed-fidelity native route versus XLA; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_jqmc_kernel/test_agpn_gamma_ecp_reference.py::test_agpn_gamma_ecp_lambda_reference",
+      "class": "param-derivative",
+      "reason": "Checks that omitting the Gamma AGPn ECP term exceeds the native parity band; does not relax the strict-full analytical-versus-AD comparison"
+    },
+    {
+      "site": "tests/test_jqmc_kernel/test_orbital_tiling_source_routes.py::test_six_source_routes_energy_force_stress",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of energy, force and stress through the six orbital-tiling source routes, accumulated over tiling grad/lap, AO, Jastrow, kinetic and Coulomb zones; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_agpn.py::_assert_c_param_grad_parity",
+      "class": "param-derivative",
+      "reason": "Per-walker ln_Psi/e_L c-axis blocks, including AGPn lambda_diag/lambda_unpaired and AGP lambda_matrix. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Both Re and Im blocks compared; common production reducer on the XLA side is shared machinery, not an independent FD oracle."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_agpn_complex_derivative_sources.py::test_native_agpn_complex_lambda_sources_match_xla",
+      "class": "param-derivative",
+      "reason": "AGPn complex optimizer-source assembly on independently anchored inputs; existing derivative-zone medium policy, without the periodic absolute floor"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_agpn_gamma_ecp_sources.py::test_native_agpn_gamma_ecp_lambda_source",
+      "class": "param-derivative",
+      "reason": "Real Gamma AGPn total optimizer source on a live ECP input; existing central derivative-zone medium policy without an additional floor"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_batch_mesh_per_walker.py::test_native_batch_entries_use_each_walkers_rotated_mesh",
+      "class": "end-to-end",
+      "reason": "XLA-Rust parity of per-walker native batch e_L and its gradient blocks over each walker's rotated ECP mesh; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_chain_modes.py::_assert_value_parity",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_composite.py::test_composite_Ok_and_dT_dMO",
+      "class": "param-derivative",
+      "reason": "MO-coefficient derivative blocks O_k and dT/dMO"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_complex_composite_kinetic_stress_force",
+      "class": "force-stress",
+      "reason": "d Re(T)/d strain and d Re(T)/d nuclear R, pgto+PW/J3. Nuclear/electron-position or strain derivative aggregate, not an ordinary fixed-state forward value. Complex native kernel on real-Gamma composite; this checks its k=0 limit, not an additional nonzero-twist composite fixture."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_complex_kinetic_DTN_stress_force",
+      "class": "force-stress",
+      "reason": "d Re(T)/d strain and nuclear R with active DTN f channel. Nuclear/electron-position or strain derivative aggregate, not an ordinary fixed-state forward value. Only rtol comes from the medium helper; atol=ATOL_FD_VS_ANALYTIC_TIGHT is set separately and is outside this quantity-class classification."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_T_mo_withJ_complex",
+      "class": "param-derivative",
+      "reason": "Per-spin d Re(T with J1/J2)/d complex MO coefficients. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Only rtol comes from the medium helper; atol=ATOL_FD_VS_ANALYTIC_TIGHT is set separately and is outside this quantity-class classification."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_T_strain_complex_G6",
+      "class": "force-stress",
+      "reason": "d Re(T determinant)/d strain, jnone. Nuclear/electron-position or strain derivative aggregate, not an ordinary fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_T_strain_withJ_complex",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_T_withJ_J3_complex",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_T_withJ_J3_composite_complex",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_R_withJ_complex",
+      "class": "force-stress",
+      "reason": "d Re(V_ECP_nonlocal with J)/d nuclear R. Nuclear/electron-position or strain derivative aggregate, not an ordinary fixed-state forward value. Only rtol comes from the medium helper; atol=ATOL_COMPLEX_GRAD_FD is set separately and is outside this quantity-class classification."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_mo_complex",
+      "class": "param-derivative",
+      "reason": "Per-spin d V_ECP_nonlocal/d complex MO coefficients, determinant-only. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Only rtol comes from the medium helper; atol=ATOL_COMPLEX_GRAD_FD is set separately and is outside this quantity-class classification."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_mo_withJ_complex",
+      "class": "param-derivative",
+      "reason": "Per-spin d Re(V_ECP_nonlocal with J)/d complex MO coefficients. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Only rtol comes from the medium helper; atol=ATOL_COMPLEX_GRAD_FD is set separately and is outside this quantity-class classification."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_strain_withJ_complex",
+      "class": "force-stress",
+      "reason": "d Re(V_ECP_nonlocal with J)/d strain. Nuclear/electron-position or strain derivative aggregate, not an ordinary fixed-state forward value. Only rtol comes from the medium helper; atol=ATOL_COMPLEX_GRAD_FD is set separately and is outside this quantity-class classification."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_V_ecp_nonlocal_withDTN_strain_force_complex",
+      "class": "force-stress",
+      "reason": "d Re(V_ECP_nonlocal with DTN)/d strain and nuclear R. Nuclear/electron-position or strain derivative aggregate, not an ordinary fixed-state forward value. Two medium rtol calls; both absolute floors use ATOL_COMPLEX_GRAD_FD, outside this quantity-class classification."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_lnPsi_strain_complex_G5",
+      "class": "force-stress",
+      "reason": "Pulay d Re ln|det G|/d strain. Nuclear/electron-position or strain derivative aggregate, not an ordinary fixed-state forward value. No finite-difference comparison; existing custom VJP applies."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_ln_det_complex_Ok",
+      "class": "param-derivative",
+      "reason": "Complex SD per-spin MO O_k (gradient of Re ln|det G|). Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. The forward log-determinant has an existing JAX custom VJP; calling jax.grad does not imply an independently implemented raw AD oracle."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_core.py::test_grad_lndet_R_complex_G3",
+      "class": "force-stress",
+      "reason": "Pulay d Re ln|det G|/d nuclear R. Nuclear/electron-position or strain derivative aggregate, not an ordinary fixed-state forward value. Existing log-determinant custom VJP remains shared reference machinery."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_signature_ports.py::<module>",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_signature_ports.py::test_grad_T_wrt_R_complex_is_with_jastrow_capable",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_j3",
+      "class": "end-to-end",
+      "reason": "Returned AO up/down and paired-state buffers after a native complex MCMC sweep with active J3. State/observable of an actual deterministic move, sweep or GFMC run, not an isolated fixed-state value kernel. Old leaf-kernel classification is too broad: these are carried post-sweep state buffers. Separate independent Python/JAX move reference checks the acceptance count exactly, not the entire path/final positions; do not claim full independent trajectory parity."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_sweep.py::test_complex_sweep_state_consistency",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_complex_sweep.py::test_native_vmc_complex",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_driver_loops_rust.py::_parity",
+      "class": "end-to-end",
+      "reason": "Rust-on driver loops (optimizer, checkpoint, CLI, twist-average) against XLA runs"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_driver_loops_rust.py::test_run_optimize_step_rust_equals_xla",
+      "class": "end-to-end",
+      "reason": "negative control of the SR-update parity: perturbation sized by the same envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ecp_legendre_endpoint_parity.py::_check",
+      "class": "force-stress",
+      "reason": "GFMC tmove/dltmove e_L position derivatives (R, r_up, r_dn), strain derivative, and MCMC ECP position derivatives. Nuclear/electron-position or strain derivative aggregate, not an ordinary fixed-state forward value. All callers compare derivatives at generic/on-mesh points and require both operands finite. There is no Legendre-value-only caller; old leaf-kernel classification is incorrect."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ecp_radial_nearest_selection.py::test_native_ecp_j3_radial_matches_nearest_projector_gradient",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of ECP J3 radial gradient contracted over the nearest projectors; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ecp_radial_nearest_selection.py::test_native_radial_gradient_preserves_nearest_centre_selection_effect",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of ECP radial gradient aggregate with nearest-centre selection; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_J_dtn_R",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_T_R_jnone",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_T_R_sphe",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_T_R_withJ",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_V_R",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_ecp_force_R",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_ecp_force_R_nn_filter",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_ecp_local_force_R",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_lndet_R",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces.py::test_grad_lndet_R_sphe",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces_pbc.py::test_grad_T_pbc_R",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces_pbc.py::test_grad_T_pbc_R_bspline",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_forces_pbc.py::test_grad_T_pbc_R_composite_j3",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc.py::test_gfmc_discretized_kinetic_matches_jqmc",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc.py::test_gfmc_random_mesh_smoke",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc.py::test_gfmc_run_ae_n_lrdmc_bra",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc.py::test_gfmc_run_ae_pop_consistency",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc.py::test_gfmc_run_ae_smoke",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc.py::test_gfmc_run_ecp_complex_smoke",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc.py::test_gfmc_run_ecp_n_lrdmc_bra",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc.py::test_gfmc_run_ecp_smoke",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc.py::test_gfmc_projection_lsda_periodic",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_analytic_matrix.py::_install_force_stress_parity_tolerance",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_chain_modes.py::_assert_product_buffer_parity",
+      "class": "end-to-end",
+      "reason": "Stored e_L*force_PP and e_L*stress_PP cross-backend product buffers after deterministic GFMC runs. State/observable of an actual deterministic move, sweep or GFMC run, not an isolated fixed-state value kernel. Two same-backend identities use ATOL_PYTHON_FP64_TIGHT/RTOL_PYTHON_FP64_TIGHT, NOT medium. The medium resolver only builds the cross-backend propagated bound. Primitive e_L/factor parity is separately checked by caller. Periodic fast floor stays a separate existing policy."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_chain_modes.py::_assert_value_parity",
+      "class": "end-to-end",
+      "reason": "Stored w_L/e_L/e_L2, force/stress components and public energy/force/stress estimators after deterministic GFMC runs. State/observable of an actual deterministic move, sweep or GFMC run, not an isolated fixed-state value kernel. Actual driver callers switch backend explicitly. _frozen_pair negative-control caller uses synthetic copies, not additional scientific backend evidence. Fixed/random mesh coordinate and RNG checks retain their separate exact/ULP policies; periodic fast floor unchanged."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_complex_dltmove_route.py::test_production_complex_method_accepts_and_honours_dltmove",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_complex_force_stress.py::test_gfmc_complex_force",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_complex_force_stress.py::test_gfmc_complex_stress",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_complex_force_stress.py::test_gfmc_zero_k_complex_bspline_dtn_force_stress",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_ecp_high_l_rust.py::test_gfmc_rust_vs_xla_high_l_ecp_values",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_forces.py::<module>",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_grid_j3_derivatives.py::test_native_gfmc_grid_j3_derivatives_match_xla",
+      "class": "force-stress",
+      "reason": "GFMC measurement-energy position and strain derivative aggregates, as in test_gfmc_forces.py"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_complex_nonlocal_mesh_re_projection",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_complex_sprime_and_mesh_residual",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_components_complex",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_components_real",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_components_rotated_mesh",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_integration_projected_state_components",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_observables.py::test_gfmc_same_state_ok_and_shapes",
+      "class": "force-stress",
+      "reason": "grad ln|Psi| wrt R and r (force-side O_k) on the propagated state"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_projection.py::_gfmc_projection_tolerance",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_projection.py::test_complex_twist_chunk_honours_dltmove",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_pure_leaf_j3_force_stress.py::test_pure_leaf_j3_gfmc_driver_force_stress",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of GFMC driver force/stress aggregate with a pure-leaf J3; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_pure_leaf_j3_force_stress.py::test_pure_leaf_j3_native_measurement_force_stress",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of native GFMC measurement force/stress with a pure-leaf J3; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_stress_ecp_pbc_jnone_nn1_min_image.py::test_gfmc_stress_ecp_pbc_jnone_nn1_selects_min_image_nearest_nucleus",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of periodic GFMC ECP stress (no Jastrow) with minimum-image nearest-nucleus selection; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_gfmc_stress_ecp_pbc_withj_nn1_min_image.py::test_gfmc_stress_ecp_pbc_withj_nn1_selects_min_image_nearest_nucleus",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of periodic GFMC ECP stress with Jastrow and minimum-image nearest-nucleus selection; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_grads_laplacian_far.py::test_local_energy_fast_complex_far",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_grads_laplacian_far.py::test_local_energy_fast_far",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_inactive_complex_j3_free_wrappers.py::test_free_real_j3_jmatrix_derivative_inactive_representable_j3_matches_xla",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of real J3 j-matrix parameter derivative through the free wrappers; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_jastrow_skew_law.py::test_native_skew_j12_force_stress_matches_xla",
+      "class": "force-stress",
+      "reason": "selected full-Gram periodic J1/J2 kinetic force and strain aggregates, using the existing propagated policies"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_jastrow_skew_law.py::test_native_skew_j12_gfmc_measurement_derivatives_match_xla",
+      "class": "force-stress",
+      "reason": "selected full-Gram periodic J1/J2 GFMC measurement force and strain aggregates, using the existing GFMC policy"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_ecp_high_l_rust.py::test_mcmc_rust_vs_xla_high_l_ecp_rejects_scaled_native_e_L",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_ecp_high_l_rust.py::test_mcmc_rust_vs_xla_high_l_ecp_values",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_exotic_leaf_value_parity.py::_assert_value",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_exotic_leaf_value_parity.py::test_mcmc_exotic_leaf_value_parity_rejects_scaled_native_e_L",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_lnpsi_components",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_local_energy_components",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_e_L",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_force",
+      "class": "force-stress",
+      "reason": "per-walker HF/Pulay force"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_param_deriv",
+      "class": "param-derivative",
+      "reason": "Same-input native walker-batch ln_Psi/e_L parameter blocks compared with XLA at the medium pair."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_param_deriv_triclinic_ecp",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of MCMC walker-batch parameter derivatives on a triclinic ECP cell; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_observables.py::test_mcmc_walker_batch_stress",
+      "class": "force-stress",
+      "reason": "Same-input native walker-batch HF/Pulay strain derivatives compared with XLA at the medium pair."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_observables.py::test_native_chunk_stored_as_weights_match_recomputed_walkers",
+      "class": "end-to-end",
+      "reason": "XLA-Rust parity of native MCMC chunk stored AS weights versus walkers recomputed by XLA; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_raw_ao_rank.py::test_native_mcmc_raw_ao_agp_matches_xla",
+      "class": "end-to-end",
+      "reason": "XLA-Rust parity of native MCMC raw-AO AGP route energies versus XLA; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_sweep.py::test_mcmc_sweep_matches_reference",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_sweep_pbc.py::test_mcmc_sweep_pbc_matches_reference",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_transition.py::_assert_transition_parity",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_transition.py::test_far_unwrapped_pbc_positions",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mcmc_transition.py::test_rs_streaming_cache_no_drift",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mixed_ecp_ae_routes.py::test_mixed_ecp_ae_gfmc_force_selects_ecp_centres",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of GFMC force on a mixed ECP/all-electron system restricted to ECP centres; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mixed_ecp_ae_routes.py::test_mixed_ecp_ae_gfmc_projection_selects_ecp_centres",
+      "class": "end-to-end",
+      "reason": "XLA-Rust parity of GFMC projection on a mixed ECP/all-electron system restricted to ECP centres; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_mixed_ecp_ae_routes.py::test_mixed_ecp_ae_parameter_derivative_selects_ecp_centres",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of parameter derivative on a mixed ECP/all-electron system restricted to ECP centres; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_open_shell_ecp_dtn_parity.py::test_ecp_dtn_hf_force_open_shell",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of open-shell ECP DTN Hellmann-Feynman force; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_open_shell_ecp_dtn_parity.py::test_ecp_dtn_hf_stress_open_shell_pbc",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of periodic open-shell ECP DTN Hellmann-Feynman stress; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_orbital_tiling.py::test_native_tiled_full_force_stress_with_supercell_j3",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of tiled-orbital full force/stress with a supercell J3; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_orbital_tiling.py::test_native_tiled_physical_vgl_cotangents",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of tiled-orbital value/gradient/Laplacian cotangents through the tiling and AO zones; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_orbital_tiling_lrdmc.py::_measurements",
+      "class": "end-to-end",
+      "reason": "XLA-Rust parity of tiled-orbital LRDMC measurement observables; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_orbital_tiling_lrdmc.py::test_native_tiled_lrdmc_observables_and_restart",
+      "class": "end-to-end",
+      "reason": "XLA-Rust parity of tiled-orbital LRDMC observables before and after restart; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params",
+      "class": "param-derivative",
+      "reason": "d J_DTN/d active alpha_indep, beta_indep, gamma_indep blocks. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Active flags are checked; disabled channels are not newly certified by this review."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_dtn_params_twist",
+      "class": "param-derivative",
+      "reason": "d J_DTN/d active alpha_indep, beta_indep, gamma_indep blocks. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Twist fixture; DTN is a real distance-based Jastrow. The twist label does not make DTN O_k complex."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_j3_jmatrix",
+      "class": "param-derivative",
+      "reason": "d J3/d j_matrix with randomized symmetric coupling. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_jastrow_12_param",
+      "class": "param-derivative",
+      "reason": "d J1/d jastrow_1b_param and d J2/d jastrow_2b_param, electron-summed O_k blocks. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_lambda",
+      "class": "param-derivative",
+      "reason": "d ln|det G|/d AGP lambda_matrix. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Existing JAX log-determinant custom VJP; not same-backend analytic-versus-AD."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_lambda_diag",
+      "class": "param-derivative",
+      "reason": "AGPn ln|det G| derivatives w.r.t. lambda_diag and nonempty lambda_unpaired. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Existing JAX log-determinant custom VJP; empty unpaired leaf is not claimed as active evidence."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_mo",
+      "class": "param-derivative",
+      "reason": "Per-spin d ln|det G|/d MO coefficients. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Existing JAX log-determinant custom VJP."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_ln_det_mo_pw_composite",
+      "class": "param-derivative",
+      "reason": "Per-spin MO O_k on PW and pgto+PW composite Gamma inputs. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Existing JAX log-determinant custom VJP."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_radial_basis",
+      "class": "param-derivative",
+      "reason": "Per-spin d ln|det G|/d radial exponents and contraction coefficients. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Existing JAX log-determinant custom VJP; derivative contraction, not raw AO value parity."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_radial_basis_periodic",
+      "class": "param-derivative",
+      "reason": "Per-spin d ln|det G|/d radial exponents and contraction coefficients. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Existing JAX log-determinant custom VJP; derivative contraction, not raw AO value parity."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_radial_kinetic",
+      "class": "param-derivative",
+      "reason": "Per-spin d T_determinant/d radial exponents and contraction coefficients. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. The compared quantity is the kinetic parameter derivative, not raw AO radial evaluation."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad.py::test_grad_radial_kinetic_periodic",
+      "class": "param-derivative",
+      "reason": "Per-spin d T_determinant/d radial exponents and contraction coefficients. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. The compared quantity is the kinetic parameter derivative, not raw AO radial evaluation."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_ecp_nn1_min_image.py::test_param_grad_ecp_nn1_selects_min_image_nearest_nucleus",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of ECP parameter gradient with minimum-image nearest-nucleus selection; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_complex_twist_ecp_j2_gradient_uses_production_nearest_nuclei",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of complex-twist ECP J2 gradient with the production nearest nuclei; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn",
+      "class": "param-derivative",
+      "reason": "d V_ECP_nonlocal/d active DTN alpha/beta/gamma parameter blocks. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Existing conditioning selection is retained; no new numerical screening was reviewed or introduced."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_dtn_uses_nearest_projectors",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of ECP DTN u/chi/f gradient blocks with the nearest projectors; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_j3",
+      "class": "param-derivative",
+      "reason": "d V_ECP_nonlocal/d randomized symmetric J3 j_matrix. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_jastrow_12",
+      "class": "param-derivative",
+      "reason": "d V_ECP_nonlocal/d J1/J2 parameters. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_lambda",
+      "class": "param-derivative",
+      "reason": "d V_ECP_nonlocal/d AGP lambda_matrix. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_mo",
+      "class": "param-derivative",
+      "reason": "Per-spin d V_ECP_nonlocal/d MO coefficients. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_det_jastrow_12",
+      "class": "param-derivative",
+      "reason": "Periodic total d e_L/d per-spin MO and J1/J2 parameters. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Total component assembly; XLA analytic reference."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_dtn",
+      "class": "param-derivative",
+      "reason": "Periodic total d e_L/d active DTN alpha/beta/gamma blocks. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_periodic_j3",
+      "class": "param-derivative",
+      "reason": "Periodic total d e_L/d J3 j_matrix. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Symmetric randomized coupling; no FD oracle."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_radial",
+      "class": "param-derivative",
+      "reason": "Per-spin total d e_L/d radial exponents and coefficients (kinetic + nonlocal ECP). Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. XLA analytic reference, not FD. This classification admits no far-image commentary or extra envelope."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_ecp_radial_periodic",
+      "class": "param-derivative",
+      "reason": "Per-spin total d e_L/d radial exponents and coefficients (kinetic + nonlocal ECP). Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. XLA analytic reference, not FD. This classification admits no far-image commentary or extra envelope."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_dtn_kinetic",
+      "class": "param-derivative",
+      "reason": "d T/d active DTN alpha_indep, beta_indep, gamma_indep. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Inactive channels remain conditional; this review does not establish per-component liveness."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_j3",
+      "class": "param-derivative",
+      "reason": "d T/d J3 j_matrix. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_jastrow_12",
+      "class": "param-derivative",
+      "reason": "d T/d J1 and J2 parameters. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda",
+      "class": "param-derivative",
+      "reason": "d T/d AGP lambda_matrix with jnone/J1/J2/J3. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Despite the name eL, this node compares kinetic derivatives only."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda_diag",
+      "class": "param-derivative",
+      "reason": "d T/d AGPn lambda_diag and nonempty lambda_unpaired. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Kinetic component only; empty unpaired leaf is not active evidence."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_lambda_diag_non_full_rank_does_not_take_structural_zero_branch",
+      "class": "param-derivative",
+      "reason": "Non-full-rank/virtual-occupation AGPn d T/d lambda_diag. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Same resolver atol also anchors the native nonzero witness; main allclose remains Rust/XLA, while the unpaired block is asserted empty."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo",
+      "class": "param-derivative",
+      "reason": "Per-spin d T/d MO coefficients with jnone/J1/J2/J3. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Kinetic component only."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo_consumes_supplied_geminal_inverse",
+      "class": "param-derivative",
+      "reason": "Per-spin kinetic MO derivative evaluated using the same deliberately perturbed supplied inverse. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Fresh-vs-supplied native inequality is only an exact consumption witness; medium allclose compares native against XLA analytic supplied-inverse derivatives."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_mo_pw_composite",
+      "class": "param-derivative",
+      "reason": "Per-spin d T/d MO coefficients for PW/pgto+PW. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Kinetic component only."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ae_j123",
+      "class": "param-derivative",
+      "reason": "Twist AE d Re(e_L)/d J1/J2/J3 parameters = d Re(T)/dc. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Potential has no Jastrow-parameter dependence in this AE fixture."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_dtn_with_j3",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of twisted DTN e_L gradient with J3 (strict in full, medium only when mixed precision is enabled); the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_dtn",
+      "class": "param-derivative",
+      "reason": "Twist total d Re(e_L)/d active DTN alpha/beta/gamma blocks. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_param_grad_el.py::test_grad_el_twist_ecp_j12",
+      "class": "param-derivative",
+      "reason": "Twist total d Re(e_L)/d J1/J2 parameters. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_periodic_invariants.py::test_per_config_translation_sum_rule_fp_floor",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_periodic_lsda.py::<module>",
+      "class": "force-stress",
+      "reason": "force/stress and MO derivative blocks of the LSDA/complex open-shell observables"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_periodic_lsda.py::test_derivative_observables_complex_open_shell_twist",
+      "class": "force-stress",
+      "reason": "force/stress and MO derivative blocks of the LSDA/complex open-shell observables"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_periodic_lsda.py::test_derivative_observables_lsda_gamma",
+      "class": "force-stress",
+      "reason": "force/stress and MO derivative blocks of the LSDA/complex open-shell observables"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_precision_policy_contract.py::test_force_medium_tolerance_only_widens_mixed",
+      "class": "policy-contract",
+      "reason": "pins the medium table itself"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_raw_bspline_force_stress.py::_assert_driver_parity",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of raw B-spline composite force/stress through the drivers; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_raw_bspline_force_stress.py::_assert_fixed_mcmc_derivatives",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of raw B-spline force/strain derivatives on fixed MCMC chunks; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_raw_bspline_force_stress.py::_assert_mcmc_fixed_input_parity",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of raw B-spline MCMC force/stress on fixed inputs; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_raw_bspline_force_stress.py::test_native_pure_bspline_force_stress_matches_xla",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of pure B-spline Jastrow force/stress; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_route_parity_param_deriv.py::_tol",
+      "class": "param-derivative",
+      "reason": "parameter-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_rs_analytic_matrix.py::_assert_close",
+      "class": "param-derivative",
+      "reason": "parameter-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_rs_analytic_matrix_rRe.py::_tol",
+      "class": "param-derivative",
+      "reason": "parameter-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_rs_complex_twist_param_parity.py::_periodic_e_l_tolerance",
+      "class": "param-derivative",
+      "reason": "parameter-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_single_move.py::test_single_move_matches_body",
+      "class": "end-to-end",
+      "reason": "Determinant/proposal/wavefunction-regularization ratios and updated inverse during one injected MCMC move. State/observable of an actual deterministic move, sweep or GFMC run, not an isolated fixed-state value kernel. Selection/acceptance are exact; final positions use BIT_EXACT constants. Shared native-created initial inverse is common input, not the compared output. Medium is scoped to transition ratios/carried inverse."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_slab_wavefunction_parity.py::<module>",
+      "class": "force-stress",
+      "reason": "slab force/stress derivative envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_gfmc_step_components_parity",
+      "class": "end-to-end",
+      "reason": "cancelling aggregate"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_slab_wavefunction_parity.py::test_slab_mcmc_driver_route_parity",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress.py::test_grad_el_strain_ecp",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress.py::test_grad_el_strain_jnone",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress.py::test_grad_el_strain_withJ",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress.py::test_grad_el_strain_withJ_sphe_agp_j12",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress.py::test_grad_lnpsi_strain",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress_pbc.py::test_dtn_value_strain_uchif",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress_pbc.py::test_grad_T_det_pbc_strain",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress_pbc.py::test_grad_T_pbc_strain_withJ",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress_pbc.py::test_grad_T_pbc_strain_withJ_composite_j3",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress_pbc.py::test_grad_V_ecp_local_pbc_strain",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress_pbc.py::test_grad_eL_pbc_dtn_strain_uchi",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress_pbc.py::test_grad_eL_pbc_ecp_strain",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_stress_pbc.py::test_grad_lnpsi_pbc_strain",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_twist_multi_electron_ecp_j3.py::test_hf_force_complex_twist_multi_electron_ecp_j3",
+      "class": "force-stress",
+      "reason": "XLA-Rust parity of complex-twist multi-electron ECP J3 Hellmann-Feynman force; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ungate_basis_opt_param_deriv.py::test_ungate_c3_basis_block_values",
+      "class": "param-derivative",
+      "reason": "parameter-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ungate_complex_driver_param_deriv.py::_tol",
+      "class": "param-derivative",
+      "reason": "parameter-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_delc_mo_complex_ecp",
+      "class": "param-derivative",
+      "reason": "Driver-facing complex MO d e_L/dc = tied kinetic + tied holomorphic ECP weight. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. Required native entry-point existence is asserted; stale module prose about missing ports is not used as current execution evidence."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_delc_mo_complex_kinetic_ae",
+      "class": "param-derivative",
+      "reason": "Driver-facing complex MO d e_L/dc on AE input (kinetic only). Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_okc_lambda_complex",
+      "class": "param-derivative",
+      "reason": "Driver-facing complex AGP lambda_matrix O_k block. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. "
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ungate_complex_twist_param_deriv.py::test_ungate_c1_okc_mo_complex",
+      "class": "param-derivative",
+      "reason": "Driver-facing complex MO O_k block with closed-shell tie. Parameter derivative contracted/reduced through the wavefunction or local-energy calculation, not a fixed-state forward value. The separate same-XLA reference-trust node is OUTSIDE these 56 and remains a split-family case; this classification does not cover it."
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ungate_gfmc_pbc_ae_force.py::_tol",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_ungate_periodic_config_param_deriv.py::_tol",
+      "class": "param-derivative",
+      "reason": "parameter-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_vmc_driver.py::test_native_vmc_molecular",
+      "class": "end-to-end",
+      "reason": "deterministic MCMC/GFMC/VMC driver, sweep, transition or projection-interval state/observable parity"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_vmc_forces.py::<module>",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_vmc_stress.py::<module>",
+      "class": "force-stress",
+      "reason": "nuclear force or strain-derivative aggregate (amplified by conditioning)"
+    },
+    {
+      "site": "tests/test_rs_kernel/test_zero_basis_coefficient.py::_check_derivatives",
+      "class": "param-derivative",
+      "reason": "XLA-Rust parity of log-psi/e_L derivatives with a zero geminal or J3 basis coefficient; the fp64 medium pair equals strict (1e-8, 1e-6), so only the mixed-precision fp32 zones use the medium envelope"
+    }
+  ],
+  "migration_sites": [],
+  "document": {
+    "id": "jqmc.inventories.medium-tolerance",
+    "version": 1,
+    "title": "Reviewed medium XLA-Rust tolerance sites",
+    "lifecycle": "pre-cutover",
+    "purpose": "Preserve the reviewed medium-capable call sites, classifications and reasons. Migration entries record existing policy-incompatible uses; they are not new permission or a tolerance change."
+  }
+}

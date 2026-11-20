@@ -1,0 +1,64 @@
+id: IMPL-TOOL-OPT-STEP-AVERAGE-REFUSALS-001
+kind: implementation
+name: vmc average-wf refuses inputs that are not steps of one optimization and writes nothing
+plain_language: >-
+  jqmc-tool vmc average-wf exits 1 with an Error line naming the cause, leaves the inputs unchanged, creates no output,
+  leaves an existing output untouched and leaves no temporary file when the inputs differ outside the variational
+  parameters or are otherwise unusable: a moved atomic structure, a different J3 basis (shape), different AO basis values,
+  a J1-frozen optimization mixed with a J1-optimized one (the never-updated scalar is stored as an attribute), an SD mixed
+  with an AGPn ansatz, a dtype of the other precision mode, a non-finite parameter, a non-finite MO coefficient of a supported
+  independent-spin SD (time_reversal false) that is unchanged across several inputs or sits in a single input
+  (finiteness is checked for every variational parameter before the unchanged-leaf and one-input paths), a file
+  given twice, an output that is an
+  input, a file that is not a Hamiltonian, a changed k-point, a different twist count, and a single-twist file mixed with a
+  combined file. A sign flip of a real MO row or a phase jump of a complex twist MO row between steps, each a valid
+  Hamiltonian on its own, is refused with the row coherence |sum_i c_ik| / sum_i |c_ik| of an independent NumPy evaluation,
+  below OPT_STEP_AVERAGE_MIN_MO_ROW_COHERENCE. A parameter block identical in two steps while others change, and two inputs
+  with identical parameters, produce warnings and the NumPy-mean output instead of a refusal, because a frozen block cannot
+  be told apart from a different optimization. Identical content written by an independent optimization of the same input
+  with the same flags cannot be detected and is not claimed.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_average_wf_refuses_inconsistent_inputs_without_writing
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: structure, existing_output: false}
+    - {case: structure, existing_output: true}
+    - {case: basis-shape, existing_output: false}
+    - {case: basis-shape, existing_output: true}
+    - {case: basis-values, existing_output: false}
+    - {case: basis-values, existing_output: true}
+    - {case: frozen-j1-optimization, existing_output: false}
+    - {case: frozen-j1-optimization, existing_output: true}
+    - {case: ansatz, existing_output: false}
+    - {case: ansatz, existing_output: true}
+    - {case: precision-dtype, existing_output: false}
+    - {case: precision-dtype, existing_output: true}
+    - {case: non-finite, existing_output: false}
+    - {case: non-finite, existing_output: true}
+    - {case: unchanged-nonfinite-mo, existing_output: false}
+    - {case: unchanged-nonfinite-mo, existing_output: true}
+    - {case: single-nonfinite-mo, existing_output: false}
+    - {case: single-nonfinite-mo, existing_output: true}
+    - {case: duplicate, existing_output: false}
+    - {case: duplicate, existing_output: true}
+    - {case: output-is-input, existing_output: false}
+    - {case: output-is-input, existing_output: true}
+    - {case: not-hamiltonian, existing_output: false}
+    - {case: not-hamiltonian, existing_output: true}
+    - {case: twist-k-point, existing_output: false}
+    - {case: twist-k-point, existing_output: true}
+    - {case: twist-count, existing_output: false}
+    - {case: twist-count, existing_output: true}
+    - {case: twist-layout, existing_output: false}
+    - {case: twist-layout, existing_output: true}
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_average_wf_refuses_an_mo_gauge_jump
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {layout: molecular-real-sign-flip}
+    - {layout: twist-complex-phase-jump}
+  - pytest_node: tests/test_jqmc_kernel/test_tool_vmc_average_wf.py::test_average_wf_warns_when_parameters_do_not_change_together
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

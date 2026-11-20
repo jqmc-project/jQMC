@@ -1,0 +1,20 @@
+id: MATH-RS-INACTIVE-COMPLEX-CHILD-J3-NATIVE-MCMC-RUN-001
+kind: mathematical
+name: Native real MCMC.run with an all-zero-j_matrix J3 over a complex plane-wave child equals the J3-free run
+plain_language: >-
+  An all-zero j_matrix makes the three-body Jastrow factor identically zero, so the public native real (Gamma)
+  MCMC.run must sample exactly as the same run with jastrow_three_body_data=None, also when the J3 orbital is an MO
+  over a composite of a real pGTO and a complex plane-wave child that the real orbital parser cannot represent (it
+  must never re-read that orbital). On the committed Li Gamma ccECP cell with a real constant plane-wave single
+  determinant and an identity-MO-wrapped (pGTO s, plane-wave) composite J3 orbital, for a complex plane-wave child
+  with a nonzero G vector, a complex constant (k = 0) child and a real constant child as the control, an
+  energy-only native run of two walkers, four steps, fixed mesh and seed 34356 stores e_L and w_L of every step and
+  final walker positions exactly equal to the J3-free run, whose energies are finite, nonzero and not all equal.
+  Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_inactive_complex_j3_native_mcmc.py::test_native_mcmc_inactive_complex_child_j3_samples_as_j3_free
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{child: complex_pw_G}, {child: complex_pw_0}, {child: real_pw}]

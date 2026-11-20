@@ -1,0 +1,16 @@
+id: IMPL-OPTK-PUBLIC-SAMPLE-ROWS-001
+kind: implementation
+name: Public sample-row wrapper exact local data and sharding preservation
+plain_language: The retained public sample-row wrapper preserves tuple order, exact values, shapes and dtypes for integer vectors, real matrices and complex rank-three arrays. Host and genuinely JAX-named-sharded inputs use two rows per available local CPU device, and each addressable shard has the exact expected slice. No inputs return exactly an empty tuple. This certifies the single-process public route only, not multi-process stitching.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_public_sample_sharding.py::test_public_sample_rows_preserves_order_values_and_local_sharding
+    required_parameter_cases:
+    - {input_placement: host}
+    - {input_placement: named-sharded}
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_public_sample_sharding.py::test_public_sample_rows_accepts_empty_argument_tuple
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

@@ -1,0 +1,19 @@
+id: MATH-JAS-J3-SYMMETRY-PRESERVATION-001
+kind: mathematical
+name: Symmetry preservation of J3 matrix updates
+plain_language: J3 matrix symmetrization and block updates preserve the declared symmetric subblock structure exactly, and
+  malformed blocks are rejected.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJ3MatrixUtilities::test_symmetrize_j3_symmetric_subblock
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJ3MatrixUtilities::test_symmetrize_j3_nonsymmetric_subblock
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJ3MatrixUtilities::test_symmetrize_j3_none
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJ3MatrixUtilities::test_apply_block_update_symmetric_j3_preserved
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_j3_symmetry_invariant.py::test_nonsymmetric_j3_rejected_by_sanity_check
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow.py::TestJ3MatrixUtilities::test_symmetrize_j3_too_few_columns

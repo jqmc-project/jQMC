@@ -1,0 +1,389 @@
+id: MATH-TA-BZ-MEAN-IDENTITIES-001
+kind: mathematical
+name: BZ-mean estimator identities
+plain_language: 'The BZ-mean estimators satisfy their exact algebra (mathematical): identical-twist replication
+  leaves energy and force unchanged, constant shifts translate only the average, weights are scale invariant, single-twist
+  means equal their input, the estimator quartet is consistent at one twist, and dual-path and weighted sums match hand
+  references.'
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageEstimatorIdentity::test_n_twist_1_identity_E_aF_aT
+    executable_checks:
+      d8-n-005:
+        site: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageEstimatorIdentity.test_n_twist_1_identity_E_aF_aT#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.force.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.asarray(F_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-006:
+        site: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageEstimatorIdentity.test_n_twist_1_identity_E_aF_aT#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.force.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: np.asarray(F_std_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-007:
+        site: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageEstimatorIdentity.test_n_twist_1_identity_E_aF_aT#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.stress.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.asarray(T_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-008:
+        site: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageEstimatorIdentity.test_n_twist_1_identity_E_aF_aT#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.stress.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: np.asarray(T_std_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-009:
+        site: tests/test_jqmc_kernel/test_integration_gfmc_twist_average.py::TestGFMCTwistAverageEstimatorIdentity.test_n_twist_1_identity_E_aF_aT#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_T[0]
+        reference:
+          role: source-reference-value
+          expression: np.asarray(T_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_T1_identical_twist_replication_energy
+    executable_checks:
+      d8-n-010:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_T1_identical_twist_replication_energy#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out.W
+        reference:
+          role: source-reference-value
+          expression: np.full(N, 1.0 / N)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_T1_identical_twist_replication_force
+    executable_checks:
+      d8-n-011:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_T1_identical_twist_replication_force#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out.F_TA
+        reference:
+          role: source-reference-value
+          expression: F_bar
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+      d8-n-012:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_T1_identical_twist_replication_force#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: sigma_k / np.sqrt(N)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_bz_mean_force_preserves_complex_generalized_force
+    executable_checks:
+      d8-n-013:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_bz_mean_force_preserves_complex_generalized_force#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.einsum('k,kp->p', W, gF)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+      d8-n-014:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_bz_mean_force_preserves_complex_generalized_force#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: np.sqrt(np.einsum('k,kp->p', W ** 2, sigma ** 2))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_T2_constant_shift_one_twist_unequal_weights
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_T2_weight_scale_invariance
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_bz_mean_energy_n_twist_1_equals_input
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_bz_mean_energy_n_identical_replicas_equals_single
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_bz_mean_energy_constant_shift_translates_E_TA_only
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_bz_mean_energy_s_twist_diagnoses_zero_MC_error_split
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageEstimatorQuartetIdentity::test_n_twist_1_identity_E_aF_aT_gF
+    executable_checks:
+      d8-n-015:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageEstimatorQuartetIdentity.test_n_twist_1_identity_E_aF_aT_gF#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.force.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.asarray(F_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-016:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageEstimatorQuartetIdentity.test_n_twist_1_identity_E_aF_aT_gF#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.force.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: np.asarray(F_std_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-017:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageEstimatorQuartetIdentity.test_n_twist_1_identity_E_aF_aT_gF#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.stress.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.asarray(T_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-018:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageEstimatorQuartetIdentity.test_n_twist_1_identity_E_aF_aT_gF#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.stress.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: np.asarray(T_std_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-019:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageEstimatorQuartetIdentity.test_n_twist_1_identity_E_aF_aT_gF#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.param_grad.F_TA
+        reference:
+          role: source-reference-value
+          expression: np.ravel(np.asarray(gF_ref))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-020:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageEstimatorQuartetIdentity.test_n_twist_1_identity_E_aF_aT_gF#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.param_grad.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: np.ravel(np.asarray(gF_std_ref))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-021:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageEstimatorQuartetIdentity.test_n_twist_1_identity_E_aF_aT_gF#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_T[0]
+        reference:
+          role: source-reference-value
+          expression: np.asarray(T_ref)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-022:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestRunTwistAverageEstimatorQuartetIdentity.test_n_twist_1_identity_E_aF_aT_gF#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.per_twist_gF[0]
+        reference:
+          role: source-reference-value
+          expression: np.ravel(np.asarray(gF_ref))
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_T3_dual_path_hand_reference
+    executable_checks:
+      d8-n-023:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_T3_dual_path_hand_reference#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out.W
+        reference:
+          role: source-reference-value
+          expression: W
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_bz_mean_energy_matches_hand_weighted_sum
+    executable_checks:
+      d8-n-024:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_bz_mean_energy_matches_hand_weighted_sum#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out.W
+        reference:
+          role: source-reference-value
+          expression: W
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_bz_mean_force_matches_hand_weighted_sum
+    executable_checks:
+      d8-n-025:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_bz_mean_force_matches_hand_weighted_sum#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out.F_TA
+        reference:
+          role: source-reference-value
+          expression: expected_F
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-026:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_bz_mean_force_matches_hand_weighted_sum#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: out.F_TA_std
+        reference:
+          role: source-reference-value
+          expression: expected_sigma
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001

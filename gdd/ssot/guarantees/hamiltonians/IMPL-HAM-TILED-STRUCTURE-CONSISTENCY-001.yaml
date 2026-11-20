@@ -1,0 +1,26 @@
+id: IMPL-HAM-TILED-STRUCTURE-CONSISTENCY-001
+# Covers the rejection branch of the tiled-structure consistency check.
+kind: implementation
+name: A tiled-orbital periodic Hamiltonian is accepted only when its orbitals, Coulomb, Ewald and Hamiltonian share one supercell
+plain_language: >-
+  Hamiltonian_data.sanity_check compares the physical supercell structure_data of the tiled orbitals, of
+  Coulomb_potential_data and of its Ewald_data with the Hamiltonian structure_data. On the small tiled plane-wave
+  Hamiltonian (two He atoms, restricted spin, built with SD_data.build_tiled and build_hamiltonian_from_wavefunction), the
+  unmodified Hamiltonian is accepted. Each of the following, placed with the dataclass replace route, is rejected with
+  ValueError("tiled orbitals, Coulomb and Hamiltonian must share the physical supercell structure"): tiled orbitals rebuilt
+  with TiledOrbitalSet_data.build on a primitive cell and positions scaled by 1.05, a Coulomb structure_data scaled by 1.05,
+  an Ewald structure_data scaled by 1.05, and a Hamiltonian structure_data scaled by 1.05. Each mismatched leaf is
+  internally consistent, so only this check can reject it. A mismatch left unrejected gives a silently wrong periodic
+  local energy. Full and mixed are each required.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_hdf5.py::test_tiled_hamiltonian_rejects_structure_mismatch
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {leaf: control}
+    - {leaf: orbitals}
+    - {leaf: coulomb}
+    - {leaf: ewald}
+    - {leaf: hamiltonian}

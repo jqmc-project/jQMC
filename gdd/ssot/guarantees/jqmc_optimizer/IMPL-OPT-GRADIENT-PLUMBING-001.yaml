@@ -1,0 +1,12 @@
+id: IMPL-OPT-GRADIENT-PLUMBING-001
+kind: implementation
+name: End-to-end AO-exponent gradient plumbing
+plain_language: Differentiating the full log-wavefunction reaches both the J3 and geminal AO-exponent leaves and returns
+  finite, nonzero gradients. This is a production-plumbing/liveness guarantee; it is not a finite-difference correctness
+  oracle.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ao_basis_optimization.py::TestAOBasisOptimizationMisc::test_full_wavefunction_exponent_gradient

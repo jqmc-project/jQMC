@@ -1,0 +1,23 @@
+id: MATH-OPT-SR-DIAGONAL-FLOOR-001
+kind: mathematical
+name: Real SR step freezes exactly the coordinates whose centred variance is below the diagonal floor
+plain_language: >-
+  One MCMC.run_optimize SR step on H2 (all-electron, Pade J1 = 1, J2 = 100, fixed seed, real sampler) consumes
+  samples equal to an independent evaluation; the recomputed weighted centred diag S puts J2 strictly between zero
+  and min_S_diag_abs and J1 above it. The production frozen coordinate groups equal this recomputed floor decision,
+  the metric diagonal equals the recomputed diag S, the update equals the J1-only regularized dense solve with
+  q_J2 = 0, J2 is bit-identical after the step and J1 moves by delta q. Replaying the production target without the
+  floor, or with an SR sample builder that does not centre O, fails the verdict.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_mask_and_floor.py::test_sr_diagonal_floor_freezes_the_low_variance_block
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_mask_and_floor.py::test_negative_control_disabled_diagonal_floor_fails_freeze_check
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_mask_and_floor.py::test_negative_control_dropped_centring_fails_freeze_check
+    required_parameter_cases: [{}]
+    required_precision_modes: [full, mixed]

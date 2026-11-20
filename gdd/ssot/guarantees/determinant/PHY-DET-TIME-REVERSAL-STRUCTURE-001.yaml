@@ -1,0 +1,118 @@
+id: PHY-DET-TIME-REVERSAL-STRUCTURE-001
+kind: physical
+name: Time-reversal structure of geminal factor conversions
+plain_language: 'Time-reversal pairing is preserved through the factor conversions: signed occupations, unpaired columns,
+  and negative occupations survive conversion and first update, and broken time-reversal preconditions are hard errors.'
+verdict_methods:
+- VM-PHY-INVARIANT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestAGPnDataIntegration::test_density_TRS_invariant_pbc_complex
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion::test_time_reversal_conversion_retains_signed_occupations
+    executable_checks:
+      d8-n-129:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion.test_time_reversal_conversion_retains_signed_occupations#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: occupations
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+      d8-n-130:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion.test_time_reversal_conversion_retains_signed_occupations#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: converted.orb_data_dn_spin.mo_coefficients
+        reference:
+          role: source-reference-value
+          expression: np.conj(converted.orb_data_up_spin.mo_coefficients)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+      d8-n-131:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion.test_time_reversal_conversion_retains_signed_occupations#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: AGP_data.convert_from_MOs_to_AOs(converted).lambda_matrix
+        reference:
+          role: source-reference-value
+          expression: source.lambda_matrix
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion::test_time_reversal_open_shell_truncation_preserves_unpaired_column
+    executable_checks:
+      d8-n-132:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion.test_time_reversal_open_shell_truncation_preserves_unpaired_column#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: occupations
+        reference:
+          role: source-reference-value
+          expression: np.array([5.0, -4.0, 3.0, 0.0])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+      d8-n-133:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion.test_time_reversal_open_shell_truncation_preserves_unpaired_column#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: C_dn
+        reference:
+          role: source-reference-value
+          expression: np.conj(C_up)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion::test_time_reversal_mo_conversion_and_first_update_keep_negative_occupation
+    executable_checks:
+      d8-n-134:
+        site: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion.test_time_reversal_mo_conversion_and_first_update_keep_negative_occupation#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: converted.lambda_diag
+        reference:
+          role: source-reference-value
+          expression: expected_occupations
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-TIGHT-R-PYTHON-FP64-LOOSE-001
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestAOToMOFactorConversion::test_declared_time_reversal_preconditions_are_hard_errors
+  - pytest_node: tests/test_jqmc_kernel/test_geminal_factor_conversion.py::TestMOToAGPnFactorConversion::test_declared_time_reversal_rejects_mismatched_down_factor

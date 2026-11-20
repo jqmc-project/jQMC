@@ -1,0 +1,340 @@
+id: IMPL-OPT-SOURCE-CONTRACTS-001
+kind: implementation
+name: Derivative-source and layout contracts
+plain_language: Derivative sources retain Wirtinger components without conjugate folding, layouts and fingerprints are structural,
+  storage dtypes and immutability are preserved, and every malformed publication, layout, or metadata is rejected loudly.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jax_complex_grad_convention.py::TestJaxComplexGradConvention::test_grad_abs_sq_is_two_conj
+  - pytest_node: tests/test_jqmc_kernel/test_jax_complex_grad_convention.py::TestJaxComplexGradConvention::test_grad_abs_sq_is_two_conj_param
+  - pytest_node: tests/test_jqmc_kernel/test_jax_complex_grad_convention.py::TestJaxComplexGradConvention::test_grad_real_part_of_holomorphic_log_is_unconjugated
+  - pytest_node: tests/test_jqmc_kernel/test_jax_complex_grad_convention.py::TestJaxComplexGradConvention::test_grad_abs_sq_matches_real_gradient
+  - pytest_node: tests/test_jqmc_kernel/test_jax_complex_grad_convention.py::TestPhase3JAXGradConvention::test_jax_grad_returns_O_not_conj_O
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_direct_real_preserves_the_complete_complex_sample_array
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_holomorphic_source_keeps_A_and_structural_zero_separate
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_wirtinger_pair_retains_A_and_B_without_conjugate_folding
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_build_defensively_copies_inputs_without_changing_source_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_batch.py::test_energy_estimate_is_real_and_immutable
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_batch.py::test_batch_is_breaking_exact_source_schema_without_log_derivatives_alias
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_step_result.py::test_finalize_step_scales_once_and_preserves_each_storage_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_step_result.py::test_optimizer_diagnostic_computation_is_logger_level_independent
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_layout_fingerprint_is_structural_and_excludes_state_values_and_token
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_actual_gamma_and_twist_sd_publishers_build_matched_factor_actions
+    executable_checks:
+      d8-n-306:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_actual_gamma_and_twist_sd_publishers_build_matched_factor_actions#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: lhs
+        reference:
+          role: source-reference-value
+          expression: rhs
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-307:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_actual_gamma_and_twist_sd_publishers_build_matched_factor_actions#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: tangent_constraint
+        reference:
+          role: source-reference-value
+          expression: np.zeros_like(tangent_constraint)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+      d8-n-308:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_actual_gamma_and_twist_sd_publishers_build_matched_factor_actions#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: encoded
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_actual_open_shell_agpn_publishes_independent_spin_and_unpaired_coordinates
+    executable_checks:
+      d8-n-309:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_actual_open_shell_agpn_publishes_independent_spin_and_unpaired_coordinates#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: first_order_constraint
+        reference:
+          role: source-reference-value
+          expression: np.zeros_like(first_order_constraint)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+      d8-n-311:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_actual_open_shell_agpn_publishes_independent_spin_and_unpaired_coordinates#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: delta[storage_slice].reshape(block.shape)
+        reference:
+          role: source-reference-value
+          expression: expected
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+      d8-n-310:
+        site: tests/test_jqmc_kernel/test_optimizer_coordinate_map.py::test_actual_open_shell_agpn_publishes_independent_spin_and_unpaired_coordinates#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: delta[unpaired_storage]
+        reference:
+          role: source-reference-value
+          expression: q[unpaired_q]
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_encode_exact_real_complex_and_mixed_layouts
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_mixed_layout_metadata_uses_block_c_order_then_xy_pairs
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_actions_preserve_float32_complex64_field_precision
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_complete_coordinate_map_owns_the_validated_scalar_field_map
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_block_metadata_is_required_immutable_and_preserved_by_update
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_stiefel_metadata_matches_the_published_mo_storage_shape
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_complex_linear_tie_requires_two_component_wirtinger_policy
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_stiefel_metric_validation_uses_scaled_backward_error
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_stiefel_backward_error_depends_on_real_precision_not_complex_storage_width
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_stiefel_metric_builder_accepts_roundoff_negative_overlap
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_local_layout_is_rank_component_sample_order_with_gather_counts
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_tall_routes_preserve_explicit_float32_real_coordinate_dtype
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_internal_tall_target_decodes_once_and_never_persists_sample_dual
+    executable_checks:
+      d8-n-312:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_internal_tall_target_decodes_once_and_never_persists_sample_dual#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: coordinate_map.encode(result.q)
+        reference:
+          role: source-reference-value
+          expression: coordinate_map.encode(expected_q)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-313:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_tall_real.py::test_internal_tall_target_decodes_once_and_never_persists_sample_dual#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.q
+        reference:
+          role: source-reference-value
+          expression: expected_q
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_exact_batch_sources_are_transformed_and_centered_once_in_coordinate_order
+    executable_checks:
+      d8-n-314:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_exact_batch_sources_are_transformed_and_centered_once_in_coordinate_order#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: samples.X_q_local
+        reference:
+          role: source-reference-value
+          expression: expected_X
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-315:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_exact_batch_sources_are_transformed_and_centered_once_in_coordinate_order#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: samples.F_local
+        reference:
+          role: source-reference-value
+          expression: expected_F
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_internal_target_path_covers_uniform_real_and_complex_manifolds
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_mixed_coordinate_decode_matches_real_and_complex_storage_blocks
+    executable_checks:
+      d8-n-316:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_mixed_coordinate_decode_matches_real_and_complex_storage_blocks#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: delta
+        reference:
+          role: source-reference-value
+          expression: np.asarray([q[0], q[1] + 1j * q[2]])
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_coordinate_force_jackknife_uses_distributed_allreduce_moments
+    executable_checks:
+      d8-n-317:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_coordinate_force_jackknife_uses_distributed_allreduce_moments#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual_force
+        reference:
+          role: source-reference-value
+          expression: expected_force
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-318:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_coordinate_force_jackknife_uses_distributed_allreduce_moments#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual_std
+        reference:
+          role: source-reference-value
+          expression: np.sqrt(expected_variance)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_unequal_count_full_target_uses_valid_gather_and_nonpersistent_dual
+    executable_checks:
+      d8-n-319:
+        site: tests/test_jqmc_kernel/test_optimizer_sr_tall_real_mpi.py::test_unequal_count_full_target_uses_valid_gather_and_nonpersistent_dual#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: actual.q
+        reference:
+          role: source-reference-value
+          expression: expected.q
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-C9-GAMMA-SR-UPDATE-R-C9-GAMMA-SR-UPDATE-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_build_rejects_component_sets_that_disagree_with_block_policy
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_build_rejects_wrong_trailing_block_shape_and_component_shape_mismatch
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_derivative_sources.py::test_publication_validation_rejects_missing_reordered_and_mixed_sample_shapes
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_batch.py::test_batch_rejects_cross_batch_state_and_source_mismatches
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_batch.py::test_jackknife_metadata_rejects_empty_local_bins_and_moment_order
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate
+    executable_checks:
+      d8-n-320:
+        site: tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: candidate.jastrow_data.jastrow_one_body_data.jastrow_1b_param
+        reference:
+          role: source-reference-value
+          expression: '0.5'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+      d8-n-321:
+        site: tests/test_jqmc_kernel/test_optimizer_step_result.py::test_atomic_update_rejects_bad_publication_before_constructing_candidate#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: wf.jastrow_data.jastrow_one_body_data.jastrow_1b_param
+        reference:
+          role: source-reference-value
+          expression: '0.4'
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-LOOSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_block_rejects_inconsistent_field_policy_and_storage
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_coordinate_map_rejects_duplicate_mixed_and_mismatched_tokens
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_block_rejects_incomplete_structural_metadata
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_tangent_spec_rejects_invalid_payload_and_mutable_input
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_block_metadata.py::test_stiefel_metric_builder_rejects_significant_negative_overlap_at_every_scale
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_real_coordinate_map.py::test_scalar_map_rejects_invalid_blocks_and_action_shapes

@@ -1,0 +1,16 @@
+id: MATH-UPF-FIT-INDEPENDENT-REFERENCES-001
+kind: mathematical
+name: UPF primitive fit and overlap conditioning against independent references
+plain_language: The PSWFC fit recovers the exponents and coefficients of an exact two-Gaussian radial function r^l times
+  a Gaussian sum for l = 0, 1 and 2; the reported same-l overlap condition number equals the condition number of the radial
+  overlap integrals evaluated by numerical quadrature; and UPFExponentInit reproduces the committed Li ccECP radial functions
+  within rel_target in the radial L2 norm while, by default, appending the even-tempered tight ladder up to the per-shell
+  cap when the Fourier reach lies far above the fitted range and nothing when it lies far below.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_fit_pswfc_channel_recovers_analytic_gaussian_sum
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_gaussian_radial_overlap_cond_matches_quadrature
+  - pytest_node: tests/test_jqmc_kernel/test_upf_wrapper.py::TestUPFWrapper::test_upf_exponent_init_li_fit_quality_and_default_extension

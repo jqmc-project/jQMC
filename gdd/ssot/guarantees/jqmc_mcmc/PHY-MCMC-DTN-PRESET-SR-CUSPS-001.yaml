@@ -1,0 +1,19 @@
+id: PHY-MCMC-DTN-PRESET-SR-CUSPS-001
+kind: physical
+name: Shipped DTN presets retain nuclear and electron cusp constraints after SR
+plain_language: Every shipped DTN preset built through the CLI factory performs a live MCMC SR update on committed H2 AE and H2 ccECP inputs. The actual inflated coefficients retain the independent polynomial electron-electron cusp, AE nuclear minus-Z cusp, ECP zero nuclear cusp, and active f-channel symmetry and zero-cusp identities. Disabled independent blocks remain unchanged. This is a deterministic constraint check, not an energy convergence claim.
+verdict_methods: [VM-PHY-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-PHY-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_dtn_preset_sr_cusps.py::test_dtn_shipped_presets_keep_cusps_after_sr
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: H2_ae_ccpvdz_cart.h5, preset: u}
+    - {fixture: H2_ae_ccpvdz_cart.h5, preset: u_chi}
+    - {fixture: H2_ae_ccpvdz_cart.h5, preset: u_f}
+    - {fixture: H2_ae_ccpvdz_cart.h5, preset: u_chi_f}
+    - {fixture: H2_ecp_ccpvdz_cart.h5, preset: u}
+    - {fixture: H2_ecp_ccpvdz_cart.h5, preset: u_chi}
+    - {fixture: H2_ecp_ccpvdz_cart.h5, preset: u_f}
+    - {fixture: H2_ecp_ccpvdz_cart.h5, preset: u_chi_f}

@@ -1,0 +1,152 @@
+id: NUM-AO-EVAL-MIXED-RANGE-PRECONDITION-001
+kind: numerical
+name: Reject out-of-range GTO AO values in float32 evaluation zones
+plain_language: >-
+  When the leaf's AO value zone is float32 (mixed precision), configuring
+  a Cartesian or spherical GTO leaf into a wavefunction (MOs_data.sanity_check: MO build, geminal / Hamiltonian
+  validation, TREXIO / HDF5 load and the MCMC driver constructor, shared by the XLA and Rust backends; and the J3
+  sanity_check) and check_ao_eval_value_range raise AOEvalRangeError, a ValueError naming the
+  atom, AO, l, Cartesian powers or m and exponent of each offending primitive and suggesting full precision, exactly
+  when the analytic float32 range of one of its primitives fails: the normalization N (and the spherical N_n), the peak
+  value max_r |N r^l exp(-a r^2)| and the values exp(-ln eps) below it, the radial factor, r^l and the peak-ray
+  polynomial inside the significant shell where the envelope is within eps of its peak, or an underflowing factor
+  would drop an AO value above the strict ao_eval absolute tolerance. The reference is computed in the test with
+  math.lgamma and a bisection (no jqmc code) from np.finfo of the leaf's value-zone dtype. Cases: the driver model x^82
+  exp(-r^2) is rejected as a J3 basis, by Hamiltonian validation and by the MCMC constructor; (53,0,0) at
+  a = 1, the complete l = 8 shell at a = 1e8 (molecular) and 1e9 (periodic), (24,0,0) at a = 1e-3, and spherical l = 6
+  at a = 1e11 (molecular and periodic) and l = 4 at a = 1e15 are rejected. Every committed TREXIO and Jastrow basis
+  fixture under tests/trexio_example_files registered as a GDD source validates and the reference finds all its primitives representable (no
+  false positives). For exponent grids straddling the bound (complete Cartesian shells l = 0..8, axis components
+  l = 13..53, spherical m = 0 l = 2, 4, 6) every accepted basis is evaluated by XLA compute_AOs and Rust
+  jqmc_rs.compute_AOs at points across the significant shell and out to a r^2 = 2 t_out, on peak-ray, near-axis and generic
+  directions, and equals the closed form within the strict ao_eval tolerance. The same either-rejected-or-correct
+  contract holds for one m = 0 spherical primitive (l = 2, 4, 6) on a periodic pGTO leaf and on a complex-Bloch leaf
+  (twist (1/4, 0, 0), complex MO coefficients) over exponent grids straddling the bound, with a vanishing imaginary
+  part for the complex leaf. Real leaves use ao_eval; complex Bloch pGTO leaves use ao_bloch_eval, which is float64
+  in full and mixed precision under the existing IMPL-PREC-REAL-FIXTURE-ZONES-001 policy. Therefore those complex
+  leaves are accepted and checked numerically over the entire existing exponent grids, with complex128 XLA outputs.
+  The native real-value export promotes its output to float64 independently of its arithmetic precision.
+  The shell sample points and strict ao_eval comparison tolerances remain unchanged.
+  The precondition includes the contraction coefficient c of every primitive in the kernels'
+  order of operations (exp(-a r^2), c exp(-a r^2), N c exp(-a r^2), summed over the AO's primitives, then the angular
+  polynomial): c itself, the radial product |N c|, the peak |c| max_r |phi| and the values exp(-ln eps)
+  below it, the radial partial products inside the significant shell, and the AO value dropped where the polynomial or
+  the first radial partial product underflows. The witness x^53 at a = 100 with c = 1e15 (N c exp(-9) overflows
+  float32 at a r^2 = 9, inside the shell, while c phi = 2.8e11 there), the same primitive contracted with an ordinary
+  (a = 50, c = 1) primitive, and spherical l = 4 at a = 1e6 with c = 1e25 (molecular and periodic) are rejected by
+  check_ao_eval_value_range and by MOs_data.build with MO coefficient 1/c in mixed; in full they build, and XLA and
+  Rust compute_AOs equal c phi and compute_MOs equals phi of the closed form at the witness point and across the shell.
+  Over a coefficient scan c = 1e-40 ... 1e40 (plus a negative and a near-tiny c) on Cartesian l = 0, 2, 6 and (53,0,0)
+  and spherical l = 0, 4 (molecular) and l = 4 (periodic) bases, the orbital set is rejected exactly when the
+  coefficient-aware reference finds a violation (never in full), and every accepted basis gives XLA and Rust AO values
+  equal to c phi and compute_MOs values (MO = AO / c) equal to phi in AO units, within the strict tolerances. A bare
+  AO leaf stays constructible in both modes. In full
+  precision nothing is rejected and the same evaluations hold. Full and mixed are judged separately. Not claimed: AO values at electron-nucleus
+  distances beyond a r^2 = 2 t_out (r^l can still overflow float32 there for very high l), gradients and
+  Laplacians (ao_grad_lap is float64), and basis-exponent updates applied during optimization without revalidation.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ao_eval_range_precondition.py::test_ao_eval_range_precondition_accepts_committed_fixtures
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: Ar_ae_ccpvdz_cart.h5}
+    - {fixture: Ar_ae_ccpvdz_sphe.h5}
+    - {fixture: Cl2_ecp_ccpvtz_cart.h5}
+    - {fixture: CuBr_ecp_ccpvtz_cart.h5}
+    - {fixture: H2_ae_ccpvdz_cart.h5}
+    - {fixture: H2_ae_ccpvdz_sphe.h5}
+    - {fixture: H2_ae_ccpvqz.h5}
+    - {fixture: H2_ae_ccpvtz_cart.h5}
+    - {fixture: H2_ecp_ccpvdz_cart.h5}
+    - {fixture: H2_ecp_ccpvtz.h5}
+    - {fixture: H2_ecp_ccpvtz_cart.h5}
+    - {fixture: H2_pbc_ae_cart.h5}
+    - {fixture: H2_pbc_ae_k025_cart.h5}
+    - {fixture: H2_pbc_ae_k025_sphe.h5}
+    - {fixture: H2_pbc_ae_sphe.h5}
+    - {fixture: H4_pbc_ae_cart.h5}
+    - {fixture: H4_pbc_ae_k025_cart.h5}
+    - {fixture: H_ae_ccpvdz_cart.h5}
+    - {fixture: H_ecp_ccpvdz_cart.h5}
+    - {fixture: H_ecp_ccpvqz.h5}
+    - {fixture: Li_ae_ccpvdz_cart.h5}
+    - {fixture: Li_ecp_ccpvdz_cart.h5}
+    - {fixture: Li_pbc_ae_ccpvdz_cart.h5}
+    - {fixture: Li_pbc_ae_ccpvdz_sphe.h5}
+    - {fixture: N2_ecp_ccpvtz_cart.h5}
+    - {fixture: N_ae_ccpvdz_cart.h5}
+    - {fixture: Ti2_ecp_ccpvtz_cart.h5}
+    - {fixture: lithium.h5}
+    - {fixture: lithium_cart.h5}
+    - {fixture: lithium_k025.h5}
+    - {fixture: lithium_k025_cart.h5}
+    - {fixture: lithium_twist_222.h5}
+    - {fixture: silicon.h5}
+    - {fixture: water_ccecp_ccpvqz.h5}
+    - {fixture: jastrow_data_w_1b_2b_1b3b_ae.h5}
+    - {fixture: jastrow_data_w_2b_1b3b_w_ecp.h5}
+    - {fixture: jastrow_data_w_2b_3b_w_ecp.h5}
+  - pytest_node: tests/test_rs_kernel/test_ao_eval_range_precondition.py::test_ao_eval_range_precondition_accepted_basis_is_evaluated_within_tolerance
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {family: cart_shell_l0}
+    - {family: cart_shell_l2}
+    - {family: cart_shell_l4}
+    - {family: cart_shell_l6}
+    - {family: cart_shell_l8}
+    - {family: cart_axis_l13}
+    - {family: cart_axis_l20}
+    - {family: cart_axis_l28}
+    - {family: cart_axis_l40}
+    - {family: cart_axis_l53}
+    - {family: sphe_l2}
+    - {family: sphe_l4}
+    - {family: sphe_l6}
+  - pytest_node: tests/test_rs_kernel/test_ao_eval_range_precondition.py::test_ao_eval_range_precondition_periodic_spherical_basis_rejected_or_correct
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {family: l2, leaf: periodic}
+    - {family: l2, leaf: complex}
+    - {family: l4, leaf: periodic}
+    - {family: l4, leaf: complex}
+    - {family: l6, leaf: periodic}
+    - {family: l6, leaf: complex}
+  - pytest_node: tests/test_rs_kernel/test_ao_eval_range_precondition.py::test_ao_eval_range_precondition_rejects_overflowing_coefficient_radial_product
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: cart_x53_a1e2_c1e15}
+    - {case: cart_x53_contracted_c1e15}
+    - {case: sphe_l4_a1e6_c1e25}
+    - {case: sphe_pgto_l4_a1e6_c1e25}
+  - pytest_node: tests/test_rs_kernel/test_ao_eval_range_precondition.py::test_ao_eval_range_precondition_coefficient_scan_rejected_or_correct
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {family: cart_axis_l53_a1e2}
+    - {family: cart_shell_l0_a1e4}
+    - {family: cart_shell_l2_a1}
+    - {family: cart_shell_l6_a1e-2}
+    - {family: sphe_l0_a1}
+    - {family: sphe_l4_a1e6}
+    - {family: sphe_pgto_l4_a1e6}
+# Registered outside VM-MATH-REFERENCE-001: the test asserts no value agreement, so it is not reference evidence. It asserts the reference-predicted refusal of the precondition.
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ao_eval_range_precondition.py::test_ao_eval_range_precondition_rejects_unrepresentable_mixed_basis
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: cart_x82_a1}
+    - {case: cart_axis_l53_a1}
+    - {case: cart_shell_l8_a1e8}
+    - {case: cart_axis_l24_a1e-3}
+    - {case: cart_pgto_shell_l8_a1e9}
+    - {case: sphe_l6_a1e11}
+    - {case: sphe_l4_a1e15}
+    - {case: sphe_pgto_l6_a1e11}
+# Registered outside VM-MATH-REFERENCE-001: the test asserts no value agreement, so it is not reference evidence. It asserts the refusal at the driver and J3 setup.
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_ao_eval_range_precondition.py::test_ao_eval_range_precondition_guards_driver_and_j3_setup
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

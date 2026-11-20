@@ -1,0 +1,371 @@
+id: MATH-JAS-PERIODIC-DISTANCE-LAW-001
+kind: mathematical
+name: Conventional periodic J1 and J2 follow the full cell metric
+plain_language: >-
+  With row-vector cell C, fractional displacement s=x inv(C), Gram G=C C.T,
+  h=sin(pi s) cos(pi s) and z=sin(pi s)^2, the periodic distance squared is
+  (||h C||^2 + sum_i G_ii z_i^2)/pi^2. Conventional exp/Pade J1/J2 values,
+  coordinate gradients and Laplacians, and all nine affine-strain components
+  must agree with a test-only independent positive double-angle expression.
+  Lattice translations preserve values. Orthogonal-cell values retain the
+  old sine law, but their shear derivatives follow the full law, not a
+  diagonal-metric shortcut. Eight selected synthetic parameter sets cover
+  cubic, tetragonal, orthorhombic, rotated orthogonal, monoclinic, triclinic
+  and a fixed strongly skewed nonsingular cell, both radial forms, both
+  Jastrow terms, either occupied single spin and the three J2 spin sectors.
+  Each test uses three fixed finite displacements, no file, RNG, determinant
+  or cond(G) screen. Both precision modes retain their own active zones and
+  existing strict element-wise tolerance. No FD, statistical acceptance or
+  mixed-versus-full comparison is used. Molecular and DTN distance laws and
+  the conventional spin-independent J2 radial coefficient are unchanged.
+  These component tests do not by themselves certify native parity, cached
+  ratios, higher force derivatives, arbitrary ill-conditioned cells, or
+  invariance under arbitrary integer changes of lattice basis.
+  Nonzero near-cusp coordinate and cell responses additionally match an
+  independent quartic local series, while exactly representable nonzero
+  near-image fields and outer responses obey lattice translation. The
+  translation identity is not a substitute for the independent reference.
+  At exact coincidence the distance is not Cartesian differentiable;
+  the declared zero-tangent/self-pair-mask convention is checked separately
+  by IMPL-JAS-PERIODIC-ZERO-AD-CONVENTION-001, not as a physical derivative.
+verdict_methods: [VM-MATH-REFERENCE-001, VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_positive_law_values_and_derivatives
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {part: j1, form: exp, cell_kind: cubic, spin_sector: up}
+    - {part: j1, form: pade, cell_kind: tetragonal, spin_sector: down}
+    - {part: j2, form: exp, cell_kind: orthorhombic, spin_sector: up-down}
+    - {part: j2, form: pade, cell_kind: rotated-orthogonal, spin_sector: up-up}
+    - {part: j1, form: exp, cell_kind: monoclinic, spin_sector: up}
+    - {part: j2, form: pade, cell_kind: monoclinic, spin_sector: down-down}
+    - {part: j1, form: pade, cell_kind: triclinic, spin_sector: down}
+    - {part: j2, form: exp, cell_kind: strong-skew, spin_sector: up-down}
+    executable_checks:
+      value:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_positive_law_values_and_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-jastrow-value, expression: actual_value}
+        reference: {role: independent-positive-periodic-law-value, expression: reference_value}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+      gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_positive_law_values_and_derivatives#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-electron-gradient, expression: analytical_gradient}
+        reference: {role: independent-positive-law-ad-gradient, expression: reference_gradient}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+      laplacian:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_positive_law_values_and_derivatives#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-electron-laplacian, expression: analytical_laplacian}
+        reference: {role: independent-positive-law-ad-laplacian, expression: reference_laplacian}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+      translation:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_positive_law_values_and_derivatives#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: translated-production-jastrow-value, expression: actual_translated}
+        reference: {role: independent-positive-periodic-law-value, expression: reference_value}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_all_strain_components
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {part: j1, form: exp, cell_kind: cubic, spin_sector: up}
+    - {part: j1, form: pade, cell_kind: tetragonal, spin_sector: down}
+    - {part: j2, form: exp, cell_kind: orthorhombic, spin_sector: up-down}
+    - {part: j2, form: pade, cell_kind: rotated-orthogonal, spin_sector: up-up}
+    - {part: j1, form: exp, cell_kind: monoclinic, spin_sector: up}
+    - {part: j2, form: pade, cell_kind: monoclinic, spin_sector: down-down}
+    - {part: j1, form: pade, cell_kind: triclinic, spin_sector: down}
+    - {part: j2, form: exp, cell_kind: strong-skew, spin_sector: up-down}
+    executable_checks:
+      strain:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_geometry.py::test_periodic_jastrow_all_strain_components#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: production-forward-affine-strain-derivative, expression: actual_strain}
+        reference: {role: independent-positive-law-affine-strain-ad, expression: reference_strain}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_eval, jastrow_grad_lap]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_kind: cubic}
+    - {cell_kind: rotated-orthogonal}
+    - {cell_kind: monoclinic}
+    - {cell_kind: triclinic}
+    - {cell_kind: strong-skew}
+    executable_checks:
+      kinetic-distance:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-kinetic-distance, expression: kinetic_distance}
+        reference: {role: independent-positive-law-reference-distance, expression: reference_distance}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      kinetic-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-kinetic-gradient, expression: kinetic_gradient}
+        reference: {role: independent-positive-law-reference-gradient, expression: reference_gradient}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      kinetic-norm:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-kinetic-norm, expression: kinetic_norm}
+        reference: {role: independent-positive-law-reference-norm, expression: reference_norm}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      kinetic-laplacian:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-kinetic-laplacian, expression: kinetic_laplacian}
+        reference: {role: independent-positive-law-reference-laplacian, expression: reference_laplacian}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      force-distance:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-force-distance, expression: force_distance}
+        reference: {role: independent-positive-law-reference-distance, expression: reference_distance}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      force-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-force-gradient, expression: force_gradient}
+        reference: {role: independent-positive-law-reference-gradient, expression: reference_gradient}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      force-norm:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-force-norm, expression: force_norm}
+        reference: {role: independent-positive-law-reference-norm, expression: reference_norm}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      force-hessian:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-force-hessian, expression: force_hessian}
+        reference: {role: independent-positive-law-reference-hessian, expression: reference_hessian}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      force-laplacian:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-force-laplacian, expression: force_laplacian}
+        reference: {role: independent-positive-law-reference-laplacian, expression: reference_laplacian}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      force-gradlap:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_force_kinematics_match_positive_law#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-force-gradlap, expression: force_gradlap}
+        reference: {role: independent-positive-law-reference-gradlap, expression: reference_gradlap}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_kind: cubic}
+    - {cell_kind: rotated-orthogonal}
+    - {cell_kind: monoclinic}
+    - {cell_kind: triclinic}
+    - {cell_kind: strong-skew}
+    executable_checks:
+      stress-distance:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-stress-distance, expression: stress_distance}
+        reference: {role: independent-positive-law-reference-distance, expression: reference_distance}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      stress-gradient:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-stress-gradient, expression: stress_gradient}
+        reference: {role: independent-positive-law-reference-gradient, expression: reference_gradient}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      stress-norm:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-stress-norm, expression: stress_norm}
+        reference: {role: independent-positive-law-reference-norm, expression: reference_norm}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      stress-laplacian:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-stress-laplacian, expression: stress_laplacian}
+        reference: {role: independent-positive-law-reference-laplacian, expression: reference_laplacian}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      stress-distance-strain:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-stress-distance-strain, expression: stress_distance_strain}
+        reference: {role: independent-positive-law-reference-distance-strain, expression: reference_distance_strain}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      stress-gradient-strain:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-stress-gradient-strain, expression: stress_gradient_strain}
+        reference: {role: independent-positive-law-reference-gradient-strain, expression: reference_gradient_strain}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      stress-norm-strain:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-stress-norm-strain, expression: stress_norm_strain}
+        reference: {role: independent-positive-law-reference-norm-strain, expression: reference_norm_strain}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      stress-laplacian-strain:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-8
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-stress-laplacian-strain, expression: stress_laplacian_strain}
+        reference: {role: independent-positive-law-reference-laplacian-strain, expression: reference_laplacian_strain}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      pulay-distance:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-9
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-pulay-distance, expression: pulay_distance}
+        reference: {role: independent-positive-law-reference-distance, expression: reference_distance}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+      pulay-distance-strain:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_response_geometry.py::test_periodic_strain_kinematics_match_positive_law#comparison-10
+        comparator: numpy.testing.assert_allclose
+        actual: {role: analytical-periodic-pulay-distance-strain, expression: pulay_distance_strain}
+        reference: {role: independent-positive-law-reference-distance-strain, expression: reference_distance_strain}
+        iterations: {variable: sample_label, required_values: ['0', '1', '2']}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [wf_kinetic]}
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_near_cusp_outer_response
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {form: exp, axis: 0}
+    - {form: exp, axis: 1}
+    - {form: exp, axis: 2}
+    - {form: pade, axis: 0}
+    - {form: pade, axis: 1}
+    - {form: pade, axis: 2}
+    executable_checks:
+      actual-transverse:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_near_cusp_outer_response#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-periodic-actual-transverse, expression: actual_transverse}
+        reference: {role: declared-reference-transverse, expression: reference_transverse}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      actual-scaled-radial:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_near_cusp_outer_response#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-periodic-actual-scaled-radial, expression: actual_scaled_radial}
+        reference: {role: declared-reference-scaled-radial, expression: reference_scaled_radial}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      actual-cell-response:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_near_cusp_outer_response#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-periodic-actual-cell-response, expression: actual_cell_response}
+        reference: {role: declared-reference-cell-response, expression: reference_cell_response}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_near_image_response
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {form: exp, axis: 0}
+    - {form: exp, axis: 1}
+    - {form: exp, axis: 2}
+    - {form: pade, axis: 0}
+    - {form: pade, axis: 1}
+    - {form: pade, axis: 2}
+    executable_checks:
+      actual-fields:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_near_image_response#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-periodic-actual-fields, expression: actual_fields}
+        reference: {role: declared-reference-fields, expression: reference_fields}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      actual-position-jacobian:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_near_image_response#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-periodic-actual-position-jacobian, expression: actual_position_jacobian}
+        reference: {role: declared-reference-position-jacobian, expression: reference_position_jacobian}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+      actual-cell-jacobian:
+        site: tests/test_jqmc_kernel/test_jastrow_skew_zero_response.py::test_periodic_j2_near_image_response#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: actual-periodic-actual-cell-jacobian, expression: actual_cell_jacobian}
+        reference: {role: declared-reference-cell-jacobian, expression: reference_cell_jacobian}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [jastrow_grad_lap]}

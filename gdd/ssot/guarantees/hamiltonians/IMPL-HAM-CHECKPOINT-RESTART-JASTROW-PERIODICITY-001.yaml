@@ -1,0 +1,27 @@
+id: IMPL-HAM-CHECKPOINT-RESTART-JASTROW-PERIODICITY-001
+kind: implementation
+name: An MCMC checkpoint restart of a periodic Hamiltonian keeps its Jastrow, or the inconsistent run is rejected up front
+plain_language: >-
+  An MCMC run (4 walkers, seed 12345, 5 steps) on the Gamma-point H2_pbc_ae_cart.h5 Hamiltonian with a periodic Pade J2
+  restarts through save_to_hdf5, merge_rank_checkpoints and MCMC.load_from_hdf5 with ln Psi of the restarted Hamiltonian
+  equal to the in-memory value at the latest walker positions within the HDF5 round-trip tolerance, on the XLA chain and
+  on the native chain (JQMC_FLAG_RUST_ON_CPU=1). A Pade J2 left at the molecular default structure, or a J1 on a molecular
+  copy of the nuclei, is rejected with ValueError when the MCMC driver is constructed instead of running and restarting
+  with a different wavefunction (a restart that back-filled the periodic structure into the default J2
+  changed ln Psi by up to 1.42 per walker). Full and mixed are each required.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jastrow_structure_consistency.py::test_mcmc_checkpoint_restart_keeps_periodic_jastrow_or_rejects
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: j2_pade_periodic}
+    - {case: j2_pade_default_structure}
+    - {case: j1_molecular_structure}
+  - pytest_node: tests/test_rs_kernel/test_jastrow_structure_consistency_rust.py::test_rust_mcmc_checkpoint_restart_keeps_periodic_jastrow_or_rejects
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {case: j2_pade_periodic}
+    - {case: j2_pade_default_structure}
+    - {case: j1_molecular_structure}

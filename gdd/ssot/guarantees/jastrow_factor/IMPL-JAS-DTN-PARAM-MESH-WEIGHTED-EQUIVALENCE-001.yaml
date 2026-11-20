@@ -1,0 +1,18 @@
+id: IMPL-JAS-DTN-PARAM-MESH-WEIGHTED-EQUIVALENCE-001
+kind: implementation
+name: The weighted rank-one DTN parameter-gradient mesh sum equals the dense per-config recompute
+plain_language: >-
+  derivatives.dtn.dtn_param_mesh_weighted returns, for the alpha, beta and gamma independent DTN parameters, the
+  weighted sum over one-electron-moved mesh configurations of the DTN parameter gradient of each configuration
+  minus that of the base, built only from the moved electron's pairs, legs and triples. With complex
+  weights, it equals the weighted sum of the dense grad_dtn_wrt_param of each moved configuration minus the base at
+  the jastrow_grad_lap strict zone policy, for molecular and periodic H2 with the u_chi_f, u_chi and u_f presets on a
+  six-point lattice mesh around every electron, and for an f pair whose electrons sit on opposite faces of the
+  periodic cell. Every returned block is checked to be non-vacuous. Full and mixed are judged separately.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_dtn_param_mesh_delta.py::test_param_mesh_weighted_matches_dense_per_config_oracle
+  - pytest_node: tests/test_jqmc_kernel/test_dtn_param_mesh_delta.py::test_param_mesh_weighted_matches_dense_across_the_cell_boundary

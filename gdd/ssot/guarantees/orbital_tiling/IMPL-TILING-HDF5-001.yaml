@@ -1,0 +1,47 @@
+id: IMPL-TILING-HDF5-001
+kind: implementation
+name: Tiled Hamiltonians restore primitive storage and explicit spin sharing
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  Tiled occupied SDs use explicitly typed primitive-block HDF5 providers without schema versions. Local backend
+  and coefficient aliases are hard-linked across spin sectors and restored once;
+  equal independent LSDA sources are not deduplicated by value. Periodic GTOs are
+  reconstructed in their saved primitive cell, while the Hamiltonian and Coulomb
+  model remain in the physical supercell. PW, B-spline and Cartesian/spherical
+  pGTO roundtrips preserve VGL, determinant and XLA local energy. Invalid provider content,
+  normalization, primitive cell and spin metadata fail on load. This guarantee
+  covers Hamiltonian files, not yet MCMC/GFMC restart or native sampling.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_hdf5.py::test_hamiltonian_roundtrip_retains_primitive_storage_spin_sharing_and_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw, restricted: true}
+    - {backend: pw, restricted: false}
+    - {backend: bspline, restricted: true}
+    - {backend: bspline, restricted: false}
+    - {backend: pgto_cart, restricted: true}
+    - {backend: pgto_cart, restricted: false}
+    - {backend: pgto_sphe, restricted: true}
+    - {backend: pgto_sphe, restricted: false}
+    - {backend: composite_cart, restricted: true}
+    - {backend: composite_cart, restricted: false}
+    - {backend: composite_sphe, restricted: true}
+    - {backend: composite_sphe, restricted: false}
+
+  - pytest_node: tests/test_jqmc_kernel/test_orbital_tiling_hdf5.py::test_tiled_hdf5_rejects_incompatible_or_corrupted_contract
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {corruption: provider_class}
+    - {corruption: missing_tiling}
+    - {corruption: normalization}
+    - {corruption: primitive_cell}
+    - {corruption: physical_cell}
+    - {corruption: spin}
+    - {corruption: conjugate}
+    - {corruption: operator}

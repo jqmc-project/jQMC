@@ -1,0 +1,13 @@
+id: IMPL-TOOL-DRIVER-MATCH-001
+kind: implementation
+name: mcmc and lrdmc compute-energy and compute-force refuse the other driver's checkpoint
+plain_language: >-
+  mcmc compute-energy and mcmc compute-force refuse a checkpoint file, or a twist checkpoint directory, whose stored
+  driver type is GFMC_t or GFMC_n; lrdmc compute-energy and lrdmc compute-force refuse one whose stored driver type
+  is MCMC. The command exits with status 1, names the stored driver and the matching command, and prints no energy,
+  force or pressure result, instead of applying its own estimator to the other driver's weights.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeDriverMismatch::test_wrong_driver_checkpoint_is_refused

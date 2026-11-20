@@ -1,0 +1,49 @@
+id: IMPL-CLI-TWIST-RESUME-VALUES-001
+kind: implementation
+name: Real CLI twist resume preserves input identity and displayed checkpoint summaries
+plain_language: >-
+  On the existing Li TREXIO two-twist pGTO and Li_k025 one-twist pGTO+PW and
+  pGTO+B-spline fixtures, actual MPI subprocess CLI runs save the input twist's
+  up/down MO arrays and k identity. Fresh and fully cached restart output must
+  both equal independent arithmetic on the saved per-twist energies, errors
+  and weights at the CLI's five displayed decimals. Preserve the original
+  seed 12345, two walkers and twenty measurements, with no cond(G) selection.
+  Full/mixed is explicitly passed to the child through TOML. Saved final
+  coordinates are observed, not every internal trajectory. This certifies
+  deterministic input/output and cache presentation, not physical energy
+  accuracy, sampling-error convergence or partial-twist recovery.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_cli_twist_dispatch.py::TestCLITwistDispatchSubprocess::test_cli_twist_resume_saved_values_and_input_identity
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{kind: pgto}, {kind: 'pgto+pw'}, {kind: 'pgto+bspline'}]
+    executable_checks:
+      input-orbitals:
+        site: tests/test_jqmc_kernel/test_integration_cli_twist_dispatch.py::_assert_twist_checkpoint_inputs#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: actual-subprocess-checkpoint-up-and-down-MOs, expression: observed_mo}
+        reference: {role: corresponding-twist-input-MOs, expression: expected_mo}
+        iterations:
+          variable: spin
+          required_values: [orb_data_up_spin, orb_data_dn_spin]
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      input-k:
+        site: tests/test_jqmc_kernel/test_integration_cli_twist_dispatch.py::_assert_twist_checkpoint_inputs#exact-comparison-2
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: subprocess-checkpoint-k-identity, expression: saved_k}
+        reference: {role: corresponding-combined-input-k, expression: input_k}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}
+      fresh-and-resumed-display:
+        site: tests/test_jqmc_kernel/test_integration_cli_twist_dispatch.py::_assert_twist_summary_from_checkpoints#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: two-CLI-displays-of-energy-error-and-dispersion, expression: actual}
+        reference: {role: independent-checkpoint-arithmetic-rounded-to-five-displayed-decimals, expression: expected}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

@@ -1,0 +1,24 @@
+id: IMPL-DOC-CANONICAL-KINETIC-PAIRED-PRECISION-001
+kind: implementation
+name: Canonical kinetic oracle partitions retain paired full and mixed pattern closure
+plain_language: The kinetic oracle split preserves the full mathematical strict allclose and mixed orbital_derivative
+  block-norm fidelity obligations across every independently authored canonical pattern, including WF-PATTERN-017. Each partial kinetic registration must have a sibling
+  with the identical pytest node and entire physical requirement, including seed, activation and configuration. Both the static
+  canonical ledger gate and runtime module-contract loader reject missing precision or pattern coverage. Legacy both-mode
+  allclose, physical both-mode execution, activation/electron policy and streaming distinct sites remain mandatory. Negative
+  witnesses exercise missing siblings, missing and duplicate selectors, changed seed or scale, undeclared policy/quantity/comparator,
+  physical precision deletion, changed activation or condition filtering, and other-operation exceptions. This is receipt-contract
+  detection, separate from the scientific numerical outcomes. The ten-field canonical consumer map applies the identical paired
+  closure and records each numerical registration precision separately from its unchanged both-mode physical execution.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_gdd_simplification/test_canonical_partition.py::test_unpaired_registration_is_rejected_for_every_pattern
+  - pytest_node: tests/test_gdd_simplification/test_canonical_partition.py::test_missing_one_mixed_pattern_is_rejected_by_both_pattern_and_coverage_checks
+  - pytest_node: tests/test_gdd_simplification/test_canonical_partition.py::test_partition_cannot_change_approved_oracle_budget
+  - pytest_node: tests/test_gdd_simplification/test_canonical_partition.py::test_physical_test_execution_still_requires_both_modes
+  - pytest_node: tests/test_gdd_simplification/test_canonical_partition.py::test_activation_and_unscreened_electron_contracts_remain_mandatory
+  - pytest_node: tests/test_gdd_simplification/test_canonical_partition.py::test_streaming_three_distinct_sites_remain_mandatory
+  - pytest_node: tests/test_gdd_simplification/test_canonical_partition.py::test_runtime_loader_rejects_missing_sibling_and_emits_only_its_own_precision

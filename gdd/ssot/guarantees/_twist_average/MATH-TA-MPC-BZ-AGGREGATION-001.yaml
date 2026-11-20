@@ -1,0 +1,79 @@
+id: MATH-TA-MPC-BZ-AGGREGATION-001
+kind: mathematical
+name: MPC BZ aggregation preserves joint uncertainty
+plain_language: The twist-averaged MPC correction and corrected total use normalized BZ weights for their means and independent-chain
+  quadrature for their per-twist errors, every corrected-total input error comes from the covariance-aware same-walker joint
+  estimator rather than rebuilding a quadrature from Ewald and correction bars, and deterministic twist-scoped RNG namespaces
+  make the independent-chain premise true without changing the single-twist stream.
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average_mpc.py::test_mpc_bz_aggregate_uses_unequal_weights_and_joint_per_twist_errors
+  - pytest_node: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_mpc_bz_aggregate_uses_real_twist_root_mpi_collectives
+    executable_checks:
+      d8-n-027:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_mpc_bz_aggregate_uses_real_twist_root_mpi_collectives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.mpc.correction.E_TA
+        reference:
+          role: source-reference-value
+          expression: expected_correction.E_TA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-028:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_mpc_bz_aggregate_uses_real_twist_root_mpi_collectives#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.mpc.correction.E_TA_std
+        reference:
+          role: source-reference-value
+          expression: expected_correction.E_TA_std
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-029:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_mpc_bz_aggregate_uses_real_twist_root_mpi_collectives#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.mpc.energy.E_TA
+        reference:
+          role: source-reference-value
+          expression: expected_energy.E_TA
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+      d8-n-030:
+        site: tests/test_jqmc_kernel/test_twist_decomposition_mpi.py::test_mpc_bz_aggregate_uses_real_twist_root_mpi_collectives#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: result.mpc.energy.E_TA_std
+        reference:
+          role: source-reference-value
+          expression: expected_energy.E_TA_std
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-PYTHON-FP64-BZ-MEAN-R-PYTHON-FP64-ZERO-001

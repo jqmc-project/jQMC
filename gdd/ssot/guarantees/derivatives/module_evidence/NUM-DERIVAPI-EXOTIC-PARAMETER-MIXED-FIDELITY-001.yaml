@@ -1,0 +1,148 @@
+id: NUM-DERIVAPI-EXOTIC-PARAMETER-MIXED-FIDELITY-001
+kind: numerical
+name: Exotic public derivatives and Exp Jastrow parameters preserve full analytical fidelity
+plain_language: Whole-wavefunction pure-PW derivatives, real/twist pgto+PW radial parameters, composite B-spline
+  J3 radial parameters, B-spline normalized-wavefunction kinetic strain and Exp J1/J2 parameter derivatives compare
+  independently rebuilt Mixed and Full analytical-production blocks at the unchanged central parameter_derivative
+  infinity-norm budget. Whole-WF routes consume mixed Jastrow/AO forward arithmetic even where a primitive PW or
+  spline is float64. Original Full mathematical comparisons and every original non-AD precondition, field/key/child
+  count, inactive radial=None anchor, coordinate and seed control remain. H16 Exp keeps the original Full mathematical-reference
+  nonzero controls at the entry-Mixed floor in both callbacks; the reference is a liveness control, not the Mixed
+  numerical comparator. Pade H16 and primitive spline mathematical AD remain registered in both modes separately.
+  Positive primary sites are explicit; pytest.raises executes an excess-perturbation rejection at the same local
+  norm helper without claiming a separate negative receipt.
+verdict_methods:
+- VM-NUM-MIXED-FIDELITY-001
+required_evidence:
+- verdict_method: VM-NUM-MIXED-FIDELITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_pw_full_axes_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - save_dir:
+        source_expression: os.path.join(os.fspath(qe_example_files_root()), 'Li_gamma', 'out', 'li.save')
+      upf_path:
+        source_expression: os.path.join(os.path.join(os.fspath(qe_example_files_root()), 'Li_gamma', 'out', 'li.save'),
+          'Li.ccECP.upf')
+      element: Li
+      g_cut_fraction: 0.25
+    - save_dir:
+        source_expression: os.path.join(os.fspath(qe_example_files_root()), 'Li_k025', 'out', 'li_k025.save')
+      upf_path:
+        source_expression: os.path.join(os.path.join(os.fspath(qe_example_files_root()), 'Li_k025', 'out', 'li_k025.save'),
+          'Li.ccECP.upf')
+      element: Li
+      g_cut_fraction: 0.25
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_exotic#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-production-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-production-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_basis_opt_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_exotic#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-production-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-production-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_pgtopw_twist_basis_opt_analytic_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_exotic#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-production-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-production-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_composite_bspline_j3_basis_grads_vs_auto
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - quantity: ln_Psi
+    - quantity: e_L
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_exotic#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-production-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-production-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_exotic_bspline_kinetic_vs_grad
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - {}
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_bspline_stress#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-production-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-production-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_derivatives.py::test_j1_j2_exp_parameter_precision_partition
+    required_precision_modes:
+    - mixed
+    required_parameter_cases:
+    - stem: Li_ae_ccpvdz_cart.h5
+    - stem: lithium.h5
+    executable_checks:
+      mixed-production-vs-full-production:
+        site: tests/test_jqmc_kernel/test_jqmc_derivatives.py::_compare_native_api_exp_mixed#helper-inequality-1
+        comparator: python.inequality
+        actual:
+          role: mixed-analytical-production-derivative-block
+          expression: mixed_block
+        reference:
+          role: independently-rebuilt-full-analytical-production-derivative-block
+          expression: full_block
+        precision:
+          mixed:
+            policy: CMP-MIXED-FULL-FIDELITY-001
+            quantity_class: parameter_derivative

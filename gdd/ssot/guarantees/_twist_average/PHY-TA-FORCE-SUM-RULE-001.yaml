@@ -1,0 +1,67 @@
+id: PHY-TA-FORCE-SUM-RULE-001
+kind: physical
+name: Force sum rule under BZ combination
+plain_language: The physical force sum rule survives the Brillouin-zone combination of per-twist estimators.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_T4_force_sum_rule_holds_under_BZ_combine
+    executable_checks:
+      d8-n-032:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_T4_force_sum_rule_holds_under_BZ_combine#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.sum(F_per_twist[k], axis=0)
+        reference:
+          role: source-reference-value
+          expression: np.zeros(3, dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+        iterations:
+          variable: comparison_iteration
+          required_values:
+          - '0'
+          - '1'
+          - '2'
+      d8-n-031:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_T4_force_sum_rule_holds_under_BZ_combine#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: np.sum(out.F_TA, axis=0)
+        reference:
+          role: source-reference-value
+          expression: np.zeros(3, dtype=np.float64)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-LOOSE-ZERO-001
+  - pytest_node: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants::test_bz_mean_force_preserves_sum_rule
+    executable_checks:
+      d8-n-033:
+        site: tests/test_jqmc_kernel/test_twist_average.py::TestBZMeanInvariants.test_bz_mean_force_preserves_sum_rule#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: sum_a_F_TA
+        reference:
+          role: source-reference-value
+          expression: np.zeros(3)
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-PYTHON-FP64-MEDIUM-ZERO-001

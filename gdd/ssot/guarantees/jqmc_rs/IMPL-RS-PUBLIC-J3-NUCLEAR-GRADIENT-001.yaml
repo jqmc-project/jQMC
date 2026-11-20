@@ -1,0 +1,20 @@
+id: IMPL-RS-PUBLIC-J3-NUCLEAR-GRADIENT-001
+kind: implementation
+name: Direct native J3 nuclear-gradient export
+plain_language: The retained public native grad_J3_wrt_R wrapper returns the same finite nuclear-gradient tensor as same-mode analytical XLA on the molecular Cartesian N all-electron SD/J123 fixture, with symmetric nonzero J3 coefficients and two fixed-seed ion-centered electron configurations. This is direct public-wrapper parity, not a claim that every unused native export has been covered or may be removed.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_public_j3_wrapper.py::test_native_public_j3_nuclear_gradient_matches_xla
+    required_parameter_cases: [{seed: 1}, {seed: 3}]
+    required_precision_modes: [full, mixed]
+    executable_checks:
+      nuclear-gradient:
+        site: tests/test_rs_kernel/test_public_j3_wrapper.py::test_native_public_j3_nuclear_gradient_matches_xla#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-public-J3-nuclear-gradient, expression: actual}
+        reference: {role: xla-analytical-J3-nuclear-gradient, expression: reference}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_eval]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, ao_grad_lap, jastrow_eval]}

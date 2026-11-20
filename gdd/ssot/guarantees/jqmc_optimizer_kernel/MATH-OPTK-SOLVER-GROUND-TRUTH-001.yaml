@@ -1,0 +1,116 @@
+id: MATH-OPTK-SOLVER-GROUND-TRUTH-001
+kind: mathematical
+name: Ground-truth agreement of the SR and LM solvers
+plain_language: 'The linear-method step matches a dense generalized eigenproblem, the production SR solvers match the
+  dense solution of the real-coordinate system Re(X X^dagger) + epsilon I (the direct host and device routes to the exact
+  solution of their fp64 inputs, every CG route to the dense solution within its stopping residual, and the wide CG to the
+  direct solve for complex and real-valued complex samples), and the ASR scalars match their pinned references
+  (mathematical).'
+verdict_methods:
+- VM-MATH-REFERENCE-001
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_opt_gt_linear_method.py::TestT3LinearMethod::test_lm_step_matches_dense_generalized_eig
+    executable_checks:
+      d8-n-333:
+        site: tests/test_jqmc_kernel/test_complex_opt_gt_linear_method.py::TestT3LinearMethod.test_lm_step_matches_dense_generalized_eig#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: _rayleigh_quotient(H_bar, S_bar, np.asarray(c_vec, dtype=np.complex128))
+        reference:
+          role: source-reference-value
+          expression: E_lm
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-LM-EIGVAL-VS-DENSE-R-LM-EIGVAL-VS-DENSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-LM-EIGVAL-VS-DENSE-R-LM-EIGVAL-VS-DENSE-001
+      d8-n-334:
+        site: tests/test_jqmc_kernel/test_complex_opt_gt_linear_method.py::TestT3LinearMethod.test_lm_step_matches_dense_generalized_eig#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: E_lm
+        reference:
+          role: source-reference-value
+          expression: E_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-LM-EIGVAL-VS-DENSE-R-LM-EIGVAL-VS-DENSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-LM-EIGVAL-VS-DENSE-R-LM-EIGVAL-VS-DENSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_complex_opt_gt_linear_method.py::TestT4ASRScalars::test_asr_scalars_match_pinned_references
+    executable_checks:
+      d8-n-335:
+        site: tests/test_jqmc_kernel/test_complex_opt_gt_linear_method.py::TestT4ASRScalars.test_asr_scalars_match_pinned_references#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: H_0
+        reference:
+          role: source-reference-value
+          expression: case.H_0
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-AGGREGATOR-INVARIANT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-AGGREGATOR-INVARIANT-001
+      d8-n-336:
+        site: tests/test_jqmc_kernel/test_complex_opt_gt_linear_method.py::TestT4ASRScalars.test_asr_scalars_match_pinned_references#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: S_2
+        reference:
+          role: source-reference-value
+          expression: S_2_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-AGGREGATOR-INVARIANT-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-PYTHON-FP64-AGGREGATOR-INVARIANT-001
+      d8-n-337:
+        site: tests/test_jqmc_kernel/test_complex_opt_gt_linear_method.py::TestT4ASRScalars.test_asr_scalars_match_pinned_references#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: H_2
+        reference:
+          role: source-reference-value
+          expression: H_2_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-QUADFORM-VS-DENSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-BIT-EXACT-R-QUADFORM-VS-DENSE-001
+      d8-n-338:
+        site: tests/test_jqmc_kernel/test_complex_opt_gt_linear_method.py::TestT4ASRScalars.test_asr_scalars_match_pinned_references#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: source-computed-value
+          expression: H_1
+        reference:
+          role: source-reference-value
+          expression: H_1_ref
+        precision:
+          full:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-QUADFORM-VS-DENSE-R-QUADFORM-VS-DENSE-001
+          mixed:
+            policy: CMP-SOURCE-CENTRAL-PAIR-001
+            pair: TOL-D8-QUADFORM-VS-DENSE-R-QUADFORM-VS-DENSE-001
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_wide_real_cg_matches_direct_on_complex_and_real_valued_complex_samples
+  - pytest_node: tests/test_jqmc_kernel/test_sr_direct_solve_accuracy.py::test_direct_sr_solve_matches_exact_solution_of_its_inputs
+  - pytest_node: tests/test_rs_kernel/test_optimizer_host_linalg_parity.py::test_sr_cg_relative_stopping_rule_on_every_route

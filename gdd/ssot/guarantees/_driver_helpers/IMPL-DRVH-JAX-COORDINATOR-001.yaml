@@ -1,0 +1,15 @@
+id: IMPL-DRVH-JAX-COORDINATOR-001
+kind: implementation
+name: JAX coordinator address is OS-assigned and broadcast
+plain_language: The shared JAX-distributed bootstrap picks the coordinator port from the OS ephemeral allocator on rank
+  0 and broadcasts one host:port string to every rank. With JAX coordinator pins unset, a port held open by another listener
+  on this host is not handed out again, every rank receives the identical address, and the host is rank 0's hostname; this
+  is checked in the serial lane and across two ranks under mpirun -np 2. It replaces JAX's hashed mpi4py port (4096 candidates),
+  under which concurrent MPI jobs on one host could share a coordination service. A port can still be taken by another
+  process between the probe and the coordinator bind; that window is not claimed closed.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_mcmc.py::test_jax_coordinator_address_avoids_occupied_port_and_is_broadcast

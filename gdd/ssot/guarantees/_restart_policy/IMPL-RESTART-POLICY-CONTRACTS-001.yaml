@@ -1,0 +1,37 @@
+id: IMPL-RESTART-POLICY-CONTRACTS-001
+kind: implementation
+name: Restart-policy classification contracts
+plain_language: Every driver parameter of every section (control, mcmc, vmc, lrdmc-bra, lrdmc-tau, coulomb) is classified, frozen
+  keys map to their checkpoint fields, TOML comments carry the restart label, and a frozen-parameter mismatch on restart
+  is a hard error for ALL drivers. VMC workflow continuation must also write restart=true, the selected checkpoint, and
+  the production Hamiltonian into its generated TOML, and the LRDMC drivers do not restore checkpoint physics (alat,
+  non_local_move, tau, collect steps) over the continuation TOML (the checkpoint-sync drift guard is registered in the
+  MCMC ledger). For single-twist MPC sampling, explicit changes to the saved flag
+  or cutoff are rejected before a continuation can rewrite the checkpoint.
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+- VM-ERROR-DISPOSITION-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_restart_policy.py::test_all_params_classified
+  - pytest_node: tests/test_jqmc_workflow/test_restart_policy.py::test_frozen_keys_are_mapped
+  - pytest_node: tests/test_jqmc_workflow/test_restart_policy.py::test_toml_comments_show_restart_label
+  - pytest_node: tests/test_jqmc_workflow/test_vmc_restart_contract.py::test_crystal_gamma_continuation_toml_requests_restart
+  - pytest_node: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_force_stress_reporting
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{job_type: mcmc}, {job_type: lrdmc-bra}, {job_type: lrdmc-tau}]
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_workflow/test_restart_policy.py::test_lrdmc_and_vmc_restart_raise_on_frozen_mismatch
+  - pytest_node: tests/test_jqmc_workflow/test_restart_policy.py::test_restart_raises_on_frozen_mismatch
+  - pytest_node: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_continuous_state_and_energy
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {job_type: mcmc}
+    - {job_type: vmc}
+    - {job_type: lrdmc-bra}
+    - {job_type: lrdmc-tau}
+  - pytest_node: tests/test_jqmc_kernel/test_cli_restart_values.py::test_cli_restart_preserves_mpc_history_and_reporting
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{job_type: mcmc}, {job_type: lrdmc-bra}, {job_type: lrdmc-tau}]

@@ -1,0 +1,100 @@
+schema_version: 1
+document:
+  id: jqmc.jqmc_cli
+  version: 1
+  lifecycle: cutover
+  title: CLI guarantees
+  purpose: Which test guarantees what, by which verdict method, for the jqmc CLI entry point and its twist dispatch.
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-CLI-TWIST-DISPATCH-001
+  overrides:
+    jqmc.jqmc_cli._collect_mpc_estimates:
+    - IMPL-CLI-TWIST-DISPATCH-001
+    - IMPL-CLI-MPC-ESTIMATOR-ROUTING-001
+    jqmc.jqmc_cli._validate_mpc_job_type:
+    - IMPL-CLI-TWIST-DISPATCH-001
+    - IMPL-CLI-MPC-ESTIMATOR-ROUTING-001
+    jqmc.jqmc_cli._log_twist_average_result:
+    - IMPL-CLI-TWIST-DISPATCH-001
+    - IMPL-CLI-MPC-TWIST-OUTPUT-001
+    jqmc.output_parser._last:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._last_breakdown:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._percent_to_fraction:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._value:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._shape:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._key_values:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_ufloat_short:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_force_table:
+    - MATH-CLI-FINAL-OUTPUT-CHAIN-001
+    jqmc.output_parser._parse_labelled_ufloat_table:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_stress_table:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_pressure_table:
+    - MATH-CLI-FINAL-OUTPUT-CHAIN-001
+    jqmc.output_parser.parse_run_metadata:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._new_vmc_step:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_vmc_steps:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._parse_vmc_step_detail:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_environment:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_input_parameters:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_system_info:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._first_values:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._ao_images:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._lattice_vectors:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._bspline:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._jastrow_dtn:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._lambda_matrix:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._parse_common:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._parse_twist_dispatch:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._parse_mpc_setup:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_twist_average_result:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_mcmc_log:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_vmc_log:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_lrdmc_log:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_jqmc_log:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser._coverage_patterns:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.unparsed_numeric_lines:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_tool_energy:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_tool_force:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_lrdmc_extrapolation:
+    - NUM-CLI-E2E-SMOKE-001
+    jqmc.output_parser.parse_last_exception:
+    - NUM-CLI-E2E-SMOKE-001
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

@@ -1,0 +1,37 @@
+id: MATH-HAM-FREE-ELECTRON-TWIST-SUPERCELL-001
+kind: mathematical
+name: Band folding of a free-electron supercell at Gamma onto the twist average of its primitive cell
+plain_language: >-
+  For four H nuclei in a triclinic primitive cell and a Jastrow-free Slater determinant of single plane waves
+  (up electrons in exp(i (G + k) . r), down electrons in exp(i (G - k) . r)), the production local energy and
+  kinetic energy of the n x 1 x 1 supercell at Gamma, built from all folded orbitals and evaluated at the
+  primitive configuration replicated along a1, divided by n, equal the production twist average
+  (bz_mean_energy) of the primitive-cell values at the folded twists at the same configuration: 2 x 1 x 1 with
+  twists 0 and 1/2 and equal weights, and 3 x 1 x 1 with the irreducible twists 0 and 1/3 and weights 1 and 2.
+  The supercell local energy has zero imaginary part, the primitive kinetic energies equal, full complex, an
+  independent NumPy determinant kinetic energy (exactly sum_occ |G + k|^2 / 2 in exact arithmetic) evaluated
+  per precision zone as compute_kinetic_energy routes it (plane-wave values from the fused ao_grad_lap
+  evaluation stored in the ao_eval dtype as the denominator, derivatives in ao_grad_lap, determinant algebra
+  in det_eval; fp64 in full), and the per-twist local energies differ by far
+  more than the tolerance. The strict zone policy applies at three seeded configurations with electrons also
+  outside the home cell. A wrong supercell Miller index, an omitted twist, the total instead of the per-cell
+  supercell energy, permuted irreducible weights and a wrong primitive twist must each fail. Full and mixed
+  are judged separately. The identity is exact only for this Jastrow-free single-plane-wave system; it is not
+  a finite-size or convergence claim for interacting states.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_supercell_folding.py::test_supercell_gamma_equals_twist_average_of_folded_primitive_cells
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fold: 2x1x1_full_zone}
+    - {fold: 3x1x1_irreducible}
+  - pytest_node: tests/test_jqmc_kernel/test_twist_supercell_folding.py::test_supercell_folding_rejects_wrong_folds
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fold: 2x1x1_full_zone, fault: wrong-miller}
+    - {fold: 2x1x1_full_zone, fault: omitted-twist}
+    - {fold: 2x1x1_full_zone, fault: total-not-per-cell}
+    - {fold: 2x1x1_full_zone, fault: wrong-twist}
+    - {fold: 3x1x1_irreducible, fault: permuted-weights}

@@ -1,0 +1,31 @@
+id: IMPL-RS-FAST-CUT-AO-VALUE-SCREEN-HIGH-L-001
+kind: implementation
+name: FAST-mode Rust AO value screens stay absolute for every accepted angular momentum
+plain_language: >-
+  The value cut of the screened FAST-mode Rust AO value kernels (compute_mo_single_cutoff_cart_into,
+  dot_aos_multi_cutoff_cart and the GFMC molecular candidate AO batch for Cartesian shells) is valid for every
+  angular momentum that AO construction and the native molecular FAST gates accept: the search for the cut radius
+  starts beyond every turning point of the Gaussian-polynomial value bound, so a bound that dips below
+  FAST_AO_SCREEN_ABS_BOUND = 1e-12 at zeta_min r^2 = 20.72 and rises above it farther out
+  cannot screen the larger radii. For one accepted Cartesian AO at the origin with powers (82, 0, 0), exponent 1 and
+  contraction coefficient 1e-9, at points on and next to the x axis with r^2 from 10 to 130 (the AO is below 1e-12 at
+  r^2 = 20.72 and above it farther out), every value a kernel drops is at most 1e-12 in magnitude and every
+  value it keeps equals the independent closed form c N x^82 exp(-r^2) (N from separable Gaussian integrals, c as
+  stored in the AO leaf) within the strict XLA-Rust consistency tolerance of the ao_eval zone; the kernels are
+  reached through the test-only binding compute_AOs_value_fast_cut. Full and mixed are each required.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_fast_cut_value_screen_bound.py::test_fast_value_screens_absolute_for_high_angular_momentum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+    executable_checks:
+      fast-cut-ao-values-high-l-vs-closed-form:
+        site: tests/test_rs_kernel/test_fast_cut_value_screen_bound.py::test_fast_value_screens_absolute_for_high_angular_momentum#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-fast-cut-ao-values, expression: "got[kept]"}
+        reference: {role: independent-closed-form-ao-values, expression: "ref[kept]"}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval]}

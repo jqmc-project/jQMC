@@ -1,0 +1,60 @@
+id: IMPL-RS-F32-AO-EVAL-SIMD-001
+native_evidence:
+- jqmc_rs::atomic_orbital::tests::cart_f32_shell_reuse_is_bitwise_per_ao
+- jqmc_rs::atomic_orbital::tests::fold_image_axis_f32_rows_is_bitwise_per_element_tree
+- jqmc_rs::atomic_orbital::tests::single_f32_value_is_bitwise_one_point_batch
+- jqmc_rs::complex_ao::fold_f32_tests::fold_complex_f32_rows_is_bitwise_per_element
+- jqmc_rs::fastmath::tests_f32::exp_f32_and_sincos_f32_match_libm_to_fp32_ulps
+kind: implementation
+name: The mixed-precision fp32 ao_eval kernels (GTO and plane-wave, real and complex) run vectorized fp32 transcendentals with XLA's zone arithmetic
+plain_language: >-
+  In mixed precision the ao_eval zone is fp32 (jqmc/_precision.py): XLA evaluates the standalone AO value kernel
+  with fp32 arithmetic and its own fp32 exp / sin / cos polynomials. The Rust fp32 kernels
+  (atomic_orbital::compute_aos_kernel_screened_f32 for real and complex Bloch GTO leaves, compute_pw_f32 for the
+  real plane-wave leaf, and the fp32 branch of complex_ao::compute_pw_complex_with_policy) keep the zone-local
+  operands, casts, products and reduction order of the scalar per-AO kernels, but loop over the points of a shell (or AO) and call
+  the vectorizable fastmath::exp_f32 and fastmath::sincos_f32 instead of scalar libm expf / cosf / sinf, and a
+  Cartesian shell shares each primitive exponential among its components. exp_f32 (cephes expf minimax, flushed
+  to +0 below exp(-87)) agrees with libm to RTOL_FASTMATH_F32_VS_LIBM and sincos_f32 (3-part Cody-Waite, cephes
+  sinf / cosf minimax) to ATOL_FASTMATH_F32_SINCOS_VS_LIBM for |x| <= 400, i.e. both sit at the fp32 rounding
+  level that XLA's own polynomials also differ by, so the Rust-versus-XLA mixed-precision parity contracts
+  apply unchanged and are judged by the mixed-mode runs of the Rust-versus-XLA suites. The shell-shared
+  Cartesian exponentials, the cached Cartesian fp32 normalizations and the contiguous-row fp32 image folds (real adjacent-tree reduce_sum, complex Bloch scatter with an exact signed-zero skip) give bit-identical values to the per-AO / per-element reference loops of the native tests. The single-position fp32 kernel atomic_orbital::compute_aos_single_f32_into (unscreened), which the per-move orbital columns of OrbData::compute_single / compute_single_into use under an fp32 ao_eval zone, gives the one-point batch value (kernel plus adjacent-tree image fold) bit for bit, molecular and periodic, spherical and Cartesian, up to l = 5. These fp32 kernels keep IEEE gradual underflow (no flush-to-zero control-word change, no unsafe code); XLA:CPU flushes fp32 subnormals to zero, so a Rust value can differ from XLA's by less than the smallest normal fp32 (1.2e-38), far below every ao_eval tolerance. Full precision is unaffected.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_sphe_matches_jax
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 0, lmax: 1}
+    - {seed: 0, lmax: 2}
+    - {seed: 0, lmax: 3}
+    - {seed: 4, lmax: 1}
+    - {seed: 4, lmax: 2}
+    - {seed: 4, lmax: 3}
+    - {seed: 19, lmax: 1}
+    - {seed: 19, lmax: 2}
+    - {seed: 19, lmax: 3}
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital.py::test_compute_aos_cart_matches_jax
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {seed: 1}
+    - {seed: 8}
+    - {seed: 27}
+  - pytest_node: tests/test_rs_kernel/test_atomic_orbital_pgto_anisotropic.py::test_pgto_anisotropic_value_matches_jax
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: slab, kind: sphe, seed: 0}
+    - {cell_name: slab, kind: sphe, seed: 7}
+    - {cell_name: slab, kind: cart, seed: 0}
+    - {cell_name: slab, kind: cart, seed: 7}
+    - {cell_name: oblique, kind: sphe, seed: 0}
+    - {cell_name: oblique, kind: sphe, seed: 7}
+    - {cell_name: oblique, kind: cart, seed: 0}
+    - {cell_name: oblique, kind: cart, seed: 7}
+  - pytest_node: tests/test_rs_kernel/test_complex_ao.py::test_compute_aos_complex
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {side: orb_data_up_spin}
+    - {side: orb_data_dn_spin}

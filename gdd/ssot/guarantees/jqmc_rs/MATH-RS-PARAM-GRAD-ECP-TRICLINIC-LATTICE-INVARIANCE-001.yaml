@@ -1,0 +1,23 @@
+id: MATH-RS-PARAM-GRAD-ECP-TRICLINIC-LATTICE-INVARIANCE-001
+kind: mathematical
+name: The periodic real-Gamma ECP parameter derivatives dE_L/dc are lattice-translation invariant on a triclinic cell
+plain_language: >-
+  Triclinic sibling of MATH-RS-PARAM-GRAD-ECP-NN1-MIN-IMAGE-001. param_grad_ecp.rs collect_mesh folds every
+  electron-nucleus displacement of the ECP non-local mesh to its periodic minimum image with the inverse of the cell
+  matrix. On a diagonal (cubic) cell inv(cell) equals inv(cell.T), so every committed periodic fixture leaves the
+  orientation of that inverse unchecked. On the Li ccECP J1+J2 Gamma Hamiltonian rebuilt on two triclinic cells
+  (tests/_triclinic_li_ecp.py: the committed bcc lithium cell and nuclei mapped by the fixed non-symmetric deformation of
+  the strain finite-difference test, mild, and additionally sheared, skew; every cell angle differs from 90 degrees and
+  inv(cell).T differs from inv(cell) by more than the comparison band), one up and one down electron, the home-cell copy
+  Xw puts each electron at a Gaussian offset (scale 0.3 bohr) from a nucleus and X = Xw + lattice vectors (four shift pairs) moves them whole
+  triclinic lattice vectors away. The native ECP non-local derivatives with respect to the J1 parameter, the J2 parameter
+  and the MO coefficients at X equal those at Xw (lattice-translation invariance of dE_L/dc for a real-Gamma
+  wavefunction), and the home-cell derivative is nonzero. Full and mixed are judged separately, each at the strict XLA-Rust
+  consistency tier of its own zone policy (no mixed-vs-full comparison).
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_param_grad_ecp_nn1_min_image.py::test_param_grad_ecp_triclinic_lattice_translation
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: j1_j12, cell: mild, shift: shift0}, {route: j1_j12, cell: mild, shift: shift1}, {route: j1_j12, cell: mild, shift: shift2}, {route: j1_j12, cell: mild, shift: shift3}, {route: j1_j12, cell: skew, shift: shift0}, {route: j1_j12, cell: skew, shift: shift1}, {route: j1_j12, cell: skew, shift: shift2}, {route: j1_j12, cell: skew, shift: shift3}, {route: j2_j12, cell: mild, shift: shift0}, {route: j2_j12, cell: mild, shift: shift1}, {route: j2_j12, cell: mild, shift: shift2}, {route: j2_j12, cell: mild, shift: shift3}, {route: j2_j12, cell: skew, shift: shift0}, {route: j2_j12, cell: skew, shift: shift1}, {route: j2_j12, cell: skew, shift: shift2}, {route: j2_j12, cell: skew, shift: shift3}, {route: mo_j12, cell: mild, shift: shift0}, {route: mo_j12, cell: mild, shift: shift1}, {route: mo_j12, cell: mild, shift: shift2}, {route: mo_j12, cell: mild, shift: shift3}, {route: mo_j12, cell: skew, shift: shift0}, {route: mo_j12, cell: skew, shift: shift1}, {route: mo_j12, cell: skew, shift: shift2}, {route: mo_j12, cell: skew, shift: shift3}]

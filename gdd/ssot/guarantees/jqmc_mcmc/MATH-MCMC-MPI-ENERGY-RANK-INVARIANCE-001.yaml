@@ -1,0 +1,44 @@
+id: MATH-MCMC-MPI-ENERGY-RANK-INVARIANCE-001
+kind: mathematical
+name: Two-rank MCMC energy and variance with jackknife errors equal the exact raw-sample reference
+plain_language: >-
+  Two actual MPI ranks, each holding ten fixed time slices of two walkers with integer weights and real or complex
+  energies that differ between the ranks, give get_E energy mean, energy error, variance mean and variance error equal
+  to the exact-rational delete-one (time block, walker) jackknife of the concatenated four-walker set, which removes
+  each rank's cell from the global sums. A one-rank accessor holding all four walkers must match the same reference.
+  Warmup and block counts 0/4 and 1/3 are required. A get_E rebuilt from its own source with the jackknife deletion
+  taken from the rank-local sums still matches on one rank but must fail on two ranks. Deterministic values are
+  compared at same-mode local_energy strict tolerances, not statistical confidence bands. This is stored-buffer
+  aggregation, not sampling correctness.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_mcmc_mpi_energy_matches_exact_rational_reference_and_serial
+    executable_checks:
+      energy-quartet-comparison-1:
+        site: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::_assert_energy_quartet#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: actual_value
+        reference:
+          role: existing-test-reference
+          expression: expected_value
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - local_energy
+        iterations:
+          variable: quantity
+          required_values:
+          - energy-mean
+          - energy-error
+          - variance-mean
+          - variance-error
+  - pytest_node: tests/test_jqmc_kernel/test_estimator_reduction_mpi.py::test_mcmc_mpi_energy_oracle_rejects_local_jackknife_deletion

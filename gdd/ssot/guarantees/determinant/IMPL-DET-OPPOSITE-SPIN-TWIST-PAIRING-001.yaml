@@ -1,0 +1,42 @@
+id: IMPL-DET-OPPOSITE-SPIN-TWIST-PAIRING-001
+kind: implementation
+name: Geminals whose spin channels are not an opposite-twist pair are refused
+plain_language: >-
+  Every complex Bloch geminal pairs its spin channels at opposite twists. Each channel's twist is the common k_point of
+  all its complex Bloch AO leaves (composite children included), it must be unique within the channel, and k_dn = -k_up;
+  each periodic-Gaussian leaf must carry image phases exp(2 pi i k . n) of its own twist. The down basis is the channel's
+  own: an independent beta basis need not equal alpha's (different plane-wave cutoffs, reordered rows and different AO
+  kinds are accepted); plane-wave and spline leaves are Bloch bases of any twist they carry. Channels with no electrons
+  are not paired. SD_data / AGP_data / AGPn_data sanity_check refuse a down channel at the same twist as the up channel
+  (beta's coefficients or their conjugates on the +k leaf) and a periodic-Gaussian +k leaf merely relabelled -k, so
+  Hamiltonian_data.load_from_hdf5 refuses a stored same-twist Hamiltonian with a regeneration error before any sampling.
+  The same check runs after every reconstruction that bypasses the constructors: checkpoint restart
+  (load_hamiltonian_from_checkpoint, hence MCMC / GFMC load_from_hdf5) for SD, AGP and AGPn, merge_rank_checkpoints and
+  load_twist. load_twist refuses an independent-spin twist-averaged input lacking the required /_meta/spin_twist_pairing
+  attribute at a complex twist. Evidence: an independent-spin periodic-Gaussian SD from the committed KUHF oxygen TREXIO
+  fixture and plane-wave and B-spline SDs from the committed O-lsda_k025 QE fixture with each broken down channel; a
+  written-and-reloaded same-twist periodic-Gaussian Hamiltonian; beta plane-wave bases with a smaller cutoff and with
+  permuted rows, accepted; AGP and AGPn checkpoints written by the real MCMC writer whose stored down twist is rewritten
+  to the up twist, refused by MCMC.load_from_hdf5; the TREXIO twist-average conversion with the pairing attribute
+  removed.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_opposite_spin_twist_policy.py::test_sanity_check_refuses_non_opposite_spin_twists
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {kind: pgto, construction: same_twist}
+    - {kind: pgto, construction: conj_coefficients_only}
+    - {kind: pgto, construction: relabelled_leaf}
+    - {kind: pw, construction: same_twist}
+    - {kind: pw, construction: conj_coefficients_only}
+    - {kind: bspline, construction: same_twist}
+    - {kind: bspline, construction: conj_coefficients_only}
+  - pytest_node: tests/test_jqmc_kernel/test_opposite_spin_twist_policy.py::test_independent_beta_plane_wave_basis_is_accepted
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{layout: smaller_cutoff}, {layout: reordered_rows}]
+  - pytest_node: tests/test_jqmc_kernel/test_integration_checkpoint_mcmc.py::test_restart_refuses_common_twist_independent_agp_and_agpn
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{geminal_class: AGP}, {geminal_class: AGPn}]
+  - pytest_node: tests/test_jqmc_kernel/test_opposite_spin_twist_policy.py::test_load_twist_refuses_unmarked_independent_spin_input

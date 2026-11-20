@@ -1,0 +1,13 @@
+id: IMPL-TOOL-MCMC-ENERGY-REFUSALS-001
+kind: implementation
+name: MCMC compute-energy refuses settings that leave the estimate undefined
+plain_language: >-
+  mcmc compute-energy rejects a warmup that leaves fewer measurements than bins on any rank, more bins than
+  measurements, zero bins, a negative warmup, and a run whose delete-one-bin weight sums are not positive, with an
+  explicit usage error and without printing an energy line.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_mcmc_compute_energy_rejects_vacuous_binning
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestComputeEnergy::test_mcmc_compute_energy_rejects_zero_weights

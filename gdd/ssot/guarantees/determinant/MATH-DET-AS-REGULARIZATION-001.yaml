@@ -1,0 +1,31 @@
+id: MATH-DET-AS-REGULARIZATION-001
+kind: mathematical
+name: AS regularization identity
+plain_language: The AS-regularized determinant evaluation agrees with the reference behavior in the reviewed regime.
+verdict_methods:
+- VM-MATH-REVIEWED-IDENTITY-001
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_determinant.py::TestASRegularization::test_comparing_AS_regularization
+    executable_checks:
+      comparison-1:
+        site: tests/test_jqmc_kernel/test_determinant.py::TestASRegularization.test_comparing_AS_regularization#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: R_AS_debug
+        reference:
+          role: existing-test-reference
+          expression: R_AS_jax
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - det_eval

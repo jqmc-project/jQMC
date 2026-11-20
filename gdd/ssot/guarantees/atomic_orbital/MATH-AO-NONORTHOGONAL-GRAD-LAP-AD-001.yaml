@@ -1,0 +1,27 @@
+id: MATH-AO-NONORTHOGONAL-GRAD-LAP-AD-001
+kind: mathematical
+name: Periodic pGTO gradients and Laplacians on FCC and triclinic cells against AD of a brute-force lattice sum
+plain_language: >-
+  On the primitive FCC and triclinic cells, with two atoms strictly inside the home cell and s, p, d, f shells
+  including a diffuse s exponent, the analytic periodic Cartesian and spherical pGTO gradients and Laplacians at
+  seeded electrons inside and outside the home cell equal forward-mode automatic differentiation (gradient and
+  Hessian trace) of the test's own brute-force lattice sum of the open-boundary AO kernel over every image inside
+  a Gaussian cutoff it derives itself, at Gamma and k = (0.25, -0.1, 0.4). The production leaf uses the tighter
+  truncation AO_IMAGE_TRUNCATION_ATOL**2 because the production bound is stated for values; the budget is the
+  ao_eval/ao_grad_lap strict policy plus that truncation. Halving the per-atom image radius must fail on the
+  triclinic cell. Full and mixed are judged separately. Nuclei outside the home cell are not claimed here.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_grad_lap_ad.py::test_periodic_pgto_grad_and_laplacian_match_ad_of_bruteforce_lattice_sum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {cell_name: primitive_fcc_si, kind: cart}
+    - {cell_name: primitive_fcc_si, kind: sphe}
+    - {cell_name: triclinic_skewed, kind: cart}
+    - {cell_name: triclinic_skewed, kind: sphe}
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_grad_lap_ad.py::test_noncubic_grad_lap_ad_oracle_rejects_halved_image_radius
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: halve-per-atom-image-radius}

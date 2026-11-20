@@ -1,0 +1,73 @@
+id: IMPL-DOC-GDD-MIXED-FIDELITY-PRIMARY-BINDING-001
+kind: implementation
+name: Mixed-fidelity primaries bind real source and an executable node invocation
+plain_language: 'Every authored VM-NUM-MIXED-FIDELITY-001 node has a nonempty independently authored primary. Its site and
+  actual/reference expressions match the real ToleranceSourceIndex and the node''s freshly derived typed observations; requirement_errors
+  validates comparator, precision and the unchanged central quantity policy. A primary in a helper must be reachable through
+  supported explicit comparison-procedure calls from the test. Imported helpers are accepted when that actual binding exists;
+  an imported definition or opaque callback alone is not evidence. Independent source mutations reject pytest Class::method
+  addresses, wrong surviving ordinals, substituted operands/comparator/quantity/mode, missing authoring, and unreachable or
+  forwarded helper definitions after fresh derivation. The metatest establishes static contract bookkeeping, not a scientific
+  value or runtime receipt; positive fidelity and expected comparator rejection remain distinct. It changes no numerical budget,
+  verdict registry or global AD policy. On the same NUM-migrated pytest nodes, existing authored VM-MATH-AD-ORACLE-001 registrations
+  containing full precision are independently checked against their own declared method, precision, comparator, operands and
+  central policy. Unmigrated None mathematical registrations and other mathematical identities acquire no new authoring obligation.
+  A source-only witness inserts a mixed perturbation call with tolerance keywords: its ordinal shifts the retained full allclose
+  while the numerical mixed primary stays valid, and the detector rejects the stale full site after fresh derivation. This
+  source fixture is not an execution of a scientific AD oracle. Source-resolved synchronous assertion calls may return
+  diagnostics that are ignored, assigned, returned through a wrapper or aggregated without suppressing the executed assertion.
+  Every concrete case in the executable check precision must still reach its authored typed primary. Finite fixtures retain
+  rejection of uncalled wrappers or unreachable definitions, escaped callbacks, different source identities, substituted
+  operands or quantity policies, incomplete or wrong forwarded cases, and recovered errors.'
+verdict_methods:
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_gdd_simplification/test_mixed_fidelity_primary_bindings.py::test_all_authored_mixed_fidelity_primaries_bind_actual_nodes
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_gdd_simplification/test_mixed_fidelity_primary_bindings.py::test_missing_authored_primary_is_not_legacy_acceptance
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - replacement: null
+    - replacement: {}
+  - pytest_node: tests/test_gdd_simplification/test_mixed_fidelity_primary_bindings.py::test_regenerated_binding_rejects_policy_and_operand_substitution
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {fault: quantity}
+    - {fault: comparator}
+    - {fault: operand}
+    - {fault: mode}
+    - {fault: 'none'}
+  - pytest_node: tests/test_gdd_simplification/test_mixed_fidelity_primary_bindings.py::test_retained_authored_full_math_bindings_on_migrated_nodes
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_gdd_simplification/test_mixed_fidelity_primary_bindings.py::test_mixed_perturbation_call_cannot_shift_the_retained_full_binding
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_gdd_simplification/test_mixed_fidelity_primary_bindings.py::test_imported_diagnostic_return_primary_requires_actual_case_calls
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {call_form: direct}
+    - {call_form: unreachable}
+    - {call_form: escaped}
+    - {call_form: wrong-source}
+    - {call_form: partial-case}
+    - {call_form: swallowed-error}
+    - {call_form: helper-only}

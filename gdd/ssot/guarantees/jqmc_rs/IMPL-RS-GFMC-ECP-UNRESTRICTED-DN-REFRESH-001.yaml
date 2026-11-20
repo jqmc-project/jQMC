@@ -1,0 +1,39 @@
+id: IMPL-RS-GFMC-ECP-UNRESTRICTED-DN-REFRESH-001
+kind: implementation
+name: Native molecular ECP GFMC refreshes a moved down-spin electron with the down-spin orbitals
+plain_language: >-
+  In the native real GFMC projection chunk of a molecular ECP Slater
+  determinant, the candidate-table refresh after a down-spin hop evaluates the
+  kinetic-lattice and ECP quadrature rows of the moved electron through the
+  occupied down-spin orbitals, not the up-spin ones. For a broken-symmetry
+  unrestricted ccECP H2 determinant (one up and one down electron, the down-spin
+  orbital polarized towards one nucleus and therefore different from the up-spin
+  orbital), the native GFMC_n and GFMC_t chains reproduce the production XLA
+  chains at the same seed and random mesh: per-step weights, local energies and
+  their squares, and the public energy agree at the strict XLA-Rust tier in Full
+  and Mixed, the walker positions agree to fp64 accumulator roundoff, and the
+  random keys are identical.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_unrestricted_ecp_dn_refresh.py::test_gfmc_unrestricted_ecp_down_spin_refresh_matches_xla
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{driver: n}, {driver: t}]
+    executable_checks:
+      unrestricted-gfmc-per-step-values:
+        site: tests/test_rs_kernel/test_gfmc_unrestricted_ecp_dn_refresh.py::_assert_strict_driver_parity#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-same-input, expression: native_values}
+        reference: {role: xla-same-precision, expression: xla_values}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+      unrestricted-gfmc-public-energy:
+        site: tests/test_rs_kernel/test_gfmc_unrestricted_ecp_dn_refresh.py::_assert_strict_driver_parity#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: native-same-input, expression: native_energy}
+        reference: {role: xla-same-precision, expression: xla_energy}
+        precision:
+          full: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}
+          mixed: {policy: CMP-XLA-RUST-STRICT-001, zones: [ao_eval, jastrow_eval, det_eval, coulomb, wf_kinetic, swct]}

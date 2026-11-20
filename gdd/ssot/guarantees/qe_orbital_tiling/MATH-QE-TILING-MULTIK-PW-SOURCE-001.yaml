@@ -1,0 +1,19 @@
+id: MATH-QE-TILING-MULTIK-PW-SOURCE-001
+kind: mathematical
+name: A tiled eight-k QE PW projection reproduces its raw source bands in the physical supercell
+plain_language: >-
+  The committed Li_k_twist eight-k QE save, projected onto PW blocks and tiled into a physical 2x2x2 supercell at
+  supertwist (1/2, 1/2, 1/2), reproduces its raw occupied Fourier bands, evaluated in the test from the stored QE
+  coefficients, and their determinant at eight fixed positions within the medium ao_eval/tiling_eval tolerance. The
+  common adapter assembles a (+k_s,-k_s) occupied SD and a physical Ewald/ccECP Hamiltonian whose finite XLA local
+  energy is unchanged by HDF5 reload and equals that of an explicit dense-supercell PW SD built only in the test, within
+  the medium local-energy tolerance. Full and mixed are judged separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_orbital_tiling.py::test_real_qe_multik_pw_matches_raw_source_supercell_sum
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

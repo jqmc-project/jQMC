@@ -1,0 +1,30 @@
+id: IMPL-GFMC-INCREMENTAL-TWIN-PERIODIC-COMPLEX-001
+kind: implementation
+name: XLA driver incremental twins at complex twist, with DTN, and on a skewed cell, compared in real and imaginary parts
+plain_language: >-
+  GFMC_t and GFMC_n production runs (incremental interval potential) and JQMC_GFMC_POT_FULL_RECOMPUTE=1 runs, same seed,
+  two walkers and three stored steps, on lithium.h5 and lithium_k025.h5 (Li ccECP, real Gamma and k = (0.25, 0, 0)) each
+  with J1 + J2 and with the DTN Jastrow, and on H4_pbc_ae_k025_cart.h5 rewritten onto a strongly skewed triclinic cell
+  basis (all-electron, complex, non-orthogonal metric) from an unwrapped start in which electrons sit up to eight cells
+  apart, beyond the real-space image shells of its Ewald tables. Stored w_L, e_L and e_L2 agree separately in real and
+  imaginary parts at the incremental-twin tolerance (no real projection), walkers and PRNG keys are byte-identical, the
+  incremental branch is traced and counts updates while the twin counts none, and at k != Gamma the stored e_L has a
+  non-zero imaginary part. On the skewed cell, skipping the nearest-image search in the carried ee real-space update, and
+  on every fixture, zeroing the imaginary half of the carried structure factor, fails the comparison in both modes.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_gfmc_incremental_twin_xla.py::test_gfmc_xla_incremental_twin_periodic_complex
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fixture: lithium_j12, driver: t}
+    - {fixture: lithium_j12, driver: n}
+    - {fixture: lithium_jdtn, driver: t}
+    - {fixture: lithium_jdtn, driver: n}
+    - {fixture: lithium_k025_j12, driver: t}
+    - {fixture: lithium_k025_j12, driver: n}
+    - {fixture: lithium_k025_jdtn, driver: t}
+    - {fixture: lithium_k025_jdtn, driver: n}
+    - {fixture: h4_skew_k025, driver: t}
+    - {fixture: h4_skew_k025, driver: n}

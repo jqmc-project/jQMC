@@ -1,0 +1,33 @@
+id: MATH-RS-GFMC-COMB-MASS-001
+kind: mathematical
+name: Exact comb-resampling mass on a complete finite offset grid
+plain_language: >-
+  For each of six explicit nonnegative integer-weight fixtures with power-of-two total W,
+  the native comb kernel is evaluated at every offset (2*j+1)/(2*W), j=0..W-1.
+  Across this entire finite grid, the exact integer descendant count of each parent must
+  equal the walker count times its weight. Unequal and permuted weights, zero-mass parents,
+  one walker, equal weights and one supported parent are required in both precision modes.
+  This deterministic mass identity has no sampling error, sigma band or fitted tolerance.
+  It does not assert ground-state convergence or the quality of an arbitrary RNG.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc.py::test_reconfigure_exact_descendant_totals
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {weights: [1, 2, 5, 8]}
+    - {weights: [8, 1, 5, 2]}
+    - {weights: [0, 1, 3, 0]}
+    - {weights: [1]}
+    - {weights: [1, 1, 1, 1]}
+    - {weights: [0, 0, 16, 0]}
+    executable_checks:
+      descendant-mass:
+        site: tests/test_rs_kernel/test_gfmc.py::test_reconfigure_exact_descendant_totals#exact-comparison-1
+        comparator: numpy.testing.assert_array_equal
+        actual: {role: descendants-over-complete-offset-grid, expression: descendants}
+        reference: {role: exact-integer-weighted-descendants, expression: expected}
+        precision:
+          full: {policy: CMP-EXACT-VALUES-001}
+          mixed: {policy: CMP-EXACT-VALUES-001}

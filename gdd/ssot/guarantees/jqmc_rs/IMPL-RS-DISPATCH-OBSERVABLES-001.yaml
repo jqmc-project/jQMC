@@ -1,0 +1,104 @@
+id: IMPL-RS-DISPATCH-OBSERVABLES-001
+kind: implementation
+name: Rust dispatch and observable-context equivalence
+plain_language: The Rust dispatch layer selects the declared kernels, dispatch equivalence holds across routes, and observable
+  contexts are equivalent between the Rust and XLA drivers.
+verdict_methods:
+- VM-IMPL-BACKEND-PARITY-001
+- VM-ERROR-DISPOSITION-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_env_flag_off_disables_native_sweep_no_error
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_gpu_backend_disables_native_dispatch_no_error
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_periodic_opt_geminal_param_deriv_is_native_and_silent
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_walker_order_and_dtype_preserved_across_rust_boundary
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - seed: 90210
+      nw: 4
+    executable_checks:
+      own-walker-energy:
+        site: tests/test_rs_kernel/test_rust_dispatch.py::test_walker_order_and_dtype_preserved_across_rust_boundary#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: driver-final-energy-in-walker-order
+          expression: actual
+        reference:
+          role: xla-direct-energy-at-same-walker-positions
+          expression: reference
+        iterations:
+          variable: backend
+          required_values:
+          - rust
+          - xla
+        precision:
+          full:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+          mixed:
+            policy: CMP-XLA-RUST-STRICT-001
+            zones:
+            - wf_kinetic
+            - ao_eval
+            - det_eval
+            - coulomb
+            - jastrow_grad_lap
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_no_cross_walker_aliasing_on_repeated_direct_kernel_calls
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch_equivalence.py::test_mcmc_rust_jax_dispatch_equivalent
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch_equivalence.py::test_mcmc_rust_jax_dispatch_energy_chunk
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch_equivalence.py::test_mcmc_rust_jax_dispatch_equivalent_qe_exotic
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch_equivalence.py::test_mcmc_rust_jax_dispatch_equivalent_qe_zero_k_complex_dtn
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch_equivalence.py::test_mcmc_rust_jax_dispatch_mixed_built_ham
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch_equivalence.py::test_mcmc_rust_param_deriv_free_vs_ctx_identity
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch_equivalence.py::test_mcmc_rust_jax_dispatch_param_deriv_molecular
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch_equivalence.py::test_mcmc_rust_jax_dispatch_param_deriv_periodic
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_ctx_sweep_equiv_molecular
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_ctx_sweep_equiv_twist
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_complex_bspline_dtn_ctx_shares_geminal_and_matches_free_kernels
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_run_energy_chunk_equiv_per_step
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_run_energy_chunk_forces_equiv_per_step
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - pattern: mol_ecp_sphe_j12
+    - pattern: mol_cart_sd_j12
+    - pattern: pbc_gamma_sphepgto_j12
+    - pattern: bspline_gamma_jnone
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_run_energy_chunk_forces_complex_gated_to_per_step
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_run_energy_chunk_complex_energy_only_and_bitexact_gated
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_run_energy_chunk_complex_fast_equiv_per_step
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_run_energy_chunk_boundary_split
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_ctx_lazy_force_args_skipped_energy_only
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_ctx_cache_invalidation_on_param_update
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_ctx_equiv_molecular
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_ctx_equiv_pbc_real
+  - pytest_node: tests/test_rs_kernel/test_obs_ctx_equivalence.py::test_ctx_equiv_twist
+  - pytest_node: tests/test_rs_kernel/test_route_parity_observables.py::test_route_parity_observables
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_extension_import_failure_raises_runtime_error_with_build_instructions
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_cli_reports_xla_plus_rust_for_active_native_cpu_backend
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_cli_does_not_report_rust_when_extension_import_fails
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_cli_reports_xla_when_native_cpu_backend_is_inactive
+# Registered outside VM-IMPL-BACKEND-PARITY-001: the test asserts no value agreement, so it is not backend-parity evidence.
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_rust_dispatch.py::test_mixed_precision_enables_native_dispatch

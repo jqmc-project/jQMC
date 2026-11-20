@@ -1,0 +1,56 @@
+id: IMPL-HAM-TRICLINIC-ECP-LOCAL-ENERGY-ROUTES-001
+kind: implementation
+name: Periodic ccECP local energy on cubic, FCC and triclinic lattices through the analytic, autodiff and debug routes
+plain_language: >-
+  Lithium ccECP at Gamma, without a Jastrow, is used on its own cubic cell and is moved through the
+  production loader onto the primitive FCC cell of the Si fixture and onto a genuinely triclinic lattice (for
+  FCC and triclinic the physical lattice is non-orthogonal, not a skewed basis of a cubic lattice). On each
+  lattice, at three configurations every electron sits 0.6 Bohr from a lattice image of a nucleus, outside the
+  home cell and inside a live ECP core. The production local energy (analytic kinetic) equals the
+  autodiff-kinetic route _compute_local_energy_auto, and the production ECP energy (JAX Wigner-Seitz minimum
+  image, rank-1 ratios) equals the numpy debug ECP energy (numpy minimum image and nearest nucleus, all-pairs
+  local part, full determinant ratios), in the strict zone policy; the ECP energy is live at every
+  configuration. On every lattice, a production ECP projector without the minimum image and a fused AO
+  value/gradient/Laplacian kernel evaluated at the unwrapped electron must each fail with the message of the
+  route that disagrees. A production minimum image with a transposed metric must fail on the triclinic
+  lattice; on the cubic and FCC cells, which are symmetric matrices, that fault is the identity and the check
+  must still pass. Full and mixed are judged separately. Route parity, not an absolute value: an AO
+  image-list truncation fault is shared by all three routes and is not detected by this route comparison
+  alone; twists are not claimed (the debug ECP twin wraps its quadrature points without the Bloch phase).
+  This route guarantee must be read together with the existing blocking guarantees
+  [MATH-AO-NONORTHOGONAL-CELL-BRUTE-FORCE-001](../atomic-orbital/math-ao-nonorthogonal-cell-brute-force-001.md#guarantee-math-ao-nonorthogonal-cell-brute-force-001)
+  and [MATH-AO-OFF-CELL-NUCLEUS-BRUTE-FORCE-001](../atomic-orbital/math-ao-off-cell-nucleus-brute-force-001.md#guarantee-math-ao-off-cell-nucleus-brute-force-001),
+  which independently check the periodic AO image sums and face crossings, and
+  [PHY-HAM-UNIMODULAR-CELL-BASIS-INVARIANCE-001](phy-ham-unimodular-cell-basis-invariance-001.md#guarantee-phy-ham-unimodular-cell-basis-invariance-001),
+  which checks local-energy invariance including
+  Li ccECP. These guarantees are jointly required, not alternative evidence: the independent AO checks
+  detect shared image-list defects within their declared fixtures, and the energy invariants and this
+  route comparison check their use in the Hamiltonian. No individual ECP route comparison is claimed
+  to be an independent image-sum oracle, nor must every test detect every image-list fault.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_periodic_ecp_local_energy_analytic_matches_auto_and_debug_on_triclinic_lattice
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_periodic_ecp_local_energy_analytic_matches_auto_and_debug_on_cubic_and_fcc_lattices
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {lattice: cubic}
+    - {lattice: primitive_fcc}
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_triclinic_ecp_local_energy_routes_reject_route_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {fault: transpose-ecp-minimum-image-metric}
+    - {fault: drop-ecp-minimum-image}
+    - {fault: unwrapped-fused-grad-lap}
+  - pytest_node: tests/test_jqmc_kernel/test_noncubic_cell_oracles.py::test_cubic_and_fcc_ecp_local_energy_routes_reject_route_faults
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {lattice: cubic, fault: transpose-ecp-minimum-image-metric}
+    - {lattice: cubic, fault: drop-ecp-minimum-image}
+    - {lattice: cubic, fault: unwrapped-fused-grad-lap}
+    - {lattice: primitive_fcc, fault: transpose-ecp-minimum-image-metric}
+    - {lattice: primitive_fcc, fault: drop-ecp-minimum-image}
+    - {lattice: primitive_fcc, fault: unwrapped-fused-grad-lap}

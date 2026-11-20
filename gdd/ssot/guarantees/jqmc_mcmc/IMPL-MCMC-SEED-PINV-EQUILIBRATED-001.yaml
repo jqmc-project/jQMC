@@ -1,0 +1,31 @@
+id: IMPL-MCMC-SEED-PINV-EQUILIBRATED-001
+kind: implementation
+name: The pseudo-inverse that seeds or re-anchors the carried geminal inverse keeps the direction of a far electron
+plain_language: >-
+  The single pseudo-inverse that seeds or re-anchors a carried G^-1
+  (_geminal_pinv_from_matrix: the MCMC seed of the XLA route and of the real native routes, the MCMC and GFMC
+  boundary refreshes, the GFMC_t and GFMC_n projection seeds) scales the rows and then the columns of G by
+  powers of two to unit infinity norm, takes the SVD pseudo-inverse with the unchanged rcond_svd cutoff and
+  unscales it. A G whose singular values span more than 1/rcond_svd only because an electron is far from every
+  nucleus is invertible, and its pseudo-inverse is then its inverse. Evidence: committed all-electron open-shell UHF
+  N (5 up / 2 dn); one walker with the first up and the first down electron 10 bohr out, one with only the first
+  down electron 14 bohr out (both below the plain cutoff, both invertible) and one regular walker. For a 0.3 bohr
+  inward move of the first up and of the first down electron, the production rank-1 ratio from every site's
+  inverse (XLA seed, MCMC carried-inverse refresh, GFMC carried-inverse refresh with rebuilt G and with the streaming det state) equals
+  the ratio of two fresh LU determinants within get_tolerance_min((det_ratio,), strict); the same holds on the
+  native per-step MCMC route for the seed (G, G^-1) the production driver hands to the first native sweep
+  (mol_cart_sd_j12), with the native rank-1 kernels. The plain thresholded SVD gives ratio 1.0 against 3.6 in both
+  modes. Controls: on the regular walker the seed equals the plain thresholded pseudo-inverse within the strict
+  det_eval pair and bitwise once G is already equilibrated; scaling one row by 2^-80 rescales only the matching
+  column of the result, bitwise; an exactly zero row and two coincident up electrons stay singular (finite result,
+  probe residual above the refresh threshold). Full and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_sm_inverse_refresh.py::test_seed_pinv_keeps_far_electron_direction
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_rs_kernel/test_tier2_sweep_state.py::test_driver_far_seed_keeps_far_electron_ratios_exact
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

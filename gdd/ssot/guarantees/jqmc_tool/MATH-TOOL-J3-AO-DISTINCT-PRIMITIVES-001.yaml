@@ -1,0 +1,58 @@
+id: MATH-TOOL-J3-AO-DISTINCT-PRIMITIVES-001
+kind: mathematical
+name: J3 ao* bases keep each distinct input primitive once
+plain_language: >-
+  A three-body Jastrow basis built by jqmc-tool trexio convert-to with -j3 ao, ao-full, ao-small, ao-medium or
+  ao-large contains no two identical basis functions: each distinct primitive Gaussian of the input basis
+  (nucleus, angular momentum, angular component, exponent) appears at most once, also when a general-contraction
+  basis lists the same primitive in several contracted shells. ao and ao-full hold exactly the distinct primitives,
+  each with every Cartesian or real-spherical component of its angular momentum. ao-small, ao-medium and ao-large
+  hold, for each atom and angular momentum, exactly min(shell-table count, number of distinct exponents) radial
+  shells of the documented shell table (for example 4s2p for period-3 ao-small), each an input exponent with all
+  its components. The reference is counted from the raw TREXIO basis tables read with the trexio package,
+  independently of jqmc, on committed ccECP cc-pVTZ CuBr and all-electron cc-pVDZ N, Ar (Cartesian and spherical)
+  and periodic Gamma bcc Li (Cartesian and spherical) inputs, with the segmented ccECP cc-pVTZ N2 as a control.
+  Exponents are stored and compared exactly in fp64, independently of the active ao_eval evaluation dtype. Full and mixed precision
+  are checked separately.
+verdict_methods: [VM-MATH-REFERENCE-001]
+required_evidence:
+- verdict_method: VM-MATH-REFERENCE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_tool.py::TestTrexioConvertTo::test_j3_ao_basis_keeps_each_distinct_trexio_primitive_once
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_filename: CuBr_ecp_ccpvtz_cart.h5, choice: ao}
+    - {trexio_filename: CuBr_ecp_ccpvtz_cart.h5, choice: ao-full}
+    - {trexio_filename: CuBr_ecp_ccpvtz_cart.h5, choice: ao-small}
+    - {trexio_filename: CuBr_ecp_ccpvtz_cart.h5, choice: ao-medium}
+    - {trexio_filename: CuBr_ecp_ccpvtz_cart.h5, choice: ao-large}
+    - {trexio_filename: N_ae_ccpvdz_cart.h5, choice: ao}
+    - {trexio_filename: N_ae_ccpvdz_cart.h5, choice: ao-full}
+    - {trexio_filename: N_ae_ccpvdz_cart.h5, choice: ao-small}
+    - {trexio_filename: N_ae_ccpvdz_cart.h5, choice: ao-medium}
+    - {trexio_filename: N_ae_ccpvdz_cart.h5, choice: ao-large}
+    - {trexio_filename: Ar_ae_ccpvdz_cart.h5, choice: ao}
+    - {trexio_filename: Ar_ae_ccpvdz_cart.h5, choice: ao-full}
+    - {trexio_filename: Ar_ae_ccpvdz_cart.h5, choice: ao-small}
+    - {trexio_filename: Ar_ae_ccpvdz_cart.h5, choice: ao-medium}
+    - {trexio_filename: Ar_ae_ccpvdz_cart.h5, choice: ao-large}
+    - {trexio_filename: Ar_ae_ccpvdz_sphe.h5, choice: ao}
+    - {trexio_filename: Ar_ae_ccpvdz_sphe.h5, choice: ao-full}
+    - {trexio_filename: Ar_ae_ccpvdz_sphe.h5, choice: ao-small}
+    - {trexio_filename: Ar_ae_ccpvdz_sphe.h5, choice: ao-medium}
+    - {trexio_filename: Ar_ae_ccpvdz_sphe.h5, choice: ao-large}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_cart.h5, choice: ao}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_cart.h5, choice: ao-full}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_cart.h5, choice: ao-small}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_cart.h5, choice: ao-medium}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_cart.h5, choice: ao-large}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_sphe.h5, choice: ao}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_sphe.h5, choice: ao-full}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_sphe.h5, choice: ao-small}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_sphe.h5, choice: ao-medium}
+    - {trexio_filename: Li_pbc_ae_ccpvdz_sphe.h5, choice: ao-large}
+    - {trexio_filename: N2_ecp_ccpvtz_cart.h5, choice: ao}
+    - {trexio_filename: N2_ecp_ccpvtz_cart.h5, choice: ao-full}
+    - {trexio_filename: N2_ecp_ccpvtz_cart.h5, choice: ao-small}
+    - {trexio_filename: N2_ecp_ccpvtz_cart.h5, choice: ao-medium}
+    - {trexio_filename: N2_ecp_ccpvtz_cart.h5, choice: ao-large}

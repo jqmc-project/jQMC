@@ -1,15 +1,50 @@
-"""H2 PES pipeline: pySCF -> WF -> VMC (JSD, MO opt) -> MCMC + LRDMC (a=0.2).
+"""H2 PES pipeline: pySCF -> WF -> VMC (JSD, determinant opt) -> MCMC + LRDMC (a=ALAT).
 
 For each bond length R, this script:
   1. Runs pySCF locally to produce a TREXIO HDF5 file.
   2. Converts it to ``hamiltonian_data.h5`` with JSD Jastrow via WF_Workflow.
-  3. Optimizes J1/J2/J3 parameters and projected MOs via VMC_Workflow.
-  4. Launches MCMC and LRDMC (a=0.2) production runs (in parallel).
-  5. Prints a summary table with energies and atomic forces.
+  3. Optimizes J1/J2/J3 parameters and the rank-one determinant
+     (opt_geminal=True, fix_geminal_rank=1) via VMC_Workflow.
+  4. Launches MCMC and LRDMC (lattice spacing ALAT, in bohr) production
+     runs (in parallel).
+  5. Prints a summary table with energies and the largest per-atom force
+     norm (Ha/bohr), and plots the PES (forces converted to Ha/Angstrom).
 
 All R values are independent; their WF -> VMC -> {MCMC, LRDMC} chains
 run in parallel once the DAG is submitted to the Launcher.
 """
+
+# Copyright (C) 2024- Kosuke Nakano
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 
 import math
 import os
@@ -28,6 +63,7 @@ from scipy.interpolate import CubicSpline
 from jqmc_workflow import (
     Container,
     FileFrom,
+    ValueFrom,
     Launcher,
     LRDMC_Workflow,
     MCMC_Workflow,
@@ -38,11 +74,12 @@ from jqmc_workflow import (
 )
 
 # -- Configuration -------------------------------------------------
+# docs: configuration-begin
 SERVER = "cluster"
 QUEUE_LABEL = "cores-120-mpi-120-omp-1-1h"
 
 NUM_OPT_STEPS = 120  # VMC optimization steps
-WF_DUMP_FREQ = 20  # WF dumping freq.
+WF_DUMP_FREQ = 1  # dump every step: VMC_Workflow hands on the average of the last 20 steps
 Dt = 1.2  # MCMC hopping distance
 ALAT = 0.3  # LRDMC lattice spacing
 TARGET_SNR = 6.0  # target signal_to_noise for convergence.
@@ -56,26 +93,16 @@ TARGET_LRDMC_ERROR = 5e-5  # Target statistical error (Ha)
 PRECISION_MODE = "full"  # "full" or "mixed"
 
 R_VALUES = [
-    0.40,
-    0.45,
     0.50,
-    0.55,
     0.60,
-    0.65,
     0.70,
     0.74,
     0.80,
-    0.85,
     0.90,
-    0.95,
     1.00,
-    1.05,
-    1.10,
-    1.15,
-    1.20,
-    1.30,
-    1.40,
 ]
+
+# docs: configuration-end
 
 # -- pySCF script template ----------------------------------------
 PYSCF_TEMPLATE = '''\
@@ -134,25 +161,22 @@ def extract_hf_energy(pyscf_output: str) -> float | None:
 
 
 def format_energy(energy: float | None, error: float | None) -> str:
-    """Format energy as ``-X.XXXXX(YY)`` (error in last digits)."""
+    """Format a value as ``-X.XXXXX(YY)`` (two significant digits of error in the last digits)."""
     if energy is None or error is None:
         return "N/A"
     if error == 0:
         return f"{energy:.5f}(0)"
     n_dec = max(0, -math.floor(math.log10(error)) + 1)
     err_in_last = round(error * 10**n_dec)
+    if err_in_last >= 100:  # e.g. 9.96e-5 rounds up to a third digit
+        n_dec -= 1
+        err_in_last = round(error * 10**n_dec)
     return f"{energy:.{n_dec}f}({err_in_last})"
 
 
 def format_force(force: float | None, error: float | None) -> str:
-    """Format atomic force similarly to energy."""
-    if force is None or error is None:
-        return "N/A"
-    if error == 0:
-        return f"{force:.5f}(0)"
-    n_dec = max(0, -math.floor(math.log10(error)) + 1)
-    err_in_last = round(error * 10**n_dec)
-    return f"{force:.{n_dec}f}({err_in_last})"
+    """Format an atomic force like :func:`format_energy`."""
+    return format_energy(force, error)
 
 
 def extract_max_force_norm(
@@ -246,7 +270,7 @@ def build_pipeline() -> tuple[list[Container], dict[float, Container], dict[floa
         label_lrdmc = f"lrdmc-{R:.2f}"
         trexio_file = trexio_filename(R)
 
-        # WF: TREXIO -> hamiltonian_data.h5 (JSD: J1 + J2 + J3-MO)
+        # WF: TREXIO -> hamiltonian_data.h5 (JSD: J1 + J2 + J3 AO-small)
         wf = Container(
             label=label_wf,
             dirname=os.path.join(r_dir(R), "01_wf"),
@@ -259,7 +283,7 @@ def build_pipeline() -> tuple[list[Container], dict[float, Container], dict[floa
             ),
         )
 
-        # VMC: Jastrow + projected-MO optimization
+        # VMC: Jastrow + determinant optimization
         vmc = Container(
             label=label_vmc,
             dirname=os.path.join(r_dir(R), "02_vmc"),
@@ -271,20 +295,28 @@ def build_pipeline() -> tuple[list[Container], dict[float, Container], dict[floa
                 wf_dump_freq=WF_DUMP_FREQ,
                 Dt=Dt,
                 num_opt_steps=NUM_OPT_STEPS,
+                # Code minimums: 30 warmup measurements and 10 bins.
+                num_mcmc_warmup_steps=30,
+                num_mcmc_bin_blocks=10,
                 pilot_mcmc_steps=50,
                 pilot_vmc_steps=20,
                 opt_J1_param=True,
                 opt_J2_param=True,
                 opt_J3_param=True,
-                opt_lambda_param=True,
-                opt_with_projected_MOs=True,
+                # Optimize the determinant while keeping it a single Slater
+                # determinant: fix_geminal_rank = N_occ.
+                # H2 is a closed-shell singlet -> N_occ = N_ae / 2 = 1.
+                opt_geminal=True,
+                fix_geminal_rank=1,
                 target_error=TARGET_VMC_ERROR,
                 target_snr=TARGET_SNR,
                 energy_slope_sigma_threshold=ENERGY_SLOPE_THRESHOLD,
                 optimizer_kwargs={"method": "sr", "delta": 0.300, "epsilon": 0.010, "use_lm": True},
                 max_time=3000,
                 poll_interval=120,
-                max_continuation=1,
+                # Up to 3 production runs of NUM_OPT_STEPS each; stops early
+                # once the S/N and energy-slope criteria are met.
+                max_continuation=3,
                 precision_mode=PRECISION_MODE,
             ),
         )
@@ -294,7 +326,7 @@ def build_pipeline() -> tuple[list[Container], dict[float, Container], dict[floa
             label=label_mcmc,
             dirname=os.path.join(r_dir(R), "03_mcmc"),
             input_files=[
-                FileFrom(label_vmc, f"hamiltonian_data_opt_step_{NUM_OPT_STEPS}.h5"),
+                FileFrom(label_vmc, ValueFrom(label_vmc, "optimized_hamiltonian")),
             ],
             rename_input_files=["hamiltonian_data.h5"],
             workflow=MCMC_Workflow(
@@ -319,7 +351,7 @@ def build_pipeline() -> tuple[list[Container], dict[float, Container], dict[floa
             label=label_lrdmc,
             dirname=os.path.join(r_dir(R), "04_lrdmc"),
             input_files=[
-                FileFrom(label_vmc, f"hamiltonian_data_opt_step_{NUM_OPT_STEPS}.h5"),
+                FileFrom(label_vmc, ValueFrom(label_vmc, "optimized_hamiltonian")),
             ],
             rename_input_files=["hamiltonian_data.h5"],
             workflow=LRDMC_Workflow(
@@ -365,13 +397,13 @@ def print_summary_table(
         f"| {'R (A)':>6} "
         f"| {'E_HF (Ha)':>13} "
         f"| {'E_MCMC (Ha)':>15} "
-        f"| {'F_MCMC (Ha/A)':>15} "
+        f"| {'F_MCMC (Ha/bohr)':>16} "
         f"| {'MCMC t_net':>10} "
         f"| {'E_LRDMC (Ha)':>15} "
-        f"| {'F_LRDMC (Ha/A)':>16} "
+        f"| {'F_LRDMC (Ha/bohr)':>17} "
         f"| {'LRDMC t_net':>11} |"
     )
-    separator = f"|{'-' * 8}|{'-' * 15}|{'-' * 17}|{'-' * 17}|{'-' * 12}|{'-' * 17}|{'-' * 18}|{'-' * 13}|"
+    separator = f"|{'-' * 8}|{'-' * 15}|{'-' * 17}|{'-' * 18}|{'-' * 12}|{'-' * 17}|{'-' * 19}|{'-' * 13}|"
     print(header)
     print(separator)
 
@@ -412,8 +444,8 @@ def print_summary_table(
 
         row = (
             f"| {R:6.2f} | {hf_str:>13} "
-            f"| {mcmc_e_str:>15} | {mcmc_f_str:>15} | {mcmc_t_str:>10} "
-            f"| {lrdmc_e_str:>15} | {lrdmc_f_str:>16} | {lrdmc_t_str:>11} |"
+            f"| {mcmc_e_str:>15} | {mcmc_f_str:>16} | {mcmc_t_str:>10} "
+            f"| {lrdmc_e_str:>15} | {lrdmc_f_str:>17} | {lrdmc_t_str:>11} |"
         )
         print(row)
 
@@ -532,10 +564,18 @@ def _plot_panel(ax, R, E, E_err, Fz, Fz_err, label):
     return ax2
 
 
-def plot_pes(base_dir: str) -> str:
-    """Generate H2 PES plot (MCMC + LRDMC) and return the PDF path."""
+def plot_pes(base_dir: str) -> str | None:
+    """Generate H2 PES plot (MCMC + LRDMC) and return the PDF path.
+
+    Returns ``None`` (and prints a message) when fewer than two geometries
+    completed for either method, since a spline through fewer points is
+    meaningless; the per-stage logs then explain which stage stopped.
+    """
     R_mcmc, E_mcmc, Ee_mcmc, Fz_mcmc, Fze_mcmc = _load_pes_data(base_dir, "03_mcmc")
     R_lrdmc, E_lrdmc, Ee_lrdmc, Fz_lrdmc, Fze_lrdmc = _load_pes_data(base_dir, "04_lrdmc")
+    if len(E_mcmc) < 2 or len(E_lrdmc) < 2:
+        print("Not enough completed geometries to plot a PES (need at least two per method); see the per-stage logs.")
+        return None
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5.5))
 
@@ -576,4 +616,5 @@ if __name__ == "__main__":
 
     # 4) PES plot
     pdf_path = plot_pes(base_dir)
-    print(f"PES plot saved: {pdf_path}")
+    if pdf_path is not None:
+        print(f"PES plot saved: {pdf_path} (and the matching .png)")

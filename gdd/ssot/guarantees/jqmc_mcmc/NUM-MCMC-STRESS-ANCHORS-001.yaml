@@ -1,0 +1,17 @@
+id: NUM-MCMC-STRESS-ANCHORS-001
+kind: numerical
+name: Stress finite-difference anchor and kernel smoke
+plain_language: The Hellmann-Feynman stress agrees with a per-walker finite difference, and the composite and DTN stress
+  kernels run finite; the smoke rows are never correctness oracles.
+verdict_methods:
+- VM-NUM-FD-ANCHOR-001
+- VM-NUM-SMOKE-001
+required_evidence:
+- verdict_method: VM-NUM-FD-ANCHOR-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestMCMCStressAD::test_stress_HF_fd_vs_ad_per_walker
+- verdict_method: VM-NUM-SMOKE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestCompositeAO::test_stress_HF_composite_aos_kernel_runs
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestCompositeAO::test_stress_PP_composite_aos_kernel_runs
+  - pytest_node: tests/test_jqmc_kernel/test_integration_mcmc_stress.py::TestDTNRegression::test_stress_HF_PP_pgto_with_DTN_finite

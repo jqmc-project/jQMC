@@ -1,0 +1,157 @@
+{
+  "schema_format": 1,
+  "schema_id": "reviewed-rust_inventory.v1",
+  "match": {
+    "path": "gdd/ssot/inventories/rust_inventory.yaml"
+  },
+  "document_schema_version": 1,
+  "required_top_level": [
+    "schema_version",
+    "vocabularies",
+    "rust_tests",
+    "python_exports",
+    "document"
+  ],
+  "optional_top_level": [],
+  "runtime_schema": {
+    "type": "mapping",
+    "properties": {
+      "schema_version": {
+        "type": "integer",
+        "const": 1
+      },
+      "vocabularies": {
+        "type": "mapping",
+        "properties": {
+          "test_kinds": {
+            "type": "sequence",
+            "items": {
+              "type": "string",
+              "min_length": 1
+            },
+            "min_items": 1,
+            "unique_items": true
+          },
+          "export_statuses": {
+            "type": "sequence",
+            "items": {
+              "type": "string",
+              "min_length": 1
+            },
+            "min_items": 1,
+            "unique_items": true
+          }
+        },
+        "required": [
+          "test_kinds",
+          "export_statuses"
+        ],
+        "additional_properties": false
+      },
+      "rust_tests": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "id": {
+              "type": "string",
+              "min_length": 1
+            },
+            "kind": {
+              "type": "string",
+              "min_length": 1,
+              "enum_from": "vocabularies.test_kinds"
+            }
+          },
+          "required": [
+            "id",
+            "kind"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 1,
+        "unique_by": [
+          "id"
+        ]
+      },
+      "python_exports": {
+        "type": "sequence",
+        "items": {
+          "type": "mapping",
+          "properties": {
+            "name": {
+              "type": "string",
+              "min_length": 1
+            },
+            "status": {
+              "type": "string",
+              "min_length": 1,
+              "enum_from": "vocabularies.export_statuses"
+            }
+          },
+          "required": [
+            "name",
+            "status"
+          ],
+          "additional_properties": false
+        },
+        "min_items": 1,
+        "unique_by": [
+          "name"
+        ]
+      },
+      "document": {
+        "type": "mapping",
+        "properties": {
+          "id": {
+            "type": "string",
+            "min_length": 1,
+            "const": "jqmc.inventories.rust-inventory"
+          },
+          "version": {
+            "type": "integer",
+            "const": 1
+          },
+          "title": {
+            "type": "string",
+            "min_length": 1
+          },
+          "lifecycle": {
+            "type": "string",
+            "min_length": 1,
+            "const": "pre-cutover"
+          },
+          "purpose": {
+            "type": "string",
+            "min_length": 1
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "title",
+          "lifecycle",
+          "purpose"
+        ],
+        "additional_properties": false
+      }
+    },
+    "required": [
+      "schema_version",
+      "vocabularies",
+      "rust_tests",
+      "python_exports",
+      "document"
+    ],
+    "additional_properties": false
+  },
+  "document_block": {
+    "required_fields": [
+      "id",
+      "version",
+      "title",
+      "lifecycle",
+      "purpose"
+    ]
+  }
+}

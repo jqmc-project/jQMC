@@ -1,0 +1,25 @@
+id: IMPL-OPT-SR-NONFINITE-DIAGNOSTIC-001
+kind: implementation
+name: A non-finite SR centering failure names the offending parameter blocks and their non-finite counts
+plain_language: >-
+  When the SR global centering statistics are non-finite, build_sr_coordinate_samples still refuses the
+  step, and the error names every offending parameter block with its non-finite raw-source entries, transformed
+  real-coordinate entries, affected samples and first offending sample, and non-finite weighted sums, plus a
+  non-finite weighted local-energy sum. It is produced at every verbosity, only on the failure path, and the values
+  are reported, never repaired. Evidence: the C8 two-block batch (real block r, complex block z) with one NaN sample
+  in one block under the local reduction and under caller-supplied global statistics, and with finite local sources
+  but a non-finite reduced weighted sum of one block (another rank); only the offending block is named, with the
+  exact counts.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_wide_real.py::test_nonfinite_centering_statistics_name_the_offending_block
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {bad_block: r, statistics: local}
+    - {bad_block: r, statistics: global}
+    - {bad_block: r, statistics: remote}
+    - {bad_block: z, statistics: local}
+    - {bad_block: z, statistics: global}
+    - {bad_block: z, statistics: remote}

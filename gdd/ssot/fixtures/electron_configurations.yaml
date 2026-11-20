@@ -1,0 +1,183 @@
+schema_version: 1
+document:
+  id: jqmc.fixtures.electron-configurations
+  version: 1
+  lifecycle: cutover
+  title: Electron-configuration probe contract
+  purpose: >-
+    Every concrete guarantee case must state whether electron positions are
+    needed and, when they are, exactly which deterministic positions are tested,
+    including any conditioning filter on the realized geminal matrix G. This
+    file owns only that concern; the boundary table in gdd/ssot/README.md says
+    which sibling contract owns input origin, wavefunction physics, and
+    numerical comparison.
+
+# Who enforces each top-level section. A dotted gdd.engine name means the
+# executable engine type/function is the single authority for that section's
+# shapes and cross-field rules; a script path means a static push/PR gate.
+enforcement_map:
+  binding_contract: gdd.engine.evidence.ElectronConfigurationBinding
+  geminal_matrix_definition: scripts/check_gdd_wavefunction_fixtures_contract.py
+  configuration_generation_guarantees: tests/test_jqmc_kernel/test_analytic_coverage_evidence.py
+  anti_vacuity_rules: per-rule
+  enforcement: scripts/check_gdd_wavefunction_fixtures_contract.py
+
+binding_contract:
+  notes: >-
+    One binding per concrete guarantee case; an implicit default is forbidden,
+    and a pytest fixture name is not a binding. The exact required fields per
+    mode, their cross-field validation rules, and the realized-configuration
+    receipt shape are defined once, by gdd.engine.evidence
+    (ElectronConfigurationBinding and ElectronConfigurationReceipt), and are
+    deliberately not duplicated in this file. The vocabularies below are the reviewed policy choices; the
+    static gate verifies each one against the engine source.
+  field: electron_configuration
+  cardinality: exactly-one
+  implicit_default: forbidden
+  modes: [not-required, required]
+  position_sources: [explicit, seeded-random]
+  generation_patterns: [direct, rejection-screen, condition-target, rank-deficient-target]
+  conditioning_modes: [not-applicable, not-limited, upper-bounded, target-range]
+  violation_actions: [fail-case, deterministic-resample]
+  conditioning_subjects: [geminal-matrix-G, polynomial-evaluation-kappa]
+  conditioning_subject_rule: >-
+    geminal-matrix-G is the default subject and every cond_2(G) rule in this
+    file applies to it unchanged. polynomial-evaluation-kappa screens the evaluation condition number
+    kappa(x) = sum|t_i(x)| / |sum t_i(x)| of a polynomial-type quantity against
+    the central cap jqmc._precision.get_evaluation_kappa_max (rtol / ((4 l + 4) eps)).
+    It declares cond(G) not-applicable, never uses a cond(G) threshold,
+    observation, or comparator field, and is derived, observed, and completed
+    by gdd.engine.evaluation_conditioning. Its rejection-screen uses that
+    central cap with an explicit upper comparator in place of constrained
+    cond_2(G); seeded-random origin, deterministic-resample, and a positive
+    maximum attempt count are required exactly as for cond(G).
+  policy:
+    unseeded-randomness: forbidden
+    hidden-positions-in-pytest-fixture: forbidden
+    resampling: continues-declared-rng-stream
+    rejected-configurations: recorded-never-counted
+  independent_axes:
+    position_source_kind: coordinate-origin-form
+    generation_pattern: generation-algorithm-semantics
+    geminal_conditioning_mode: accepted-numerical-region
+    rule: >-
+      These are independent axes. A target-range says which realized values are
+      accepted but does not prove how they were generated; a generation pattern
+      does not replace a position-origin declaration.
+  generation_pattern_rules:
+    - pattern: direct
+      rule: >-
+        Explicit coordinates or a normal deterministic draw. It may fail a
+        declared bound but cannot claim deterministic rejection resampling.
+      enforced_by: gdd.engine.evidence.ElectronConfigurationBinding
+    - pattern: rejection-screen
+      rule: >-
+        Requires seeded-random origin, constrained cond_2(G), deterministic-resample,
+        and a positive maximum attempt count.
+      enforced_by: gdd.engine.evidence.ElectronConfigurationBinding
+    - pattern: condition-target
+      rule: >-
+        Requires target-range, a generator operation, control_parameter and
+        search_method arguments, a positive search limit, and loud fail-case
+        disposition when the target is not reached.
+      enforced_by: gdd.engine.evidence.ElectronConfigurationBinding
+    - pattern: rank-deficient-target
+      rule: >-
+        Reserved and rejected by the executable binding until numerical rank,
+        rank-threshold semantics, and expected production disposition are specified.
+      enforced_by: gdd.engine.evidence.ElectronConfigurationBinding
+
+# Reusable summaries for guarantee ledgers. These are unions over all required
+# evidence of the subscribing guarantee, not defaults for concrete test cases.
+geminal_matrix_definition:
+  symbol: G
+  production-operation: jqmc.determinant.compute_geminal_all_elements
+  construction: G = compute_geminal_all_elements(geminal_data, r_up, r_dn)
+  evaluation-point: each-realized-electron-configuration
+  condition-number:
+    name: cond_2(G)
+    definition: spectral-2-norm
+    formula: sigma_max(G) / sigma_min(G)
+    numpy-equivalent: numpy.linalg.cond(G, p=2)
+  evaluation-dtype:
+    real-G: float64
+    complex-G: complex128
+    reported-condition-number: float64
+  exclusions:
+    - atomic-orbital-overlap-matrix
+    - molecular-orbital-overlap-matrix
+    - optimizer-and-linear-method-matrices
+  rule: >-
+    Only this realized electron-configuration-dependent G is governed here. A
+    condition number used to make a basis, orbital transformation, or optimizer
+    constructible is a different contract and must not be reported as cond_2(G).
+    An optional sigma_min(G) guard stays separate because a condition number is
+    scale-invariant and cannot bound the smallest singular value.
+    An upper-bounded case is not evidence of ill-conditioned robustness, and a
+    target-range alone is not evidence that a condition-target algorithm ran.
+
+configuration_generation_guarantees:
+  - id: CFG-ELECTRON-CONDITION-TARGET-001
+    obligation_id: ECG-CONDITION-TARGET-001
+    name: Deterministic finite near-singular production-G target
+    scope: configuration-generation-only
+    evidence:
+      pytest_node: tests/test_jqmc_kernel/test_analytic_coverage_evidence.py::test_condition_target_generation_guarantee
+    declaration:
+      position_source_kind: seeded-random
+      generation_pattern: condition-target
+      geminal_conditioning_mode: target-range
+      minimum_cond_g: 1.0e11
+      maximum_cond_g: 1.0e12
+      lower_bound_comparison: greater-than
+      upper_bound_comparison: less-than
+      search: same-spin-decreasing-log-grid
+      maximum_generation_attempts: 11
+      minimum_singular_value: 1.0e-13
+    required_observations:
+      - coordinate-snapshot
+      - cond_2(G)
+      - sigma_max(G)
+      - sigma_min(G)
+      - float64-machine-epsilon
+      - cond_2(G)-times-epsilon
+      - generation-attempts
+      - rejected-configuration-count
+      - production-G-route-capture
+    does_not_guarantee:
+      - derivative-correctness-near-a-node
+      - inverse-or-pseudoinverse-backward-error
+      - walker-rebase-reject-or-failure-policy
+
+# Every declared rule names the implementation that guarantees it.
+anti_vacuity_rules:
+  - rule: A generated configuration must reach the tested production operation.
+    enforced_by: gdd.engine.evidence.CaseReceipt
+  - rule: A loop count is not evidence; every realized coordinate array needs a snapshot.
+    enforced_by: gdd.engine.evidence.ElectronConfigurationReceipt
+  - rule: Screening must happen before the correctness result is evaluated.
+    enforced_by: gdd.engine.evidence.CaseReceipt
+  - rule: A rejected configuration is recorded and cannot count toward requested coverage.
+    enforced_by: gdd.engine.evidence.ElectronConfigurationReceipt
+  - rule: An upper bound on cond_2(G) does not certify robustness on ill-conditioned G.
+    enforced_by: gdd.engine.derivative_requirements
+  - rule: A cond_2(G) range does not replace a separately required sigma_min(G) guard.
+    enforced_by: gdd.engine.evidence.ElectronConfigurationReceipt
+  - rule: A condition-target receipt records sigma_max, sigma_min, epsilon, and cond_2(G)*epsilon consistently.
+    enforced_by: gdd.engine.evidence.ElectronConfigurationReceipt
+  - rule: A fixed coordinate return cannot replace production-G evaluation during condition targeting.
+    enforced_by: tests/test_jqmc_kernel/test_analytic_coverage_evidence.py
+
+enforcement:
+  static:
+    command: python scripts/check_gdd_wavefunction_fixtures_contract.py
+    pre_commit_hook: gdd-contracts
+  runtime:
+    receipts: gdd.engine.execution_records
+    notes: >-
+      Subscribing tests check their declared electron configurations and
+      conditioning preconditions directly. Ordinary-module completion checks
+      required cases, precision and execution profiles, and passing pytest
+      setup/call/teardown outcomes; it does not reinterpret coordinate or
+      conditioning observations. Explicit derivative receipts retain their
+      specialized electron-configuration validation.

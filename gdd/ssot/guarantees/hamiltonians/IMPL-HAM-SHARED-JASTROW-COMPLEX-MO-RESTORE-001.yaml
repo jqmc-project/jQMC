@@ -1,0 +1,19 @@
+id: IMPL-HAM-SHARED-JASTROW-COMPLEX-MO-RESTORE-001
+kind: implementation
+name: Standalone shared Jastrow restart restores complex pGTO before MO validation
+plain_language: >-
+  Both shared-Jastrow persistence APIs reconstruct the phase-free complex pGTO
+  AO representation before checking its MO coefficient dtype. The non-square
+  genuinely complex MO matrix is retained exactly across a deterministic
+  variational J3/DTN update and restart; neither imaginary coefficients nor
+  periodic images are discarded. The existing same-mode strict periodic-value
+  and full dataclass equality checks remain required in full and mixed precision.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_shared_jastrow_update_and_restart_keep_periodic_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {storage: shared-jastrow, representation: MO}
+    - {storage: optimizer-checkpoint, representation: MO}

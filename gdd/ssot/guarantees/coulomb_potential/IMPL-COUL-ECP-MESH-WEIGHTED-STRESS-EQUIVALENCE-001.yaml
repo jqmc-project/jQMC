@@ -1,0 +1,21 @@
+id: IMPL-COUL-ECP-MESH-WEIGHTED-STRESS-EQUIVALENCE-001
+kind: implementation
+name: The weighted rank-one periodic ECP mesh Pulay-stress sum equals the weighted dense per-config stress
+plain_language: >-
+  The periodic ECP non-local stress uses only the weighted sum over the one-electron-moved mesh configurations of the
+  Pulay-stress delta. derivatives.one_move_mesh.mesh_stress_weighted contracts the configuration weights before any
+  strain field is evaluated: one determinant strain-field evaluation per spin at the base positions and
+  one at the mesh points, the moved electron's J1 point and J2 pair terms, the J3 coefficient change, and the DTN
+  weighted one-move delta. It never evaluates the full periodic Pulay stress per configuration.
+  For random weights it equals the weighted dense sum of mesh_stress_wf (the full stress_lnPsi_pbc at every
+  configuration), with and without the DTN term, under the strict zone policy of the AO, determinant and Jastrow
+  zones. The cases are periodic Gamma Li with J1, J2 and J3, periodic Gamma Li with spherical AOs and J2 and J3, complex-twist H2 with
+  J1 and J2 and complex weights, and complex-twist ECP lithium with a DTN u/chi/f Jastrow and complex weights. The base
+  configurations come from the shared conditioned-case draw (draw_well_conditioned_cfg).
+  Full and mixed are judged separately.
+verdict_methods:
+- VM-IMPL-ROUTE-PARITY-001
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mesh_stress_weighted.py::test_weighted_mesh_stress_matches_dense_per_config_stress

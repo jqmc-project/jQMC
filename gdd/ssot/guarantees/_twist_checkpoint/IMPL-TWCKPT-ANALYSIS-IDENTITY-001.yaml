@@ -1,0 +1,23 @@
+id: IMPL-TWCKPT-ANALYSIS-IDENTITY-001
+kind: implementation
+name: Completed twist checkpoints match the requested analysis
+plain_language: >-
+  A completed MCMC or GFMC twist checkpoint stores the warmup and jackknife
+  block count of its stored energy analysis next to its target step count. A
+  resume of the MCMC and GFMC twist drivers reuses it only when the stored step
+  count, warmup and block count equal the request, so one BZ average never
+  combines a stored analysis of one twist with a fresh analysis of another
+  under other settings. A longer stored chain or another stored
+  warmup or block count raises ValueError naming the twist and the stored and
+  requested settings, on both ranks of a two-rank calculation and before any
+  sampling, leaving the stored file unchanged and writing no missing twist. A
+  shorter stored chain is sampled again, and a checkpoint without the stored
+  settings is sampled again. A resume with the unchanged settings reproduces
+  the uninterrupted per-twist energies and their weighted BZ sum.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_twist_partial_resume_mpi.py::test_resume_refuses_a_cached_twist_analysed_with_other_settings
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{route: mcmc}, {route: gfmc_tau}]

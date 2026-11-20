@@ -1,0 +1,33 @@
+id: IMPL-TILING-NATIVE-PHYSICAL-VJP-001
+kind: implementation
+name: Native tiled physical VGL cotangents equal XLA analytic
+plain_language: >-
+  PW+pGTO composite blocks are also required, with both Cartesian and spherical
+  GTO children where parameterized; independent supercell J3 remains separate.
+  Native primitive image kernels and block-local coefficient contractions produce
+  independent physical-atom, all-nine strain and electron VGL responses matching
+  XLA analytical derivatives for PW, B-spline and Cartesian/spherical pGTO, with
+  logical conjugation and unwrapped probes. XLA evaluation and derivative entry
+  points are forbidden during native evaluation. This fixed-reference geometry
+  kernel guarantee is separate from full energy/force/stress source-route parity.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+contract_authority: cutover
+cutover_requirement: blocking
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_orbital_tiling.py::test_native_tiled_physical_vgl_cotangents
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {backend: pw, conjugate: false}
+    - {backend: pw, conjugate: true}
+    - {backend: bspline3, conjugate: false}
+    - {backend: bspline3, conjugate: true}
+    - {backend: pgto_cart, conjugate: false}
+    - {backend: pgto_cart, conjugate: true}
+    - {backend: pgto_sphe, conjugate: false}
+    - {backend: pgto_sphe, conjugate: true}
+    - {backend: composite_cart, conjugate: false}
+    - {backend: composite_cart, conjugate: true}
+    - {backend: composite_sphe, conjugate: false}
+    - {backend: composite_sphe, conjugate: true}

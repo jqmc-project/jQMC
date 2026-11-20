@@ -1,0 +1,42 @@
+id: IMPL-AO-PERIODIC-BASIS-UPDATE-001
+kind: implementation
+name: Periodic basis updates keep physical parameter identity through acceptance, HDF5 and restart
+plain_language: >-
+  Periodic Cartesian and real-spherical GTO basis updates keep each physical shell primitive's own exponent and
+  contraction coefficient: two distinct physical s shells with equal values keep independent coordinates and their
+  order, and Cartesian and spherical d/f shells keep their existing canonical home primitive gather and normalization
+  across lattice images without redefining molecular normalization or shell ownership. On the attributed ordinary Li
+  supercell PW-determinant/ao-small-J3 audit fixture (J3 matrix seed 41; MCMC seed 718, two walkers, four steps, one SR
+  update, two bins, delta = epsilon = 1e-3) the accepted update is finite and positive in the XLA and applicable native
+  routes, and native MCMC produces physical J3 basis derivatives and rebuilds its contexts after acceptance. HDF5
+  preserves parameters, maps, image layout and AO/J3 values exactly within each mode, and real checkpoint continuation
+  preserves walkers, RNG, energies and weights. Full and mixed are evaluated separately.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_j3_basis_updates.py::test_periodic_basis_coincident_parameters_preserve_identity
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_j3_basis_updates.py::test_periodic_high_l_preserves_canonical_home_gather
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - angular: cart
+    - angular: sphe
+  - pytest_node: tests/test_jqmc_kernel/test_periodic_j3_audit_optimization.py::test_audit_ordinary_supercell_j3_update_and_restart
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}
+  - pytest_node: tests/test_rs_kernel/test_periodic_j3_basis_updates.py::test_native_audit_ordinary_supercell_j3_update_and_restart
+    required_precision_modes:
+    - full
+    - mixed
+    required_parameter_cases:
+    - {}

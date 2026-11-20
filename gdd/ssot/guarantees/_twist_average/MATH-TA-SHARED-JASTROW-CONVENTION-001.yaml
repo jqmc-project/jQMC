@@ -1,0 +1,29 @@
+id: MATH-TA-SHARED-JASTROW-CONVENTION-001
+kind: mathematical
+name: J3 and DTN stay common to Gamma and both signed twists
+plain_language: >-
+  A single shared phase-free J3 basis and J matrix, together with common DTN
+  coefficients, orders, cutoffs and cusp constraints, belong to every twist.
+  Gamma, +k and -k loads preserve that shared function while determinant
+  momenta differ. Deterministic world-scoped variational updates and both
+  shared-state persistence APIs preserve the same nonzero correlation factor,
+  including one-electron lattice translations requiring restored pGTO images.
+  Parameter copies are exact; numerical values use each mode's existing strict
+  AO/MO/Jastrow policy. These fixed-input tests do not assert stochastic energy
+  convergence or a full multi-rank optimizer trajectory.
+verdict_methods: [VM-MATH-REVIEWED-IDENTITY-001]
+required_evidence:
+- verdict_method: VM-MATH-REVIEWED-IDENTITY-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_gamma_and_signed_twist_inputs_keep_one_live_shared_jastrow
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {representation: AO}
+    - {representation: MO}
+  - pytest_node: tests/test_jqmc_kernel/test_shared_jastrow_convention.py::test_shared_jastrow_update_and_restart_keep_periodic_values
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {storage: shared-jastrow, representation: AO}
+    - {storage: optimizer-checkpoint, representation: AO}
+    - {storage: shared-jastrow, representation: MO}
+    - {storage: optimizer-checkpoint, representation: MO}

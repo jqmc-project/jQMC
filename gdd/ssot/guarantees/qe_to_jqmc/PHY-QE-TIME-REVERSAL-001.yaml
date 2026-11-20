@@ -1,0 +1,32 @@
+id: PHY-QE-TIME-REVERSAL-001
+kind: physical
+name: Time-reversal pairing of converted spin channels
+plain_language: At a non-Gamma k point the converted down channel is the time-reversal partner of the up channel.
+verdict_methods:
+- VM-PHY-INVARIANT-001
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_dn_channel_is_tr_pair_of_up_at_non_gamma
+  - pytest_node: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma::test_projected_pgto_down_channel_is_time_reversed
+    executable_checks:
+      comparison-4:
+        site: tests/test_jqmc_kernel/test_integration_qe_non_gamma.py::TestQENonGamma.test_projected_pgto_down_channel_is_time_reversed#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: down_mos
+        reference:
+          role: existing-test-reference
+          expression: np.conj(up_mos)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval
+          mixed:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - mo_eval

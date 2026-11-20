@@ -1,0 +1,111 @@
+id: PHY-COUL-EWALD-II-FAR-NUCLEUS-SKEWED-001
+kind: physical
+name: Ion-ion Ewald energy, force and stress are invariant when a nucleus is given far outside a strongly skewed cell
+plain_language: >-
+  The ion-ion Ewald energy, force and stress are invariant under translating a nucleus by a lattice vector of a
+  strongly skewed (non-reduced) cell basis. The cell rows are ((5,0,0),(4.5,2,0),(4,0.7,3))/2 Bohr, four ions of
+  charges +1, +1, -1, -1 sit at fixed fractional sites plus an asymmetric Cartesian perturbation, and the Ewald
+  tables use tol 1e-12. One ion is translated by the lattice vector (3,-2,4) or (-4,5,-1) in units of the cell
+  rows. At that far-shifted geometry the XLA ion-ion energy, the cached numpy ii_energy that build_ewald_data
+  stores for the structure it is given and the _debug oracle equal the XLA ion-ion energy of the same crystal
+  written with every nucleus inside the home cell, and the XLA analytic (grad_Eii_wrt_R, grad_Eii_wrt_strain) and
+  AD ion-ion force and stress equal fourth-order central finite differences of that in-cell energy. Likewise the
+  Rust ion-ion energy at the far-shifted geometry equals the Rust ion-ion energy of the in-cell crystal, and the
+  Rust ion-ion force (grad_Eii_wrt_R) and stress (grad_Eii_wrt_strain) kernels equal fourth-order central finite
+  differences of that Rust in-cell energy, with the strained Ewald tables rebuilt from the fixed integer index
+  sets. Every ion's force and the stress are nonzero at the comparison tolerance, and the far-shifted geometry
+  has a pair whose fractional displacement exceeds 1/2 and rounds differently in the transposed basis, so the
+  nucleus fold is active and its basis orientation is observable. Full and mixed precision are each required. This does not
+  certify other cells or shifts, or the ee/ei channels.
+verdict_methods: [VM-PHY-INVARIANT-001]
+required_evidence:
+- verdict_method: VM-PHY-INVARIANT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_ewald_ii_far_nucleus.py::test_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{shift_name: skew_3_m2_4}, {shift_name: skew_m4_5_m1}]
+    executable_checks:
+      xla-energy:
+        site: tests/test_jqmc_kernel/test_ewald_ii_far_nucleus.py::test_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-ii-energy-far-shifted, expression: e_xla}
+        reference: {role: xla-ii-energy-of-in-cell-crystal, expression: e_in_cell}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      cached-energy:
+        site: tests/test_jqmc_kernel/test_ewald_ii_far_nucleus.py::test_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: numpy-cached-ii-energy-far-shifted, expression: e_cached}
+        reference: {role: xla-ii-energy-of-in-cell-crystal, expression: e_in_cell}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      debug-energy:
+        site: tests/test_jqmc_kernel/test_ewald_ii_far_nucleus.py::test_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: debug-ii-energy-far-shifted, expression: e_debug}
+        reference: {role: xla-ii-energy-of-in-cell-crystal, expression: e_in_cell}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      xla-analytic-force:
+        site: tests/test_jqmc_kernel/test_ewald_ii_far_nucleus.py::test_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-4
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-analytic-ii-force-far-shifted, expression: force_analytic}
+        reference: {role: fd4-of-in-cell-ii-energy, expression: fd_force}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      xla-ad-force:
+        site: tests/test_jqmc_kernel/test_ewald_ii_far_nucleus.py::test_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-5
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-ad-ii-force-far-shifted, expression: force_ad}
+        reference: {role: fd4-of-in-cell-ii-energy, expression: fd_force}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      xla-analytic-stress:
+        site: tests/test_jqmc_kernel/test_ewald_ii_far_nucleus.py::test_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-6
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-analytic-ii-stress-far-shifted, expression: stress_analytic}
+        reference: {role: fd4-strain-of-in-cell-ii-energy, expression: fd_stress}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      xla-ad-stress:
+        site: tests/test_jqmc_kernel/test_ewald_ii_far_nucleus.py::test_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-7
+        comparator: numpy.testing.assert_allclose
+        actual: {role: xla-ad-ii-stress-far-shifted, expression: stress_ad}
+        reference: {role: fd4-strain-of-in-cell-ii-energy, expression: fd_stress}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+  - pytest_node: tests/test_rs_kernel/test_ewald_ii_far_nucleus_rs.py::test_rust_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{shift_name: skew_3_m2_4}, {shift_name: skew_m4_5_m1}]
+    executable_checks:
+      rust-energy:
+        site: tests/test_rs_kernel/test_ewald_ii_far_nucleus_rs.py::test_rust_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-ii-energy-far-shifted, expression: e_rust}
+        reference: {role: rust-ii-energy-of-in-cell-crystal, expression: e_in_cell}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      rust-force:
+        site: tests/test_rs_kernel/test_ewald_ii_far_nucleus_rs.py::test_rust_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-ii-force-far-shifted, expression: force_rust}
+        reference: {role: fd4-of-in-cell-rust-ii-energy, expression: fd_force}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+      rust-stress:
+        site: tests/test_rs_kernel/test_ewald_ii_far_nucleus_rs.py::test_rust_ewald_ii_far_nucleus_skewed_basis_force_stress_are_translation_invariant#comparison-3
+        comparator: numpy.testing.assert_allclose
+        actual: {role: rust-ii-stress-far-shifted, expression: stress_rust}
+        reference: {role: fd4-strain-of-in-cell-rust-ii-energy, expression: fd_stress}
+        precision:
+          full: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}
+          mixed: {policy: CMP-ZONE-ALLCLOSE-STRICT-001, zones: [ewald]}

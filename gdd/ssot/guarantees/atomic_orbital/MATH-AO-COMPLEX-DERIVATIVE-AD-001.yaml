@@ -1,0 +1,111 @@
+id: MATH-AO-COMPLEX-DERIVATIVE-AD-001
+kind: mathematical
+name: Complex-leaf and high-l periodic AO derivatives equal autodiff of the AO value
+plain_language: >-
+  At the original non-Gamma twist and fixed straddling-cell points, Cartesian/spherical
+  Bloch pGTO leaves through l=4, complex PW/B-spline/composite leaves and real high-l
+  periodic leaves retain their strict full-precision complex value-AD gradient/Laplacian
+  oracle. Real/imaginary parts are differentiated separately; dropping the Bloch cross
+  term or doubling wrap-restore phase is rejected. Mixed numerical derivative evidence
+  is separately NUM-ORBITAL-ELEMENTARY-DERIVATIVE-MIXED-FIDELITY-001, with a clean full
+  host reference captured before fault injection. Same-mode fused value API parity
+  retains its strict ao_eval comparison under IMPL-ORBITAL-FUSED-API-PARITY-001.
+verdict_methods: [VM-MATH-AD-ORACLE-001]
+required_evidence:
+- verdict_method: VM-MATH-AD-ORACLE-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_complex_and_high_l_ao_derivatives_match_autodiff
+    executable_checks:
+      ao-derivatives-comparison-1:
+        site: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::_compare_ao_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: analytic
+        reference:
+          role: existing-test-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+        iterations:
+          variable: name
+          required_values:
+          - grad_x
+          - grad_y
+          - grad_z
+          - lap
+          - fused_grad_x
+          - fused_grad_y
+          - fused_grad_z
+          - fused_lap
+      ao-derivatives-comparison-2:
+        site: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::_compare_ao_derivatives#comparison-2
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: existing-test-actual
+          expression: np.asarray(val_f)
+        reference:
+          role: existing-test-reference
+          expression: np.asarray(val_u)
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+    required_precision_modes: [full]
+    required_parameter_cases:
+    - {case: pgto_cart_l4_real}
+    - {case: pgto_sphe_l4_real}
+    - {case: pgto_cart_l4_complex}
+    - {case: pgto_sphe_l4_complex}
+    - {case: pw_complex}
+    - {case: bspline_complex}
+    - {case: composite_complex}
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_negative_control_dropped_bloch_cross_term_fails_ao_laplacian
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - case: bspline_complex
+    - case: composite_complex
+    executable_checks:
+      full-ad-rejection:
+        site: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::_compare_ao_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-output-or-control-fault
+          expression: analytic
+        reference:
+          role: full-same-forward-value-autodiff-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap
+  - pytest_node: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::test_negative_control_double_restore_phase_fails_ao_laplacian
+    required_precision_modes:
+    - full
+    required_parameter_cases:
+    - case: pgto_cart_l4_complex
+    - case: pgto_sphe_l4_complex
+    executable_checks:
+      full-ad-rejection:
+        site: tests/test_jqmc_kernel/test_complex_derivative_ad_oracles.py::_compare_ao_derivatives#comparison-1
+        comparator: numpy.testing.assert_allclose
+        actual:
+          role: full-analytical-output-or-control-fault
+          expression: analytic
+        reference:
+          role: full-same-forward-value-autodiff-reference
+          expression: reference
+        precision:
+          full:
+            policy: CMP-ZONE-ALLCLOSE-STRICT-001
+            zones:
+            - ao_eval
+            - ao_grad_lap

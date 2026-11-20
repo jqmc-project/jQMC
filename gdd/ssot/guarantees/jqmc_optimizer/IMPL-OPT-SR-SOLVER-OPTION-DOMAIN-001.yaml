@@ -1,0 +1,30 @@
+id: IMPL-OPT-SR-SOLVER-OPTION-DOMAIN-001
+kind: implementation
+name: SR/LM solver options outside their domains are rejected at input
+plain_language: >-
+  One validator owns the domains of the SR/LM solver options: epsilon must be a finite number >= 0 (0 is the
+  unregularized metric), cg_tol a finite number > 0, cg_max_iter an integer >= 1, and lm_subspace_dim an integer
+  >= -1 (0 aSR, > 0 reduced LM, -1 full LM). run_optimize applies it where it parses optimizer_kwargs, so the Python
+  API and the jqmc VMC route (which reaches run_optimize) raise a ValueError naming the option before the sampler
+  is configured or any sample is drawn. The single-k and twist-decomposed target entries apply the same validator,
+  so lm_subspace_dim < -1 raises on the twist entry too instead of running full LM silently. A NaN or negative cg_tol, a zero
+  cg_max_iter or a negative epsilon therefore never produces a silently truncated or indefinite SR step.
+verdict_methods: [VM-ERROR-DISPOSITION-001]
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_jqmc_optimizer_control.py::test_invalid_sr_solver_option_is_rejected_before_configuration
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {key: cg_tol, value: {source_expression: numpy.nan}}
+    - {key: cg_tol, value: {source_expression: numpy.inf}}
+    - {key: cg_tol, value: 0.0}
+    - {key: cg_tol, value: -1.0e-05}
+    - {key: cg_max_iter, value: 0}
+    - {key: cg_max_iter, value: 2.5}
+    - {key: epsilon, value: -0.001}
+    - {key: epsilon, value: {source_expression: numpy.nan}}
+    - {key: lm_subspace_dim, value: -2}
+  - pytest_node: tests/test_jqmc_kernel/test_optimizer_sr_solver_guards.py::test_lm_subspace_dim_below_minus_one_is_rejected_by_both_target_entries
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{entry: single-k}, {entry: twist}]

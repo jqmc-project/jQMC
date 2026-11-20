@@ -1,0 +1,22 @@
+id: IMPL-RS-REAL-ORB-PARSER-ZERO-IMAG-COMPLEX128-MO-EXACT-001
+kind: implementation
+name: The real native orbital parser reads a zero-imaginary complex128 J3 MO exactly, without a complex-to-real cast
+plain_language: >-
+  MOs_data.sanity_check requires complex128 MO coefficients over a phase-free Gamma-complex pGTO child. The real
+  native orbital parser must read such coefficients with an exactly zero imaginary part as their real values, with
+  no ComplexWarning cast, so a sanity-valid supported J3 reaches the real native consumers. Evidence: the real
+  Li_gamma determinant of MATH-RS-REAL-DISPATCH-GAMMA-COMPLEX-PGTO-COMPOSITE-J3-ENERGY-001 with its J3 MO stored
+  as complex128 (orbital, J3 and Hamiltonian sanity checks pass), with ComplexWarning promoted to an error. The real
+  periodic native context e_L(J3) - e_L(no J3), the free compute_local_energy difference and the free
+  compute_kinetic_energy must equal those of the identical real pGTO control with float64 coefficients exactly, and
+  the analytic J3 kinetic reference (0.5666084267722298 Ha) within the strict tolerance of the active policy.
+  Negative control: the same child with a nonzero imaginary MO coefficient is still rejected with
+  NotImplementedError naming the complex native path by the real native context and the free local energy. Full
+  and mixed are judged separately.
+verdict_methods: [VM-IMPL-ROUTE-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-ROUTE-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_real_gamma_complex_pgto_j3_composite.py::test_real_native_parser_reads_zero_imaginary_complex128_j3_mo_exactly
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

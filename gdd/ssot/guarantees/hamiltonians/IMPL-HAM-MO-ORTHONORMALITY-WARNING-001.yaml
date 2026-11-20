@@ -1,0 +1,38 @@
+id: IMPL-HAM-MO-ORTHONORMALITY-WARNING-001
+kind: implementation
+name: Hamiltonian sanity check warns, without raising, when determinant MOs are not orthonormal in the AO metric
+plain_language: >-
+  Hamiltonian_data.sanity_check, which build, load_from_hdf5 and the MCMC and GFMC constructors run, forms
+  M = conj(C) S C^T for every MOs_data channel of the geminal with the production AO overlap
+  compute_overlap_matrix, and logs one warning per channel, naming the channel and reporting
+  max|M_ii - 1| and max over i != j of |M_ij| / sqrt(M_ii M_jj), when either exceeds
+  MO_ORTHONORMALITY_WARNING_THRESHOLD or is not finite. It never raises. The committed molecular Cartesian
+  and spherical, periodic Gamma and periodic twist TREXIO fixtures build without the warning and with both
+  numbers at or below the threshold; an old-convention file with sqrt(Omega)-scaled MOs warns again once per
+  spin when loaded from HDF5; null and NaN MO rows warn without raising; AO-basis orbital data and a molecular
+  AO composite (no shared cell) are skipped with a debug record and no warning. MOs on a standalone complex
+  twisted B-spline leaf are measured with its exact cell overlap, not skipped: three MOs made orthonormal with
+  an independent cell-quadrature Gram matrix build without a warning, and the same MOs scaled by 5 warn once
+  per spin channel with a normalization deviation of 24. Full and mixed are judged separately. This is a diagnostic contract: no MO,
+  energy or file is changed, and the threshold is a measured warning boundary, not a correctness tolerance.
+verdict_methods: [VM-IMPL-REVIEWED-CONTRACT-001]
+required_evidence:
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_check.py::test_orthonormal_fixture_mos_do_not_warn
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {trexio_file: H2_ae_ccpvdz_sphe.h5}
+    - {trexio_file: N2_ecp_ccpvtz_cart.h5}
+    - {trexio_file: H4_pbc_ae_cart.h5}
+    - {trexio_file: H4_pbc_ae_k025_cart.h5}
+    - {trexio_file: lithium_k025.h5}
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_check.py::test_scaled_mos_warn_again_when_loaded_from_hdf5
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_mo_orthonormality_check.py::test_degenerate_and_unsupported_orbitals_never_raise
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
+  - pytest_node: tests/test_jqmc_kernel/test_bspline_complex_overlap.py::test_mo_check_measures_complex_bspline_mos_with_the_cell_overlap
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]

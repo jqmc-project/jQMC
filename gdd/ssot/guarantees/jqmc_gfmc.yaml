@@ -1,0 +1,16 @@
+schema_version: 1
+document:
+  id: jqmc.jqmc_gfmc
+  version: 1
+  lifecycle: cutover
+  title: GFMC driver guarantees
+  purpose: 'Which test guarantees what, by which verdict method, for the GFMC/LRDMC drivers: novar=0 propagation/measurement
+    energy routing, production/debug parity, LRDMC force sum rules, stress identities, checkpointing, and compile-tax contracts.'
+symbol_contract:
+  status: governed
+  default_guarantee_refs:
+  - IMPL-GFMC-DEBUG-PRODUCTION-001
+  overrides: {}
+  critical_private_symbols: []
+guarantees:
+  layout: one-file-per-guarantee

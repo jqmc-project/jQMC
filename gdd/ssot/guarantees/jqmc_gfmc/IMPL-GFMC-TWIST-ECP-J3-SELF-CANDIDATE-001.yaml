@@ -1,0 +1,24 @@
+id: IMPL-GFMC-TWIST-ECP-J3-SELF-CANDIDATE-001
+kind: implementation
+name: XLA streaming GFMC on a multi-electron complex-twist ECP J3 wavefunction stores the native e_L and w_L
+plain_language: >-
+  Within one projection interval the ECP quadrature rotation is fixed, so after a t-move the moved
+  electron lies exactly on a point of its own ECP candidate mesh; that candidate configuration moves no electron
+  and its Jastrow ratio is exactly 1, which the cached-J3 split-spin ECP ratio must return for every electron
+  index (kernel-level, with the rank-one dltmove consumer, in IMPL-WF-CANDIDATE-MESH-VALUES-001). On the
+  committed QE O-lsda k=0.25 save (pGTO, 4 up / 2 dn, ccECP) with an active complex-pGTO J3, one walker and one stored step on the fixed identity mesh, the production
+  XLA GFMC_t (tmove, seed 3) and GFMC_n (tmove, 40 projections, seed 2) follow the native Rust walk
+  byte for byte (final walker and RNG keys) and store the native e_L and w_L at the existing periodic
+  route-parity envelope (get_tolerance_gfmc_fast_pbc, medium). For GFMC_t tmove Re of the stored measurement e_L also
+  equals the cache-free fixed-configuration compute_local_energy at the final walker (Im differs by
+  the real-projected fixed-phase ECP convention). Full and mixed are judged
+  separately, each in its own precision.
+verdict_methods: [VM-IMPL-BACKEND-PARITY-001]
+required_evidence:
+- verdict_method: VM-IMPL-BACKEND-PARITY-001
+  nodes:
+  - pytest_node: tests/test_rs_kernel/test_gfmc_twist_ecp_j3_self_candidate.py::test_xla_gfmc_twist_ecp_j3_multi_electron_matches_native
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {driver: t, non_local_move: tmove, seed: 3}
+    - {driver: n, non_local_move: tmove, seed: 2}

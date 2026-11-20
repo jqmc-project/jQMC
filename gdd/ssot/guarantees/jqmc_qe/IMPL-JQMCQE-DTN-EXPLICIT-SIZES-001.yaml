@@ -1,0 +1,29 @@
+id: IMPL-JQMCQE-DTN-EXPLICIT-SIZES-001
+kind: implementation
+name: run_qe2jqmc keeps explicitly supplied DTN sizes and rejects an explicit 0
+plain_language: >-
+  An explicitly supplied DTN cutoff smoothness or polynomial order reaches the DTN builder unchanged; only an
+  omitted value takes its default (C = 4, N_u = N_chi = 8, N_eN = N_ee = 4). An explicit dtn_c = 0 is rejected
+  with the builder's "cutoff_smoothness must be >= 3" ValueError, and an explicit 0 for the order of an active
+  channel (dtn_n_u, dtn_n_chi, dtn_n_eN, dtn_n_ee) is rejected with a ValueError stating that the order must be
+  >= 1 because the channel's cusp constraint fixes its linear coefficient; no Hamiltonian file is written.
+  Explicit non-default sizes are stored as given; an explicit 0 is never replaced by the default.
+verdict_methods:
+- VM-ERROR-DISPOSITION-001
+- VM-IMPL-REVIEWED-CONTRACT-001
+required_evidence:
+- verdict_method: VM-ERROR-DISPOSITION-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_dtn_explicit_sizes.py::test_explicit_zero_dtn_size_is_rejected_not_defaulted
+    required_precision_modes: [full, mixed]
+    required_parameter_cases:
+    - {preset: u, option: dtn_c}
+    - {preset: u, option: dtn_n_u}
+    - {preset: u_chi, option: dtn_n_chi}
+    - {preset: u_f, option: dtn_n_eN}
+    - {preset: u_f, option: dtn_n_ee}
+- verdict_method: VM-IMPL-REVIEWED-CONTRACT-001
+  nodes:
+  - pytest_node: tests/test_jqmc_kernel/test_qe_dtn_explicit_sizes.py::test_dtn_sizes_keep_defaults_when_omitted_and_explicit_values_otherwise
+    required_precision_modes: [full, mixed]
+    required_parameter_cases: [{}]
